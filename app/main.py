@@ -3,13 +3,15 @@ from pydantic import BaseModel, Field
 from typing import Literal
 
 from app.api.alpaca import router as alpaca_router
+from app.api.backtest import router as backtest_router
 from app.api.strategy import router as strategy_router
 from app.api.trading import router as trading_router
 
-app = FastAPI(title="Bitey System Bots Trading", version="0.3.0")
+app = FastAPI(title="Bitey System Bots Trading", version="0.4.0")
 app.include_router(trading_router)
 app.include_router(alpaca_router)
 app.include_router(strategy_router)
+app.include_router(backtest_router)
 
 Mode = Literal["demo", "paper", "live"]
 
@@ -23,7 +25,7 @@ class TradingConfig(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "module": "bitey-system-bots-trading", "version": "0.3.0"}
+    return {"status": "ok", "module": "bitey-system-bots-trading", "version": "0.4.0"}
 
 
 @app.get("/api/v1/system")
@@ -37,6 +39,7 @@ def system():
         "supported_modes": ["demo", "paper"],
         "integrations": ["TradingView webhook", "Alpaca Paper Trading"],
         "strategies": ["sma-crossover-v1"],
+        "capabilities": ["backtesting", "risk-controls", "paper-orders"],
     }
 
 
