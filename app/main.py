@@ -2,7 +2,12 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from typing import Literal
 
-app = FastAPI(title="Bitey System Bots Trading", version="0.1.0")
+from app.api.alpaca import router as alpaca_router
+from app.api.trading import router as trading_router
+
+app = FastAPI(title="Bitey System Bots Trading", version="0.2.0")
+app.include_router(trading_router)
+app.include_router(alpaca_router)
 
 Mode = Literal["demo", "paper", "live"]
 
@@ -16,7 +21,7 @@ class TradingConfig(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "module": "bitey-system-bots-trading", "version": "0.1.0"}
+    return {"status": "ok", "module": "bitey-system-bots-trading", "version": "0.2.0"}
 
 
 @app.get("/api/v1/system")
@@ -26,13 +31,14 @@ def system():
         "parent": "Bitey IA",
         "sibling_module": "Bitey Trainer",
         "live_trading_enabled": False,
-        "supported_modes": ["demo", "paper", "live"],
+        "default_execution": "alpaca_paper",
+        "supported_modes": ["demo", "paper"],
+        "integrations": ["TradingView webhook", "Alpaca Paper Trading"],
     }
 
 
 @app.post("/api/v1/config/validate")
 def validate_config(config: TradingConfig):
-    # Live mode is deliberately rejected in the first milestone.
     if config.mode == "live":
-        return {"valid": False, "reason": "Live trading is disabled in v0.1.0"}
+        return {"valid": False, "reason": "Live trading is disabled in the current milestone"}
     return {"valid": True, "config": config.model_dump()}
