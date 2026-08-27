@@ -1,41 +1,55 @@
 # Bitey System Bots Trading
 
-**Bitey System Bots Trading** is an independent specialized trading module of **Bitey IA / Supracerebro**.
+**Bitey System Bots Trading** is an independent specialized trading module of **Bitey IA / Supracerebro**. Its mobile application is **Bitey SBT App** (`bitey-system-bots-trading-app`).
 
-It is separate from JobIA and Bitey Trainer, with its own trading engine, strategies, risk controls, simulation and execution architecture. Its mobile application is **Bitey SBT App** (`bitey-system-bots-trading-app`).
+## Product objective
 
-## Objective
-
-Research, build, test, evaluate and operate algorithmic trading systems with a controlled progression:
+Research, test and operate algorithmic trading systems through a controlled progression:
 
 **Research → Backtest → Demo → Paper Trading → Micro-capital → Controlled scaling**
 
-No profit is guaranteed or assumed. Real-money operation is disabled until explicit safety and validation gates are satisfied.
+The product is designed for both beginners and advanced users. A beginner sees a plain-language explanation such as: **“If you assign $10, this profile is configured to risk about $0.20 per trade.”** The professional view exposes market, strategy, position and risk parameters. These are estimates/configured controls, not profit guarantees or guaranteed maximum losses under every market condition.
 
-## Relationship with Bitey IA
+## Bot groups
 
-Bitey IA is the general Supracerebro. Trading is a specialized module that can consume authorized Bitey IA services and return authorized results, metrics and knowledge that can enrich the ecosystem. It does not replace or restrict Bitey IA.
+The backend now exposes `/api/v1/bot-profiles` with initial profiles:
 
-```text
-BITEY IA / SUPRACEREBRO
-          │
-          └── Bitey System Bots Trading
-                    │
-               Bitey SBT App
-```
+- **Conservador EUR/USD** — low exposure, intended for learning and validation.
+- **Equilibrado EUR/USD** — intermediate exposure after demo/paper validation.
+- **Agresivo EUR/USD** — high exposure and variability; for advanced users only.
 
-Bitey Trainer/JobIA is a separate module/product and is not a dependency of the trading engine.
+Each profile contains:
 
-## Safety progression
+- Simple beginner explanation.
+- Professional/technical explanation.
+- Markets and strategies.
+- Risk level.
+- Maximum position percentage.
+- Configured loss per trade.
+- Configured daily loss.
+- Illustrative favorable/neutral/unfavorable scenarios.
+- Risk preview for a selected capital amount.
 
-1. Research.
-2. Historical backtesting with fees/slippage.
-3. Demo with virtual capital.
-4. Paper trading with live market data and simulated execution.
-5. Micro-capital only after predefined validation gates and explicit activation.
-6. Controlled scaling only while objective performance, reliability and risk limits remain valid.
+## Real-money transition
 
-Failure of safety criteria should reduce exposure or return the system to demo/paper mode.
+The application is being prepared with an **“Activar dinero real”** control, but real execution remains disabled in this milestone. The backend exposes a safety-preparation status and requires, before future activation:
+
+1. Authenticated user.
+2. Broker/account connection.
+3. Explicit selection of a real account.
+4. Maximum capital allocation.
+5. Per-trade loss limit.
+6. Daily loss limit.
+7. Pre-trade risk validation.
+8. Audit trail.
+9. Emergency stop.
+10. Explicit final confirmation.
+
+The system must fail closed when a required safety dependency is unavailable. Broker credentials must never be stored in the mobile application.
+
+## MetaTrader 5
+
+MT5 is currently integrated as a **read-only market-data/demo bridge**. The bridge can provide account information, quotes and candles while the trading engine uses virtual execution. A future real connector must be isolated behind the same risk and audit gates; the current milestone does not send real broker orders.
 
 ## Architecture
 
@@ -44,25 +58,21 @@ Failure of safety criteria should reduce exposure or return the system to demo/p
 - `risk/` — mandatory pre-trade and portfolio controls.
 - `backtest/` — historical simulation.
 - `execution/` — broker/exchange adapters; paper first.
-- `api/` — FastAPI service for Bitey IA and Bitey SBT App.
+- `api/` — FastAPI API for Bitey IA and Bitey SBT App.
 - `tests/` — unit, integration, simulation and safety tests.
 
 AI may assist with research, comparison, experiment design, anomaly detection, analysis and reporting, but cannot bypass hard risk controls.
 
-## Design principles
+## Mobile app UX
 
-- Same signal → risk → execution architecture across simulation and future live modes.
-- Strategies never send orders directly.
-- Risk controls cannot be bypassed by AI or strategies.
-- Hard limits are outside the AI decision layer.
-- Events and decisions are auditable.
-- Live execution is disabled by default.
-- Fail closed when required data, credentials, risk state or execution dependencies are unavailable.
+Bitey SBT App provides:
 
-## Initial milestone
+- Bot-group selection.
+- Beginner/professional explanation toggle.
+- Capital/risk preview.
+- Demo/paper monitoring.
+- Prepared real-money activation flow, currently disabled.
 
-A safe demo/paper trading engine with authentication, audit trail, monitoring and validated risk controls. No live broker/exchange connection until the required gates pass.
+## Safety
 
-## Disclaimer
-
-Trading financial assets involves risk, including loss of capital. No bot, strategy or AI system guarantees profits. This software is initially for research, simulation and controlled testing.
+No bot, strategy or AI system guarantees profits. A configured loss limit is a risk-control target, not a promise: market gaps, slippage, liquidity and execution conditions can produce larger losses. Real-money trading remains disabled until the full safety architecture is validated.
