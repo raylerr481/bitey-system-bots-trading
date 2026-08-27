@@ -13,8 +13,7 @@ class DemoRunRequest(TechnicalSignalRequest):
 
 @router.post("/run")
 def run_demo(request: DemoRunRequest):
-    state = get_demo_state()
-    return state.run(request, request.quantity)
+    return get_demo_state().run(request, request.quantity)
 
 
 @router.get("/portfolio")
