@@ -4,6 +4,7 @@ from typing import Literal
 
 from app.api.alpaca import router as alpaca_router
 from app.api.backtest import router as backtest_router
+from app.api.demo import router as demo_router
 from app.api.mt5 import router as mt5_router
 from app.api.strategy import router as strategy_router
 from app.api.trading import router as trading_router
@@ -14,6 +15,7 @@ app.include_router(alpaca_router)
 app.include_router(mt5_router)
 app.include_router(strategy_router)
 app.include_router(backtest_router)
+app.include_router(demo_router)
 
 Mode = Literal["demo", "paper", "live"]
 
@@ -41,7 +43,7 @@ def system():
         "supported_modes": ["demo", "paper"],
         "integrations": ["TradingView webhook", "Alpaca Paper Trading", "MetaTrader 5 Demo bridge"],
         "strategies": ["sma-crossover-v1"],
-        "capabilities": ["backtesting", "risk-controls", "paper-orders", "mt5-demo-bridge"],
+        "capabilities": ["backtesting", "risk-controls", "paper-orders", "mt5-demo-bridge", "demo-trading-loop"],
     }
 
 
