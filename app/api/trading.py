@@ -28,10 +28,11 @@ def demo_order(request: DemoOrderRequest):
 
 
 @router.post("/demo/run")
-def demo_run(request: TechnicalSignalRequest, quantity: float = Field(default=1, gt=0)):
+def demo_run(request: TechnicalSignalRequest, quantity: float = 1.0):
     return get_demo_state().run(request, quantity=quantity)
 
 
 @router.get("/demo/portfolio")
 def demo_portfolio():
     return get_demo_state().snapshot()
+
