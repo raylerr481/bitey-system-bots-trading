@@ -13,10 +13,10 @@ from app.api.trading import router as trading_router
 
 app = FastAPI(
     title="Bitey System Bots Trading",
-    version="0.7.0",
+    version="0.7.1",
     description=(
-        "Bitey SBT trading platform with demo/paper execution, MT5 demo market "
-        "data, risk controls and market intelligence. Live trading is disabled."
+        "Bitey SBT specialist market module for Bitey IA, with demo/paper execution, "
+        "MT5 demo market data, risk controls and market intelligence. Live trading is disabled."
     ),
 )
 
@@ -45,14 +45,15 @@ class TradingConfig(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "module": "bitey-system-bots-trading", "version": "0.7.0"}
+    return {"status": "ok", "module": "bitey-system-bots-trading", "version": "0.7.1"}
 
 
 @app.get("/api/v1/system")
 def system():
     return {
-        "module": "Bitey System Bots Trading",
+        "module": "Bitey SBT",
         "parent": "Bitey IA",
+        "role": "specialized_market_intelligence_and_trading_module",
         "sibling_module": "Bitey Trainer",
         "live_trading_enabled": False,
         "default_execution": "virtual",
