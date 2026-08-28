@@ -1,4 +1,5 @@
-from services.market_intelligence import Evidence, engine
+from app.services.market_intelligence import Evidence, engine
+from app.services.sbt_risk import build_opportunity_risk
 
 
 def test_energy_domino_analysis():
@@ -30,3 +31,10 @@ def test_multilingual_output():
         result = engine.analyze(capital=500, language=language)
         assert result["language"] == language
         assert result["nodes"]
+
+
+def test_opportunity_risk_is_bounded():
+    result = build_opportunity_risk(1000)
+    assert result.max_loss == 10
+    assert result.reward_target == 20
+    assert result.position_budget == 20
