@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import Iterable
 
@@ -25,6 +25,17 @@ class MarketImpact:
     direction: Direction
     score: int
     horizon: Horizon
+    layer: str
+    reason: str
+
+
+@dataclass(frozen=True)
+class DominoEffect:
+    source: str
+    asset: str
+    direction: Direction
+    layer: int
+    horizon: Horizon
     reason: str
 
 
@@ -37,6 +48,7 @@ class Opportunity:
     action: str
     thesis: str
     risk: str
+    confirmation_required: bool
 
 
 @dataclass
@@ -48,10 +60,10 @@ class NewsEvent:
 
 
 class MarketIntelligenceEngine:
-    """Deterministic foundation for event -> domino -> opportunity analysis.
+    """Deterministic event -> domino -> opportunity analysis.
 
-    This engine does not place orders. It creates explainable hypotheses that
-    must still pass strategy confirmation and the SBT risk engine.
+    Intelligence creates explainable hypotheses only. It never places orders.
+    Strategy confirmation and the SBT Risk Engine remain mandatory.
     """
 
     TAG_MAP = {
@@ -72,13 +84,30 @@ class MarketIntelligenceEngine:
                     "NASDAQ": Direction.BULLISH, "BTC": Direction.BULLISH},
     }
 
-    HORIZON_SCORE = {
-        Horizon.IMMEDIATE: 100,
-        Horizon.SHORT: 90,
-        Horizon.INTRADAY: 80,
-        Horizon.SWING: 65,
-        Horizon.MACRO: 50,
+    DOMINO_MAP = {
+        "USD": {
+            "EUR/USD": Direction.BEARISH,
+            "USD/JPY": Direction.BULLISH,
+            "USD/BRL": Direction.BULLISH,
+            "GOLD": Direction.BEARISH,
+            "NASDAQ": Direction.BEARISH,
+        },
+        "US2Y": {
+            "USD": Direction.BULLISH,
+            "NASDAQ": Direction.BEARISH,
+            "GOLD": Direction.BEARISH,
+        },
+        "OIL": {
+            "USD/CAD": Direction.BEARISH,
+            "CAD": Direction.BULLISH,
+        },
+        "NASDAQ": {"BTC": Direction.BEARISH},
     }
+
+    HORIZONS = (Horizon.IMMEDIATE, Horizon.SHORT, Horizon.INTRADAY, Horizon.SWING, Horizon.MACRO)
+
+    def _base_score(self, event: NewsEvent, evidence: int) -> int:
+        return min(100, 30 + event.importance // 2 + event.source_quality // 5 + evidence * 8)
 
     def impacts(self, event: NewsEvent) -> list[MarketImpact]:
         merged: dict[str, tuple[Direction, int, set[str]]] = {}
@@ -92,46 +121,89 @@ class MarketIntelligenceEngine:
                 else:
                     merged[asset] = (Direction.NEUTRAL, current[1] + 1, current[2] | {tag})
 
-        impacts: list[MarketImpact] = []
+        results: list[MarketImpact] = []
         for asset, (direction, evidence, tags) in merged.items():
-            score = min(100, 30 + event.importance // 2 + event.source_quality // 5 + evidence * 8)
+            score = self._base_score(event, evidence)
             horizon = Horizon.IMMEDIATE if event.importance >= 80 else Horizon.INTRADAY
-            reason = f"tags={','.join(sorted(tags))}; evidence={evidence}"
-            impacts.append(MarketImpact(asset, direction, score, horizon, reason))
-        return sorted(impacts, key=lambda item: item.score, reverse=True)
+            results.append(MarketImpact(
+                asset=asset,
+                direction=direction,
+                score=score,
+                horizon=horizon,
+                layer="primary",
+                reason=f"tags={','.join(sorted(tags))}; evidence={evidence}",
+            ))
+        return sorted(results, key=lambda item: item.score, reverse=True)
+
+    def domino_effects(self, event: NewsEvent) -> list[DominoEffect]:
+        """Build secondary/tertiary hypotheses from primary affected assets."""
+        effects: list[DominoEffect] = []
+        seen: set[tuple[str, str]] = set()
+        for primary in self.impacts(event):
+            for asset, direction in self.DOMINO_MAP.get(primary.asset, {}).items():
+                key = (primary.asset, asset)
+                if key in seen:
+                    continue
+                seen.add(key)
+                horizon = Horizon.SHORT if primary.horizon is Horizon.IMMEDIATE else Horizon.INTRADAY
+                effects.append(DominoEffect(
+                    source=primary.asset,
+                    asset=asset,
+                    direction=direction if primary.direction is Direction.BULLISH else (
+                        Direction.BULLISH if direction is Direction.BEARISH else Direction.BEARISH
+                    ) if primary.direction is Direction.BEARISH else Direction.NEUTRAL,
+                    layer=2,
+                    horizon=horizon,
+                    reason=f"secondary propagation from {primary.asset}",
+                ))
+        return effects
 
     def opportunities(self, event: NewsEvent, confirmed_assets: Iterable[str] = ()) -> list[Opportunity]:
         confirmed = {asset.upper() for asset in confirmed_assets}
         results: list[Opportunity] = []
-        for impact in self.impacts(event):
+        primary = self.impacts(event)
+        domino = self.domino_effects(event)
+        candidates = primary + [MarketImpact(
+            asset=item.asset, direction=item.direction, score=max(0, 80 - item.layer * 10),
+            horizon=item.horizon, layer="secondary", reason=item.reason,
+        ) for item in domino]
+
+        for impact in candidates:
             confirmation = 15 if impact.asset.upper() in confirmed else 0
             score = min(100, impact.score + confirmation)
             if score < 60:
                 continue
-            action = "watch"
-            risk = "elevated" if event.importance >= 80 else "normal"
             if impact.direction is Direction.NEUTRAL:
-                action = "wait"
-                risk = "conflicted"
-            thesis = (
-                f"{event.headline}: {impact.asset} has a {impact.direction.value} "
-                f"bias through the detected event chain."
-            )
+                action, risk = "wait", "conflicted"
+            elif impact.asset.upper() in confirmed:
+                action, risk = "watch-confirmed", "elevated" if event.importance >= 80 else "normal"
+            else:
+                action, risk = "watch", "elevated" if event.importance >= 80 else "normal"
             results.append(Opportunity(
-                impact.asset, impact.direction, score, impact.horizon,
-                action, thesis, risk,
+                asset=impact.asset,
+                direction=impact.direction,
+                score=score,
+                horizon=impact.horizon,
+                action=action,
+                thesis=(f"{event.headline}: {impact.asset} has a {impact.direction.value} bias "
+                        f"through the {impact.layer} market-impact chain."),
+                risk=risk,
+                confirmation_required=impact.asset.upper() not in confirmed,
             ))
-        return results
+        return sorted(results, key=lambda item: item.score, reverse=True)
 
     def analyze(self, event: NewsEvent, confirmed_assets: Iterable[str] = ()) -> dict:
         impacts = self.impacts(event)
+        domino = self.domino_effects(event)
         opportunities = self.opportunities(event, confirmed_assets)
         return {
             "headline": event.headline,
             "event_importance": event.importance,
             "source_quality": event.source_quality,
-            "primary_and_domino_impacts": [impact.__dict__ for impact in impacts],
-            "opportunities": [opportunity.__dict__ for opportunity in opportunities],
+            "primary_impacts": [asdict(item) for item in impacts],
+            "domino_effects": [asdict(item) for item in domino],
+            "probable_market_horizons": [h.value for h in self.HORIZONS],
+            "opportunities": [asdict(item) for item in opportunities],
             "execution_allowed": False,
             "next_gate": "strategy_confirmation_and_risk_engine",
         }
