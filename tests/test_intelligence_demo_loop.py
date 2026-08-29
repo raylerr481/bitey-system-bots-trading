@@ -12,18 +12,20 @@ def _buy_request(symbol="EURUSD"):
     )
 
 
-def test_confirmed_news_can_reach_demo_after_strategy_and_risk():
-    loop = DemoTradingLoop()
-    event = NewsEvent(
-        headline="Fed signals a hawkish policy path",
+def _dovish_event():
+    return NewsEvent(
+        headline="Fed signals a dovish policy path",
         source_quality=95,
         importance=90,
-        tags={"fed", "hawkish"},
+        tags={"fed", "dovish"},
     )
 
+
+def test_confirmed_news_can_reach_demo_after_strategy_and_risk():
+    loop = DemoTradingLoop()
     result = loop.run_with_intelligence(
         _buy_request(),
-        event,
+        _dovish_event(),
         confirmed_assets=("EURUSD",),
         quantity=1,
     )
@@ -37,14 +39,7 @@ def test_confirmed_news_can_reach_demo_after_strategy_and_risk():
 
 def test_unconfirmed_news_stops_before_demo_execution():
     loop = DemoTradingLoop()
-    event = NewsEvent(
-        headline="Fed signals a hawkish policy path",
-        source_quality=95,
-        importance=90,
-        tags={"fed", "hawkish"},
-    )
-
-    result = loop.run_with_intelligence(_buy_request(), event, quantity=1)
+    result = loop.run_with_intelligence(_buy_request(), _dovish_event(), quantity=1)
 
     assert result["executed"] is False
     assert result["reason"] == "Intelligence opportunity is not confirmed"
@@ -54,12 +49,6 @@ def test_unconfirmed_news_stops_before_demo_execution():
 
 def test_strategy_contradiction_stops_before_demo_execution():
     loop = DemoTradingLoop()
-    event = NewsEvent(
-        headline="Fed signals a hawkish policy path",
-        source_quality=95,
-        importance=90,
-        tags={"fed", "hawkish"},
-    )
     request = TechnicalSignalRequest(
         symbol="EURUSD",
         prices=[101.0] * 20 + [100.0] * 10,
@@ -69,7 +58,7 @@ def test_strategy_contradiction_stops_before_demo_execution():
 
     result = loop.run_with_intelligence(
         request,
-        event,
+        _dovish_event(),
         confirmed_assets=("EURUSD",),
         quantity=1,
     )
@@ -82,16 +71,9 @@ def test_strategy_contradiction_stops_before_demo_execution():
 
 def test_risk_gate_still_blocks_intelligence_approved_demo_trade():
     loop = DemoTradingLoop()
-    event = NewsEvent(
-        headline="Fed signals a hawkish policy path",
-        source_quality=95,
-        importance=90,
-        tags={"fed", "hawkish"},
-    )
-
     result = loop.run_with_intelligence(
         _buy_request(),
-        event,
+        _dovish_event(),
         confirmed_assets=("EURUSD",),
         quantity=3,
     )
