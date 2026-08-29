@@ -1,7 +1,7 @@
 from app.intelligence.market_intelligence import Direction, MarketIntelligenceEngine, NewsEvent
 
 
-def test_hawkish_fed_event_builds_primary_and_domino_impacts():
+def test_hawkish_fed_event_builds_primary_secondary_and_tertiary_impacts():
     engine = MarketIntelligenceEngine()
     result = engine.analyze(NewsEvent(
         headline="Fed signals higher rates",
@@ -10,11 +10,16 @@ def test_hawkish_fed_event_builds_primary_and_domino_impacts():
         tags={"fed", "hawkish"},
     ))
     primary_assets = {item["asset"] for item in result["primary_impacts"]}
-    domino_assets = {item["asset"] for item in result["domino_effects"]}
+    domino = result["domino_effects"]
+    secondary_assets = {item["asset"] for item in domino if item["layer"] == 2}
+    tertiary_assets = {item["asset"] for item in domino if item["layer"] == 3}
+
     assert {"USD", "EUR/USD", "NASDAQ", "GOLD"}.issubset(primary_assets)
-    assert {"USD/JPY", "USD/BRL"}.issubset(domino_assets)
+    assert {"USD/JPY", "USD/BRL"}.issubset(secondary_assets)
+    assert "JPY" in tertiary_assets or "BRL" in tertiary_assets
     assert result["probable_market_horizons"] == ["0-5m", "5-30m", "30m-4h", "1-3d", "1-4w"]
     assert result["execution_allowed"] is False
+    assert result["next_gate"] == "strategy_confirmation_and_risk_engine"
 
 
 def test_conflicting_tags_produce_neutral_bias_and_wait():
