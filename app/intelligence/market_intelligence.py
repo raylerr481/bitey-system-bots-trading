@@ -60,23 +60,26 @@ class NewsEvent:
 
 
 class MarketIntelligenceEngine:
-    """Deterministic event -> domino -> opportunity analysis.
+    """Deterministic event -> impact -> domino -> opportunity analysis.
 
     Intelligence creates explainable hypotheses only. It never places orders.
     Strategy confirmation and the SBT Risk Engine remain mandatory.
     """
 
     TAG_MAP = {
-        "fed": {"USD": Direction.BULLISH, "EUR/USD": Direction.BEARISH,
+        "fed": {"USD": Direction.BULLISH, "US2Y": Direction.BULLISH,
+                "EUR/USD": Direction.BEARISH, "USD/JPY": Direction.BULLISH,
                 "NASDAQ": Direction.BEARISH, "GOLD": Direction.BEARISH},
-        "hawkish": {"USD": Direction.BULLISH, "EUR/USD": Direction.BEARISH,
+        "hawkish": {"USD": Direction.BULLISH, "US2Y": Direction.BULLISH,
+                    "EUR/USD": Direction.BEARISH, "USD/JPY": Direction.BULLISH,
                     "NASDAQ": Direction.BEARISH, "GOLD": Direction.BEARISH},
-        "dovish": {"USD": Direction.BEARISH, "EUR/USD": Direction.BULLISH,
+        "dovish": {"USD": Direction.BEARISH, "US2Y": Direction.BEARISH,
+                   "EUR/USD": Direction.BULLISH, "USD/JPY": Direction.BEARISH,
                    "NASDAQ": Direction.BULLISH, "GOLD": Direction.BULLISH},
         "inflation": {"USD": Direction.BULLISH, "US2Y": Direction.BULLISH,
                       "NASDAQ": Direction.BEARISH, "GOLD": Direction.BEARISH},
-        "oil": {"USD/CAD": Direction.BEARISH, "CAD": Direction.BULLISH,
-                "OIL": Direction.BULLISH},
+        "oil": {"OIL": Direction.BULLISH, "USD/CAD": Direction.BEARISH,
+                "CAD": Direction.BULLISH},
         "risk_off": {"USD": Direction.BULLISH, "JPY": Direction.BULLISH,
                      "GOLD": Direction.BULLISH, "NASDAQ": Direction.BEARISH,
                      "BTC": Direction.BEARISH},
@@ -84,6 +87,7 @@ class MarketIntelligenceEngine:
                     "NASDAQ": Direction.BULLISH, "BTC": Direction.BULLISH},
     }
 
+    # Direction is expressed for a bullish source. A bearish source reverses it.
     DOMINO_MAP = {
         "USD": {
             "EUR/USD": Direction.BEARISH,
@@ -104,10 +108,37 @@ class MarketIntelligenceEngine:
         "NASDAQ": {"BTC": Direction.BEARISH},
     }
 
+    # A tertiary chain makes the effect-dominó explicit instead of stopping at
+    # the first secondary asset. Cycles are removed by the visited set.
+    TERTIARY_MAP = {
+        "EUR/USD": {"USD": Direction.BEARISH},
+        "USD/JPY": {"JPY": Direction.BEARISH},
+        "USD/BRL": {"BRL": Direction.BEARISH},
+        "GOLD": {"USD": Direction.BULLISH},
+        "NASDAQ": {"BTC": Direction.BEARISH},
+        "BTC": {"RISK": Direction.BEARISH},
+        "CAD": {"USD/CAD": Direction.BULLISH},
+    }
+
     HORIZONS = (Horizon.IMMEDIATE, Horizon.SHORT, Horizon.INTRADAY, Horizon.SWING, Horizon.MACRO)
 
     def _base_score(self, event: NewsEvent, evidence: int) -> int:
         return min(100, 30 + event.importance // 2 + event.source_quality // 5 + evidence * 8)
+
+    def _initial_horizon(self, event: NewsEvent) -> Horizon:
+        if event.importance >= 85:
+            return Horizon.IMMEDIATE
+        if event.importance >= 65:
+            return Horizon.SHORT
+        return Horizon.INTRADAY
+
+    @staticmethod
+    def _reverse(direction: Direction) -> Direction:
+        if direction is Direction.BULLISH:
+            return Direction.BEARISH
+        if direction is Direction.BEARISH:
+            return Direction.BULLISH
+        return Direction.NEUTRAL
 
     def impacts(self, event: NewsEvent) -> list[MarketImpact]:
         merged: dict[str, tuple[Direction, int, set[str]]] = {}
@@ -123,50 +154,68 @@ class MarketIntelligenceEngine:
 
         results: list[MarketImpact] = []
         for asset, (direction, evidence, tags) in merged.items():
-            score = self._base_score(event, evidence)
-            horizon = Horizon.IMMEDIATE if event.importance >= 80 else Horizon.INTRADAY
             results.append(MarketImpact(
                 asset=asset,
                 direction=direction,
-                score=score,
-                horizon=horizon,
+                score=self._base_score(event, evidence),
+                horizon=self._initial_horizon(event),
                 layer="primary",
                 reason=f"tags={','.join(sorted(tags))}; evidence={evidence}",
             ))
         return sorted(results, key=lambda item: item.score, reverse=True)
 
     def domino_effects(self, event: NewsEvent) -> list[DominoEffect]:
-        """Build secondary/tertiary hypotheses from primary affected assets."""
+        """Build secondary and tertiary hypotheses from primary affected assets."""
         effects: list[DominoEffect] = []
-        seen: set[tuple[str, str]] = set()
-        for primary in self.impacts(event):
-            for asset, direction in self.DOMINO_MAP.get(primary.asset, {}).items():
-                key = (primary.asset, asset)
+        seen: set[tuple[str, str, int]] = set()
+        primary = self.impacts(event)
+
+        for source in primary:
+            for asset, relation in self.DOMINO_MAP.get(source.asset, {}).items():
+                key = (source.asset, asset, 2)
+                if key not in seen:
+                    seen.add(key)
+                    direction = relation if source.direction is Direction.BULLISH else self._reverse(relation)
+                    effects.append(DominoEffect(
+                        source=source.asset,
+                        asset=asset,
+                        direction=direction,
+                        layer=2,
+                        horizon=Horizon.SHORT if source.horizon is Horizon.IMMEDIATE else Horizon.INTRADAY,
+                        reason=f"secondary propagation from {source.asset}",
+                    ))
+
+        # Tertiary propagation uses both primary and secondary nodes but keeps
+        # the graph finite and explainable.
+        for effect in list(effects):
+            for asset, relation in self.TERTIARY_MAP.get(effect.asset, {}).items():
+                key = (effect.asset, asset, 3)
                 if key in seen:
                     continue
                 seen.add(key)
-                horizon = Horizon.SHORT if primary.horizon is Horizon.IMMEDIATE else Horizon.INTRADAY
+                direction = relation if effect.direction is Direction.BULLISH else self._reverse(relation)
                 effects.append(DominoEffect(
-                    source=primary.asset,
+                    source=effect.asset,
                     asset=asset,
-                    direction=direction if primary.direction is Direction.BULLISH else (
-                        Direction.BULLISH if direction is Direction.BEARISH else Direction.BEARISH
-                    ) if primary.direction is Direction.BEARISH else Direction.NEUTRAL,
-                    layer=2,
-                    horizon=horizon,
-                    reason=f"secondary propagation from {primary.asset}",
+                    direction=direction,
+                    layer=3,
+                    horizon=Horizon.INTRADAY if effect.horizon is Horizon.SHORT else Horizon.SWING,
+                    reason=f"tertiary propagation from {effect.asset}",
                 ))
         return effects
 
     def opportunities(self, event: NewsEvent, confirmed_assets: Iterable[str] = ()) -> list[Opportunity]:
         confirmed = {asset.upper() for asset in confirmed_assets}
         results: list[Opportunity] = []
-        primary = self.impacts(event)
-        domino = self.domino_effects(event)
-        candidates = primary + [MarketImpact(
-            asset=item.asset, direction=item.direction, score=max(0, 80 - item.layer * 10),
-            horizon=item.horizon, layer="secondary", reason=item.reason,
-        ) for item in domino]
+        candidates = list(self.impacts(event))
+        candidates.extend(MarketImpact(
+            asset=item.asset,
+            direction=item.direction,
+            score=max(0, 80 - (item.layer - 2) * 10),
+            horizon=item.horizon,
+            layer="secondary" if item.layer == 2 else "tertiary",
+            reason=item.reason,
+        ) for item in self.domino_effects(event))
 
         for impact in candidates:
             confirmation = 15 if impact.asset.upper() in confirmed else 0
