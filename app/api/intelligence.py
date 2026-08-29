@@ -3,10 +3,12 @@ from pydantic import BaseModel, Field
 
 from app.intelligence.market_intelligence import MarketIntelligenceEngine, NewsEvent
 from app.intelligence.market_confirmation import MarketConfirmation
+from app.intelligence.opportunity import OpportunityScorer
 
 router = APIRouter(prefix="/api/v1/intelligence", tags=["market-intelligence"])
 engine = MarketIntelligenceEngine()
 confirmation = MarketConfirmation()
+opportunity_scorer = OpportunityScorer()
 
 
 class NewsAnalysisRequest(BaseModel):
@@ -16,6 +18,8 @@ class NewsAnalysisRequest(BaseModel):
     tags: list[str] = Field(default_factory=list, max_length=30)
     confirmed_assets: list[str] = Field(default_factory=list, max_length=50)
     market_observations: dict[str, float] = Field(default_factory=dict, max_length=50)
+    risk_level: str = Field(default="medium", pattern="^(low|medium|high)$")
+    reward_risk: float | None = Field(default=None, ge=0, le=20)
 
 
 @router.post("/news/analyze")
@@ -27,12 +31,37 @@ def analyze_news(request: NewsAnalysisRequest):
         tags={tag.strip().lower() for tag in request.tags if tag.strip()},
     )
     analysis = engine.analyze(event, request.confirmed_assets)
-    analysis["market_confirmation"] = confirmation.evaluate(
+    market_confirmation = confirmation.evaluate(
         analysis.get("primary_impacts", []),
         request.market_observations,
     )
+    analysis["market_confirmation"] = market_confirmation
+
+    opportunities = []
+    for impact in analysis.get("primary_impacts", []):
+        asset = impact.get("asset")
+        direction = impact.get("direction", "neutral")
+        if not asset or direction == "neutral":
+            continue
+        asset_confirmation = next(
+            (item.get("status") for item in market_confirmation if item.get("asset") == asset),
+            "WAIT",
+        )
+        opportunities.append(
+            opportunity_scorer.score(
+                asset=asset,
+                direction=direction,
+                confirmation=asset_confirmation,
+                importance=request.importance,
+                source_quality=request.source_quality,
+                risk_level=request.risk_level,
+                reward_risk=request.reward_risk,
+            ).__dict__
+        )
+    analysis["opportunities"] = sorted(opportunities, key=lambda item: item["score"], reverse=True)
     analysis["execution"] = "analysis-only"
     analysis["execution_allowed"] = False
+    analysis["risk_engine_required"] = True
     return analysis
 
 
@@ -45,4 +74,5 @@ def intelligence_health():
         "execution_allowed": False,
         "risk_engine_required": True,
         "market_confirmation": True,
+        "opportunity_scoring": True,
     }
