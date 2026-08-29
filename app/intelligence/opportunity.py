@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from app.risk.engine import RiskEngine
+
 
 @dataclass(frozen=True)
 class Opportunity:
@@ -14,11 +16,13 @@ class Opportunity:
 
 
 class OpportunityScorer:
-    """Ranks opportunities; it never authorizes execution by itself."""
+    """Ranks opportunities and optionally gates them through RiskEngine."""
 
     def score(self, asset: str, direction: str, confirmation: str, importance: int,
               source_quality: int, horizon: str = "30m-4h", risk_level: str = "medium",
-              reward_risk: float | None = None) -> Opportunity:
+              reward_risk: float | None = None, capital: float | None = None,
+              notional: float | None = None, daily_pnl: float = 0.0,
+              risk_engine: RiskEngine | None = None) -> Opportunity:
         score = 0.0
         rationale: list[str] = []
         if confirmation == "CONFIRMED":
@@ -47,4 +51,16 @@ class OpportunityScorer:
             status = "WATCH-CONFIRMED"
         else:
             status = "WATCH"
-        return Opportunity(asset, direction, score, status, horizon, rationale)
+
+        risk_allowed = False
+        risk_reason = "Risk Engine not evaluated"
+        if risk_engine is not None and capital is not None and notional is not None:
+            decision = risk_engine.approve(capital, notional, daily_pnl)
+            risk_allowed = decision.allowed and status == "WATCH-CONFIRMED"
+            risk_reason = decision.reason
+            if not decision.allowed:
+                status = "WAIT"
+                rationale.append(f"risk gate: {decision.reason}")
+
+        return Opportunity(asset, direction, score, status, horizon, rationale,
+                           risk_allowed, risk_reason)
