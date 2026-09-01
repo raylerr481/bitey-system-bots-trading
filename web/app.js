@@ -44,10 +44,15 @@ $('chat-form').addEventListener('submit', async e=>{
   catch(e) { appendMessage('La capa ChatGPT aún no está configurada en el servidor. La interfaz está preparada; configura OPENAI_API_KEY para activarla.','ai'); }
 });
 function appendMessage(text,type){const el=document.createElement('div');el.className=`message ${type}`;el.textContent=text;$('chat-messages').appendChild(el);el.scrollIntoView({behavior:'smooth'});}
+
 $('run-backtest').addEventListener('click', async()=>{
-  const out=$('backtest-result'); out.textContent='Ejecutando…';
-  try { const r=await getJSON('/api/v1/backtest',{method:'POST',body:JSON.stringify({market:$('bt-market').value,strategy:$('bt-strategy').value,capital:Number($('bt-capital').value)})}); out.textContent=JSON.stringify(r); }
-  catch(e) { out.textContent='El módulo de backtesting está conectado al backend, pero este formulario necesita el contrato exacto de la versión actual para ejecutar una simulación.'; }
+  const out=$('backtest-result'); out.textContent='Ejecutando simulación SMA sobre una serie de prueba…';
+  const capital=Number($('bt-capital').value)||10000;
+  const prices=Array.from({length:240},(_,i)=>100 + i*0.035 + Math.sin(i/7)*1.8 + Math.sin(i/19)*0.9);
+  try {
+    const r=await getJSON('/api/v1/backtest',{method:'POST',body:JSON.stringify({prices,initial_capital:capital,fast_window:10,slow_window:30,fee_pct:0.001})});
+    out.textContent=`SMA Crossover · capital inicial ${capital.toFixed(2)} · resultado: ${JSON.stringify(r)}`;
+  } catch(e) { out.textContent='No fue posible ejecutar el backtest. Verifica que el backend esté disponible.'; }
 });
 function escapeHTML(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
 loadSystem(); loadProfiles();
