@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="TradingSystemBot — análisis, backtesting, bots y control de riesgo asistidos por IA.">
+  <title>TradingSystemBot — AI Trading Suite</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">TS</span><span>TradingSystemBot</span></div>
+      <nav>
+        <a href="#dashboard" class="active">Panel</a>
+        <a href="#analysis">Análisis IA</a>
+        <a href="#backtest">Backtesting</a>
+        <a href="#bots">Bot Factory</a>
+        <a href="#arena">AI Arena</a>
+        <a href="#risk">Riesgo</a>
+      </nav>
+      <div class="sidebar-foot">Modo seguro · Demo/Paper</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div><span class="eyebrow">AI TRADING SUITE</span><h1>Trading más inteligente, con control.</h1></div>
+        <div class="top-actions"><select id="language" aria-label="Idioma"><option value="es">Español</option><option value="pt">Português</option><option value="en">English</option></select><span class="status-dot">Sistema activo</span></div>
+      </header>
+
+      <section id="dashboard" class="hero card">
+        <div class="hero-copy"><span class="pill">TRADINGSYSTEMBOT</span><h2>Investiga, prueba y compara estrategias antes de arriesgar capital.</h2><p>Una suite propia inspirada en los mejores flujos de trading asistido por IA, pero conectada al motor de TradingSystemBot, sus controles de riesgo y tus integraciones.</p><div class="hero-buttons"><a class="btn primary" href="#analysis">Hablar con IA</a><a class="btn secondary" href="#backtest">Probar estrategia</a></div></div>
+        <div class="hero-grid"><div><strong id="mode-value">DEMO</strong><span>modo actual</span></div><div><strong id="profiles-value">—</strong><span>perfiles de bot</span></div><div><strong>0%</strong><span>ejecución real</span></div><div><strong>IA</strong><span>asistente</span></div></div>
+      </section>
+
+      <section class="feature-grid">
+        <article class="card feature"><span class="icon">◈</span><h3>Análisis IA</h3><p>Pregunta por mercados, estrategias, riesgo y escenarios. La IA responde usando el contexto del sistema.</p><a href="#analysis">Abrir →</a></article>
+        <article class="card feature"><span class="icon">↗</span><h3>Backtesting</h3><p>Valida una idea con datos históricos antes de pasar a demo o paper trading.</p><a href="#backtest">Abrir →</a></article>
+        <article class="card feature"><span class="icon">◎</span><h3>Bot Factory</h3><p>Explora perfiles conservadores, equilibrados y agresivos con una vista simple y profesional.</p><a href="#bots">Explorar →</a></article>
+        <article class="card feature"><span class="icon">⚖</span><h3>Control de riesgo</h3><p>Los límites son obligatorios y la IA no puede saltarse las barreras del motor.</p><a href="#risk">Ver controles →</a></article>
+      </section>
+
+      <section id="analysis" class="section two-col"><div class="section-heading"><span class="eyebrow">CHATGPT INTEGRATION</span><h2>Analista IA</h2><p>ChatGPT trabaja como capa de investigación y explicación; las reglas deterministas siguen teniendo la última palabra.</p></div><div class="chat card"><div id="chat-messages" class="chat-messages"><div class="message ai">Hola. Soy el analista de TradingSystemBot. Puedo ayudarte a investigar una estrategia, interpretar un backtest o revisar riesgo.</div></div><form id="chat-form"><input id="chat-input" autocomplete="off" placeholder="Ej.: analiza una estrategia SMA para EUR/USD…"><button class="btn primary">Enviar</button></form></div></section>
+
+      <section id="backtest" class="section"><div class="section-heading"><span class="eyebrow">RESEARCH → BACKTEST → DEMO</span><h2>Laboratorio de estrategias</h2><p>El objetivo es validar hipótesis, no prometer rentabilidad.</p></div><div class="lab card"><div class="form-row"><label>Mercado<input id="bt-market" value="EUR/USD"></label><label>Estrategia<select id="bt-strategy"><option>SMA Crossover</option><option>RSI + SMA</option><option>Breakout</option></select></label><label>Capital<input id="bt-capital" type="number" value="10000" min="1"></label></div><button id="run-backtest" class="btn primary">Ejecutar simulación</button><div id="backtest-result" class="result muted">Listo para ejecutar.</div></div></section>
+
+      <section id="bots" class="section"><div class="section-heading"><span class="eyebrow">STRATEGY / BOT FACTORY</span><h2>Perfiles de bots</h2><p>Cada perfil muestra riesgo, exposición y una explicación para principiantes y profesionales.</p></div><div id="profiles" class="profiles"></div></section>
+
+      <section id="arena" class="section"><div class="section-heading"><span class="eyebrow">AI ARENA</span><h2>Comparador de estrategias</h2><p>Compara razonamientos de varias estrategias con la misma evidencia. El resultado es análisis, no una orden.</p></div><div class="arena-grid"><div class="arena-card card"><strong>SMA Crossover</strong><span>tendencia</span><em>Esperando datos</em></div><div class="arena-card card"><strong>RSI + SMA</strong><span>momentum</span><em>Esperando datos</em></div><div class="arena-card card"><strong>Breakout</strong><span>volatilidad</span><em>Esperando datos</em></div></div></section>
+
+      <section id="risk" class="section"><div class="section-heading"><span class="eyebrow">SAFETY FIRST</span><h2>Control de riesgo</h2><p>La ejecución real permanece bloqueada hasta que todas las dependencias de seguridad sean validadas.</p></div><div class="risk-grid"><div class="card risk-ok"><strong>✓ Ejecución real bloqueada</strong><span>Fail-closed</span></div><div class="card"><strong>2% máximo por posición</strong><span>Configuración base del motor</span></div><div class="card"><strong>1% pérdida diaria</strong><span>Control base de demo</span></div><div class="card"><strong>Auditoría</strong><span>Preparada antes de dinero real</span></div></div></section>
+
+      <footer>TradingSystemBot · Sistema experimental de análisis y trading · No constituye asesoramiento financiero.</footer>
+    </main>
+  </div>
+  <script src="config.js"></script><script src="app.js"></script>
+</body>
+</html>
