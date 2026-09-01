@@ -1,78 +1,45 @@
-# Bitey System Bots Trading
+# TradingSystemBot / Bitey System Bots Trading
 
-**Bitey System Bots Trading** is an independent specialized trading module of **Bitey IA / Supracerebro**. Its mobile application is **Bitey SBT App** (`bitey-system-bots-trading-app`).
+**TradingSystemBot** is the product-facing name of this algorithmic-trading suite. The repository remains `bitey-system-bots-trading` so existing integrations are preserved.
 
 ## Product objective
 
-Research, test and operate algorithmic trading systems through a controlled progression:
+Research, test and operate algorithmic trading systems through:
 
 **Research → Backtest → Demo → Paper Trading → Micro-capital → Controlled scaling**
 
-The product is designed for both beginners and advanced users. A beginner sees a plain-language explanation such as: **“If you assign $10, this profile is configured to risk about $0.20 per trade.”** The professional view exposes market, strategy, position and risk parameters. These are estimates/configured controls, not profit guarantees or guaranteed maximum losses under every market condition.
+The system is designed as an original implementation of the workflow patterns users expect from modern AI trading suites: AI research, backtesting, bot profiles, strategy comparison, risk controls and a central dashboard. It does **not** copy proprietary source code, private APIs, text, trademarks or assets from third-party sites.
 
-## Bot groups
+## TradingSystemBot web suite
 
-The backend now exposes `/api/v1/bot-profiles` with initial profiles:
+The Cloudflare-ready frontend lives in `web/` and provides:
 
-- **Conservador EUR/USD** — low exposure, intended for learning and validation.
-- **Equilibrado EUR/USD** — intermediate exposure after demo/paper validation.
-- **Agresivo EUR/USD** — high exposure and variability; for advanced users only.
+- Spanish-first interface.
+- Language selector: **Español / Português / English**.
+- AI analyst chat connected to the backend.
+- Strategy/backtesting laboratory entry point.
+- Bot Factory with beginner/professional risk views.
+- AI Arena for future strategy-vs-strategy comparison.
+- Risk and safety dashboard.
+- Responsive dark interface.
 
-Each profile contains:
+The frontend can be deployed as a Cloudflare Pages site with `web/` as the published directory. Set `window.TRADINGSYSTEMBOT_API` in `web/config.js` to the public FastAPI backend URL when frontend and backend are deployed separately.
 
-- Simple beginner explanation.
-- Professional/technical explanation.
-- Markets and strategies.
-- Risk level.
-- Maximum position percentage.
-- Configured loss per trade.
-- Configured daily loss.
-- Illustrative favorable/neutral/unfavorable scenarios.
-- Risk preview for a selected capital amount.
+## ChatGPT integration
 
-## Real-money transition
+The backend exposes `POST /api/v1/ai/chat` and `GET /api/v1/ai/status`. It uses the OpenAI **Responses API** server-side, so the API key is never placed in browser JavaScript. Configure:
 
-The application is being prepared with an **“Activar dinero real”** control, but real execution remains disabled in this milestone. The backend exposes a safety-preparation status and requires, before future activation:
+```text
+OPENAI_API_KEY=...
+OPENAI_MODEL=gpt-5.6-luna
+```
 
-1. Authenticated user.
-2. Broker/account connection.
-3. Explicit selection of a real account.
-4. Maximum capital allocation.
-5. Per-trade loss limit.
-6. Daily loss limit.
-7. Pre-trade risk validation.
-8. Audit trail.
-9. Emergency stop.
-10. Explicit final confirmation.
+The AI is an advisory/research layer. It cannot bypass deterministic risk controls and has no authority to place real orders. The OpenAI Responses API supports text generation and tool/function integrations; TradingSystemBot can later add read-only market-data tools without giving the model direct execution authority.
 
-The system must fail closed when a required safety dependency is unavailable. Broker credentials must never be stored in the mobile application.
+## Existing trading engine preserved
 
-## MetaTrader 5
-
-MT5 is currently integrated as a **read-only market-data/demo bridge**. The bridge can provide account information, quotes and candles while the trading engine uses virtual execution. A future real connector must be isolated behind the same risk and audit gates; the current milestone does not send real broker orders.
-
-## Architecture
-
-- `core/` — portfolios, positions, orders and trading state.
-- `strategies/` — deterministic strategy/signal contracts.
-- `risk/` — mandatory pre-trade and portfolio controls.
-- `backtest/` — historical simulation.
-- `execution/` — broker/exchange adapters; paper first.
-- `api/` — FastAPI API for Bitey IA and Bitey SBT App.
-- `tests/` — unit, integration, simulation and safety tests.
-
-AI may assist with research, comparison, experiment design, anomaly detection, analysis and reporting, but cannot bypass hard risk controls.
-
-## Mobile app UX
-
-Bitey SBT App provides:
-
-- Bot-group selection.
-- Beginner/professional explanation toggle.
-- Capital/risk preview.
-- Demo/paper monitoring.
-- Prepared real-money activation flow, currently disabled.
+The existing engine remains intact: Alpaca paper integration, MetaTrader 5 demo/read-only bridge, deterministic strategies, backtesting, demo loop, bot profiles and risk controls. Real-money execution remains disabled until the safety architecture is fully validated.
 
 ## Safety
 
-No bot, strategy or AI system guarantees profits. A configured loss limit is a risk-control target, not a promise: market gaps, slippage, liquidity and execution conditions can produce larger losses. Real-money trading remains disabled until the full safety architecture is validated.
+No bot, strategy or AI system guarantees profits. Configured loss limits are controls, not promises; gaps, slippage, liquidity and execution conditions can produce larger losses. Real-money trading remains fail-closed.
