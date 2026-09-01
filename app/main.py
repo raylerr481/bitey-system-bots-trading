@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from typing import Literal
 
 from app.api.alpaca import router as alpaca_router
+from app.api.auth import router as auth_router
 from app.api.backtest import router as backtest_router
 from app.api.bot_profiles import router as bot_profiles_router
 from app.api.demo import router as demo_router
@@ -12,6 +13,7 @@ from app.api.trading import router as trading_router
 from app.intelligence.provider_guard import AIProvider, BillingOwner, ConnectionMode, ProviderPolicy, evaluate_provider_call
 
 app = FastAPI(title="Bitey System Bots Trading", version="0.6.0")
+app.include_router(auth_router)
 app.include_router(trading_router)
 app.include_router(alpaca_router)
 app.include_router(mt5_router)
@@ -56,7 +58,7 @@ def system():
         "live_trading_enabled": False, "default_execution": "alpaca_paper", "supported_modes": ["demo", "paper"],
         "integrations": ["TradingView webhook", "Alpaca Paper Trading", "MetaTrader 5 Demo bridge"],
         "strategies": ["sma-crossover-v1"],
-        "capabilities": ["backtesting", "risk-controls", "paper-orders", "mt5-demo-bridge", "demo-trading-loop", "bot-profiles", "risk-preview", "live-safety-gates", "ai-provider-cost-guard", "multi-ai-provider", "tool-calling", "mcp-ready"],
+        "capabilities": ["backtesting", "risk-controls", "paper-orders", "mt5-demo-bridge", "demo-trading-loop", "bot-profiles", "risk-preview", "live-safety-gates", "ai-provider-cost-guard", "multi-ai-provider", "tool-calling", "mcp-ready", "user-registration"],
         "ai_policy": {"model_agnostic": True, "supported_providers": ["bitey", "chatgpt", "claude", "gemini", "deepseek", "other"], "exclusive_provider_supported": True, "automatic_fallback_default": False, "user_pays_external_ai": True},
     }
 
