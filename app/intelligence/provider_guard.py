@@ -8,6 +8,8 @@ class AIProvider(str, Enum):
     BITEY = "bitey"
     CHATGPT = "chatgpt"
     CLAUDE = "claude"
+    GEMINI = "gemini"
+    DEEPSEEK = "deepseek"
     OTHER = "other"
 
 
@@ -17,9 +19,17 @@ class BillingOwner(str, Enum):
     UNKNOWN = "unknown"
 
 
+class ConnectionMode(str, Enum):
+    API = "api"
+    MCP = "mcp"
+    DIRECT_USER = "direct_user"
+    OTHER = "other"
+
+
 class ProviderPolicy(BaseModel):
     provider: AIProvider
     model: str = Field(min_length=1, max_length=120)
+    connection_mode: ConnectionMode = ConnectionMode.API
     exclusive: bool = True
     allow_paid_external: bool = False
     ask_before_paid_call: bool = True
@@ -29,7 +39,7 @@ class ProviderPolicy(BaseModel):
     billing_owner: BillingOwner = BillingOwner.UNKNOWN
     cost_known: bool = False
     consented: bool = False
-    policy_version: str = "1.0"
+    policy_version: str = "1.1"
 
 
 class GuardDecision(BaseModel):
@@ -46,38 +56,34 @@ def evaluate_provider_call(
     background: bool = False,
     fallback_provider: AIProvider | None = None,
 ) -> GuardDecision:
-    """Fail-closed authorization for AI-provider calls.
-
-    This guard never performs a provider call. It only decides whether a
-    separately implemented adapter is authorized to do so.
-    """
-    paid_external = policy.provider in {AIProvider.CHATGPT, AIProvider.CLAUDE, AIProvider.OTHER}
-
-    if policy.provider == AIProvider.BITEY:
-        if fallback_provider is not None and policy.exclusive:
-            return GuardDecision(False, "Exclusive provider policy forbids fallback", policy.provider, False)
-        return GuardDecision(True, "Bitey provider selected", policy.provider, False)
+    """Fail-closed authorization. This function never executes a provider."""
+    paid_external = policy.provider not in {AIProvider.BITEY}
 
     if policy.exclusive and fallback_provider is not None:
         return GuardDecision(False, "Exclusive provider policy forbids fallback", policy.provider, paid_external)
 
+    if policy.provider == AIProvider.BITEY:
+        return GuardDecision(True, "Bitey provider selected", policy.provider, False)
+
+    # DIRECT_USER means SBT prepares/exports the request for the user's own
+    # product session; SBT does not consume an external API quota itself.
+    if policy.connection_mode == ConnectionMode.DIRECT_USER:
+        if not policy.consented:
+            return GuardDecision(False, "User authorization is required", policy.provider, False)
+        return GuardDecision(True, "Direct user-controlled provider session", policy.provider, False)
+
     if not policy.consented:
         return GuardDecision(False, "Provider consent is required", policy.provider, paid_external)
-
     if policy.billing_owner != BillingOwner.USER:
         return GuardDecision(False, "External billing owner must be the user", policy.provider, paid_external)
-
     if background and not policy.background_usage:
         return GuardDecision(False, "Background external AI usage is disabled", policy.provider, paid_external)
-
-    if paid_external and not policy.allow_paid_external:
+    if not policy.allow_paid_external:
         return GuardDecision(False, "Paid external AI is not authorized", policy.provider, True)
-
-    if estimated_cost is None and paid_external and not policy.cost_known:
+    if estimated_cost is None and not policy.cost_known:
         return GuardDecision(False, "External cost is unknown; fail closed", policy.provider, True)
-
     if estimated_cost is not None and policy.max_spend_per_operation is not None:
         if estimated_cost > policy.max_spend_per_operation:
-            return GuardDecision(False, "Operation exceeds user spending limit", policy.provider, paid_external)
+            return GuardDecision(False, "Operation exceeds user spending limit", policy.provider, True)
 
-    return GuardDecision(True, "External provider authorized by user policy", policy.provider, paid_external)
+    return GuardDecision(True, "External provider authorized by user policy", policy.provider, True)
