@@ -1,259 +1,197 @@
-# Bitey System Bots Trading
+# Bitey System Bots Trading (Bitey SBT)
 
-**Bitey System Bots Trading (Bitey SBT)** is the specialized algorithmic-trading intelligence and trading-platform backend of the **Bitey IA ecosystem**.
+**Bitey SBT** is the specialized trading intelligence, research and execution-control platform of the **Bitey IA ecosystem**.
 
-It is designed to become the engine behind an independent web platform, hosted separately from the general Bitey IA Web, where traders can **create, test, compare, validate, publish, discover and operate trading bots**.
+It is being developed as an **original Bitey product**, with an independent web platform and mobile channel. The product may learn from proven market patterns and publicly observable product capabilities in AI-assisted trading, but it must not reproduce another company's code, copywriting, branding, artwork, proprietary workflows or distinctive interface.
 
-The platform uses the intelligence of Bitey IA for trading research and analysis, while keeping the trading engine, execution controls, risk system, bot lifecycle and trading data isolated inside this specialized product.
+## Product principle: original Bitey, proven dynamics
 
-> **Important:** the platform is original to Bitey IA. It may use familiar market-product dynamics such as strategy creation, backtesting, comparison, deployment and community discovery, but it does **not** copy TradingKit or any other product's code, branding, interface, text, proprietary implementation or visual identity.
+Bitey SBT can implement broad, non-exclusive trading-product dynamics such as:
+
+- strategy creation;
+- historical simulation/backtesting;
+- robustness and out-of-sample validation;
+- comparison of strategies or AI-generated proposals;
+- simulated/demo and paper trading;
+- bot publishing and discovery;
+- monitoring and performance measurement.
+
+These are **market-level concepts**, not a blueprint for copying any particular competitor.
+
+Bitey SBT must create its own:
+
+- information architecture;
+- navigation and page hierarchy;
+- terminology;
+- visual identity;
+- UI components and layouts;
+- copywriting;
+- prompts and orchestration;
+- scoring methodology;
+- data contracts;
+- backend architecture;
+- bot lifecycle implementation;
+- safety model.
+
+No competitor code, assets, screenshots, text or proprietary implementation may be incorporated into this repository.
 
 ## Product vision
 
-Bitey SBT is intended to evolve into an independent **Bitey trading laboratory and bot ecosystem**.
+Bitey SBT is an independent **AI Trading Laboratory** where a trader can move from an idea to evidence before exposing capital to a strategy.
 
-A trader should be able to move through a controlled lifecycle:
+The core lifecycle is:
 
-**Idea → Build → Backtest → Compare → Validate → Demo → Paper → Publish/Deploy → Monitor → Scale carefully**
+**Research → Design → Simulate → Stress-test → Validate → Demo → Paper → Publish/Deploy → Monitor → Re-evaluate**
 
-The objective is not to promise profits. The objective is to provide transparent infrastructure for discovering whether a trading system has evidence of an edge before exposing capital to it.
+The platform is designed around evidence, reproducibility and risk control rather than promises of profit.
 
-## Independent web platform
-
-A future Bitey SBT web platform will be hosted independently in the owner's Cloudflare environment and will have its own product identity, frontend, API, authentication, trading data and deployment lifecycle.
-
-Conceptually:
+## Bitey SBT architecture
 
 ```text
-BITEY IA / SUPRACEREBRO
-        │
-        │ authorized trading intelligence
+                         BITEY IA
+                    GENERAL INTELLIGENCE
+                            │
+                  authorized API contracts
+                            │
+                            ▼
+                 ┌─────────────────────┐
+                 │      BITEY SBT      │
+                 │ specialized trading │
+                 │     intelligence     │
+                 └──────────┬──────────┘
+                            │
+        ┌───────────────────┼───────────────────┐
+        ▼                   ▼                   ▼
+   Research Core       Bot Laboratory       Risk Engine
+        │                   │                   │
+        └───────────────────┼───────────────────┘
+                            ▼
+                 Simulation / Validation
+                            │
+                 ┌──────────┴──────────┐
+                 ▼                     ▼
+               Demo                  Paper
+                 │                     │
+                 └──────────┬──────────┘
+                            ▼
+                    Registry / Deploy
+                            │
+                            ▼
+                       Monitoring
+```
+
+The future web platform is independent from `bitey-web`. The mobile app is independent in presentation but consumes the same controlled SBT APIs. Bitey SBT is not BiteFixes and must not share private enterprise trading data with BiteFixes.
+
+## Original product areas
+
+### 1. Bitey Research Lab
+
+A research workspace for market questions, hypotheses, news/event context, technical context and experiment design.
+
+### 2. Bitey Bot Lab
+
+A strategy workspace where a trader can define or modify a deterministic trading system.
+
+A bot can specify:
+
+- market/instrument;
+- timeframe;
+- entry and exit conditions;
+- indicators;
+- regime filters;
+- stop loss / take profit rules;
+- position sizing;
+- capital allocation;
+- maximum exposure;
+- execution mode;
+- hard risk limits.
+
+Bitey IA can help translate natural language into a structured strategy specification, explain decisions and propose experiments. The executable strategy and Risk Engine remain deterministic and authoritative.
+
+### 3. Bitey Model Workshop
+
+Users may select supported AI providers/models, including Bitey Trading Intelligence and external models such as ChatGPT or Claude when the required integration is available.
+
+The models are **advisors/proposers**, not execution authorities.
+
+The same hypothesis can be submitted to multiple models under controlled conditions:
+
+```text
+Same hypothesis
+      │
+ ┌────┼─────┐
+ ▼    ▼     ▼
+Bitey Model A Model B
+ │      │      │
+ └──────┼──────┘
         ▼
-┌──────────────────────────────────────────┐
-│ BITEY SYSTEM BOTS TRADING                │
-│                                          │
-│  Bitey Trading Intelligence              │
-│  Bot Builder                             │
-│  Strategy Lab                            │
-│  Backtesting                             │
-│  Optimization / Comparison               │
-│  Demo & Paper Trading                    │
-│  Risk Engine                             │
-│  Bot Registry / Marketplace              │
-│  Performance & Monitoring                │
-│  Broker / Exchange Connectors             │
-└──────────────────────┬───────────────────┘
-                       │
-                       ▼
-              Independent Web Platform
-                   on Cloudflare
+ Same data + costs + period
+        ▼
+ Same simulation engine
+        ▼
+ Same risk rules
+        ▼
+ Comparable evidence
 ```
 
-The trading platform must **not depend on `bitey-web` as its frontend** and must not become part of BiteFixes. It can consume authorized Bitey IA intelligence through explicit APIs/contracts.
+Provider-specific credentials remain server-side. No model is allowed to bypass the SBT risk and validation contracts.
 
-## Bitey Bot Lab
+### 4. SBT Evaluation
 
-The central creation experience will be the **Bitey Bot Lab**: a workspace where a trader can create or modify a bot without starting from an empty project.
+Bitey SBT should not declare a strategy superior because it has the largest historical return.
 
-A bot can define:
+The platform will build its own **SBT Evaluation Score** from transparent components where statistically meaningful, including:
 
-- Market/instrument.
-- Timeframes.
-- Entry conditions.
-- Exit conditions.
-- Stop loss and take profit logic.
-- Position sizing.
-- Technical indicators.
-- Market regime filters.
-- News/event filters where supported.
-- Maximum concurrent positions.
-- Per-trade and daily risk limits.
-- Capital allocation.
-- Execution mode.
+- net return;
+- maximum drawdown;
+- profit factor;
+- risk-adjusted return;
+- win rate;
+- trade count;
+- exposure;
+- volatility;
+- consecutive losses;
+- out-of-sample performance;
+- parameter sensitivity;
+- stability across periods/regimes;
+- demo/paper consistency;
+- execution quality;
+- validation freshness.
 
-Bitey IA can help translate a trader's idea into a deterministic strategy specification, explain the logic, identify contradictions, suggest experiments and analyze results. The final executable strategy remains subject to the deterministic strategy and risk contracts.
+The exact weighting must be versioned and documented. A score is an evaluation aid, not a prediction of future profit.
 
-## Strategy validation
+### 5. SBT Strategy Registry
 
-Every bot intended for publication or deployment should pass progressively stronger validation.
+Instead of copying another platform's marketplace implementation, Bitey SBT uses an original **Strategy Registry** concept.
 
-### 1. Backtest
-
-Run the strategy against historical data with explicit assumptions for fees, spread and slippage where data permits.
-
-### 2. Robustness testing
-
-Evaluate the strategy across different periods, market conditions, parameters and instruments where appropriate. Detect overfitting, look-ahead bias and unstable parameter regions.
-
-### 3. Comparison
-
-Compare multiple versions of a strategy using the same historical conditions and rank them by transparent metrics rather than by a single headline return.
-
-### 4. Demo
-
-Run the bot against a simulated account and observe its actual signal lifecycle.
-
-### 5. Paper trading
-
-Use live market data without placing real-money orders. The code path should remain as close as practical to the future execution path.
-
-### 6. Controlled real deployment
-
-Real trading remains gated by authentication, broker/account connection, capital limits, risk controls, auditability and an emergency stop.
-
-## Bot Registry and Bitey Marketplace
-
-The future platform will include a public/private **Bitey Bot Registry** where validated bots can be discovered.
-
-Bots may have two principal origins:
-
-### Bitey-built bots
-
-Bots created and maintained under the Bitey brand. These can become official platform strategies when they meet the required validation criteria.
-
-### Trader-created bots
-
-Authorized traders can create, test and publish their own bots. Publication should require transparent metadata, validation results, risk information and clear ownership/attribution.
-
-A published bot should expose evidence such as:
-
-- Strategy description.
-- Market and timeframe.
-- Backtest period.
-- Number of trades.
-- Return metrics.
-- Drawdown.
-- Win rate.
-- Profit factor where meaningful.
-- Sharpe/Sortino where appropriate.
-- Fees/slippage assumptions.
-- Demo/paper history when available.
-- Validation status.
-- Risk classification.
-- Bot version.
-- Last validation date.
-
-Historical performance is evidence about the past, not a guarantee of future performance.
-
-## Bitey bot earnings / creator participation
-
-Bitey SBT is designed around a transparent participation model for bots carrying the Bitey ecosystem's brand and made available to other traders.
-
-When a **Bitey-branded bot is actually used by another trader and produces verified realized net profit**, the platform may allocate **0.1% of the applicable realized net profit to the platform/brand owner**, subject to the final commercial, accounting and legal model implemented by the service.
-
-The intended principle is:
+Each published strategy has an identity and version history:
 
 ```text
-Trader uses validated Bitey bot
-          ↓
-Bot operates on trader's own account
-          ↓
-Performance is recorded
-          ↓
-Realized result is calculated
-          ↓
-Eligible net profit is verified
-          ↓
-0.1% participation is calculated
+Strategy ID
+ ├── owner / author
+ ├── version
+ ├── AI/model provenance
+ ├── market + timeframe
+ ├── strategy specification
+ ├── backtest evidence
+ ├── robustness evidence
+ ├── demo/paper evidence
+ ├── risk classification
+ ├── SBT Evaluation Score
+ ├── validation timestamp
+ └── publication status
 ```
 
-The platform must never represent this mechanism as a promise of profit. It is a **usage/performance participation model**, not a guarantee, and its final implementation must account for fees, refunds/adjustments, losses, chargebacks, taxation, jurisdiction and applicable financial regulations.
-
-The exact commercial definition of **eligible net profit** must be versioned before real-money operation. A sensible initial definition is based on realized P&L attributable to the bot after explicitly defined trading costs, rather than unrealized gains.
-
-## Trader control
-
-The trader remains the owner/controller of the connected trading account and capital.
-
-The platform should not take custody of customer funds merely to operate a bot. Broker/exchange credentials must be protected and should be stored only in an appropriate server-side secret mechanism or delegated connection system; they must never be embedded in the mobile application or browser frontend.
-
-The trader chooses:
-
-- Which bot to use.
-- Which account to connect.
-- Capital allocation.
-- Risk envelope.
-- Demo/paper/live mode when available.
-- Whether to stop or disconnect the bot.
-
-## Bitey Trading Intelligence
-
-Bitey IA becomes a specialized intelligence layer for trading.
-
-It can assist with:
-
-- Market research.
-- News and event analysis.
-- Asset-impact analysis.
-- Event-chain/domino analysis.
-- Technical-context analysis.
-- Strategy hypothesis generation.
-- Experiment design.
-- Backtest interpretation.
-- Anomaly detection.
-- Strategy comparison.
-- Risk explanations.
-- Performance reports.
-- Natural-language explanations for beginners and professionals.
-
-Example intelligence flow:
-
-```text
-News / Market Event
-        ↓
-Affected Asset
-        ↓
-Possible Domino Effects
-        ↓
-Time Horizon
-        ↓
-Technical Confirmation
-        ↓
-Strategy Hypothesis
-        ↓
-Backtest
-        ↓
-Robustness / Comparison
-        ↓
-Risk Validation
-        ↓
-Demo / Paper
-        ↓
-Possible Deployment
-```
-
-Bitey IA can propose and explain. **The deterministic trading engine and Risk Engine control execution.** AI must never bypass hard risk controls.
-
-## Initial bot groups
-
-The backend currently exposes `/api/v1/bot-profiles` with initial profiles:
-
-- **Conservador EUR/USD** — low exposure, intended for learning and validation.
-- **Equilibrado EUR/USD** — intermediate exposure after demo/paper validation.
-- **Agresivo EUR/USD** — high exposure and variability; advanced users only.
-
-Each profile contains:
-
-- Beginner explanation.
-- Professional/technical explanation.
-- Markets and strategies.
-- Risk level.
-- Maximum position percentage.
-- Configured loss per trade.
-- Configured daily loss.
-- Illustrative favorable/neutral/unfavorable scenarios.
-- Risk preview for a selected capital amount.
-
-These existing profiles are the seed of the future Bitey Bot Registry and should be reused and upgraded rather than discarded.
+Backtest, demo, paper and live evidence must always be clearly separated.
 
 ## Bot lifecycle
 
 ```text
 DRAFT
   ↓
-BACKTESTED
+SIMULATED
   ↓
-ROBUSTNESS_CHECKED
+ROBUSTNESS CHECK
   ↓
 VALIDATED
   ↓
@@ -266,100 +204,153 @@ PUBLISHED
 DEPLOYED
   ↓
 MONITORED
+  ↓
+REVALIDATED / SUSPENDED
 ```
 
-A bot can be returned to testing or suspended when its validation status becomes stale, its behavior changes, or a safety condition is triggered.
+A strategy can move backwards in the lifecycle when evidence becomes stale, behavior changes or a safety condition is triggered.
 
-## Performance is more than profit
+## Initial bot groups
 
-The platform should not rank bots only by ROI.
+The existing `/api/v1/bot-profiles` profiles remain the seed for the product:
 
-Ranking and validation should consider, as applicable:
+- **Conservador EUR/USD**
+- **Equilibrado EUR/USD**
+- **Agresivo EUR/USD**
 
-- Net return.
-- Maximum drawdown.
-- Risk-adjusted return.
-- Win rate.
-- Profit factor.
-- Trade count.
-- Exposure.
-- Volatility.
-- Consecutive losses.
-- Stability across periods.
-- Out-of-sample behavior.
-- Paper/demo consistency.
-- Execution quality.
-- Strategy age and validation freshness.
+They expose beginner and professional explanations, markets/strategies, risk level, position limits, configured loss limits and risk previews. They should be upgraded into versioned SBT strategies rather than discarded.
 
-A bot with lower return and substantially lower drawdown may be more suitable than a high-return/high-risk bot.
+## Intelligence model
 
-## Real-money transition
+Bitey Trading Intelligence can assist with:
 
-The application is being prepared with an **“Activar dinero real”** control, but real execution remains disabled until the complete safety architecture is validated.
+- market research;
+- news and event analysis;
+- affected-asset analysis;
+- domino/event-chain analysis;
+- time-horizon analysis;
+- technical context;
+- strategy hypothesis generation;
+- experiment design;
+- backtest interpretation;
+- anomaly detection;
+- strategy comparison;
+- risk explanations;
+- performance reports.
 
-Before future activation, the system requires at minimum:
+Example:
 
-1. Authenticated user.
-2. Broker/account connection.
-3. Explicit selection of a real account.
-4. Maximum capital allocation.
-5. Per-trade loss limit.
-6. Daily loss limit.
-7. Pre-trade risk validation.
-8. Audit trail.
-9. Emergency stop.
-10. Explicit final confirmation.
-11. Strategy validation status.
-12. Execution health checks.
-13. Broker/exchange health checks.
-14. Ability to suspend the bot immediately.
+```text
+Event / News
+    ↓
+Affected assets
+    ↓
+Possible domino effects
+    ↓
+Time horizon
+    ↓
+Technical confirmation
+    ↓
+Hypothesis
+    ↓
+Simulation
+    ↓
+Robustness
+    ↓
+Risk validation
+    ↓
+Demo / Paper
+```
 
-The system must fail closed when a required safety dependency is unavailable.
+This is research intelligence, not a guarantee or automatic trading instruction.
 
-## MetaTrader 5
+## Risk and execution boundary
 
-MT5 is currently integrated as a **read-only market-data/demo bridge**. The bridge can provide account information, quotes and candles while the trading engine uses virtual execution.
+The fundamental rule is:
 
-A future real connector must remain behind the same strategy, risk, audit and emergency-stop gates. The current milestone does not send real broker orders.
+> **AI can propose. The deterministic SBT engine and Risk Engine decide whether an action is technically and financially permitted.**
 
-## Architecture
+Real-money execution remains gated by:
 
-- `core/` — portfolios, positions, orders and trading state.
-- `strategies/` — deterministic strategy/signal contracts.
-- `risk/` — mandatory pre-trade and portfolio controls.
-- `backtest/` — historical simulation.
-- `execution/` — broker/exchange adapters; paper first.
-- `api/` — FastAPI API for the trading platform, Bitey IA and Bitey SBT App.
-- `tests/` — unit, integration, simulation and safety tests.
+1. authenticated user;
+2. explicit real-account selection;
+3. broker/exchange connection;
+4. maximum capital allocation;
+5. per-trade loss limit;
+6. daily loss limit;
+7. pre-trade validation;
+8. audit trail;
+9. emergency stop;
+10. explicit final confirmation;
+11. strategy validation status;
+12. execution and broker health checks.
 
-Future platform services should be designed as explicit contracts so the independent web product can evolve without coupling itself to the general Bitey IA Web frontend.
+The system must fail closed when a mandatory safety dependency is unavailable.
 
-## Independent product identity
+## Current MT5 boundary
 
-The future site should feel like **Bitey IA's own trading product**, not a clone of another trading platform.
+MetaTrader 5 is currently a **read-only market-data/demo bridge**. The present milestone does not send real broker orders.
 
-Design principles:
+Future live connectors must remain behind the same strategy, validation, Risk Engine, audit and emergency-stop gates.
 
-- Original Bitey visual language.
-- Clear distinction between beginner and professional views.
-- Data-first dashboards.
-- Explainable bot logic.
-- Transparent validation.
-- Risk visible before profit.
-- Strong bot identity/versioning.
-- No black-box claims.
-- No copied layouts, copywriting, logos or proprietary workflows.
+## Participation model for Bitey-branded strategies
 
-The product can learn from the broad dynamics of successful trading platforms — build, test, compare, discover, deploy and monitor — while creating its own information architecture, UX, terminology and brand expression.
+The commercial concept remains a possible **0.1% participation on verified realized net profit** when another trader uses an eligible Bitey-branded strategy.
+
+The intended calculation is based on realized results attributable to the strategy after explicitly defined costs and adjustments. It does not apply to backtest returns or unrealized gains.
+
+Before any real-money implementation, the commercial definition, accounting treatment, taxation, jurisdictional requirements, broker rules and applicable financial regulations must be reviewed and versioned. This mechanism is not a profit guarantee.
+
+## Independent web product
+
+The future Cloudflare web application is a separate frontend/product from `bitey-web`.
+
+It will have its own:
+
+- domain/subdomain;
+- frontend codebase;
+- navigation;
+- visual identity;
+- authentication UX;
+- SBT dashboards;
+- bot laboratory;
+- registry;
+- research tools;
+- trading views.
+
+It connects to this backend through explicit versioned APIs. It must never become a copy of another platform's frontend.
 
 ## Mobile app
 
-**Bitey SBT App** (`bitey-system-bots-trading-app`) is the mobile channel for the specialized trading product.
+`bitey-system-bots-trading-app` is the mobile channel for Bitey SBT. It must consume the same SBT contracts and never duplicate the trading engine.
 
-The future independent web platform and mobile application should consume the same controlled SBT APIs and contracts rather than duplicating the trading engine.
+## Repository architecture
 
-## Safety and financial disclaimer
+- `core/` — trading state and domain primitives.
+- `strategies/` — deterministic strategy contracts.
+- `risk/` — mandatory risk controls.
+- `backtest/` — historical simulation.
+- `execution/` — broker/exchange adapters.
+- `api/` — SBT API contracts.
+- `tests/` — unit, integration, simulation and safety tests.
+- `docs/` — product and architecture specifications.
 
-No bot, strategy or AI system guarantees profits. Historical backtests and paper/demo results do not guarantee future performance. Market gaps, slippage, liquidity, execution failures and regime changes can produce losses larger than configured estimates.
+## Intellectual-property guardrail
 
-Real-money trading must remain disabled until the complete technical, operational, legal and regulatory requirements for the target jurisdictions and brokers have been validated.
+Every future feature must pass this design test:
+
+**What problem are we solving?**
+→ implement the general capability if useful.
+
+**Are we copying a particular expression of that capability?**
+→ redesign it from first principles for Bitey.
+
+Never import competitor code, assets, text, logos, screenshots or proprietary implementation details.
+
+The objective is to build a product that can stand on its own as **Bitey SBT**, not as a clone.
+
+## Disclaimer
+
+Trading financial assets involves substantial risk, including loss of capital. Backtests, simulations, demo results and paper results do not guarantee future performance. Slippage, gaps, liquidity, execution failures and market-regime changes can materially alter results.
+
+Real-money trading remains disabled until the required technical, operational, legal and regulatory controls are validated.
