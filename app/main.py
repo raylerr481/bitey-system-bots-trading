@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Literal
 
@@ -24,6 +25,18 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Bitey System Bots Trading", version="0.7.0", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://bitey-system-bots-trading.raylerr481.workers.dev",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(auth_router)
 app.include_router(trading_router)
 app.include_router(alpaca_router)
