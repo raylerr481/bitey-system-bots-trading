@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from typing import Literal
@@ -12,8 +14,16 @@ from app.api.mt5 import router as mt5_router
 from app.api.strategy import router as strategy_router
 from app.api.trading import router as trading_router
 from app.intelligence.provider_guard import AIProvider, BillingOwner, ConnectionMode, ProviderPolicy, evaluate_provider_call
+from app.mcp.server import build_mcp_app, mcp
 
-app = FastAPI(title="Bitey System Bots Trading", version="0.6.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with mcp.session_manager.run():
+        yield
+
+
+app = FastAPI(title="Bitey System Bots Trading", version="0.7.0", lifespan=lifespan)
 app.include_router(auth_router)
 app.include_router(trading_router)
 app.include_router(alpaca_router)
@@ -23,6 +33,7 @@ app.include_router(backtest_router)
 app.include_router(demo_router)
 app.include_router(bot_profiles_router)
 app.include_router(integrations_router)
+app.mount("/mcp", build_mcp_app())
 
 Mode = Literal["demo", "paper", "live"]
 
@@ -51,7 +62,7 @@ class ProviderPolicyRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "module": "bitey-system-bots-trading", "version": "0.6.0"}
+    return {"status": "ok", "module": "bitey-system-bots-trading", "version": "0.7.0", "mcp": True}
 
 @app.get("/api/v1/system")
 def system():
@@ -60,7 +71,7 @@ def system():
         "live_trading_enabled": False, "default_execution": "alpaca_paper", "supported_modes": ["demo", "paper"],
         "integrations": ["TradingView webhook", "Alpaca Paper Trading", "MetaTrader 5 Demo bridge"],
         "strategies": ["sma-crossover-v1"],
-        "capabilities": ["backtesting", "risk-controls", "paper-orders", "mt5-demo-bridge", "demo-trading-loop", "bot-profiles", "risk-preview", "live-safety-gates", "ai-provider-cost-guard", "multi-ai-provider", "tool-calling", "mcp-ready", "user-registration", "platform-registry", "permissioned-automation"],
+        "capabilities": ["backtesting", "risk-controls", "paper-orders", "mt5-demo-bridge", "demo-trading-loop", "bot-profiles", "risk-preview", "live-safety-gates", "ai-provider-cost-guard", "multi-ai-provider", "tool-calling", "mcp", "user-registration", "platform-registry", "permissioned-automation"],
         "ai_policy": {"model_agnostic": True, "supported_providers": ["bitey", "chatgpt", "claude", "gemini", "deepseek", "other"], "exclusive_provider_supported": True, "automatic_fallback_default": False, "user_pays_external_ai": True},
     }
 
@@ -81,7 +92,7 @@ def tools_catalog():
     return {"transports": [
         {"id": "api", "description": "REST/HTTP APIs and broker/exchange APIs"},
         {"id": "mcp", "description": "Model Context Protocol tool servers"},
-        {"id": "function_calling", "description": "Structured model function/tool calls executed by SBT"},
+        {"id": "function_calling", "description": "Structured model/tool calls executed by SBT"},
         {"id": "webhook", "description": "Webhooks such as TradingView"},
         {"id": "sdk", "description": "Official broker/exchange SDKs"},
         {"id": "cli", "description": "Local command-line/terminal tools when explicitly authorized"},
