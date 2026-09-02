@@ -26,6 +26,42 @@ window.SBT_API_URL = "https://bitey-system-bots-trading-api.onrender.com";
 try { if (!localStorage.getItem('sbt_api_base')) localStorage.setItem('sbt_api_base', window.SBT_API_URL); } catch (_) {}
 </script>'''
 
+VALIDATION_WIRING = '''<script>
+(function () {
+  const run = document.getElementById('runVirtual');
+  if (!run) return;
+  run.addEventListener('click', async function (event) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const base = (window.SBT_API_URL || localStorage.getItem('sbt_api_base') || '').replace(/\\/$/, '');
+    const result = document.getElementById('testResult');
+    const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+    run.disabled = true;
+    run.textContent = 'Ejecutando…';
+    if (result) { result.style.display = 'block'; result.textContent = 'Ejecutando validación virtual reproducible…'; }
+    try {
+      const response = await fetch(base + '/api/v1/validation/virtual', { method: 'GET', headers: { 'Accept': 'application/json' } });
+      if (!response.ok) throw new Error('API HTTP ' + response.status);
+      const data = await response.json();
+      set('testPnl', 'R$ ' + Number(data.realized_pnl).toFixed(2));
+      set('testDd', Number(data.max_drawdown_pct).toFixed(2) + '%');
+      set('testTrades', data.accepted_operations + ' aceptadas');
+      set('testRejected', String(data.rejected_operations));
+      if (result) {
+        result.textContent = 'VALIDACIÓN COMPLETADA · ' + data.strategy + ' · ' + data.fixture + '. P/L R$ ' + Number(data.realized_pnl).toFixed(2) + ', drawdown ' + Number(data.max_drawdown_pct).toFixed(2) + '%, ' + data.accepted_operations + ' operaciones aceptadas y ' + data.rejected_operations + ' rechazadas. Dinero real: ' + data.real_money + '. Broker orders: ' + data.broker_orders + '.';
+      }
+      document.getElementById('apiStatus').textContent = 'Virtual validation connected';
+    } catch (error) {
+      if (result) result.textContent = 'No se pudo ejecutar la validación: ' + error.message + '. No se muestran métricas inventadas.';
+      document.getElementById('apiStatus').textContent = 'API validation unavailable';
+    } finally {
+      run.disabled = false;
+      run.textContent = 'Ejecutar prueba local';
+    }
+  }, true);
+})();
+</script>'''
+
 class Handler(SimpleHTTPRequestHandler):
     def end_headers(self):
         self.send_header("Cache-Control", "no-cache")
@@ -40,6 +76,8 @@ class Handler(SimpleHTTPRequestHandler):
             marker = '<section class="page" id="risk">'
             if marker in index and "bitey-ia-shortcut" not in index:
                 index = index.replace(marker, marker + BITEY_IA_WIDGET, 1)
+            if "validation/virtual" not in index:
+                index = index.replace("</body>", VALIDATION_WIRING + "</body>", 1)
             body = index.encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
