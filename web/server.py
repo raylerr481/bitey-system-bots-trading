@@ -27,6 +27,7 @@ try { if (!localStorage.getItem('sbt_api_base')) localStorage.setItem('sbt_api_b
 </script>'''
 
 SBT_PROFILE_SCRIPT = '<script src="/sbt-profile.js" defer></script>'
+SBT_NEWS_SCRIPT = '<script src="/sbt-news.js" defer></script>'
 
 class Handler(SimpleHTTPRequestHandler):
     def end_headers(self):
@@ -41,6 +42,8 @@ class Handler(SimpleHTTPRequestHandler):
                 index = index.replace("<head>", "<head>" + API_BOOTSTRAP, 1)
             if "/sbt-profile.js" not in index:
                 index = index.replace("</head>", SBT_PROFILE_SCRIPT + "</head>", 1)
+            if "/sbt-news.js" not in index:
+                index = index.replace("</head>", SBT_NEWS_SCRIPT + "</head>", 1)
             marker = '<section class="page" id="risk">'
             if marker in index and "bitey-ia-shortcut" not in index:
                 index = index.replace(marker, marker + BITEY_IA_WIDGET, 1)
