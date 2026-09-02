@@ -5,6 +5,7 @@ from typing import Literal
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
+from app.services.bot_prompt_generator import generate_bot_prompts
 from app.services.news_intelligence import analyze_event, alert_matches, news_engine_status
 
 router = APIRouter(prefix="/api/v1/news", tags=["news-intelligence"])
@@ -23,6 +24,12 @@ class AlertRule(BaseModel):
     min_opportunity: float = Field(default=0.70, ge=0, le=1)
     max_risk: float = Field(default=0.65, ge=0, le=1)
     alert_level: Literal["medium", "high", "critical"] = "high"
+
+
+class BotPromptRequest(BaseModel):
+    event: NewsEvent
+    market: str | None = Field(default=None, max_length=80)
+    timeframe: str = Field(default="1h", min_length=1, max_length=20)
 
 
 @router.get("/status")
@@ -46,4 +53,16 @@ def check_alert(event: NewsEvent, rule: AlertRule = AlertRule()):
         "analysis": result.__dict__,
         "action": "notify_user_for_review" if matched else "no_alert",
         "execution": "never_automatic_from_news",
+    }
+
+
+@router.post("/bot-prompts")
+def bot_prompts(request: BotPromptRequest):
+    analysis = analyze_event(**request.event.model_dump()).__dict__
+    proposals = generate_bot_prompts(analysis, market=request.market, timeframe=request.timeframe)
+    return {
+        "event_analysis": analysis,
+        "proposals": proposals,
+        "execution": "never_automatic_from_news",
+        "next_step": "backtest_then_stress_test_then_demo_or_paper",
     }
