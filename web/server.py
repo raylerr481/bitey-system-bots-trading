@@ -21,6 +21,11 @@ BITEY_IA_WIDGET = '''
 </a>
 '''
 
+API_BOOTSTRAP = '''<script>
+window.SBT_API_URL = "https://bitey-system-bots-trading-api.onrender.com";
+try { if (!localStorage.getItem('sbt_api_base')) localStorage.setItem('sbt_api_base', window.SBT_API_URL); } catch (_) {}
+</script>'''
+
 class Handler(SimpleHTTPRequestHandler):
     def end_headers(self):
         self.send_header("Cache-Control", "no-cache")
@@ -30,6 +35,8 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.split("?", 1)[0] == "/" and (self.headers.get("Accept", "").find("text/html") >= 0 or self.path == "/"):
             index = (ROOT / "index.html").read_text(encoding="utf-8")
+            if "window.SBT_API_URL" not in index:
+                index = index.replace("<head>", "<head>" + API_BOOTSTRAP, 1)
             marker = '<section class="page" id="risk">'
             if marker in index and "bitey-ia-shortcut" not in index:
                 index = index.replace(marker, marker + BITEY_IA_WIDGET, 1)
