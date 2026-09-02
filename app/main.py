@@ -12,6 +12,7 @@ from app.api.bot_profiles import router as bot_profiles_router
 from app.api.demo import router as demo_router
 from app.api.integrations import router as integrations_router
 from app.api.mt5 import router as mt5_router
+from app.api.registry import router as registry_router
 from app.api.strategy import router as strategy_router
 from app.api.trading import router as trading_router
 from app.intelligence.provider_guard import AIProvider, BillingOwner, ConnectionMode, ProviderPolicy, evaluate_provider_call
@@ -24,7 +25,7 @@ async def lifespan(app: FastAPI):
         yield
 
 
-app = FastAPI(title="Bitey System Bots Trading", version="0.7.0", lifespan=lifespan)
+app = FastAPI(title="Bitey System Bots Trading", version="0.8.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -46,6 +47,7 @@ app.include_router(backtest_router)
 app.include_router(demo_router)
 app.include_router(bot_profiles_router)
 app.include_router(integrations_router)
+app.include_router(registry_router)
 app.mount("/mcp", build_mcp_app())
 
 Mode = Literal["demo", "paper", "live"]
@@ -75,7 +77,7 @@ class ProviderPolicyRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "module": "bitey-system-bots-trading", "version": "0.7.0", "mcp": True}
+    return {"status": "ok", "module": "bitey-system-bots-trading", "version": "0.8.0", "mcp": True}
 
 @app.get("/api/v1/system")
 def system():
@@ -90,15 +92,18 @@ def system():
 
 @app.get("/api/v1/ai/providers")
 def ai_providers():
-    return {"providers": [
-        {"id": "bitey", "name": "Bitey Trading Intelligence", "connection_modes": ["api"]},
-        {"id": "chatgpt", "name": "ChatGPT / OpenAI", "connection_modes": ["api", "direct_user", "mcp"]},
-        {"id": "claude", "name": "Claude / Anthropic", "connection_modes": ["api", "mcp", "direct_user"]},
-        {"id": "gemini", "name": "Gemini / Google", "connection_modes": ["api", "direct_user"]},
-        {"id": "deepseek", "name": "DeepSeek", "connection_modes": ["api", "direct_user"]},
-        {"id": "codex", "name": "Codex", "connection_modes": ["mcp", "direct_user"]},
-        {"id": "other", "name": "Other supported provider/client", "connection_modes": ["api", "mcp", "direct_user", "other"]},
-    ], "note": "External provider usage is authorized by the user and is not silently paid by Bitey."}
+    return {
+        "providers": [
+            {"id": "bitey", "name": "Bitey Trading Intelligence", "connection_modes": ["api"]},
+            {"id": "chatgpt", "name": "ChatGPT / OpenAI", "connection_modes": ["api", "direct_user", "mcp"]},
+            {"id": "claude", "name": "Claude / Anthropic", "connection_modes": ["api", "mcp", "direct_user"]},
+            {"id": "gemini", "name": "Gemini / Google", "connection_modes": ["api", "direct_user"]},
+            {"id": "deepseek", "name": "DeepSeek", "connection_modes": ["api", "direct_user"]},
+            {"id": "codex", "name": "Codex", "connection_modes": ["mcp", "direct_user"]},
+            {"id": "other", "name": "Other supported provider/client", "connection_modes": ["api", "mcp", "direct_user", "other"]},
+        ],
+        "note": "External provider usage is authorized by the user and is not silently paid by Bitey.",
+    }
 
 @app.get("/api/v1/tools/catalog")
 def tools_catalog():
