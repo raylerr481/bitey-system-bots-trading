@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Awaitable, Callable
 from typing import Any
 
 import httpx
@@ -162,7 +161,7 @@ def build_mcp_app() -> ASGIApp:
             "127.0.0.1",
             "localhost",
             "bitey-system-bots-trading.raylerr481.workers.dev",
-            "*.workers.dev",
+            "bitey-system-bots-trading.raylerr481.workers.dev:*",
         ],
         allowed_origins=[
             "https://bitey-system-bots-trading.raylerr481.workers.dev",
