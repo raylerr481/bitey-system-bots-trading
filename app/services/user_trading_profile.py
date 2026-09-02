@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import os
 from typing import Any
 
-from app.supabase_client import supabase
+import httpx
 
 
 DEFAULT_PROFILE = {
@@ -20,25 +21,36 @@ DEFAULT_PROFILE = {
 }
 
 
-def get_user_trading_profile(user_id: str) -> dict[str, Any]:
-    response = (
-        supabase.table("sbt_user_trading_profiles")
-        .select("*")
-        .eq("user_id", user_id)
-        .limit(1)
-        .execute()
-    )
-    if response.data:
-        return response.data[0]
-    return {"user_id": user_id, **DEFAULT_PROFILE}
+def _config() -> tuple[str, str]:
+    url = os.getenv("SUPABASE_URL", "").rstrip("/")
+    key = os.getenv("SUPABASE_ANON_KEY", "")
+    if not url or not key:
+        raise RuntimeError("Supabase Auth/REST is not configured")
+    return url, key
 
 
-def upsert_user_trading_profile(user_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+def _headers(access_token: str) -> dict[str, str]:
+    url, key = _config()
+    return {"apikey": key, "Authorization": f"Bearer {access_token}", "Content-Type": "application/json", "Prefer": "return=representation"}
+
+
+async def get_user_trading_profile(user_id: str, access_token: str) -> dict[str, Any]:
+    url, _ = _config()
+    async with httpx.AsyncClient(timeout=15) as client:
+        response = await client.get(f"{url}/rest/v1/sbt_user_trading_profiles", headers=_headers(access_token), params={"user_id": f"eq.{user_id}", "limit": "1"})
+    if response.status_code >= 400:
+        raise RuntimeError(f"Trading profile read failed: {response.status_code}")
+    rows = response.json()
+    return rows[0] if rows else {"user_id": user_id, **DEFAULT_PROFILE}
+
+
+async def upsert_user_trading_profile(user_id: str, access_token: str, payload: dict[str, Any]) -> dict[str, Any]:
+    url, _ = _config()
     data = {"user_id": user_id, **DEFAULT_PROFILE, **payload}
     data.pop("id", None)
-    response = (
-        supabase.table("sbt_user_trading_profiles")
-        .upsert(data, on_conflict="user_id")
-        .execute()
-    )
-    return response.data[0] if response.data else get_user_trading_profile(user_id)
+    async with httpx.AsyncClient(timeout=15) as client:
+        response = await client.post(f"{url}/rest/v1/sbt_user_trading_profiles", headers={**_headers(access_token), "Prefer": "resolution=merge-duplicates,return=representation"}, json=data)
+    if response.status_code >= 400:
+        raise RuntimeError(f"Trading profile write failed: {response.status_code}")
+    rows = response.json()
+    return rows[0] if rows else await get_user_trading_profile(user_id, access_token)
