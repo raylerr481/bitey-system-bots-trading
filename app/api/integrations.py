@@ -5,6 +5,7 @@ from typing import Literal
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
+from app.registries.ai_provider_registry import get_ai_provider, validate_ai_connection
 from app.registries.platform_connector_registry import get_platform, list_platforms
 
 router = APIRouter(prefix="/api/v1/integrations", tags=["integrations"])
@@ -53,6 +54,14 @@ def permissions():
 
 @router.post("/plan")
 def plan(request: ConnectionPlan):
+    provider = get_ai_provider(request.ai_provider)
+    if not provider:
+        return {"allowed": False, "stage": "ai-selection", "reason": "Unsupported AI provider"}
+
+    ai_validation = validate_ai_connection(request.ai_provider, request.ai_connection)
+    if not ai_validation["valid"]:
+        return {"allowed": False, "stage": "ai-connection", "reason": ai_validation["reason"]}
+
     platform = get_platform(request.platform)
     live_requested = request.mode == "live" or "live_execute" in request.permissions
 
