@@ -8,7 +8,7 @@ import httpx
 
 DEFAULT_PROFILE = {
     "ai_provider": "bitey",
-    "ai_connection_mode": "direct_user",
+    "ai_connection_mode": "api",
     "platform": None,
     "execution_mode": "demo",
     "permissions": [],
