@@ -14,6 +14,7 @@ from app.api.integrations import router as integrations_router
 from app.api.mt5 import router as mt5_router
 from app.api.strategy import router as strategy_router
 from app.api.trading import router as trading_router
+from app.api.validation import router as validation_router
 from app.intelligence.provider_guard import AIProvider, BillingOwner, ConnectionMode, ProviderPolicy, evaluate_provider_call
 from app.mcp.server import build_mcp_app, mcp
 
@@ -46,6 +47,7 @@ app.include_router(backtest_router)
 app.include_router(demo_router)
 app.include_router(bot_profiles_router)
 app.include_router(integrations_router)
+app.include_router(validation_router)
 app.mount("/mcp", build_mcp_app())
 
 Mode = Literal["demo", "paper", "live"]
@@ -83,9 +85,9 @@ def system():
         "module": "Bitey System Bots Trading", "parent": "Bitey IA", "sibling_module": "Bitey Trainer",
         "live_trading_enabled": False, "default_execution": "alpaca_paper", "supported_modes": ["demo", "paper"],
         "integrations": ["TradingView webhook", "Alpaca Paper Trading", "MetaTrader 5 Demo bridge"],
-        "strategies": ["sma-crossover-v1"],
-        "capabilities": ["backtesting", "risk-controls", "paper-orders", "mt5-demo-bridge", "demo-trading-loop", "bot-profiles", "risk-preview", "live-safety-gates", "ai-provider-cost-guard", "multi-ai-provider", "tool-calling", "mcp", "user-registration", "platform-registry", "permissioned-automation"],
-        "ai_policy": {"model_agnostic": True, "supported_providers": ["bitey", "chatgpt", "claude", "gemini", "deepseek", "other"], "exclusive_provider_supported": True, "automatic_fallback_default": False, "user_pays_external_ai": True},
+        "strategies": ["sma-crossover-v1", "ema-rsi-atr-v1"],
+        "capabilities": ["backtesting", "risk-controls", "paper-orders", "mt5-demo-bridge", "demo-trading-loop", "bot-profiles", "risk-preview", "live-safety-gates", "ai-provider-cost-guard", "multi-ai-provider", "tool-calling", "mcp", "user-registration", "platform-registry", "permissioned-automation", "virtual-validation"],
+        "ai_policy": {"model_agnostic": True, "supported_providers": ["bitey", "chatgpt", "claude", "deepseek", "codex", "other"], "exclusive_provider_supported": True, "automatic_fallback_default": False, "user_pays_external_ai": True, "gemini_api": False},
     }
 
 @app.get("/api/v1/ai/providers")
@@ -94,11 +96,10 @@ def ai_providers():
         {"id": "bitey", "name": "Bitey Trading Intelligence", "connection_modes": ["api"]},
         {"id": "chatgpt", "name": "ChatGPT / OpenAI", "connection_modes": ["api", "direct_user", "mcp"]},
         {"id": "claude", "name": "Claude / Anthropic", "connection_modes": ["api", "mcp", "direct_user"]},
-        {"id": "gemini", "name": "Gemini / Google", "connection_modes": ["api", "direct_user"]},
         {"id": "deepseek", "name": "DeepSeek", "connection_modes": ["api", "direct_user"]},
         {"id": "codex", "name": "Codex", "connection_modes": ["mcp", "direct_user"]},
         {"id": "other", "name": "Other supported provider/client", "connection_modes": ["api", "mcp", "direct_user", "other"]},
-    ], "note": "External provider usage is authorized by the user and is not silently paid by Bitey."}
+    ], "note": "Gemini API is intentionally excluded by project policy. External provider usage is authorized by the user and is not silently paid by Bitey."}
 
 @app.get("/api/v1/tools/catalog")
 def tools_catalog():
