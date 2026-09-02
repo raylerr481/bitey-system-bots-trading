@@ -1,17 +1,23 @@
 from __future__ import annotations
 
 from typing import Literal
+
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
+from app.registries.platform_connector_registry import get_platform, list_platforms
+
 router = APIRouter(prefix="/api/v1/integrations", tags=["integrations"])
 
-Permission = Literal["read_market", "read_account", "research", "strategy_write", "demo_execute", "paper_execute", "live_execute", "admin"]
-
-PLATFORMS = [
-    {"id": "mt5", "name": "MetaTrader 5", "modes": ["demo"], "transport": ["bridge", "api"], "live_enabled": False},
-    {"id": "tradingview", "name": "TradingView", "modes": ["webhook", "paper"], "transport": ["webhook"], "live_enabled": False},
-    {"id": "alpaca", "name": "Alpaca", "modes": ["paper"], "transport": ["api", "sdk"], "live_enabled": False},
+Permission = Literal[
+    "read_market",
+    "read_account",
+    "research",
+    "strategy_write",
+    "demo_execute",
+    "paper_execute",
+    "live_execute",
+    "admin",
 ]
 
 PERMISSIONS = [
@@ -24,44 +30,74 @@ PERMISSIONS = [
     {"id": "live_execute", "label": "Ejecutar dinero real", "risk": "critical"},
 ]
 
+
 class ConnectionPlan(BaseModel):
     ai_provider: str = Field(min_length=1, max_length=80)
     ai_connection: Literal["api", "mcp", "direct_user", "other"] = "mcp"
     platform: str = Field(min_length=1, max_length=80)
     mode: Literal["demo", "paper", "live"] = "demo"
-    permissions: list[Permission] = []
+    permissions: list[Permission] = Field(default_factory=list)
     automation: bool = False
+
 
 @router.get("/platforms")
 def platforms():
-    return {"platforms": PLATFORMS}
+    # Compatibility endpoint: the canonical platform definitions live in the registry.
+    return {"platforms": list_platforms()}
+
 
 @router.get("/permissions")
 def permissions():
     return {"permissions": PERMISSIONS, "live_default": False}
 
+
 @router.post("/plan")
 def plan(request: ConnectionPlan):
-    platform = next((p for p in PLATFORMS if p["id"] == request.platform), None)
+    platform = get_platform(request.platform)
     live_requested = request.mode == "live" or "live_execute" in request.permissions
+
     if live_requested:
         return {
             "allowed": False,
             "stage": "safety-gates",
             "reason": "Real-money execution is not enabled in the current milestone.",
-            "next": ["authenticated_user", "explicit_real_account", "risk_limits", "strategy_validation", "broker_health", "final_confirmation"],
+            "next": [
+                "authenticated_user",
+                "explicit_real_account",
+                "risk_limits",
+                "strategy_validation",
+                "broker_health",
+                "audit_trail",
+                "final_confirmation",
+            ],
         }
+
     if not platform:
         return {"allowed": False, "stage": "platform-selection", "reason": "Unsupported platform"}
-    if request.automation and not any(p in request.permissions for p in ["demo_execute", "paper_execute"]):
-        return {"allowed": False, "stage": "permissions", "reason": "Automation requires an explicit execution permission."}
+
+    if request.mode not in platform.modes:
+        return {
+            "allowed": False,
+            "stage": "platform-selection",
+            "reason": "Execution mode is not supported by this platform",
+        }
+
+    if request.automation and not any(
+        permission in request.permissions for permission in ["demo_execute", "paper_execute"]
+    ):
+        return {
+            "allowed": False,
+            "stage": "permissions",
+            "reason": "Automation requires an explicit execution permission.",
+        }
+
     return {
         "allowed": True,
         "stage": "ready-for-connection",
         "plan": {
             "ai_provider": request.ai_provider,
             "ai_connection": request.ai_connection,
-            "platform": platform,
+            "platform": platform.__dict__,
             "mode": request.mode,
             "permissions": request.permissions,
             "automation": request.automation,
