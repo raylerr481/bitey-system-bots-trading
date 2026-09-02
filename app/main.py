@@ -10,6 +10,7 @@ from app.api.auth import router as auth_router
 from app.api.backtest import router as backtest_router
 from app.api.bot_profiles import router as bot_profiles_router
 from app.api.demo import router as demo_router
+from app.api.execution import router as execution_router
 from app.api.integrations import router as integrations_router
 from app.api.mt5 import router as mt5_router
 from app.api.registry import router as registry_router
@@ -25,7 +26,7 @@ async def lifespan(app: FastAPI):
         yield
 
 
-app = FastAPI(title="Bitey System Bots Trading", version="0.8.0", lifespan=lifespan)
+app = FastAPI(title="Bitey System Bots Trading", version="0.8.1", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -48,6 +49,7 @@ app.include_router(demo_router)
 app.include_router(bot_profiles_router)
 app.include_router(integrations_router)
 app.include_router(registry_router)
+app.include_router(execution_router)
 app.mount("/mcp", build_mcp_app())
 
 Mode = Literal["demo", "paper", "live"]
@@ -77,7 +79,7 @@ class ProviderPolicyRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "module": "bitey-system-bots-trading", "version": "0.8.0", "mcp": True}
+    return {"status": "ok", "module": "bitey-system-bots-trading", "version": "0.8.1", "mcp": True}
 
 @app.get("/api/v1/system")
 def system():
@@ -86,7 +88,7 @@ def system():
         "live_trading_enabled": False, "default_execution": "alpaca_paper", "supported_modes": ["demo", "paper"],
         "integrations": ["TradingView webhook", "Alpaca Paper Trading", "MetaTrader 5 Demo bridge"],
         "strategies": ["sma-crossover-v1"],
-        "capabilities": ["backtesting", "risk-controls", "paper-orders", "mt5-demo-bridge", "demo-trading-loop", "bot-profiles", "risk-preview", "live-safety-gates", "ai-provider-cost-guard", "multi-ai-provider", "tool-calling", "mcp", "user-registration", "platform-registry", "permissioned-automation"],
+        "capabilities": ["backtesting", "risk-controls", "paper-orders", "mt5-demo-bridge", "demo-trading-loop", "bot-profiles", "risk-preview", "live-safety-gates", "ai-provider-cost-guard", "multi-ai-provider", "tool-calling", "mcp", "user-registration", "platform-registry", "permissioned-automation", "centralized-execution-policy"],
         "ai_policy": {"model_agnostic": True, "supported_providers": ["bitey", "chatgpt", "claude", "gemini", "deepseek", "other"], "exclusive_provider_supported": True, "automatic_fallback_default": False, "user_pays_external_ai": True},
     }
 
