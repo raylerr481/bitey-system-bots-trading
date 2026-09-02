@@ -27,11 +27,32 @@ def _fixture_prices() -> list[float]:
             delta = 0.0010
         else:
             delta = -0.0007
-        # Fixed, repeatable micro-variation prevents a perfectly linear series.
         wiggle = ((i % 5) - 2) * 0.00005
         price = round(price + delta + wiggle, 6)
         prices.append(price)
     return prices
+
+
+def _record_trade(trades: list[dict], trade_id: int, entry: dict, exit_event: dict) -> None:
+    entry_price = entry["price"]
+    exit_price = exit_event["price"]
+    quantity = entry["quantity"]
+    pnl = (exit_price - entry_price) * quantity
+    trades.append(
+        {
+            "trade_id": trade_id,
+            "symbol": entry["symbol"],
+            "side": "long",
+            "entry_index": entry["index"],
+            "entry_price": entry_price,
+            "exit_index": exit_event["index"],
+            "exit_price": exit_price,
+            "quantity": quantity,
+            "pnl": round(pnl, 6),
+            "outcome": "win" if pnl > 0 else "loss" if pnl < 0 else "flat",
+            "exit_reason": exit_event.get("exit_reason", "signal"),
+        }
+    )
 
 
 def run_virtual_validation(config: ValidationConfig | None = None) -> dict:
@@ -47,8 +68,11 @@ def run_virtual_validation(config: ValidationConfig | None = None) -> dict:
 
     accepted: list[dict] = []
     rejected: list[dict] = []
+    trades: list[dict] = []
     equity_curve = [portfolio.initial_capital]
     previous_action = "hold"
+    open_entry: dict | None = None
+    next_trade_id = 1
 
     for index in range(config.window, len(prices)):
         signal = ema_rsi_atr_signal(
@@ -70,17 +94,26 @@ def run_virtual_validation(config: ValidationConfig | None = None) -> dict:
             "price": prices[index],
             "side": side.value,
             "signal": signal,
+            "quantity": result.get("quantity", config.quantity),
+            "symbol": config.symbol,
             "executed": result.get("executed", False),
             "reason": result.get("reason"),
         }
         if result.get("executed"):
             accepted.append(event)
+            if side is Side.BUY:
+                if open_entry is not None:
+                    raise RuntimeError("Validation invariant violated: long position already open")
+                open_entry = event
+            elif open_entry is not None:
+                _record_trade(trades, next_trade_id, open_entry, {**event, "exit_reason": "signal"})
+                next_trade_id += 1
+                open_entry = None
         else:
             rejected.append(event)
         previous_action = action
         equity_curve.append(portfolio.cash + sum(p.quantity * prices[index] for p in portfolio.positions))
 
-    # Close any remaining virtual position so realized P/L is complete.
     if portfolio.positions:
         position = portfolio.positions[0]
         result = engine.simulate_order(
@@ -92,14 +125,23 @@ def run_virtual_validation(config: ValidationConfig | None = None) -> dict:
             "price": prices[-1],
             "side": "sell",
             "signal": {"strategy": "forced-validation-close"},
+            "quantity": result.get("quantity", position.quantity),
+            "symbol": config.symbol,
             "executed": result.get("executed", False),
             "reason": result.get("reason"),
         }
         if result.get("executed"):
             accepted.append(event)
+            if open_entry is not None:
+                _record_trade(trades, next_trade_id, open_entry, {**event, "exit_reason": "forced-validation-close"})
+                next_trade_id += 1
+                open_entry = None
         else:
             rejected.append(event)
         equity_curve.append(portfolio.cash)
+
+    if open_entry is not None:
+        raise RuntimeError("Validation invariant violated: position remains open after forced close")
 
     peak = config.initial_capital
     max_drawdown = 0.0
@@ -108,34 +150,28 @@ def run_virtual_validation(config: ValidationConfig | None = None) -> dict:
         if peak:
             max_drawdown = max(max_drawdown, (peak - equity) / peak)
 
-    pnl = portfolio.realized_pnl
-    wins = 0
-    losses = 0
-    for i in range(0, len(accepted) - 1, 2):
-        if accepted[i]["side"] == "buy" and accepted[i + 1]["side"] == "sell":
-            trade_pnl = (accepted[i + 1]["price"] - accepted[i]["price"]) * accepted[i]["signal"].get("quantity", config.quantity)
-            if trade_pnl > 0:
-                wins += 1
-            elif trade_pnl < 0:
-                losses += 1
+    wins = sum(1 for trade in trades if trade["outcome"] == "win")
+    losses = sum(1 for trade in trades if trade["outcome"] == "loss")
+    flats = sum(1 for trade in trades if trade["outcome"] == "flat")
+    closed_trades = len(trades)
 
-    closed_trades = wins + losses
     return {
-        "validation": "deterministic-virtual-v1",
+        "validation": "deterministic-virtual-v2",
         "fixture": "synthetic-deterministic-not-market-history",
         "strategy": "ema-rsi-atr-v1",
         "symbol": config.symbol,
         "timeframe": "H1-compatible signal window",
         "initial_capital": config.initial_capital,
         "final_virtual_cash": round(portfolio.cash, 6),
-        "realized_pnl": round(pnl, 6),
-        "return_pct": round((pnl / config.initial_capital) * 100, 6),
+        "realized_pnl": round(portfolio.realized_pnl, 6),
+        "return_pct": round((portfolio.realized_pnl / config.initial_capital) * 100, 6),
         "max_drawdown_pct": round(max_drawdown * 100, 6),
         "accepted_operations": len(accepted),
         "rejected_operations": len(rejected),
         "closed_trades": closed_trades,
         "wins": wins,
         "losses": losses,
+        "flats": flats,
         "win_rate_pct": round((wins / closed_trades) * 100, 4) if closed_trades else 0.0,
         "risk_limits": {"max_position_pct": 2.0, "max_daily_loss_pct": 1.0},
         "real_money": False,
@@ -143,4 +179,5 @@ def run_virtual_validation(config: ValidationConfig | None = None) -> dict:
         "live_trading_enabled": False,
         "operations": accepted,
         "rejections": rejected,
+        "trades": trades,
     }
