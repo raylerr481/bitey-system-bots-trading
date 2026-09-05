@@ -23,6 +23,7 @@ BITEY_IA_WIDGET = '''
 
 API_BOOTSTRAP = '''<script>
 window.SBT_API_URL = "https://bitey-system-bots-trading-api.onrender.com";
+window.SBT_LIVE_TRADING_ENABLED = false;
 try { if (!localStorage.getItem('sbt_api_base')) localStorage.setItem('sbt_api_base', window.SBT_API_URL); } catch (_) {}
 </script>'''
 
@@ -50,10 +51,12 @@ VALIDATION_WIRING = '''<script>
       if (result) {
         result.textContent = 'VALIDACIÓN COMPLETADA · ' + data.strategy + ' · ' + data.fixture + '. P/L R$ ' + Number(data.realized_pnl).toFixed(2) + ', drawdown ' + Number(data.max_drawdown_pct).toFixed(2) + '%, ' + data.accepted_operations + ' operaciones aceptadas y ' + data.rejected_operations + ' rechazadas. Dinero real: ' + data.real_money + '. Broker orders: ' + data.broker_orders + '.';
       }
-      document.getElementById('apiStatus').textContent = 'Virtual validation connected';
+      const status = document.getElementById('apiStatus');
+      if (status) status.textContent = 'Virtual validation connected · live trading disabled';
     } catch (error) {
       if (result) result.textContent = 'No se pudo ejecutar la validación: ' + error.message + '. No se muestran métricas inventadas.';
-      document.getElementById('apiStatus').textContent = 'API validation unavailable';
+      const status = document.getElementById('apiStatus');
+      if (status) status.textContent = 'API validation unavailable · live trading disabled';
     } finally {
       run.disabled = false;
       run.textContent = 'Ejecutar prueba local';
@@ -64,8 +67,12 @@ VALIDATION_WIRING = '''<script>
 
 class Handler(SimpleHTTPRequestHandler):
     def end_headers(self):
-        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        self.send_header("Pragma", "no-cache")
         self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
+        self.send_header("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
         super().end_headers()
 
     def do_GET(self):
