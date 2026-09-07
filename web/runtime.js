@@ -10,34 +10,44 @@
     document.body.appendChild(el);
   }
   async function health() {
-    try {
-      const r = await fetch(API + '/api/v1/system');
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    } catch (_) { return null; }
+    try { const r = await fetch(API + '/api/v1/system'); if (!r.ok) throw new Error('HTTP '+r.status); return r.json(); }
+    catch (_) { return null; }
+  }
+  async function openThesisLab() {
+    if (document.getElementById('thesis-lab-page')) return activateThesisLab();
+    const main = document.querySelector('main.main');
+    if (!main) return;
+    const r = await fetch('/thesis-lab.html', { cache:'no-store' });
+    if (!r.ok) throw new Error('Thesis Lab HTTP '+r.status);
+    const wrap = document.createElement('div');
+    wrap.innerHTML = await r.text();
+    const section = wrap.querySelector('#thesis-lab-page');
+    if (!section) throw new Error('Thesis Lab markup missing');
+    main.appendChild(section);
+    Array.from(wrap.querySelectorAll('script')).forEach(s => { const n=document.createElement('script'); n.textContent=s.textContent; document.body.appendChild(n); });
+    activateThesisLab();
+  }
+  function activateThesisLab() {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const p=document.getElementById('thesis-lab-page'); if(p) p.classList.add('active');
+    const title=document.getElementById('title'); if(title) title.textContent='Mathematical Thesis Lab';
+    document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page==='thesis-lab'));
+  }
+  function installThesisNav() {
+    const nav=document.querySelector('.nav'); if(!nav || nav.querySelector('[data-page="thesis-lab"]')) return;
+    const small=Array.from(nav.querySelectorAll('small')).find(x=>x.textContent.trim().toLowerCase()==='build');
+    const b=document.createElement('button'); b.dataset.page='thesis-lab'; b.textContent='∑ Mathematical Thesis Lab';
+    b.addEventListener('click',()=>openThesisLab().catch(e=>console.error(e)));
+    if(small) small.insertAdjacentElement('afterend',b); else nav.appendChild(b);
   }
   function expose() {
-    window.BiteySBT = {
-      api: API,
-      safety: window.SBT_SAFETY,
-      health,
-      async validation() {
-        const r = await fetch(API + '/api/v1/validation/virtual', { method: 'POST', headers: {'content-type':'application/json'}, body: '{}' });
-        if (!r.ok) throw new Error('Validation HTTP ' + r.status);
-        return r.json();
-      },
-      async strategyRegistry() {
-        const r = await fetch(API + '/api/v1/strategy/registry');
-        if (!r.ok) throw new Error('Registry HTTP ' + r.status);
-        return r.json();
-      },
-      async riskGateEvaluate(payload) {
-        const r = await fetch(API + '/api/v1/strategy/risk-gate/evaluate', { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(payload) });
-        if (!r.ok) throw new Error('Risk Gate HTTP ' + r.status);
-        return r.json();
-      }
+    window.BiteySBT = { api:API, safety:window.SBT_SAFETY, health,
+      async validation(){const r=await fetch(API+'/api/v1/validation/virtual',{method:'POST',headers:{'content-type':'application/json'},body:'{}'});if(!r.ok)throw new Error('Validation HTTP '+r.status);return r.json()},
+      async strategyRegistry(){const r=await fetch(API+'/api/v1/strategy/registry');if(!r.ok)throw new Error('Registry HTTP '+r.status);return r.json()},
+      async riskGateEvaluate(payload){const r=await fetch(API+'/api/v1/strategy/risk-gate/evaluate',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});if(!r.ok)throw new Error('Risk Gate HTTP '+r.status);return r.json()},
+      openThesisLab
     };
   }
-  function boot() { expose(); banner(); health(); }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+  function boot(){expose();banner();installThesisNav();health();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
