@@ -16,6 +16,7 @@ from app.api.integrations import router as integrations_router
 from app.api.market import router as market_router
 from app.api.market_intelligence import router as market_intelligence_router
 from app.api.mt5 import router as mt5_router
+from app.api.quant import router as quant_router
 from app.api.strategy import router as strategy_router
 from app.api.trading import router as trading_router
 from app.api.validation import router as validation_router
@@ -27,9 +28,9 @@ async def lifespan(app: FastAPI):
     async with mcp.session_manager.run():
         yield
 
-app = FastAPI(title="Bitey System Bots Trading", version="0.7.0", lifespan=lifespan)
+app = FastAPI(title="Bitey System Bots Trading", version="0.8.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["https://bitey-system-bots-trading.raylerr481.workers.dev", "http://localhost:8080", "http://127.0.0.1:8080"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
-app.include_router(auth_router); app.include_router(trading_router); app.include_router(alpaca_router); app.include_router(mt5_router); app.include_router(market_router); app.include_router(market_intelligence_router); app.include_router(strategy_router); app.include_router(backtest_router); app.include_router(demo_router); app.include_router(bot_profiles_router); app.include_router(bot_exchange_router); app.include_router(integrations_router); app.include_router(validation_router); app.include_router(capabilities_router)
+app.include_router(auth_router); app.include_router(trading_router); app.include_router(alpaca_router); app.include_router(mt5_router); app.include_router(market_router); app.include_router(market_intelligence_router); app.include_router(strategy_router); app.include_router(quant_router); app.include_router(backtest_router); app.include_router(demo_router); app.include_router(bot_profiles_router); app.include_router(bot_exchange_router); app.include_router(integrations_router); app.include_router(validation_router); app.include_router(capabilities_router)
 app.mount("/mcp", build_mcp_app())
 
 Mode = Literal["demo", "paper", "live"]
@@ -42,9 +43,9 @@ class ProviderPolicyRequest(BaseModel):
     provider: AIProvider; model: str = Field(min_length=1, max_length=120); connection_mode: ConnectionMode = ConnectionMode.API; exclusive: bool = True; allow_paid_external: bool = False; ask_before_paid_call: bool = True; background_usage: bool = False; max_spend_per_operation: float | None = Field(default=None, ge=0); max_spend_per_period: float | None = Field(default=None, ge=0); billing_owner: BillingOwner = BillingOwner.UNKNOWN; cost_known: bool = False; consented: bool = False; estimated_cost: float | None = Field(default=None, ge=0); background: bool = False; fallback_provider: AIProvider | None = None
 
 @app.get("/health")
-def health(): return {"status":"ok","module":"bitey-system-bots-trading","version":"0.7.0","mcp":True}
+def health(): return {"status":"ok","module":"bitey-system-bots-trading","version":"0.8.0","mcp":True,"quant_engine":True}
 @app.get("/api/v1/system")
-def system(): return {"module":"Bitey System Bots Trading","parent":"Bitey IA","sibling_module":"Bitey Trainer","live_trading_enabled":False,"default_execution":"alpaca_paper","supported_modes":["demo","paper"],"integrations":["TradingView webhook","Alpaca Paper Trading","MetaTrader 5 Demo bridge","Universal Bot Exchange"],"strategies":["sma-crossover-v1","ema-rsi-atr-v1","smc-v1"],"capabilities":["backtesting","risk-controls","paper-orders","mt5-demo-bridge","demo-trading-loop","bot-profiles","risk-preview","live-safety-gates","ai-provider-cost-guard","multi-ai-provider","tool-calling","mcp","user-registration","platform-registry","permissioned-automation","virtual-validation","native-market-gateway","real-time-quotes","real-time-charts","market-intelligence","universal-bot-exchange","bidirectional-bot-transfer"],"ai_policy":{"model_agnostic":True,"supported_providers":["bitey","chatgpt","claude","deepseek","codex","ollama","lm-studio","other"],"exclusive_provider_supported":True,"automatic_fallback_default":False,"user_pays_external_ai":True,"gemini_api":False}}
+def system(): return {"module":"Bitey System Bots Trading","parent":"Bitey IA","sibling_module":"Bitey Trainer","live_trading_enabled":False,"default_execution":"alpaca_paper","supported_modes":["demo","paper"],"integrations":["TradingView webhook","Alpaca Paper Trading","MetaTrader 5 Demo bridge","Universal Bot Exchange"],"strategies":["sma-crossover-v1","ema-rsi-atr-v1","smc-v1"],"capabilities":["quant-formulas","indicators","backtesting","risk-controls","paper-orders","mt5-demo-bridge","demo-trading-loop","bot-profiles","risk-preview","live-safety-gates","ai-provider-cost-guard","multi-ai-provider","tool-calling","mcp","user-registration","platform-registry","permissioned-automation","virtual-validation","native-market-gateway","real-time-quotes","real-time-charts","market-intelligence","universal-bot-exchange","bidirectional-bot-transfer"],"ai_policy":{"model_agnostic":True,"supported_providers":["bitey","chatgpt","claude","deepseek","codex","ollama","lm-studio","other"],"exclusive_provider_supported":True,"automatic_fallback_default":False,"user_pays_external_ai":True,"gemini_api":False}}
 @app.get("/api/v1/ai/providers")
 def ai_providers(): return {"providers":[{"id":"bitey","name":"Bitey Trading Intelligence","connection_modes":["api"]},{"id":"chatgpt","name":"ChatGPT / OpenAI","connection_modes":["api","direct_user","mcp"]},{"id":"claude","name":"Claude / Anthropic","connection_modes":["api","mcp","direct_user"]},{"id":"deepseek","name":"DeepSeek","connection_modes":["api","direct_user"]},{"id":"codex","name":"Codex","connection_modes":["mcp","direct_user"]},{"id":"ollama","name":"Ollama local","connection_modes":["api"]},{"id":"lm-studio","name":"LM Studio local","connection_modes":["api"]},{"id":"other","name":"Other supported provider/client","connection_modes":["api","mcp","direct_user","other"]}],"note":"Gemini API is intentionally excluded by project policy. External provider usage is authorized by the user and is not silently paid by Bitey."}
 @app.get("/api/v1/tools/catalog")
