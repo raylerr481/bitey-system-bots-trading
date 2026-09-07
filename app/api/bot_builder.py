@@ -4,7 +4,7 @@ from app.bot_builder.engine import build_bot
 from app.bot_builder.spec import BotSpecification
 from app.bot_builder.backtest import run_spec_backtest
 from app.bot_builder.pipeline import run_pipeline
-from app.bot_builder.ar001 import ar001_spec, size_staged_entries, evaluate_ar001_evidence
+from app.bot_builder.ar001 import ar001_spec, size_staged_entries, evaluate_ar001_evidence, backtest_ar001_ohlc
 from app.bot_builder.ar002 import ar002_spec, detect_liquidity_events, liquidity_signal_backtest
 
 router = APIRouter(prefix="/api/v1/bot-builder", tags=["bot-builder"])
@@ -14,12 +14,10 @@ def catalog():
     return {"contract":"sbt-bot-v1","languages":["python","mql5","pine","typescript"],"steps":["specify","quant","backtest","stress-test","risk-gate","virtual-validation","generate"],"hypotheses":["AR-001","AR-002"],"live":False,"real_money":False,"broker_orders":0}
 
 @router.get("/hypotheses/ar-001")
-def get_ar001():
-    return ar001_spec()
+def get_ar001(): return ar001_spec()
 
 @router.get("/hypotheses/ar-002")
-def get_ar002():
-    return ar002_spec()
+def get_ar002(): return ar002_spec()
 
 class AR001SizingRequest(BaseModel):
     capital: float = Field(default=10000, gt=0)
@@ -42,13 +40,26 @@ class AR001EvidenceRequest(BaseModel):
 
 @router.post("/hypotheses/ar-001/evaluate")
 def evaluate_ar001(request: AR001EvidenceRequest):
-    return evaluate_ar001_evidence(
-        request.r_multiples,
-        request.oos_start,
-        request.stress_results,
-        request.risk_sizing_ok,
-        request.bootstrap_samples,
-    )
+    return evaluate_ar001_evidence(request.r_multiples, request.oos_start, request.stress_results, request.risk_sizing_ok, request.bootstrap_samples)
+
+class AR001OHLCRequest(BaseModel):
+    bars: list[dict[str, float]] = Field(min_length=30, max_length=100000)
+    initial_capital: float = Field(default=10000, gt=0)
+    risk_pct: float = Field(default=0.01, gt=0, le=0.05)
+    atr_period: int = Field(default=14, ge=2, le=200)
+    entry_multipliers: list[float] | None = Field(default=None, min_length=3, max_length=3)
+    stop_atr: float = Field(default=4.0, gt=0)
+    take_profit_r: float = Field(default=3.0, gt=0)
+    direction: str = Field(default="long", pattern="^(long|short)$")
+    fee_bps: float = Field(default=1.0, ge=0, le=1000)
+    slippage_bps: float = Field(default=1.0, ge=0, le=1000)
+    weights: list[float] | None = Field(default=None, min_length=3, max_length=3)
+    point_value: float = Field(default=1.0, gt=0)
+    max_bars_per_trade: int = Field(default=250, ge=1, le=5000)
+
+@router.post("/hypotheses/ar-001/backtest")
+def backtest_ar001(request: AR001OHLCRequest):
+    return backtest_ar001_ohlc(**request.model_dump())
 
 class AR002EventStudyRequest(BaseModel):
     bars: list[dict[str, float]] = Field(min_length=30, max_length=10000)
@@ -59,12 +70,10 @@ def detect_ar002(request: AR002EventStudyRequest):
     return {"contract":"sbt-ar002-detection-v1","hypothesis_id":"AR-002","events":detect_liquidity_events(request.bars),"data_mode":"OHLCV_proxy","safety":{"live":False,"real_money":False,"broker_orders":0}}
 
 @router.post("/hypotheses/ar-002/test")
-def test_ar002(request: AR002EventStudyRequest):
-    return liquidity_signal_backtest(request.bars, request.horizon)
+def test_ar002(request: AR002EventStudyRequest): return liquidity_signal_backtest(request.bars, request.horizon)
 
 @router.post("/build")
-def build(spec: BotSpecification):
-    return build_bot(spec)
+def build(spec: BotSpecification): return build_bot(spec)
 
 class BacktestBuildRequest(BaseModel):
     specification: BotSpecification
@@ -72,13 +81,11 @@ class BacktestBuildRequest(BaseModel):
     fee_pct: float = Field(default=0.001, ge=0, lt=0.1)
 
 @router.post("/backtest")
-def backtest_build(request: BacktestBuildRequest):
-    return run_spec_backtest(request.specification, request.prices, request.fee_pct)
+def backtest_build(request: BacktestBuildRequest): return run_spec_backtest(request.specification, request.prices, request.fee_pct)
 
 class PipelineRequest(BaseModel):
     specification: BotSpecification
     prices: list[float] = Field(min_length=30, max_length=10000)
 
 @router.post("/run")
-def run(request: PipelineRequest):
-    return run_pipeline(request.specification, request.prices)
+def run(request: PipelineRequest): return run_pipeline(request.specification, request.prices)
