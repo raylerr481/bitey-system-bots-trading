@@ -46,6 +46,10 @@ jobs:
           printf '%s' "$body" | grep -q "Bitey SBT"
           printf '%s' "$body" | grep -q "Trading Laboratory"
           printf '%s' "$body" | grep -q "Market Intelligence"
+          thesis=$(curl -fsSL --retry 5 --retry-delay 3 https://bitey-system-bots-trading.raylerr481.workers.dev/thesis-lab.html)
+          printf '%s' "$thesis" | grep -q "Mathematical Market Thesis Lab"
+          printf '%s' "$thesis" | grep -q "Random Walk Baseline"
+          printf '%s' "$thesis" | grep -q "GARCH(1,1)"
           health=$(curl -fsSL --retry 5 --retry-delay 3 https://bitey-system-bots-trading.raylerr481.workers.dev/health)
           printf '%s' "$health" | grep -q '"live":false'
           printf '%s' "$health" | grep -q '"real_money":false'
