@@ -5,16 +5,21 @@ from app.bot_builder.spec import BotSpecification
 from app.bot_builder.backtest import run_spec_backtest
 from app.bot_builder.pipeline import run_pipeline
 from app.bot_builder.ar001 import ar001_spec, size_staged_entries
+from app.bot_builder.ar002 import ar002_spec, detect_liquidity_events, liquidity_signal_backtest
 
 router = APIRouter(prefix="/api/v1/bot-builder", tags=["bot-builder"])
 
 @router.get("/catalog")
 def catalog():
-    return {"contract":"sbt-bot-v1","languages":["python","mql5","pine","typescript"],"steps":["specify","quant","backtest","stress-test","risk-gate","virtual-validation","generate"],"hypotheses":["AR-001"],"live":False,"real_money":False,"broker_orders":0}
+    return {"contract":"sbt-bot-v1","languages":["python","mql5","pine","typescript"],"steps":["specify","quant","backtest","stress-test","risk-gate","virtual-validation","generate"],"hypotheses":["AR-001","AR-002"],"live":False,"real_money":False,"broker_orders":0}
 
 @router.get("/hypotheses/ar-001")
 def get_ar001():
     return ar001_spec()
+
+@router.get("/hypotheses/ar-002")
+def get_ar002():
+    return ar002_spec()
 
 class AR001SizingRequest(BaseModel):
     capital: float = Field(default=10000, gt=0)
@@ -27,6 +32,18 @@ class AR001SizingRequest(BaseModel):
 @router.post("/hypotheses/ar-001/size")
 def size_ar001(request: AR001SizingRequest):
     return size_staged_entries(request.capital, request.risk_pct, request.entries, request.stop, request.weights, request.point_value)
+
+class AR002EventStudyRequest(BaseModel):
+    bars: list[dict[str, float]] = Field(min_length=30, max_length=10000)
+    horizon: int = Field(default=5, ge=1, le=100)
+
+@router.post("/hypotheses/ar-002/detect")
+def detect_ar002(request: AR002EventStudyRequest):
+    return {"contract":"sbt-ar002-detection-v1","hypothesis_id":"AR-002","events":detect_liquidity_events(request.bars),"data_mode":"OHLCV_proxy","safety":{"live":False,"real_money":False,"broker_orders":0}}
+
+@router.post("/hypotheses/ar-002/test")
+def test_ar002(request: AR002EventStudyRequest):
+    return liquidity_signal_backtest(request.bars, request.horizon)
 
 @router.post("/build")
 def build(spec: BotSpecification):
