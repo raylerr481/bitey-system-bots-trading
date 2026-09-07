@@ -71,11 +71,6 @@ def backtest_ar001_ohlc(bars: list[dict[str,float]], *, initial_capital:float=10
                          entry_multipliers:list[float]|None=None, stop_atr:float=4.0, take_profit_r:float=3.0,
                          direction:str="long", fee_bps:float=0.0, slippage_bps:float=0.0,
                          weights:list[float]|None=None, point_value:float=1.0, max_bars_per_trade:int=250) -> dict:
-    """Research-only OHLC execution for the AR-001 staged-entry hypothesis.
-    First tranche fills at candidate close; remaining tranches are ATR-spaced limits.
-    Common stop is stop_atr from the first entry; TP is R-multiple from aggregate average entry.
-    If stop and TP occur in one candle, stop wins conservatively. No broker/order calls occur.
-    """
     if len(bars)<atr_period+5 or initial_capital<=0 or not 0<risk_pct<=0.05: raise ValueError("insufficient bars or invalid capital/risk")
     if direction not in {"long","short"}: raise ValueError("direction must be long or short")
     if stop_atr<=0 or take_profit_r<=0 or fee_bps<0 or slippage_bps<0: raise ValueError("invalid execution parameters")
@@ -134,11 +129,17 @@ def _bootstrap_lower_bound(rs:list[float],samples:int=2000,seed:int=1001)->float
 
 
 def evaluate_ar001_evidence(r_multiples:list[float],oos_start:int|None=None,stress_results:list[float]|None=None,risk_sizing_ok:bool=True,bootstrap_samples:int=2000)->dict:
-    if not r_multiples:return _evidence_result("EVIDENCE_INSUFFICIENT",["No trade outcomes supplied."],{})
+    if not r_multiples:
+        return _evidence_result("EVIDENCE_INSUFFICIENT",["No trade outcomes supplied."],{"sample_size":0,"oos_sample_size":0,"oos_expectancy_R":0.0,"oos_profit_factor":0.0,"oos_max_drawdown_pct":0.0,"bootstrap_95_lower_bound_R":0.0,"stress_scenarios":len(stress_results or []),"positive_stress":bool(stress_results) and all(x>0 for x in stress_results),"oos_start":oos_start})
     if any(not math.isfinite(x) for x in r_multiples):raise ValueError("r_multiples must contain finite numbers")
-    n=len(r_multiples); split=oos_start if oos_start is not None else max(1,n//2)
-    if split<=0 or split>=n:raise ValueError("oos_start must leave both samples")
-    oos=r_multiples[split:]; exp=statistics.fmean(oos); pf=_profit_factor(oos); lower=_bootstrap_lower_bound(oos,max(2000,bootstrap_samples)); stress=stress_results or []; failures=[]
+    n=len(r_multiples)
+    if n==1:
+        oos=r_multiples; split=0
+    else:
+        split=oos_start if oos_start is not None else max(1,n//2)
+        if split<=0 or split>=n:raise ValueError("oos_start must leave both samples")
+        oos=r_multiples[split:]
+    exp=statistics.fmean(oos); pf=_profit_factor(oos); lower=_bootstrap_lower_bound(oos,max(2000,bootstrap_samples)); stress=stress_results or []; failures=[]
     if not risk_sizing_ok: failures.append("Aggregate stop risk exceeds the configured risk budget.")
     if n<100: failures.append("Minimum sample of 100 trades not reached.")
     if len(oos)<30: failures.append("Minimum out-of-sample sample of 30 trades not reached.")
