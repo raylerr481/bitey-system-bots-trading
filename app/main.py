@@ -9,6 +9,7 @@ from app.api.alpaca import router as alpaca_router
 from app.api.auth import router as auth_router
 from app.api.backtest import router as backtest_router
 from app.api.bot_profiles import router as bot_profiles_router
+from app.api.capabilities import router as capabilities_router
 from app.api.demo import router as demo_router
 from app.api.integrations import router as integrations_router
 from app.api.mt5 import router as mt5_router
@@ -18,107 +19,38 @@ from app.api.validation import router as validation_router
 from app.intelligence.provider_guard import AIProvider, BillingOwner, ConnectionMode, ProviderPolicy, evaluate_provider_call
 from app.mcp.server import build_mcp_app, mcp
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     async with mcp.session_manager.run():
         yield
 
-
 app = FastAPI(title="Bitey System Bots Trading", version="0.7.0", lifespan=lifespan)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "https://bitey-system-bots-trading.raylerr481.workers.dev",
-        "http://localhost:8080",
-        "http://127.0.0.1:8080",
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-app.include_router(auth_router)
-app.include_router(trading_router)
-app.include_router(alpaca_router)
-app.include_router(mt5_router)
-app.include_router(strategy_router)
-app.include_router(backtest_router)
-app.include_router(demo_router)
-app.include_router(bot_profiles_router)
-app.include_router(integrations_router)
-app.include_router(validation_router)
+app.add_middleware(CORSMiddleware, allow_origins=["https://bitey-system-bots-trading.raylerr481.workers.dev", "http://localhost:8080", "http://127.0.0.1:8080"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.include_router(auth_router); app.include_router(trading_router); app.include_router(alpaca_router); app.include_router(mt5_router); app.include_router(strategy_router); app.include_router(backtest_router); app.include_router(demo_router); app.include_router(bot_profiles_router); app.include_router(integrations_router); app.include_router(validation_router); app.include_router(capabilities_router)
 app.mount("/mcp", build_mcp_app())
 
 Mode = Literal["demo", "paper", "live"]
-
 class TradingConfig(BaseModel):
     mode: Mode = "demo"
     initial_capital: float = Field(default=10000, gt=0)
     max_position_pct: float = Field(default=0.02, gt=0, le=1)
     max_daily_loss_pct: float = Field(default=0.01, gt=0, le=1)
-
 class ProviderPolicyRequest(BaseModel):
-    provider: AIProvider
-    model: str = Field(min_length=1, max_length=120)
-    connection_mode: ConnectionMode = ConnectionMode.API
-    exclusive: bool = True
-    allow_paid_external: bool = False
-    ask_before_paid_call: bool = True
-    background_usage: bool = False
-    max_spend_per_operation: float | None = Field(default=None, ge=0)
-    max_spend_per_period: float | None = Field(default=None, ge=0)
-    billing_owner: BillingOwner = BillingOwner.UNKNOWN
-    cost_known: bool = False
-    consented: bool = False
-    estimated_cost: float | None = Field(default=None, ge=0)
-    background: bool = False
-    fallback_provider: AIProvider | None = None
+    provider: AIProvider; model: str = Field(min_length=1, max_length=120); connection_mode: ConnectionMode = ConnectionMode.API; exclusive: bool = True; allow_paid_external: bool = False; ask_before_paid_call: bool = True; background_usage: bool = False; max_spend_per_operation: float | None = Field(default=None, ge=0); max_spend_per_period: float | None = Field(default=None, ge=0); billing_owner: BillingOwner = BillingOwner.UNKNOWN; cost_known: bool = False; consented: bool = False; estimated_cost: float | None = Field(default=None, ge=0); background: bool = False; fallback_provider: AIProvider | None = None
 
 @app.get("/health")
-def health():
-    return {"status": "ok", "module": "bitey-system-bots-trading", "version": "0.7.0", "mcp": True}
-
+def health(): return {"status":"ok","module":"bitey-system-bots-trading","version":"0.7.0","mcp":True}
 @app.get("/api/v1/system")
-def system():
-    return {
-        "module": "Bitey System Bots Trading", "parent": "Bitey IA", "sibling_module": "Bitey Trainer",
-        "live_trading_enabled": False, "default_execution": "alpaca_paper", "supported_modes": ["demo", "paper"],
-        "integrations": ["TradingView webhook", "Alpaca Paper Trading", "MetaTrader 5 Demo bridge"],
-        "strategies": ["sma-crossover-v1", "ema-rsi-atr-v1"],
-        "capabilities": ["backtesting", "risk-controls", "paper-orders", "mt5-demo-bridge", "demo-trading-loop", "bot-profiles", "risk-preview", "live-safety-gates", "ai-provider-cost-guard", "multi-ai-provider", "tool-calling", "mcp", "user-registration", "platform-registry", "permissioned-automation", "virtual-validation"],
-        "ai_policy": {"model_agnostic": True, "supported_providers": ["bitey", "chatgpt", "claude", "deepseek", "codex", "other"], "exclusive_provider_supported": True, "automatic_fallback_default": False, "user_pays_external_ai": True, "gemini_api": False},
-    }
-
+def system(): return {"module":"Bitey System Bots Trading","parent":"Bitey IA","sibling_module":"Bitey Trainer","live_trading_enabled":False,"default_execution":"alpaca_paper","supported_modes":["demo","paper"],"integrations":["TradingView webhook","Alpaca Paper Trading","MetaTrader 5 Demo bridge"],"strategies":["sma-crossover-v1","ema-rsi-atr-v1"],"capabilities":["backtesting","risk-controls","paper-orders","mt5-demo-bridge","demo-trading-loop","bot-profiles","risk-preview","live-safety-gates","ai-provider-cost-guard","multi-ai-provider","tool-calling","mcp","user-registration","platform-registry","permissioned-automation","virtual-validation"],"ai_policy":{"model_agnostic":True,"supported_providers":["bitey","chatgpt","claude","deepseek","codex","other"],"exclusive_provider_supported":True,"automatic_fallback_default":False,"user_pays_external_ai":True,"gemini_api":False}}
 @app.get("/api/v1/ai/providers")
-def ai_providers():
-    return {"providers": [
-        {"id": "bitey", "name": "Bitey Trading Intelligence", "connection_modes": ["api"]},
-        {"id": "chatgpt", "name": "ChatGPT / OpenAI", "connection_modes": ["api", "direct_user", "mcp"]},
-        {"id": "claude", "name": "Claude / Anthropic", "connection_modes": ["api", "mcp", "direct_user"]},
-        {"id": "deepseek", "name": "DeepSeek", "connection_modes": ["api", "direct_user"]},
-        {"id": "codex", "name": "Codex", "connection_modes": ["mcp", "direct_user"]},
-        {"id": "other", "name": "Other supported provider/client", "connection_modes": ["api", "mcp", "direct_user", "other"]},
-    ], "note": "Gemini API is intentionally excluded by project policy. External provider usage is authorized by the user and is not silently paid by Bitey."}
-
+def ai_providers(): return {"providers":[{"id":"bitey","name":"Bitey Trading Intelligence","connection_modes":["api"]},{"id":"chatgpt","name":"ChatGPT / OpenAI","connection_modes":["api","direct_user","mcp"]},{"id":"claude","name":"Claude / Anthropic","connection_modes":["api","mcp","direct_user"]},{"id":"deepseek","name":"DeepSeek","connection_modes":["api","direct_user"]},{"id":"codex","name":"Codex","connection_modes":["mcp","direct_user"]},{"id":"other","name":"Other supported provider/client","connection_modes":["api","mcp","direct_user","other"]}],"note":"Gemini API is intentionally excluded by project policy. External provider usage is authorized by the user and is not silently paid by Bitey."}
 @app.get("/api/v1/tools/catalog")
-def tools_catalog():
-    return {"transports": [
-        {"id": "api", "description": "REST/HTTP APIs and broker/exchange APIs"},
-        {"id": "mcp", "description": "Model Context Protocol tool servers"},
-        {"id": "function_calling", "description": "Structured model/tool calls executed by SBT"},
-        {"id": "webhook", "description": "Webhooks such as TradingView"},
-        {"id": "sdk", "description": "Official broker/exchange SDKs"},
-        {"id": "cli", "description": "Local command-line/terminal tools when explicitly authorized"},
-    ], "execution_boundary": "AI proposes tool calls; SBT validates parameters and Risk Gate before trading actions."}
-
+def tools_catalog(): return {"transports":[{"id":"api","description":"REST/HTTP APIs and broker/exchange APIs"},{"id":"mcp","description":"Model Context Protocol tool servers"},{"id":"function_calling","description":"Structured model/tool calls executed by SBT"},{"id":"webhook","description":"Webhooks such as TradingView"},{"id":"sdk","description":"Official broker/exchange SDKs"},{"id":"cli","description":"Local command-line/terminal tools when explicitly authorized"}],"execution_boundary":"AI proposes tool calls; SBT validates parameters and Risk Gate before trading actions."}
 @app.post("/api/v1/config/validate")
 def validate_config(config: TradingConfig):
-    if config.mode == "live":
-        return {"valid": False, "reason": "Live trading is disabled in the current milestone", "next_stage": "safety-gates"}
-    return {"valid": True, "config": config.model_dump()}
-
+    if config.mode == "live": return {"valid":False,"reason":"Live trading is disabled in the current milestone","next_stage":"safety-gates"}
+    return {"valid":True,"config":config.model_dump()}
 @app.post("/api/v1/ai/provider-policy/evaluate")
 def evaluate_provider_policy(request: ProviderPolicyRequest):
-    policy = ProviderPolicy(**request.model_dump(exclude={"estimated_cost", "background", "fallback_provider"}))
+    policy = ProviderPolicy(**request.model_dump(exclude={"estimated_cost","background","fallback_provider"}))
     return evaluate_provider_call(policy, estimated_cost=request.estimated_cost, background=request.background, fallback_provider=request.fallback_provider).model_dump()
