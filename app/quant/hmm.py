@@ -66,7 +66,8 @@ def fit_gaussian_hmm(features: np.ndarray, states: int = 3, iterations: int = 60
         trans = xi_sum / np.maximum(xi_sum.sum(axis=1, keepdims=True), 1e-300)
         weights = gamma.sum(axis=0)
         means = (gamma.T @ features) / np.maximum(weights[:, None], 1e-12)
-        var = (gamma.T @ ((features[:, None, :] - means[None, :, :]) ** 2)) / np.maximum(weights[:, None], 1e-12)
+        centered2 = (features[:, None, :] - means[None, :, :]) ** 2
+        var = np.einsum("ns,nsd->sd", gamma, centered2) / np.maximum(weights[:, None], 1e-12)
         stds = np.sqrt(np.maximum(var, 1e-5))
     posterior = gamma
     labels = posterior.argmax(axis=1)
