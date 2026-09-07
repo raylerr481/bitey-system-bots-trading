@@ -1,0 +1,1 @@
+News integration pending main.py router wiring. Use /api/v1/news/catalog, /sources, /impact-categories and /watchlist once deployed.
