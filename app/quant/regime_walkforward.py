@@ -15,12 +15,10 @@ def _classify(features, model):
 def _state_stats(trades, labels, offset=0):
     out = {}
     for t in trades:
-        idx = int(t["entry_index"]) + offset
         if not labels:
             continue
         s = int(labels[min(max(int(t["entry_index"]), 0), len(labels) - 1)])
-        row = out.setdefault(s, [])
-        row.append(float(t["r_multiple"]))
+        out.setdefault(s, []).append(float(t["r_multiple"]))
     return {s: {"trades": len(rs), "expectancy_R": sum(rs) / len(rs) if rs else 0.0,
                  "positive": sum(x > 0 for x in rs),
                  "win_rate": sum(x > 0 for x in rs) / len(rs) if rs else None}
@@ -35,18 +33,23 @@ def run_walk_forward_regime_lab(
 ) -> dict:
     if strategy_id != "AR-001":
         raise ValueError("Only AR-001 is enabled in the first walk-forward milestone")
-    if len(bars) < 160:
-        raise ValueError("Walk-forward Regime Lab requires at least 160 OHLC bars")
+    min_bars = max(160, window + 23)
+    if len(bars) < min_bars:
+        raise ValueError(f"Walk-forward Regime Lab requires at least {min_bars} OHLC bars")
     if not 0.5 <= train_pct < 0.8 or not 0.05 <= test_pct <= 0.25:
         raise ValueError("invalid train/test proportions")
 
-    n = len(bars); train_end = max(100, int(n * train_pct)); step = max(20, int(n * test_pct))
+    n = len(bars)
+    train_end = max(100, int(n * train_pct))
+    # _features needs window+3 bars; keep every OOS fold large enough to classify safely.
+    step = max(window + 3, int(n * test_pct))
     folds = []; all_oos = []; all_baseline = []
     start = train_end
     fold_no = 0
     while start < n:
         test_end = min(n, start + step)
-        if test_end - start < 20: break
+        if test_end - start < window + 3:
+            break
         train = bars[:start]; test = bars[start:test_end]
         train_features = _features(train, window)
         if states == "auto":
