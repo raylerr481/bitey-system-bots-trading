@@ -4,7 +4,7 @@ from app.bot_builder.engine import build_bot
 from app.bot_builder.spec import BotSpecification
 from app.bot_builder.backtest import run_spec_backtest
 from app.bot_builder.pipeline import run_pipeline
-from app.bot_builder.ar001 import ar001_spec, size_staged_entries
+from app.bot_builder.ar001 import ar001_spec, size_staged_entries, evaluate_ar001_evidence
 from app.bot_builder.ar002 import ar002_spec, detect_liquidity_events, liquidity_signal_backtest
 
 router = APIRouter(prefix="/api/v1/bot-builder", tags=["bot-builder"])
@@ -32,6 +32,23 @@ class AR001SizingRequest(BaseModel):
 @router.post("/hypotheses/ar-001/size")
 def size_ar001(request: AR001SizingRequest):
     return size_staged_entries(request.capital, request.risk_pct, request.entries, request.stop, request.weights, request.point_value)
+
+class AR001EvidenceRequest(BaseModel):
+    r_multiples: list[float] = Field(min_length=1, max_length=100000)
+    oos_start: int | None = Field(default=None, ge=1)
+    stress_results: list[float] = Field(default_factory=list, max_length=1000)
+    risk_sizing_ok: bool = True
+    bootstrap_samples: int = Field(default=2000, ge=2000, le=100000)
+
+@router.post("/hypotheses/ar-001/evaluate")
+def evaluate_ar001(request: AR001EvidenceRequest):
+    return evaluate_ar001_evidence(
+        request.r_multiples,
+        request.oos_start,
+        request.stress_results,
+        request.risk_sizing_ok,
+        request.bootstrap_samples,
+    )
 
 class AR002EventStudyRequest(BaseModel):
     bars: list[dict[str, float]] = Field(min_length=30, max_length=10000)
