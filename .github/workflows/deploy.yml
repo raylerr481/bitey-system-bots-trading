@@ -13,6 +13,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore rich SBT UI for deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! grep -q 'class="app"' web/index.html; then
+            git show 33b3617c40b5c95d0036a99ce705853010fc5e68:web/index.html > web/index.html
+          fi
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('web/index.html')
+          s = p.read_text(encoding='utf-8')
+          loader = '<script src="/runtime.js" defer></script>\n'
+          if loader not in s:
+              s = s.replace('</body>', loader + '</body>', 1)
+              p.write_text(s, encoding='utf-8')
+          PY
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -25,7 +43,9 @@ jobs:
         run: |
           set -e
           body=$(curl -fsSL --retry 5 --retry-delay 3 https://bitey-system-bots-trading.raylerr481.workers.dev/)
-          printf '%s' "$body" | grep -q "Bitey"
+          printf '%s' "$body" | grep -q "Bitey SBT"
+          printf '%s' "$body" | grep -q "Trading Laboratory"
+          printf '%s' "$body" | grep -q "Market Intelligence"
           health=$(curl -fsSL --retry 5 --retry-delay 3 https://bitey-system-bots-trading.raylerr481.workers.dev/health)
           printf '%s' "$health" | grep -q '"live":false'
           printf '%s' "$health" | grep -q '"real_money":false'
