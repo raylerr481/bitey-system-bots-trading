@@ -23,8 +23,7 @@ def _oos_r(trades: list[dict], oos_start: int | None) -> tuple[list[float], int]
 
 
 def run_ar001_ohlc_evidence(
-    bars: list[dict[str, float]],
-    *,
+    bars: list[dict[str, float]], *,
     initial_capital: float = 10000,
     risk_pct: float = 0.01,
     atr_period: int = 14,
@@ -71,18 +70,16 @@ def run_ar001_ohlc_evidence(
         stress_values.append(expectancy)
         stress_metrics[name] = {"oos_trades": len(stress_oos), "oos_expectancy_R": expectancy}
 
-    # The evaluator requires separate in-sample and OOS observations. A tiny
-    # sample is a valid research result, but must be classified as insufficient.
-    if len(rs) < 2:
-        evidence = evaluate_ar001_evidence([], stress_results=stress_values, risk_sizing_ok=True, bootstrap_samples=bootstrap_samples)
-    else:
-        evidence = evaluate_ar001_evidence(
-            rs,
-            oos_start=split,
-            stress_results=stress_values,
-            risk_sizing_ok=True,
-            bootstrap_samples=bootstrap_samples,
-        )
+    # Preserve the observed sample size even when the dataset is too small for
+    # a conventional train/OOS split. The evaluator classifies it as insufficient.
+    evidence_input = rs if len(rs) <= 1 else rs
+    evidence = evaluate_ar001_evidence(
+        evidence_input,
+        oos_start=(None if len(evidence_input) <= 1 else split),
+        stress_results=stress_values,
+        risk_sizing_ok=True,
+        bootstrap_samples=bootstrap_samples,
+    )
     return {
         "contract": "sbt-ar001-ohlc-evidence-v1",
         "hypothesis_id": "AR-001",
