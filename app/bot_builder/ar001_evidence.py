@@ -71,13 +71,18 @@ def run_ar001_ohlc_evidence(
         stress_values.append(expectancy)
         stress_metrics[name] = {"oos_trades": len(stress_oos), "oos_expectancy_R": expectancy}
 
-    evidence = evaluate_ar001_evidence(
-        rs,
-        oos_start=split,
-        stress_results=stress_values,
-        risk_sizing_ok=True,
-        bootstrap_samples=bootstrap_samples,
-    )
+    # The evaluator requires separate in-sample and OOS observations. A tiny
+    # sample is a valid research result, but must be classified as insufficient.
+    if len(rs) < 2:
+        evidence = evaluate_ar001_evidence([], stress_results=stress_values, risk_sizing_ok=True, bootstrap_samples=bootstrap_samples)
+    else:
+        evidence = evaluate_ar001_evidence(
+            rs,
+            oos_start=split,
+            stress_results=stress_values,
+            risk_sizing_ok=True,
+            bootstrap_samples=bootstrap_samples,
+        )
     return {
         "contract": "sbt-ar001-ohlc-evidence-v1",
         "hypothesis_id": "AR-001",
