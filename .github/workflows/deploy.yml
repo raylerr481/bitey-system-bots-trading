@@ -50,3 +50,4 @@ jobs:
           printf '%s' "$health" | grep -q '"live":false'
           printf '%s' "$health" | grep -q '"real_money":false'
           printf '%s' "$health" | grep -q '"broker_orders":0'
+# trigger after Cloudflare Actions credential setup
