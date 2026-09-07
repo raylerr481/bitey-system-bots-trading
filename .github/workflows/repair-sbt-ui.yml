@@ -2,7 +2,8 @@ name: Repair SBT UI
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -10,7 +11,6 @@ permissions:
 
 jobs:
   repair:
-    if: github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, 'chore: restore SBT UI')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,12 +29,9 @@ jobs:
           from pathlib import Path
           p = Path('web/index.html')
           s = p.read_text(encoding='utf-8')
-          marker = '</body>'
           loader = '<script src="/runtime.js" defer></script>\n'
           if loader not in s:
-              if marker not in s:
-                  raise SystemExit('Missing </body> marker')
-              s = s.replace(marker, loader + marker, 1)
+              s = s.replace('</body>', loader + '</body>', 1)
               p.write_text(s, encoding='utf-8')
           PY
       - name: Commit repaired UI
