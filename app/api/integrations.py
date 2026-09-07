@@ -4,16 +4,17 @@ from typing import Literal
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
-router = APIRouter(prefix="/api/v1/integrations", tags=["integrations"])
+from app.services.native_trading_platform import build_chart_contract, platform_capabilities
 
+router = APIRouter(prefix="/api/v1/integrations", tags=["integrations"])
 Permission = Literal["read_market", "read_account", "research", "strategy_write", "demo_execute", "paper_execute", "live_execute", "admin"]
 
 PLATFORMS = [
+    {"id": "bitey-sbt-native", "name": "Bitey SBT Trading Platform", "modes": ["research", "backtest", "demo", "paper"], "transport": ["api", "mcp", "websocket"], "live_enabled": False},
     {"id": "mt5", "name": "MetaTrader 5", "modes": ["demo"], "transport": ["bridge", "api"], "live_enabled": False},
     {"id": "tradingview", "name": "TradingView", "modes": ["webhook", "paper"], "transport": ["webhook"], "live_enabled": False},
     {"id": "alpaca", "name": "Alpaca", "modes": ["paper"], "transport": ["api", "sdk"], "live_enabled": False},
 ]
-
 PERMISSIONS = [
     {"id": "read_market", "label": "Leer mercado", "risk": "low"},
     {"id": "read_account", "label": "Leer cuenta/portfolio", "risk": "low"},
@@ -34,7 +35,11 @@ class ConnectionPlan(BaseModel):
 
 @router.get("/platforms")
 def platforms():
-    return {"platforms": PLATFORMS}
+    return {"native": platform_capabilities(), "platforms": PLATFORMS}
+
+@router.get("/market/chart/{symbol}")
+def chart(symbol: str, timeframe: str = "M1"):
+    return build_chart_contract(symbol, timeframe)
 
 @router.get("/permissions")
 def permissions():
@@ -45,27 +50,9 @@ def plan(request: ConnectionPlan):
     platform = next((p for p in PLATFORMS if p["id"] == request.platform), None)
     live_requested = request.mode == "live" or "live_execute" in request.permissions
     if live_requested:
-        return {
-            "allowed": False,
-            "stage": "safety-gates",
-            "reason": "Real-money execution is not enabled in the current milestone.",
-            "next": ["authenticated_user", "explicit_real_account", "risk_limits", "strategy_validation", "broker_health", "final_confirmation"],
-        }
+        return {"allowed": False, "stage": "safety-gates", "reason": "Real-money execution remains disabled until the explicit live-safety milestone is enabled.", "next": ["authenticated_user", "explicit_real_account", "risk_limits", "strategy_validation", "broker_health", "final_confirmation"]}
     if not platform:
         return {"allowed": False, "stage": "platform-selection", "reason": "Unsupported platform"}
     if request.automation and not any(p in request.permissions for p in ["demo_execute", "paper_execute"]):
         return {"allowed": False, "stage": "permissions", "reason": "Automation requires an explicit execution permission."}
-    return {
-        "allowed": True,
-        "stage": "ready-for-connection",
-        "plan": {
-            "ai_provider": request.ai_provider,
-            "ai_connection": request.ai_connection,
-            "platform": platform,
-            "mode": request.mode,
-            "permissions": request.permissions,
-            "automation": request.automation,
-            "risk_gate": "mandatory",
-            "user_controls_external_costs": True,
-        },
-    }
+    return {"allowed": True, "stage": "ready-for-connection", "plan": {"ai_provider": request.ai_provider, "ai_connection": request.ai_connection, "platform": platform, "mode": request.mode, "permissions": request.permissions, "automation": request.automation, "risk_gate": "mandatory", "user_controls_external_costs": True}}
