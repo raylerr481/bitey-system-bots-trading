@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from alpaca.data.historical import StockHistoricalDataClient
+from alpaca.data.requests import StockLatestQuoteRequest
+
 from app.brokers.base import BrokerAccount, BrokerCapabilities, BrokerQuote
+from app.core.settings import ALPACA_API_KEY, ALPACA_SECRET_KEY
 from app.services.alpaca_paper import account as paper_account
-from app.services.alpaca_paper import client as paper_client
 from app.services.alpaca_paper import market_order as paper_market_order
 
 
@@ -30,15 +33,19 @@ class AlpacaAdapter:
         )
 
     def quote(self, symbol: str) -> BrokerQuote:
-        client = paper_client()
-        quote = client.get_latest_trade(symbol.upper())
+        if not ALPACA_API_KEY or not ALPACA_SECRET_KEY:
+            raise RuntimeError("Alpaca paper credentials are not configured")
+        data_client = StockHistoricalDataClient(ALPACA_API_KEY, ALPACA_SECRET_KEY)
+        result = data_client.get_stock_latest_quote(
+            StockLatestQuoteRequest(symbol_or_symbols=symbol.upper())
+        )[symbol.upper()]
         return BrokerQuote(
             broker=self.broker_id,
             symbol=symbol.upper(),
-            bid=None,
-            ask=None,
-            last=float(quote.price),
-            timestamp=quote.timestamp.isoformat() if quote.timestamp else None,
+            bid=float(result.bid_price),
+            ask=float(result.ask_price),
+            last=None,
+            timestamp=result.timestamp.isoformat() if result.timestamp else None,
         )
 
     def submit_order(self, symbol: str, side: str, quantity: float) -> dict:
