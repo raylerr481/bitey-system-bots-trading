@@ -1,0 +1,1 @@
+SBT Worker runtime assets are deployed from ./web. Safety mode is research/demo only: live=false, real_money=false, broker_orders=0.
