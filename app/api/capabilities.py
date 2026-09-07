@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import re
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.api.backtest import BacktestRequest, crossover_signal
+from app.api.market import _mt5_quote
 from app.services.backtest import run_backtest
 from app.services.virtual_validation import run_virtual_validation
 from app.strategies.smc import OHLC, SMCSignalRequest, smc_signal
@@ -46,26 +48,55 @@ def _fixture_ohlc(prices: list[float]) -> list[OHLC]:
         open_price = previous
         high = max(open_price, price) + 0.2
         low = min(open_price, price) - 0.2
-        candles.append(
-            OHLC(open=open_price, high=high, low=low, close=price)
-        )
+        candles.append(OHLC(open=open_price, high=high, low=low, close=price))
         previous = price
     return candles
+
+
+def _is_gold_quote_request(message: str) -> bool:
+    text = message.lower()
+    return bool(re.search(r"\b(oro|gold|xauusd|xau/usd)\b", text)) and bool(
+        re.search(r"(cotiz|precio|valor|quote|price|mercado|hoy|actual|actualmente)", text)
+    )
+
+
+async def _gold_quote_result(message: str, conversation_id: str | None) -> dict:
+    quote = await _mt5_quote("XAUUSD")
+    return {
+        "contract": "sbt-market-quote-v1",
+        "capability": "sbt",
+        "delegated": True,
+        "delegation_status": "accepted",
+        "specialization": "trading-intelligence",
+        "conversation_id": conversation_id,
+        "source": "bitey-sbt-market-gateway",
+        "execution": {
+            "live": False,
+            "paper": False,
+            "demo": False,
+            "real_money": False,
+            "broker_orders": 0,
+            "risk_gate_authoritative": True,
+        },
+        "market_data": {
+            "mode": "real",
+            "instrument": "XAUUSD",
+            "asset": "gold",
+            "quote": quote,
+            "timestamp": quote.get("timestamp"),
+        },
+        "answer": "Bitey SBT consultó el gateway de mercado autorizado y obtuvo una cotización real de XAUUSD. No se enviaron órdenes.",
+        "mode": "market-data-real",
+        "message": message,
+    }
 
 
 def _research_result(message: str) -> dict:
     prices = _fixture_prices()
     signal = technical_signal(TechnicalSignalRequest(symbol="SYNTH", prices=prices))
     candles = _fixture_ohlc(prices)
-    smc = smc_signal(
-        SMCSignalRequest(symbol="SYNTH", candles=candles, swing_window=2)
-    )
-    backtest = run_backtest(
-        prices,
-        lambda values, i: crossover_signal(values, i, 10, 30),
-        initial_capital=10_000,
-        fee_pct=0.001,
-    )
+    smc = smc_signal(SMCSignalRequest(symbol="SYNTH", candles=candles, swing_window=2))
+    backtest = run_backtest(prices, lambda values, i: crossover_signal(values, i, 10, 30), initial_capital=10_000, fee_pct=0.001)
     validation = run_virtual_validation()
     return {
         "execution_status": "completed",
@@ -74,44 +105,23 @@ def _research_result(message: str) -> dict:
             "instrument": "SYNTH",
             "fixture": "synthetic-deterministic-not-market-history",
             "strategy_signal": signal,
-            "smc": {
-                "strategy": "smc-v1",
-                "signal": smc,
-                "structure": smc.get("structure", {}),
-                "liquidity": smc.get("liquidity", {}),
-                "fair_value_gaps": smc.get("fair_value_gaps", []),
-                "order_blocks": smc.get("order_blocks", []),
-                "research_only": True,
-                "live": False,
-                "real_money": False,
-            },
+            "smc": {"strategy": "smc-v1", "signal": smc, "structure": smc.get("structure", {}), "liquidity": smc.get("liquidity", {}), "fair_value_gaps": smc.get("fair_value_gaps", []), "order_blocks": smc.get("order_blocks", []), "research_only": True, "live": False, "real_money": False},
             "backtest": {"strategy": "sma-crossover-v1", **backtest.__dict__},
-            "validation": {
-                "validation": validation["validation"],
-                "strategy": validation["strategy"],
-                "return_pct": validation["return_pct"],
-                "max_drawdown_pct": validation["max_drawdown_pct"],
-                "closed_trades": validation["closed_trades"],
-                "win_rate_pct": validation["win_rate_pct"],
-                "real_money": False,
-                "broker_orders": 0,
-            },
+            "validation": {"validation": validation["validation"], "strategy": validation["strategy"], "return_pct": validation["return_pct"], "max_drawdown_pct": validation["max_drawdown_pct"], "closed_trades": validation["closed_trades"], "win_rate_pct": validation["win_rate_pct"], "real_money": False, "broker_orders": 0},
         },
-        "answer": (
-            "SBT ejecutó investigación técnica en modo research-only: generó una señal técnica, "
-            "analizó Smart Money Concepts (BOS/CHOCH, liquidez, FVG y order blocks), ejecutó un "
-            "backtest determinista y verificó la estrategia con validación virtual. Los precios son "
-            "sintéticos y no representan historial de mercado. No se enviaron órdenes."
-        ),
+        "answer": "SBT ejecutó investigación técnica en modo research-only: generó una señal técnica, analizó Smart Money Concepts (BOS/CHOCH, liquidez, FVG y order blocks), ejecutó un backtest determinista y verificó la estrategia con validación virtual. Los precios son sintéticos y no representan historial de mercado. No se enviaron órdenes.",
         "mode": "research-only",
         "message": message,
     }
 
 
 @router.post("/delegate")
-def delegate(request: DelegationRequest):
+async def delegate(request: DelegationRequest):
     if request.contract != "sbt-v1" or request.capability != "sbt":
         raise HTTPException(status_code=400, detail="Invalid SBT delegation contract")
+
+    if _is_gold_quote_request(request.message):
+        return await _gold_quote_result(request.message, request.conversation_id)
 
     result = _research_result(request.message)
     return {
@@ -122,22 +132,8 @@ def delegate(request: DelegationRequest):
         "specialization": "trading-intelligence",
         "conversation_id": request.conversation_id,
         "source": request.source,
-        "execution": {
-            "live": False,
-            "paper": False,
-            "demo": False,
-            "real_money": False,
-            "broker_orders": 0,
-            "risk_gate_authoritative": True,
-        },
-        "next_capabilities": [
-            "strategy",
-            "smart-money-concepts",
-            "backtesting",
-            "validation",
-            "risk-controls",
-            "market-data",
-        ],
+        "execution": {"live": False, "paper": False, "demo": False, "real_money": False, "broker_orders": 0, "risk_gate_authoritative": True},
+        "next_capabilities": ["strategy", "smart-money-concepts", "backtesting", "validation", "risk-controls", "market-data"],
         "note": "SBT research completed without trading execution. Trading actions remain subject to SBT permissions and Risk Gate.",
         **result,
     }
