@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from app.bot_builder.engine import build_bot
 from app.bot_builder.spec import BotSpecification
 from app.bot_builder.backtest import run_spec_backtest
+from app.bot_builder.pipeline import run_pipeline
 
 router = APIRouter(prefix="/api/v1/bot-builder", tags=["bot-builder"])
 
@@ -22,3 +23,11 @@ class BacktestBuildRequest(BaseModel):
 @router.post("/backtest")
 def backtest_build(request: BacktestBuildRequest):
     return run_spec_backtest(request.specification, request.prices, request.fee_pct)
+
+class PipelineRequest(BaseModel):
+    specification: BotSpecification
+    prices: list[float] = Field(min_length=30, max_length=10000)
+
+@router.post("/run")
+def run(request: PipelineRequest):
+    return run_pipeline(request.specification, request.prices)
