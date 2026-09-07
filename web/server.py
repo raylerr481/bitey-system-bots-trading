@@ -65,6 +65,73 @@ VALIDATION_WIRING = '''<script>
 })();
 </script>'''
 
+MARKET_WIRING = '''<script>
+(function () {
+  const refresh = document.getElementById('refreshMarket');
+  if (!refresh) return;
+  refresh.addEventListener('click', async function (event) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const base = (window.SBT_API_URL || localStorage.getItem('sbt_api_base') || '').replace(/\\/$/, '');
+    const status = document.getElementById('apiStatus');
+    const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+    const chart = document.getElementById('marketChart');
+    refresh.disabled = true;
+    refresh.textContent = 'Analizando…';
+    if (status) status.textContent = 'Consultando market data real…';
+    try {
+      const [quoteResponse, candlesResponse] = await Promise.all([
+        fetch(base + '/api/v1/market/quote/EURUSD', { headers: { 'Accept': 'application/json' } }),
+        fetch(base + '/api/v1/market/candles/EURUSD?timeframe=M5&limit=100', { headers: { 'Accept': 'application/json' } })
+      ]);
+      if (!quoteResponse.ok) throw new Error('Quote HTTP ' + quoteResponse.status);
+      if (!candlesResponse.ok) throw new Error('Candles HTTP ' + candlesResponse.status);
+      const quote = await quoteResponse.json();
+      const candleData = await candlesResponse.json();
+      const candles = Array.isArray(candleData) ? candleData : (Array.isArray(candleData.candles) ? candleData.candles : []);
+      if (candles.length < 35) throw new Error('Solo hay ' + candles.length + ' velas; se requieren al menos 35');
+      const analysisResponse = await fetch(base + '/api/v1/sbt/market-intelligence/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ symbol: 'EURUSD', timeframe: 'M5', candles, capital: 10000, language: 'es', event: 'market_structure', evidence: [] })
+      });
+      if (!analysisResponse.ok) throw new Error('Analysis HTTP ' + analysisResponse.status);
+      const analysis = await analysisResponse.json();
+      const price = quote.last ?? quote.bid ?? quote.ask;
+      set('miPrice', price != null ? Number(price).toFixed(5) : '—');
+      set('miBias', analysis.bias || 'NEUTRAL');
+      const atr = analysis.technical && analysis.technical.atr ? analysis.technical.atr.value : null;
+      set('miVol', atr != null ? Number(atr).toFixed(6) : '—');
+      set('miConfidence', analysis.confidence != null ? (Number(analysis.confidence) * 100).toFixed(1) + '%' : '—');
+      if (chart) {
+        chart.innerHTML = '';
+        const closes = candles.slice(-30).map(c => Number(c.close)).filter(Number.isFinite);
+        if (closes.length) {
+          const min = Math.min(...closes), max = Math.max(...closes), span = max - min || 1;
+          closes.forEach(value => {
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            bar.style.height = Math.max(8, ((value - min) / span) * 92 + 8) + '%';
+            chart.appendChild(bar);
+          });
+        }
+      }
+      if (status) status.textContent = 'Market Intelligence connected · real MT5 data';
+    } catch (error) {
+      set('miPrice', '—');
+      set('miBias', 'UNAVAILABLE');
+      set('miVol', '—');
+      set('miConfidence', '—');
+      if (chart) chart.innerHTML = '';
+      if (status) status.textContent = 'Market data unavailable · no invented metrics';
+    } finally {
+      refresh.disabled = false;
+      refresh.textContent = 'Actualizar análisis';
+    }
+  }, true);
+})();
+</script>'''
+
 class Handler(SimpleHTTPRequestHandler):
     def end_headers(self):
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -85,6 +152,8 @@ class Handler(SimpleHTTPRequestHandler):
                 index = index.replace(marker, marker + BITEY_IA_WIDGET, 1)
             if "validation/virtual" not in index:
                 index = index.replace("</body>", VALIDATION_WIRING + "</body>", 1)
+            if "sbt/market-intelligence/analyze" not in index:
+                index = index.replace("</body>", MARKET_WIRING + "</body>", 1)
             body = index.encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
