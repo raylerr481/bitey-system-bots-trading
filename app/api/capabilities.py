@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from app.api.backtest import BacktestRequest, crossover_signal
 from app.services.backtest import run_backtest
 from app.services.virtual_validation import run_virtual_validation
+from app.strategies.smc import OHLC, SMCSignalRequest, smc_signal
 from app.strategies.technical import TechnicalSignalRequest, technical_signal
 
 router = APIRouter(prefix="/api/v1/capabilities", tags=["capabilities"])
@@ -38,9 +39,27 @@ def _fixture_prices() -> list[float]:
     return prices
 
 
+def _fixture_ohlc(prices: list[float]) -> list[OHLC]:
+    candles: list[OHLC] = []
+    previous = prices[0]
+    for price in prices:
+        open_price = previous
+        high = max(open_price, price) + 0.2
+        low = min(open_price, price) - 0.2
+        candles.append(
+            OHLC(open=open_price, high=high, low=low, close=price)
+        )
+        previous = price
+    return candles
+
+
 def _research_result(message: str) -> dict:
     prices = _fixture_prices()
     signal = technical_signal(TechnicalSignalRequest(symbol="SYNTH", prices=prices))
+    candles = _fixture_ohlc(prices)
+    smc = smc_signal(
+        SMCSignalRequest(symbol="SYNTH", candles=candles, swing_window=2)
+    )
     backtest = run_backtest(
         prices,
         lambda values, i: crossover_signal(values, i, 10, 30),
@@ -55,6 +74,17 @@ def _research_result(message: str) -> dict:
             "instrument": "SYNTH",
             "fixture": "synthetic-deterministic-not-market-history",
             "strategy_signal": signal,
+            "smc": {
+                "strategy": "smc-v1",
+                "signal": smc,
+                "structure": smc.get("structure", {}),
+                "liquidity": smc.get("liquidity", {}),
+                "fair_value_gaps": smc.get("fair_value_gaps", []),
+                "order_blocks": smc.get("order_blocks", []),
+                "research_only": True,
+                "live": False,
+                "real_money": False,
+            },
             "backtest": {"strategy": "sma-crossover-v1", **backtest.__dict__},
             "validation": {
                 "validation": validation["validation"],
@@ -68,9 +98,10 @@ def _research_result(message: str) -> dict:
             },
         },
         "answer": (
-            "SBT ejecutó investigación técnica en modo research-only: generó una señal, "
-            "ejecutó un backtest determinista y verificó la estrategia con validación virtual. "
-            "Los precios son sintéticos y no representan historial de mercado. No se enviaron órdenes."
+            "SBT ejecutó investigación técnica en modo research-only: generó una señal técnica, "
+            "analizó Smart Money Concepts (BOS/CHOCH, liquidez, FVG y order blocks), ejecutó un "
+            "backtest determinista y verificó la estrategia con validación virtual. Los precios son "
+            "sintéticos y no representan historial de mercado. No se enviaron órdenes."
         ),
         "mode": "research-only",
         "message": message,
@@ -99,7 +130,14 @@ def delegate(request: DelegationRequest):
             "broker_orders": 0,
             "risk_gate_authoritative": True,
         },
-        "next_capabilities": ["strategy", "backtesting", "validation", "risk-controls", "market-data"],
+        "next_capabilities": [
+            "strategy",
+            "smart-money-concepts",
+            "backtesting",
+            "validation",
+            "risk-controls",
+            "market-data",
+        ],
         "note": "SBT research completed without trading execution. Trading actions remain subject to SBT permissions and Risk Gate.",
         **result,
     }
