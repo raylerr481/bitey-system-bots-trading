@@ -1,0 +1,52 @@
+name: Repair SBT UI
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, 'chore: restore SBT UI')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore rich UI from known-good commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -q 'class="app"' web/index.html && grep -q 'Trading Laboratory' web/index.html && grep -q 'Market Intelligence' web/index.html; then
+            echo 'Rich SBT UI already present.'
+            exit 0
+          fi
+          git show 33b3617c40b5c95d0036a99ce705853010fc5e68:web/index.html > web/index.html
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('web/index.html')
+          s = p.read_text(encoding='utf-8')
+          marker = '</body>'
+          loader = '<script src="/runtime.js" defer></script>\n'
+          if loader not in s:
+              if marker not in s:
+                  raise SystemExit('Missing </body> marker')
+              s = s.replace(marker, loader + marker, 1)
+              p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit repaired UI
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- web/index.html; then
+            echo 'No UI repair needed.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add web/index.html
+          git commit -m 'chore: restore SBT UI'
+          git push
