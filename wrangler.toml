@@ -1,0 +1,8 @@
+name = "bitey-system-bots-trading"
+main = "worker.js"
+compatibility_date = "2026-09-07"
+workers_dev = true
+
+[assets]
+directory = "./web"
+binding = "ASSETS"
