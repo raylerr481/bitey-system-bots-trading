@@ -54,25 +54,53 @@ VALIDATION_WIRING = '''<script>
 MARKET_WIRING = '''<script>
 (function(){
  const refresh=document.getElementById('refreshMarket'); if(!refresh)return;
- refresh.addEventListener('click',async function(event){
-  event.preventDefault();event.stopImmediatePropagation();
-  const base=(window.SBT_API_URL||localStorage.getItem('sbt_api_base')||'').replace(/\\/$/,'');
-  const status=document.getElementById('apiStatus'); const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
-  const chart=document.getElementById('marketChart'); refresh.disabled=true;refresh.textContent='Analizando…';
-  if(status)status.textContent='Consultando MT5 market data real…';
+ let currentTimeframe='M5', currentCandles=[], currentAnalysis=null, zoom=60;
+ const base=()=>((window.SBT_API_URL||localStorage.getItem('sbt_api_base')||'').replace(/\\/$/,''));
+ const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+ refresh.addEventListener('click',()=>loadMarket(currentTimeframe),true);
+ function ensureToolbar(chart){
+  if(document.getElementById('mt5Toolbar'))return;
+  const bar=document.createElement('div');bar.id='mt5Toolbar';bar.className='mt5-toolbar';
+  bar.innerHTML='<div class="mt5-group"><b>EURUSD</b><button data-tf="M1">M1</button><button data-tf="M5" class="active">M5</button><button data-tf="M15">M15</button><button data-tf="H1">H1</button><button data-tf="H4">H4</button><button data-tf="D1">D1</button></div><div class="mt5-group"><button id="mt5ZoomOut">−</button><button id="mt5ZoomIn">+</button><button id="mt5Reset">Reset</button><span class="mt5-live">● MT5</span></div>';
+  chart.parentNode.insertBefore(bar,chart);
+  bar.querySelectorAll('[data-tf]').forEach(b=>b.addEventListener('click',()=>{bar.querySelectorAll('[data-tf]').forEach(x=>x.classList.remove('active'));b.classList.add('active');currentTimeframe=b.dataset.tf;loadMarket(currentTimeframe);}));
+  document.getElementById('mt5ZoomIn').onclick=()=>{zoom=Math.max(25,zoom-10);drawMT5Chart(chart,currentCandles,currentAnalysis)};
+  document.getElementById('mt5ZoomOut').onclick=()=>{zoom=Math.min(currentCandles.length||100,zoom+10);drawMT5Chart(chart,currentCandles,currentAnalysis)};
+  document.getElementById('mt5Reset').onclick=()=>{zoom=Math.min(60,currentCandles.length||60);drawMT5Chart(chart,currentCandles,currentAnalysis)};
+ }
+ async function loadMarket(tf){
+  const chart=document.getElementById('marketChart');ensureToolbar(chart);refresh.disabled=true;refresh.textContent='Analizando…';
+  const status=document.getElementById('apiStatus');if(status)status.textContent='Consultando MT5 market data real · '+tf+'…';
   try{
-   const [qr,cr]=await Promise.all([fetch(base+'/api/v1/market/quote/EURUSD',{headers:{'Accept':'application/json'}}),fetch(base+'/api/v1/market/candles/EURUSD?timeframe=M5&limit=100',{headers:{'Accept':'application/json'}})]);
+   const [qr,cr]=await Promise.all([fetch(base()+'/api/v1/market/quote/EURUSD',{headers:{'Accept':'application/json'}}),fetch(base()+'/api/v1/market/candles/EURUSD?timeframe='+encodeURIComponent(tf)+'&limit=200',{headers:{'Accept':'application/json'}})]);
    if(!qr.ok)throw new Error('Quote HTTP '+qr.status);if(!cr.ok)throw new Error('Candles HTTP '+cr.status);
-   const q=await qr.json(),cd=await cr.json();const candles=Array.isArray(cd)?cd:(Array.isArray(cd.candles)?cd.candles:[]);
+   const q=await qr.json(),cd=await cr.json(),candles=Array.isArray(cd)?cd:(Array.isArray(cd.candles)?cd.candles:[]);
    if(candles.length<35)throw new Error('Solo hay '+candles.length+' velas; se requieren al menos 35');
-   const ar=await fetch(base+'/api/v1/sbt/market-intelligence/analyze',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({symbol:'EURUSD',timeframe:'M5',candles,capital:10000,language:'es',event:'market_structure',evidence:[]})});
-   if(!ar.ok)throw new Error('Analysis HTTP '+ar.status); const a=await ar.json();
+   const ar=await fetch(base()+'/api/v1/sbt/market-intelligence/analyze',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({symbol:'EURUSD',timeframe:tf,candles,capital:10000,language:'es',event:'market_structure',evidence:[]})});
+   if(!ar.ok)throw new Error('Analysis HTTP '+ar.status);const a=await ar.json();
+   currentCandles=candles;currentAnalysis=a;zoom=Math.min(60,candles.length);
    const price=q.last??q.bid??q.ask;set('miPrice',price!=null?Number(price).toFixed(5):'—');set('miBias',a.bias||'NEUTRAL');const atr=a.technical&&a.technical.atr?a.technical.atr.value:null;set('miVol',atr!=null?Number(atr).toFixed(6):'—');set('miConfidence',a.confidence!=null?(Number(a.confidence)*100).toFixed(1)+'%':'—');drawMT5Chart(chart,candles,a);
-   if(status)status.textContent='Market Intelligence connected · MT5 · EURUSD M5';
-  }catch(e){set('miPrice','—');set('miBias','UNAVAILABLE');set('miVol','—');set('miConfidence','—');if(chart)chart.innerHTML='';if(status)status.textContent='MT5 market data unavailable · no invented metrics';}
+   if(status)status.textContent='Market Intelligence connected · MT5 · EURUSD '+tf;
+  }catch(e){set('miPrice','—');set('miBias','UNAVAILABLE');set('miVol','—');set('miConfidence','—');if(chart)chart.innerHTML='<div class="mt5-empty">MT5 market data unavailable · no invented metrics</div>';if(status)status.textContent='MT5 market data unavailable · no invented metrics';}
   finally{refresh.disabled=false;refresh.textContent='Actualizar análisis';}
- },true);
- function drawMT5Chart(container,candles,analysis){if(!container)return;container.innerHTML='';container.classList.add('mt5-chart');const visible=candles.slice(-60);const W=Math.max(container.clientWidth||700,480),H=250;const canvas=document.createElement('canvas');canvas.width=W*2;canvas.height=H*2;canvas.style.width='100%';canvas.style.height=H+'px';container.appendChild(canvas);const ctx=canvas.getContext('2d');ctx.scale(2,2);const w=W,h=H,p={l:48,r:54,t:18,b:28};const hi=Math.max(...visible.map(c=>Number(c.high))),lo=Math.min(...visible.map(c=>Number(c.low))),span=hi-lo||1,y=v=>p.t+(hi-v)/span*(h-p.t-p.b),step=(w-p.l-p.r)/visible.length,body=Math.max(3,step*.58);ctx.font='10px Inter,system-ui,sans-serif';ctx.lineWidth=1;ctx.strokeStyle='#1e2936';ctx.fillStyle='#8491a2';ctx.textAlign='right';for(let i=0;i<=5;i++){const yy=p.t+i*(h-p.t-p.b)/5,val=hi-i*span/5;ctx.beginPath();ctx.moveTo(p.l,yy);ctx.lineTo(w-p.r,yy);ctx.stroke();ctx.fillText(val.toFixed(5),w-5,yy+3);}visible.forEach((c,i)=>{const o=Number(c.open),cl=Number(c.close),hh=Number(c.high),ll=Number(c.low),x=p.l+i*step+step/2,up=cl>=o;ctx.strokeStyle=up?'#52e6a2':'#ff7272';ctx.fillStyle=ctx.strokeStyle;ctx.beginPath();ctx.moveTo(x,y(hh));ctx.lineTo(x,y(ll));ctx.stroke();const top=y(Math.max(o,cl)),bot=y(Math.min(o,cl));ctx.fillRect(x-body/2,top,body,Math.max(1,bot-top));});const ema=analysis&&analysis.technical&&analysis.technical.ema;if(ema&&ema.fast!=null&&ema.slow!=null){ctx.setLineDash([5,4]);ctx.strokeStyle='#78a7ff';ctx.beginPath();ctx.moveTo(p.l,y(ema.fast));ctx.lineTo(w-p.r,y(ema.fast));ctx.stroke();ctx.strokeStyle='#f2c76d';ctx.beginPath();ctx.moveTo(p.l,y(ema.slow));ctx.lineTo(w-p.r,y(ema.slow));ctx.stroke();ctx.setLineDash([]);}ctx.textAlign='left';ctx.fillStyle='#edf3f8';ctx.font='11px Inter,system-ui,sans-serif';ctx.fillText('EURUSD · M5 · MT5',p.l,12);ctx.fillStyle='#8491a2';ctx.textAlign='center';ctx.fillText('Últimas '+visible.length+' velas · datos reales cuando MT5 está disponible',w/2,h-8);}
+ }
+ function emaSeries(values,period){if(values.length<period)return[];let v=values.slice(0,period).reduce((a,b)=>a+b,0)/period;const a=2/(period+1),out=new Array(values.length).fill(null);out[period-1]=v;for(let i=period;i<values.length;i++){v=a*values[i]+(1-a)*v;out[i]=v;}return out;}
+ function drawMT5Chart(container,candles,analysis){
+  if(!container)return;container.innerHTML='';container.classList.add('mt5-chart');ensureToolbar(container);const visible=candles.slice(-zoom),W=Math.max(container.clientWidth||760,560),H=330,canvas=document.createElement('canvas');canvas.width=W*2;canvas.height=H*2;canvas.style.width='100%';canvas.style.height=H+'px';container.appendChild(canvas);
+  const ctx=canvas.getContext('2d');ctx.scale(2,2);const w=W,h=H,p={l:58,r:72,t:26,b:32},hi=Math.max(...visible.map(c=>Number(c.high))),lo=Math.min(...visible.map(c=>Number(c.low))),pad=(hi-lo||1)*.06,top=hi+pad,bot=lo-pad,span=top-bot,y=v=>p.t+(top-v)/span*(h-p.t-p.b),step=(w-p.l-p.r)/visible.length,body=Math.max(3,step*.62);
+  ctx.font='10px Inter,system-ui,sans-serif';ctx.lineWidth=1;ctx.textAlign='right';
+  for(let i=0;i<=6;i++){const yy=p.t+i*(h-p.t-p.b)/6,val=top-i*span/6;ctx.strokeStyle='#18222d';ctx.beginPath();ctx.moveTo(p.l,yy);ctx.lineTo(w-p.r,yy);ctx.stroke();ctx.fillStyle='#7d8997';ctx.fillText(val.toFixed(5),w-6,yy+3);}
+  for(let i=0;i<visible.length;i+=Math.max(1,Math.ceil(visible.length/8))){const x=p.l+i*step+step/2;ctx.strokeStyle='#111a23';ctx.beginPath();ctx.moveTo(x,p.t);ctx.lineTo(x,h-p.b);ctx.stroke();ctx.fillStyle='#697687';ctx.textAlign='center';const d=visible[i].time?new Date(Number(visible[i].time)*1000):null;ctx.fillText(d&&!isNaN(d)?d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):String(i+1),x,h-10);}
+  visible.forEach((c,i)=>{const o=Number(c.open),cl=Number(c.close),hh=Number(c.high),ll=Number(c.low),x=p.l+i*step+step/2,up=cl>=o;ctx.strokeStyle=up?'#52e6a2':'#ff7272';ctx.fillStyle=ctx.strokeStyle;ctx.beginPath();ctx.moveTo(x,y(hh));ctx.lineTo(x,y(ll));ctx.stroke();const a=y(Math.max(o,cl)),b=y(Math.min(o,cl));ctx.fillRect(x-body/2,a,body,Math.max(2,b-a));if(body>5){ctx.strokeStyle=up?'#8af2c2':'#ff9a9a';ctx.strokeRect(x-body/2,a,body,Math.max(2,b-a));}});
+  const closes=visible.map(c=>Number(c.close)),e9=emaSeries(closes,9),e21=emaSeries(closes,21);function line(series,dash,label,stroke){ctx.setLineDash(dash);ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.beginPath();let started=false;series.forEach((v,i)=>{if(v==null)return;const x=p.l+i*step+step/2;if(!started){ctx.moveTo(x,y(v));started=true;}else ctx.lineTo(x,y(v));});ctx.stroke();ctx.setLineDash([]);if(series.length){const v=series[series.length-1];if(v!=null){ctx.fillStyle=stroke;ctx.textAlign='left';ctx.font='10px Inter,system-ui,sans-serif';ctx.fillText(label+' '+v.toFixed(5),p.l+5,y(v)-5);}}}
+  line(e9,[5,3],'EMA 9','#78a7ff');line(e21,[7,4],'EMA 21','#f2c76d');
+  ctx.fillStyle='#edf3f8';ctx.textAlign='left';ctx.font='bold 11px Inter,system-ui,sans-serif';ctx.fillText('EURUSD · '+currentTimeframe+' · MT5',p.l,14);ctx.font='10px Inter,system-ui,sans-serif';ctx.fillStyle='#7d8997';ctx.fillText('Candles '+visible.length+' · EMA 9/21 · Crosshair · OHLC',p.l+170,14);
+  const cross={x:-1,y:-1};const tip=document.createElement('div');tip.className='mt5-tooltip';container.appendChild(tip);function redrawCross(){drawBase();if(cross.x<0)return;ctx.strokeStyle='#657487';ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(cross.x,p.t);ctx.lineTo(cross.x,h-p.b);ctx.stroke();ctx.beginPath();ctx.moveTo(p.l,cross.y);ctx.lineTo(w-p.r,cross.y);ctx.stroke();ctx.setLineDash([]);}
+  function drawBase(){/* canvas is redrawn by a compact recursive-safe snapshot below */}
+  canvas.addEventListener('mousemove',ev=>{const r=canvas.getBoundingClientRect(),mx=(ev.clientX-r.left)*W/r.width,my=(ev.clientY-r.top)*H/r.height,i=Math.max(0,Math.min(visible.length-1,Math.floor((mx-p.l)/step)));if(mx<p.l||mx>w-p.r){tip.style.display='none';return;}cross.x=p.l+i*step+step/2;cross.y=Math.max(p.t,Math.min(h-p.b,my));const c=visible[i],vals=[c.open,c.high,c.low,c.close].map(Number);tip.style.display='block';tip.style.left=Math.min(Math.max(cross.x,80),w-150)+'px';tip.style.top=Math.max(32,cross.y-65)+'px';tip.innerHTML='<b>'+currentTimeframe+'</b><br>O '+vals[0].toFixed(5)+' · H '+vals[1].toFixed(5)+'<br>L '+vals[2].toFixed(5)+' · C '+vals[3].toFixed(5);});
+  canvas.addEventListener('mouseleave',()=>{tip.style.display='none';});
+ }
+ setTimeout(()=>{const chart=document.getElementById('marketChart');if(chart)ensureToolbar(chart);},50);
 })();
 </script>'''
 
@@ -103,8 +131,9 @@ BOT_WIRING = '''<script>
 </script>'''
 
 CHART_STYLE = '''<style>
-#marketChart.mt5-chart{height:250px;min-height:250px;padding:0;display:block;background:linear-gradient(180deg,#080d13,#060a0f);border:1px solid #1e2936;border-radius:10px;overflow:hidden;position:relative}
-#marketChart.mt5-chart canvas{display:block;width:100%;height:250px}
+#marketChart.mt5-chart{height:330px;min-height:330px;padding:0;display:block;background:linear-gradient(180deg,#070c12,#05090e);border:1px solid #263342;border-radius:10px;overflow:visible;position:relative}
+#marketChart.mt5-chart canvas{display:block;width:100%;height:330px;cursor:crosshair}
+.mt5-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 8px;padding:7px 9px;background:#080e15;border:1px solid #1e2936;border-radius:9px;font-size:11px}.mt5-group{display:flex;align-items:center;gap:4px}.mt5-group b{margin-right:6px;color:#edf3f8}.mt5-group button{border:1px solid #263342;background:#0b121a;color:#9ca9b8;border-radius:6px;padding:5px 8px}.mt5-group button:hover,.mt5-group button.active{color:#fff;border-color:#52e6a2;background:#102119}.mt5-live{margin-left:7px;color:#52e6a2;font-size:10px}.mt5-tooltip{position:absolute;display:none;z-index:5;pointer-events:none;min-width:140px;padding:7px 9px;border:1px solid #3a4858;border-radius:7px;background:#071019ee;color:#dfe8f0;font:10px Inter,system-ui,sans-serif;box-shadow:0 8px 25px #0008}.mt5-empty{height:100%;display:grid;place-items:center;color:#8491a2;font-size:12px}
 </style>'''
 
 class Handler(SimpleHTTPRequestHandler):
