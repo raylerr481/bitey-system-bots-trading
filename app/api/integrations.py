@@ -10,10 +10,12 @@ router = APIRouter(prefix="/api/v1/integrations", tags=["integrations"])
 Permission = Literal["read_market", "read_account", "research", "strategy_write", "demo_execute", "paper_execute", "live_execute", "admin"]
 
 PLATFORMS = [
-    {"id": "bitey-sbt-native", "name": "Bitey SBT Trading Platform", "modes": ["research", "backtest", "demo", "paper"], "transport": ["api", "mcp", "websocket"], "live_enabled": False},
-    {"id": "mt5", "name": "MetaTrader 5", "modes": ["demo"], "transport": ["bridge", "api"], "live_enabled": False},
-    {"id": "tradingview", "name": "TradingView", "modes": ["webhook", "paper"], "transport": ["webhook"], "live_enabled": False},
-    {"id": "alpaca", "name": "Alpaca", "modes": ["paper"], "transport": ["api", "sdk"], "live_enabled": False},
+    {"id": "bitey-sbt-native", "name": "Bitey SBT Trading Platform", "modes": ["research", "backtest", "demo", "paper"], "transport": ["api", "mcp", "websocket"], "live_enabled": False, "bidirectional": True},
+    {"id": "mt5", "name": "MetaTrader 5", "modes": ["demo"], "transport": ["bridge", "api"], "live_enabled": False, "bidirectional": True},
+    {"id": "tradingview", "name": "TradingView", "modes": ["webhook", "paper"], "transport": ["webhook"], "live_enabled": False, "bidirectional": True},
+    {"id": "alpaca", "name": "Alpaca", "modes": ["paper"], "transport": ["api", "sdk"], "live_enabled": False, "bidirectional": True},
+    {"id": "webhook-generic", "name": "Generic Webhook", "modes": ["demo", "paper"], "transport": ["webhook"], "live_enabled": False, "bidirectional": True},
+    {"id": "api-generic", "name": "Generic REST API", "modes": ["demo", "paper"], "transport": ["api"], "live_enabled": False, "bidirectional": True},
 ]
 PERMISSIONS = [
     {"id": "read_market", "label": "Leer mercado", "risk": "low"},
@@ -37,6 +39,11 @@ class ConnectionPlan(BaseModel):
 def platforms():
     return {"native": platform_capabilities(), "platforms": PLATFORMS}
 
+@router.get("/ai")
+def ai_connections():
+    """Free/local AI endpoints that can exchange bot instructions and results with SBT."""
+    return {"policy": "ZERO_COST_BY_DEFAULT", "automatic_paid_calls": False, "providers": platform_capabilities()["ai_adapters"]}
+
 @router.get("/market/chart/{symbol}")
 def chart(symbol: str, timeframe: str = "M1"):
     return build_chart_contract(symbol, timeframe)
@@ -55,4 +62,4 @@ def plan(request: ConnectionPlan):
         return {"allowed": False, "stage": "platform-selection", "reason": "Unsupported platform"}
     if request.automation and not any(p in request.permissions for p in ["demo_execute", "paper_execute"]):
         return {"allowed": False, "stage": "permissions", "reason": "Automation requires an explicit execution permission."}
-    return {"allowed": True, "stage": "ready-for-connection", "plan": {"ai_provider": request.ai_provider, "ai_connection": request.ai_connection, "platform": platform, "mode": request.mode, "permissions": request.permissions, "automation": request.automation, "risk_gate": "mandatory", "user_controls_external_costs": True}}
+    return {"allowed": True, "stage": "ready-for-connection", "plan": {"ai_provider": request.ai_provider, "ai_connection": request.ai_connection, "platform": platform, "mode": request.mode, "permissions": request.permissions, "automation": request.automation, "risk_gate": "mandatory", "user_controls_external_costs": True, "bidirectional": True}}
