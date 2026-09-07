@@ -5,6 +5,7 @@ from app.bot_builder.spec import BotSpecification
 from app.bot_builder.backtest import run_spec_backtest
 from app.bot_builder.pipeline import run_pipeline
 from app.bot_builder.ar001 import ar001_spec, size_staged_entries, evaluate_ar001_evidence, backtest_ar001_ohlc
+from app.bot_builder.ar001_evidence import run_ar001_ohlc_evidence
 from app.bot_builder.ar002 import ar002_spec, detect_liquidity_events, liquidity_signal_backtest
 
 router = APIRouter(prefix="/api/v1/bot-builder", tags=["bot-builder"])
@@ -60,6 +61,14 @@ class AR001OHLCRequest(BaseModel):
 @router.post("/hypotheses/ar-001/backtest")
 def backtest_ar001(request: AR001OHLCRequest):
     return backtest_ar001_ohlc(**request.model_dump())
+
+class AR001EvidenceOHLCRequest(AR001OHLCRequest):
+    oos_start: int | None = Field(default=None, ge=1)
+    bootstrap_samples: int = Field(default=2000, ge=2000, le=100000)
+
+@router.post("/hypotheses/ar-001/backtest/evidence")
+def backtest_ar001_evidence(request: AR001EvidenceOHLCRequest):
+    return run_ar001_ohlc_evidence(**request.model_dump())
 
 class AR002EventStudyRequest(BaseModel):
     bars: list[dict[str, float]] = Field(min_length=30, max_length=10000)
