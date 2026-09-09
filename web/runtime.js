@@ -40,14 +40,50 @@
     b.addEventListener('click',()=>openThesisLab().catch(e=>console.error(e)));
     if(small) small.insertAdjacentElement('afterend',b); else nav.appendChild(b);
   }
+  async function openBotLab() {
+    if (document.getElementById('bot-lab-page')) return activateBotLab();
+    const main = document.querySelector('main.main');
+    if (!main) return;
+    const r = await fetch('/bot-lab.html', { cache:'no-store' });
+    if (!r.ok) throw new Error('Bot Lab HTTP '+r.status);
+    const wrap = document.createElement('div');
+    wrap.innerHTML = await r.text();
+    const section = wrap.querySelector('#bot-lab-page');
+    if (!section) throw new Error('Bot Lab markup missing');
+    main.appendChild(section);
+    Array.from(wrap.querySelectorAll('script')).forEach(s => { const n=document.createElement('script'); n.textContent=s.textContent; document.body.appendChild(n); });
+    activateBotLab();
+  }
+  function activateBotLab() {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const p=document.getElementById('bot-lab-page'); if(p) p.classList.add('active');
+    const title=document.getElementById('title'); if(title) title.textContent='Bot Lab';
+    document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page==='bots'));
+    const status=document.getElementById('apiStatus'); if(status) status.textContent='Bot Lab connected · live trading disabled';
+  }
+  function installBotLabNav() {
+    const nav=document.querySelector('.nav'); if(!nav || nav.querySelector('[data-page="bots"]')) return;
+    const small=Array.from(nav.querySelectorAll('small')).find(x=>x.textContent.trim().toLowerCase()==='workspace');
+    const b=document.createElement('button'); b.dataset.page='bots'; b.textContent='◉ Bot Lab';
+    b.addEventListener('click',()=>openBotLab().catch(e=>console.error(e)));
+    if(small) small.insertAdjacentElement('afterend',b); else nav.appendChild(b);
+  }
+  function interceptExistingBotButton() {
+    document.querySelectorAll('[data-page="bots"]').forEach(b=>{
+      if (b.dataset.botLabWired) return;
+      b.dataset.botLabWired='1';
+      b.addEventListener('click',event=>{ event.preventDefault(); event.stopImmediatePropagation(); openBotLab().catch(e=>console.error(e)); },true);
+    });
+  }
   function expose() {
     window.BiteySBT = { api:API, safety:window.SBT_SAFETY, health,
       async validation(){const r=await fetch(API+'/api/v1/validation/virtual',{method:'POST',headers:{'content-type':'application/json'},body:'{}'});if(!r.ok)throw new Error('Validation HTTP '+r.status);return r.json()},
       async strategyRegistry(){const r=await fetch(API+'/api/v1/strategy/registry');if(!r.ok)throw new Error('Registry HTTP '+r.status);return r.json()},
       async riskGateEvaluate(payload){const r=await fetch(API+'/api/v1/strategy/risk-gate/evaluate',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});if(!r.ok)throw new Error('Risk Gate HTTP '+r.status);return r.json()},
-      openThesisLab
+      openThesisLab,
+      openBotLab
     };
   }
-  function boot(){expose();banner();installThesisNav();health();}
+  function boot(){expose();banner();installThesisNav();installBotLabNav();interceptExistingBotButton();health();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
