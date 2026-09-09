@@ -13,6 +13,15 @@
     try { const r = await fetch(API + '/api/v1/system'); if (!r.ok) throw new Error('HTTP '+r.status); return r.json(); }
     catch (_) { return null; }
   }
+  function loadWebTrader() {
+    if (window.BiteyWebTrader) { window.BiteyWebTrader.init(); return; }
+    if (document.querySelector('script[data-bitey-web-trader]')) return;
+    const script = document.createElement('script');
+    script.src = '/web-trader.js';
+    script.defer = true;
+    script.dataset.biteyWebTrader = '1';
+    document.head.appendChild(script);
+  }
   async function openThesisLab() {
     if (document.getElementById('thesis-lab-page')) return activateThesisLab();
     const main = document.querySelector('main.main');
@@ -60,6 +69,7 @@
     const title=document.getElementById('title'); if(title) title.textContent='Bot Lab';
     document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page==='bots'));
     const status=document.getElementById('apiStatus'); if(status) status.textContent='Bot Lab connected · live trading disabled';
+    loadWebTrader();
   }
   function installBotLabNav() {
     const nav=document.querySelector('.nav'); if(!nav || nav.querySelector('[data-page="bots"]')) return;
