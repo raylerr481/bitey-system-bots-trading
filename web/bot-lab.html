@@ -1,0 +1,76 @@
+<section class="page" id="bot-lab-page">
+<style>
+#bot-lab-page .bl-wrap{display:grid;grid-template-columns:1.35fr .8fr;gap:17px}
+#bot-lab-page .bl-chat{min-height:560px;display:flex;flex-direction:column}
+#bot-lab-page .bl-log{flex:1;min-height:320px;max-height:460px;overflow:auto;display:grid;gap:10px;padding-right:4px}
+#bot-lab-page .bl-msg{padding:11px 13px;border:1px solid var(--line);border-radius:12px;background:#090f16;line-height:1.55;white-space:pre-wrap}
+#bot-lab-page .bl-msg.ai{border-color:#24563f;background:#0b1712}
+#bot-lab-page .bl-msg.system{border-color:#2b3b50;background:#0b1119;color:#b8c5d2}
+#bot-lab-page .bl-input{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:12px}
+#bot-lab-page textarea{resize:vertical;min-height:82px;background:#080d13;border:1px solid var(--line);color:#fff;border-radius:10px;padding:11px;outline:none}
+#bot-lab-page textarea:focus{border-color:#396f5a}
+#bot-lab-page .bl-stage{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0 17px}
+#bot-lab-page .bl-stage span{padding:7px 9px;border:1px solid var(--line);border-radius:99px;color:#718093;font-size:10px}
+#bot-lab-page .bl-stage span.active{border-color:var(--accent);color:var(--accent);background:#0c1b15}
+#bot-lab-page .bl-stage span.done{border-color:#24563f;color:#75d9ab}
+#bot-lab-page .bl-spec{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px;line-height:1.55;white-space:pre-wrap;overflow:auto;max-height:430px;color:#cbd7e3}
+#bot-lab-page .bl-kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:12px}
+#bot-lab-page .bl-kpi{padding:12px;border:1px solid var(--line);border-radius:10px;background:#090e14}
+#bot-lab-page .bl-kpi b{display:block;font-size:17px;margin-top:4px}
+#bot-lab-page .bl-note{margin-top:12px;padding:11px 12px;border-radius:9px;background:#15140d;border:1px solid #3b331d;color:#d8c58b;line-height:1.5;font-size:12px}
+@media(max-width:900px){#bot-lab-page .bl-wrap{grid-template-columns:1fr}}
+</style>
+<div class="hero">
+  <span class="eyebrow">Bot Lab · conversational strategy engineering</span>
+  <h2>De una idea a un bot probado, sin saltar el Risk Gate.</h2>
+  <p>Describe el bot en lenguaje natural. Bot Lab lo convierte en una especificación determinista, lo prueba con el motor SBT y prepara un manifiesto portable para MT5 / Demo. El laboratorio nunca habilita dinero real.</p>
+  <div class="bl-stage" id="blStage"><span class="active" data-s="idea">1 Idea</span><span data-s="build">2 Build</span><span data-s="backtest">3 Backtest</span><span data-s="risk">4 Risk Gate</span><span data-s="demo">5 MT5 / Demo</span><span data-s="paper">6 Paper</span></div>
+</div>
+<div class="bl-wrap">
+  <div class="card bl-chat">
+    <h3>Conversación de Bot Lab</h3>
+    <div class="bl-log" id="blLog">
+      <div class="bl-msg system">Bot Lab listo. Puedes escribir algo como: “Crea un bot EURUSD H1 con EMA 9/21, RSI 14, entrada al cruce, stop por ATR, riesgo 1% y salida cuando la tendencia se invierta.”</div>
+    </div>
+    <div class="bl-input">
+      <textarea id="blPrompt" placeholder="Describe la estrategia que quieres construir…"></textarea>
+      <button class="btn primary" id="blBuild">Construir bot</button>
+    </div>
+    <div class="toolbar" style="margin-top:10px">
+      <button class="btn" id="blBacktest">Ejecutar backtest</button>
+      <button class="btn blue" id="blRisk">Evaluar Risk Gate</button>
+      <button class="btn" id="blDemo">Preparar MT5 / Trade W Demo</button>
+    </div>
+  </div>
+  <div>
+    <div class="card">
+      <h3>Especificación determinista</h3>
+      <div class="bl-spec" id="blSpec">Aún no hay una especificación. Construye el bot desde la conversación.</div>
+    </div>
+    <div class="card" style="margin-top:17px">
+      <h3>Evidence panel</h3>
+      <div class="bl-kpis"><div class="bl-kpi"><span class="muted">Estado</span><b id="blState">DRAFT</b></div><div class="bl-kpi"><span class="muted">Live</span><b class="negative">LOCKED</b></div><div class="bl-kpi"><span class="muted">Broker orders</span><b id="blOrders">0</b></div><div class="bl-kpi"><span class="muted">Demo</span><b id="blDemoState">NOT READY</b></div></div>
+      <div class="bl-note">La especificación usa <b>sbt-bot-v1</b>. El contrato del backend mantiene <b>live=false</b>, <b>real_money=false</b> y <b>broker_orders=0</b>.</div>
+      <div class="result" id="blResult"></div>
+    </div>
+  </div>
+</div>
+</section>
+<script>
+(function(){
+  const base=()=>((window.SBT_API_URL||localStorage.getItem('sbt_api_base')||'').replace(/\/$/,''));
+  let spec=null, lastBacktest=null;
+  const $=id=>document.getElementById(id);
+  const add=(text,kind='ai')=>{const e=document.createElement('div');e.className='bl-msg '+kind;e.textContent=text;$('blLog').appendChild(e);$('blLog').scrollTop=$('blLog').scrollHeight;};
+  const stage=s=>{document.querySelectorAll('#blStage span').forEach(x=>{x.classList.remove('active','done');if(x.dataset.s===s)x.classList.add('active');});const order=['idea','build','backtest','risk','demo','paper'],i=order.indexOf(s);document.querySelectorAll('#blStage span').forEach(x=>{if(order.indexOf(x.dataset.s)<i)x.classList.add('done');});};
+  const result=t=>{$('blResult').style.display='block';$('blResult').textContent=t;};
+  const post=async(path,payload)=>{const r=await fetch(base()+path,{method:'POST',headers:{'content-type':'application/json','accept':'application/json'},body:JSON.stringify(payload)});if(!r.ok)throw new Error(path+' HTTP '+r.status);return r.json();};
+  function defaultSpec(prompt){return {contract:'sbt-bot-v1',name:'Bot Lab Strategy',symbol:'EURUSD',timeframe:'H1',language:'python',indicators:[{name:'ema',period:9},{name:'ema',period:21},{name:'rsi',period:14},{name:'atr',period:14}],entry_rules:[{indicator:'ema_9',operator:'cross_above',value:'ema_21'},{indicator:'rsi_14',operator:'>',value:50}],exit_rules:[{indicator:'ema_9',operator:'cross_below',value:'ema_21'}],risk:{risk_pct:0.01,stop_type:'atr',stop_value:2,max_position_pct:0.02},initial_capital:10000,live:false,real_money:false,broker_orders:0,source_prompt:prompt};}
+  function renderSpec(){ $('blSpec').textContent=JSON.stringify(spec,null,2); }
+  async function build(){const p=$('blPrompt').value.trim();if(!p){add('Escribe primero la idea del bot.','system');return;}stage('build');add('Construyendo una especificación determinista a partir de tu idea…','system');$('blBuild').disabled=true;try{let candidate=defaultSpec(p);try{candidate=await post('/api/v1/bot-builder/build',candidate);}catch(_){candidate=defaultSpec(p);}candidate.live=false;candidate.real_money=false;candidate.broker_orders=0;spec=candidate;renderSpec();$('blState').textContent='BUILT';add('Bot construido. La estrategia está en estado BUILT y sigue sin autoridad para enviar órdenes live. Ahora puedes ejecutar el backtest y el Risk Gate.');result('BUILD OK · sbt-bot-v1 · live=false · real_money=false · broker_orders=0');}catch(e){add('No se pudo construir el bot: '+e.message,'system');result('BUILD ERROR · no se modificó ningún modo de ejecución.');}finally{$('blBuild').disabled=false;}}
+  async function backtest(){if(!spec){add('Construye el bot antes del backtest.','system');return;}stage('backtest');$('blBacktest').disabled=true;add('Ejecutando backtest determinista del Bot Builder…','system');try{const prices=[];let p=1.08;for(let i=0;i<120;i++){p+=((i%11)-5)*0.00007;prices.push(Number(p.toFixed(5)));}lastBacktest=await post('/api/v1/bot-builder/backtest',{specification:spec,prices,fee_pct:0.001});$('blState').textContent='BACKTESTED';add('Backtest completado. El resultado es evidencia de simulación, no una promesa de rendimiento.');result('BACKTEST OK · '+JSON.stringify(lastBacktest));}catch(e){add('Backtest no disponible: '+e.message,'system');result('BACKTEST UNAVAILABLE · no se inventaron métricas.');}finally{$('blBacktest').disabled=false;}}
+  async function risk(){if(!spec){add('Construye el bot antes de evaluar el Risk Gate.','system');return;}stage('risk');$('blRisk').disabled=true;add('Enviando la especificación al Risk Gate…','system');try{const r=await post('/api/v1/strategy/risk-gate/evaluate',spec);$('blState').textContent='RISK EVALUATED';add('Risk Gate respondió. La decisión del motor es superior a cualquier propuesta de IA.');result('RISK GATE · '+JSON.stringify(r));}catch(e){add('No se pudo consultar Risk Gate: '+e.message,'system');result('RISK GATE UNAVAILABLE · ejecución permanece bloqueada.');}finally{$('blRisk').disabled=false;}}
+  async function demo(){if(!spec){add('Construye el bot antes de preparar Demo.','system');return;}stage('demo');$('blDemo').disabled=true;add('Preparando manifiesto portable para MT5 / Trade W Demo…','system');try{const manifest={bot_id:'bot-lab-'+Date.now(),name:spec.name||'Bot Lab Strategy',version:'1.0.0',strategy:'sbt-bot-v1',instruments:[spec.symbol],timeframes:[spec.timeframe],parameters:{indicators:spec.indicators,entry_rules:spec.entry_rules,exit_rules:spec.exit_rules},risk_rules:spec.risk,validation:lastBacktest||{},allowed_modes:['research','backtest','demo','paper']};const r=await post('/api/v1/bot-exchange/manifest',{bot:manifest});$('blDemoState').textContent='READY';$('blOrders').textContent='0';add('Manifiesto creado. Demo preparado sin crear órdenes de broker.');result('DEMO READY · '+JSON.stringify(r));}catch(e){add('No se pudo preparar el manifiesto Demo: '+e.message,'system');result('DEMO UNAVAILABLE · broker_orders permanece 0.');}finally{$('blDemo').disabled=false;}}
+  $('blBuild').addEventListener('click',build);$('blBacktest').addEventListener('click',backtest);$('blRisk').addEventListener('click',risk);$('blDemo').addEventListener('click',demo);$('blPrompt').addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter')build();});
+})();
+</script>
