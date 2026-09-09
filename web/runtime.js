@@ -22,6 +22,15 @@
     script.dataset.biteyWebTrader = '1';
     document.head.appendChild(script);
   }
+  function loadTradingMode() {
+    if (window.BiteySBTTradingMode) { window.BiteySBTTradingMode.init(); return; }
+    if (document.querySelector('script[data-bitey-trading-mode]')) return;
+    const script = document.createElement('script');
+    script.src = '/trading-mode.js';
+    script.defer = true;
+    script.dataset.biteyTradingMode = '1';
+    document.head.appendChild(script);
+  }
   async function openThesisLab() {
     if (document.getElementById('thesis-lab-page')) return activateThesisLab();
     const main = document.querySelector('main.main');
@@ -64,12 +73,13 @@
     activateBotLab();
   }
   function activateBotLab() {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     const p=document.getElementById('bot-lab-page'); if(p) p.classList.add('active');
     const title=document.getElementById('title'); if(title) title.textContent='Bot Lab';
     document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page==='bots'));
     const status=document.getElementById('apiStatus'); if(status) status.textContent='Bot Lab connected · live trading disabled';
     loadWebTrader();
+    loadTradingMode();
   }
   function installBotLabNav() {
     const nav=document.querySelector('.nav'); if(!nav || nav.querySelector('[data-page="bots"]')) return;
