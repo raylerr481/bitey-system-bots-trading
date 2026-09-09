@@ -112,4 +112,46 @@
 
   window.BiteySBTTradingMode = { init, getState: () => ({ ...state }) };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+
+  // Live candle bridge: applies the actual MT5 Bid stream to the currently forming OHLC candle.
+  // It never creates prices; it only aggregates an already received MT5 quote.
+  function timeframeSeconds(tf) {
+    return ({ M1: 60, M5: 300, M15: 900, M30: 1800, H1: 3600, H4: 14400, D1: 86400 })[tf] || 300;
+  }
+
+  function applyLiveQuote() {
+    const market = window.BiteySBTMarketState;
+    if (!market || !Array.isArray(market.candles) || !market.candles.length || !market.quote) return;
+    const bid = Number(market.quote.bid);
+    const rawTime = Number(market.quote.timestamp);
+    if (!Number.isFinite(bid) || !Number.isFinite(rawTime)) return;
+    const timestamp = rawTime > 1e12 ? rawTime / 1000 : rawTime;
+    const interval = timeframeSeconds(market.timeframe);
+    const bucket = Math.floor(timestamp / interval) * interval;
+    const last = market.candles[market.candles.length - 1];
+    if (!last || !Number.isFinite(Number(last.time))) return;
+    const lastBucket = Math.floor(Number(last.time) / interval) * interval;
+
+    if (bucket === lastBucket) {
+      last.high = Math.max(Number(last.high), bid);
+      last.low = Math.min(Number(last.low), bid);
+      last.close = bid;
+      last.volume = Number(last.volume || 0) + 1;
+    } else if (bucket > lastBucket && bucket - lastBucket <= interval * 2) {
+      // A new candle is created only from the received MT5 Bid tick.
+      market.candles.push({ time: bucket, open: bid, high: bid, low: bid, close: bid, volume: 1 });
+      if (market.candles.length > 500) market.candles.shift();
+    } else {
+      return;
+    }
+
+    window.dispatchEvent(new Event('resize'));
+    window.dispatchEvent(new CustomEvent('bitey:sbt-live-candle', {
+      detail: { symbol: market.symbol, timeframe: market.timeframe, timestamp, bid }
+    }));
+  }
+
+  // Wait for Web Trader initialization, then keep the forming candle synchronized with MT5 quotes.
+  const liveTimer = setInterval(applyLiveQuote, 250);
+  window.addEventListener('beforeunload', () => clearInterval(liveTimer));
 })();
