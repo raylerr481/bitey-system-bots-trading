@@ -1,6 +1,6 @@
 (() => {
   const API = (window.SBT_API_URL || 'https://bitey-system-bots-trading-api.onrender.com').replace(/\/$/, '');
-  const state = { symbol: 'EURUSD', timeframe: 'M5', candles: [], quote: null, analysis: null, timer: null, ws: null };
+  const state = { symbol: 'EURUSD', timeframe: 'M5', candles: [], quote: null, analysis: null, timer: null, ws: null, feedState: 'OFFLINE', firstTickReceived: false };
 
   const el = (id) => document.getElementById(id);
   const setText = (id, value) => { const node = el(id); if (node) node.textContent = value; };
@@ -19,6 +19,17 @@
     return candles.map(normalize).filter(c =>
       Number.isFinite(c.time) && [c.open, c.high, c.low, c.close].every(Number.isFinite)
     ).sort((a, b) => a.time - b.time);
+  }
+
+  function upsertCandle(candle) {
+    const normalized = normalize(candle);
+    if (!Number.isFinite(normalized.time)) return;
+    const index = state.candles.findIndex(c => c.time === normalized.time);
+    if (index >= 0) state.candles[index] = normalized;
+    else state.candles.push(normalized);
+    state.candles.sort((a, b) => a.time - b.time);
+    if (state.candles.length > 500) state.candles = state.candles.slice(-500);
+    updateIndicators(); drawChart();
   }
 
   function ema(values, period) {
@@ -101,12 +112,18 @@
       if (yy >= top && yy <= h - bottom) { ctx.strokeStyle = '#ffffff'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(left, yy); ctx.lineTo(w - right, yy); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left'; ctx.fillText('BID ' + live.toFixed(5), left + 4, yy - 5); }
     }
 
-    ctx.fillStyle = '#edf3f8'; ctx.textAlign = 'left'; ctx.font = 'bold 11px system-ui'; ctx.fillText(`${state.symbol} · ${state.timeframe} · MT5`, left, 14);
-    ctx.font = '10px system-ui'; ctx.fillStyle = '#7d8997'; ctx.fillText(`OHLC snapshot · ${candles.length} candles`, left + 150, 14);
+    ctx.fillStyle = '#edf3f8'; ctx.textAlign = 'left'; ctx.font = 'bold 11px system-ui'; ctx.fillText(`${state.symbol} · ${state.timeframe} · BiQuote`, left, 14);
+    ctx.font = '10px system-ui'; ctx.fillStyle = '#7d8997'; ctx.fillText(`OHLC + live ticks · ${candles.length} candles`, left + 150, 14);
+  }
+
+  function setFeedState(feedState, detail = '') {
+    state.feedState = feedState;
+    const labels = { HISTORICAL: '● HISTORICAL DATA', CONNECTING: '● CONNECTING LIVE FEED', LIVE: '● LIVE DATA', OFFLINE: '● FEED OFFLINE' };
+    setText('mtFeedStatus', `${labels[feedState] || '● FEED OFFLINE'} · ${state.symbol} · ${state.timeframe}${detail ? ` · ${detail}` : ''}`);
   }
 
   async function loadCandles(runAnalysis = true) {
-    const status = el('mtFeedStatus'); if (status) status.textContent = '● MT5: consultando velas…';
+    setFeedState('CONNECTING');
     try {
       const response = await fetch(`${API}/api/v1/market/candles/${encodeURIComponent(state.symbol)}?timeframe=${encodeURIComponent(state.timeframe)}&limit=200`, { cache: 'no-store' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -116,11 +133,11 @@
       const empty = el('mtChartEmpty'); if (empty) empty.style.display = 'none';
       updateIndicators(); drawChart();
       if (runAnalysis) await analyzeSameSnapshot();
-      if (status) status.textContent = `● MT5 LIVE DATA · ${state.symbol} · ${state.timeframe}`;
+      if (!state.firstTickReceived) setFeedState('HISTORICAL');
     } catch (error) {
       state.candles = []; state.analysis = null; drawChart();
-      const empty = el('mtChartEmpty'); if (empty) { empty.style.display = 'grid'; empty.textContent = 'MT5 FEED UNAVAILABLE · no invented market data'; }
-      if (status) status.textContent = '● MT5 FEED UNAVAILABLE';
+      const empty = el('mtChartEmpty'); if (empty) { empty.style.display = 'grid'; empty.textContent = 'MARKET FEED UNAVAILABLE · no invented market data'; }
+      if (!state.firstTickReceived) setFeedState('OFFLINE', error.message);
       setText('mtChange', error.message);
     }
   }
@@ -128,26 +145,43 @@
   async function analyzeSameSnapshot() {
     if (!state.candles.length) return;
     try {
-      const response = await fetch(`${API}/api/v1/sbt/market-intelligence/analyze`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ symbol: state.symbol, timeframe: state.timeframe, candles: state.candles, capital: 10000, language: 'es', event: 'market_structure', evidence: [{ source: 'mt5', contract: 'sbt-candles-v1', snapshot_candles: state.candles.length }] }) });
+      const response = await fetch(`${API}/api/v1/sbt/market-intelligence/analyze`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ symbol: state.symbol, timeframe: state.timeframe, candles: state.candles, capital: 10000, language: 'es', event: 'market_structure', evidence: [{ source: 'biquote', contract: 'sbt-candles-v1', snapshot_candles: state.candles.length }] }) });
       if (!response.ok) throw new Error(`analysis HTTP ${response.status}`);
       state.analysis = await response.json();
       updateIndicators();
-    } catch (_) { /* Market chart remains usable even when intelligence is temporarily unavailable. */ }
+    } catch (_) { /* Market chart remains usable when intelligence is temporarily unavailable. */ }
   }
 
   function updateIndicators() {
     const i = indicators(state.candles); setText('mtEma9', num(i.ema9)); setText('mtEma21', num(i.ema21)); setText('mtRsi', i.rsi14 == null ? '—' : i.rsi14.toFixed(1)); setText('mtAtr', num(i.atr14, 6)); setText('mtTrend', i.trend);
-    const quote = state.quote; if (quote) { setText('mtBid', num(quote.bid)); setText('mtAsk', num(quote.ask)); setText('mtPrice', num(quote.last ?? quote.bid)); }
+    const quote = state.quote; if (quote) { setText('mtBid', num(quote.bid)); setText('mtAsk', num(quote.ask)); setText('mtPrice', num(quote.last ?? quote.mid ?? quote.bid)); }
   }
 
   function connectQuoteStream() {
     if (state.ws) { try { state.ws.close(); } catch (_) {} }
+    state.firstTickReceived = false; state.quote = null; setFeedState('CONNECTING');
     const url = API.replace(/^http/, 'ws') + `/api/v1/market/stream/${encodeURIComponent(state.symbol)}`;
     try {
       const ws = new WebSocket(url); state.ws = ws;
-      ws.onmessage = event => { try { const data = JSON.parse(event.data); if (data.error) return; state.quote = data; updateIndicators(); drawChart(); const price = Number(data.last ?? data.bid); setText('mtChange', Number.isFinite(price) ? `Bid ${num(data.bid)} · Ask ${num(data.ask)} · spread ${num(data.spread, 6)}` : 'MT5 quote connected'); } catch (_) {} };
-      ws.onclose = () => { if (state.ws === ws) setTimeout(() => connectQuoteStream(), 3000); };
-    } catch (_) {}
+      ws.onmessage = event => {
+        try {
+          const data = JSON.parse(event.data);
+          if (Array.isArray(data.historical_candles)) {
+            const historical = validCandles(data.historical_candles);
+            if (historical.length) { state.candles = historical; updateIndicators(); drawChart(); }
+          }
+          if (data.state === 'OFFLINE') { setFeedState('OFFLINE', data.error || 'provider unavailable'); return; }
+          if (data.state !== 'LIVE' || !data.mid && !data.bid && !data.ask) return;
+          state.firstTickReceived = true;
+          state.quote = data;
+          setFeedState('LIVE');
+          if (data.candle) upsertCandle(data.candle); else { updateIndicators(); drawChart(); }
+          const price = Number(data.mid ?? data.bid); setText('mtChange', Number.isFinite(price) ? `Bid ${num(data.bid)} · Ask ${num(data.ask)} · spread ${num(data.spread, 6)}` : 'Live quote connected');
+        } catch (_) {}
+      };
+      ws.onclose = () => { if (state.ws === ws) { if (!state.firstTickReceived) setFeedState('OFFLINE', 'stream closed'); setTimeout(() => connectQuoteStream(), 3000); } };
+      ws.onerror = () => { if (!state.firstTickReceived) setFeedState('OFFLINE', 'WebSocket error'); };
+    } catch (_) { setFeedState('OFFLINE', 'WebSocket unavailable'); }
   }
 
   function setup() {
@@ -157,9 +191,9 @@
     const refresh = el('mtRefresh'); if (refresh) refresh.addEventListener('click', () => loadCandles(true));
     const symbols = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'BTCUSD'];
     const watch = el('mtWatchBody');
-    if (watch) watch.innerHTML = symbols.map(symbol => `<tr data-symbol="${symbol}" class="${symbol === state.symbol ? 'selected' : ''}"><td><span class="mt-symbol">${symbol}</span><small>MT5</small></td><td>—</td></tr>`).join('');
+    if (watch) watch.innerHTML = symbols.map(symbol => `<tr data-symbol="${symbol}" class="${symbol === state.symbol ? 'selected' : ''}"><td><span class="mt-symbol">${symbol}</span><small>BiQuote</small></td><td>—</td></tr>`).join('');
     if (watch) watch.querySelectorAll('[data-symbol]').forEach(row => row.addEventListener('click', () => { state.symbol = row.dataset.symbol; watch.querySelectorAll('tr').forEach(r => r.classList.toggle('selected', r === row)); setText('mtPair', state.symbol); setText('mtOverlay', `Bitey SBT · ${state.symbol} · ${state.timeframe}`); state.quote = null; connectQuoteStream(); loadCandles(true); }));
-    setText('mtPair', state.symbol); setText('mtTf', `${state.timeframe} · MT5`); setText('mtOverlay', `Bitey SBT · ${state.symbol} · ${state.timeframe}`);
+    setText('mtPair', state.symbol); setText('mtTf', `${state.timeframe} · BiQuote`); setText('mtOverlay', `Bitey SBT · ${state.symbol} · ${state.timeframe}`);
     loadCandles(true); connectQuoteStream();
     clearInterval(state.timer); state.timer = setInterval(() => loadCandles(true), 10000);
     window.addEventListener('resize', drawChart);
