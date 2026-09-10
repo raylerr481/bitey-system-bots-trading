@@ -72,7 +72,17 @@
     Array.from(wrap.querySelectorAll('script')).forEach(s => { const n=document.createElement('script'); n.textContent=s.textContent; document.body.appendChild(n); });
     activateBotLab();
   }
+  function closeMobileMenu() {
+    const side = document.getElementById('side');
+    if (!side) return;
+    side.classList.remove('open');
+    if (window.matchMedia('(max-width: 850px)').matches) {
+      side.style.transform = 'translateX(-100%)';
+      side.style.pointerEvents = 'none';
+    }
+  }
   function activateBotLab() {
+    closeMobileMenu();
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     const p=document.getElementById('bot-lab-page'); if(p) p.classList.add('active');
     const title=document.getElementById('title'); if(title) title.textContent='Bot Lab';
@@ -92,7 +102,12 @@
     document.querySelectorAll('[data-page="bots"]').forEach(b=>{
       if (b.dataset.botLabWired) return;
       b.dataset.botLabWired='1';
-      b.addEventListener('click',event=>{ event.preventDefault(); event.stopImmediatePropagation(); openBotLab().catch(e=>console.error(e)); },true);
+      b.addEventListener('click',event=>{
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        closeMobileMenu();
+        openBotLab().catch(e=>console.error(e));
+      },true);
     });
   }
   function expose() {
