@@ -13,7 +13,7 @@ from .providers import MarketDataProvider, ProviderError
 
 
 def build_provider(name: str | None = None) -> MarketDataProvider:
-    selected = (name or os.getenv("SBT_MARKET_PROVIDER", "mt5")).strip().lower()
+    selected = (name or os.getenv("SBT_MARKET_PROVIDER", "none")).strip().lower()
     if selected == "biquote":
         if os.getenv("SBT_BIQUOTE_PUBLIC_APPROVED", "false").lower() != "true":
             raise ProviderError("BiQuote is installed but not approved for public SBT display")
