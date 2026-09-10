@@ -46,7 +46,8 @@
     activateThesisLab();
   }
   function activateThesisLab() {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    closeMobileMenu();
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     const p=document.getElementById('thesis-lab-page'); if(p) p.classList.add('active');
     const title=document.getElementById('title'); if(title) title.textContent='Mathematical Thesis Lab';
     document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page==='thesis-lab'));
@@ -76,10 +77,19 @@
     const side = document.getElementById('side');
     if (!side) return;
     side.classList.remove('open');
+    side.style.removeProperty('transform');
+    side.style.removeProperty('pointer-events');
     if (window.matchMedia('(max-width: 850px)').matches) {
-      side.style.transform = 'translateX(-100%)';
-      side.style.pointerEvents = 'none';
+      side.classList.add('mobile-force-closed');
     }
+  }
+  function reopenMobileMenu() {
+    const side = document.getElementById('side');
+    if (!side) return;
+    side.classList.remove('mobile-force-closed');
+    side.style.removeProperty('transform');
+    side.style.removeProperty('pointer-events');
+    side.classList.add('open');
   }
   function activateBotLab() {
     closeMobileMenu();
