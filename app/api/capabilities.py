@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.api.backtest import BacktestRequest, crossover_signal
-from app.api.market import _mt5_quote
+from app.market_sdk.registry import build_provider
 from app.services.backtest import run_backtest
 from app.services.virtual_validation import run_virtual_validation
 from app.strategies.smc import OHLC, SMCSignalRequest, smc_signal
@@ -61,7 +61,8 @@ def _is_gold_quote_request(message: str) -> bool:
 
 
 async def _gold_quote_result(message: str, conversation_id: str | None) -> dict:
-    quote = await _mt5_quote("XAUUSD")
+    provider = build_provider()
+    quote = await provider.quote("XAUUSD")
     return {
         "contract": "sbt-market-quote-v1",
         "capability": "sbt",
@@ -82,8 +83,8 @@ async def _gold_quote_result(message: str, conversation_id: str | None) -> dict:
             "mode": "real",
             "instrument": "XAUUSD",
             "asset": "gold",
-            "quote": quote,
-            "timestamp": quote.get("timestamp"),
+            "quote": quote.as_dict(),
+            "timestamp": quote.timestamp,
         },
         "answer": "Bitey SBT consultó el gateway de mercado autorizado y obtuvo una cotización real de XAUUSD. No se enviaron órdenes.",
         "mode": "market-data-real",
