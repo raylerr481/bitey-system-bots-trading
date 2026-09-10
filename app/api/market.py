@@ -55,7 +55,7 @@ def connections() -> dict[str, Any]:
 async def quote(symbol: str) -> dict[str, Any]:
     provider = _provider_or_http_error()
     try:
-        return provider_quote = (await provider.quote(symbol)).as_dict()
+        return (await provider.quote(symbol)).as_dict()
     except ProviderError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
