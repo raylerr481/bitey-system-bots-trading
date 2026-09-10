@@ -8,17 +8,19 @@ never fabricates prices.
 from __future__ import annotations
 
 import asyncio
+import json
 from collections.abc import AsyncIterator
 from typing import Any
 
 import httpx
+from websockets.asyncio.client import connect
 
 from .models import Candle, Quote
 from .providers import MarketDataProvider, ProviderError
 
 
 class BiQuoteProvider(MarketDataProvider):
-    """Read-only BiQuote adapter using REST + SignalR."""
+    """Read-only BiQuote adapter using REST + native SignalR WebSocket."""
 
     name = "biquote"
     base_url = "https://biquote.io"
@@ -84,58 +86,77 @@ class BiQuoteProvider(MarketDataProvider):
         return candles
 
     async def stream(self, symbol: str) -> AsyncIterator[Quote]:
-        """Stream ReceiveTick events from BiQuote SignalR."""
-        try:
-            from pysignalr.client import SignalRClient
-        except ImportError as exc:
-            raise ProviderError(
-                "BiQuote streaming requires the pysignalr dependency"
-            ) from exc
-
+        """Stream ReceiveTick events from BiQuote SignalR without extra packages."""
         symbol = symbol.upper()
-        loop = asyncio.get_running_loop()
-        queue: asyncio.Queue[Quote] = asyncio.Queue()
-        client = SignalRClient(f"{self.base_url}/hubs/tick")
+        url = f"{self.base_url}/hubs/tick"
 
-        async def on_tick(payload: list[dict[str, Any]]) -> None:
-            for item in payload:
-                if not isinstance(item, dict):
-                    continue
-                item_symbol = str(item.get("symbol", "")).upper()
-                if item_symbol != symbol:
-                    continue
-                try:
-                    quote = _quote_from_payload(item, symbol)
-                except ProviderError:
-                    continue
-                await queue.put(quote)
+        try:
+            async with connect(url, open_timeout=10, ping_interval=20, ping_timeout=20) as ws:
+                # SignalR JSON Hub Protocol handshake.
+                await ws.send(json.dumps({"protocol": "json", "version": 1}) + "\x1e")
+                handshake = await asyncio.wait_for(ws.recv(), timeout=10)
+                if isinstance(handshake, bytes):
+                    handshake = handshake.decode("utf-8")
+                handshake_message = str(handshake).rstrip("\x1e")
+                if handshake_message:
+                    handshake_payload = json.loads(handshake_message)
+                    if handshake_payload.get("error"):
+                        raise ProviderError(
+                            f"BiQuote SignalR handshake failed: {handshake_payload['error']}"
+                        )
 
-        def on_open() -> None:
-            client.send("Subscribe", [[symbol]])
-
-        client.on("ReceiveTick", on_tick)
-        client.on_open(on_open)
-
-        async def run_client() -> None:
-            try:
-                await client.run()
-            except asyncio.CancelledError:
-                raise
-            except Exception as exc:
-                await queue.put(
-                    ProviderError(f"BiQuote stream unavailable: {exc}")
+                # Hub invocation: Subscribe([["EURUSD"]]).
+                await ws.send(
+                    json.dumps(
+                        {
+                            "type": 1,
+                            "invocationId": "sbt-1",
+                            "target": "Subscribe",
+                            "arguments": [[symbol]],
+                        }
+                    )
+                    + "\x1e"
                 )
 
-        task = asyncio.create_task(run_client())
-        try:
-            while True:
-                item = await queue.get()
-                if isinstance(item, ProviderError):
-                    raise item
-                yield item
-        finally:
-            task.cancel()
-            await asyncio.gather(task, return_exceptions=True)
+                async for raw in ws:
+                    if isinstance(raw, bytes):
+                        raw = raw.decode("utf-8")
+                    for frame in str(raw).split("\x1e"):
+                        if not frame:
+                            continue
+                        try:
+                            message = json.loads(frame)
+                        except json.JSONDecodeError:
+                            continue
+
+                        # SignalR completion/error for the subscription invocation.
+                        if message.get("type") == 3 and message.get("error"):
+                            raise ProviderError(
+                                f"BiQuote subscription failed: {message['error']}"
+                            )
+
+                        if message.get("type") != 1:
+                            continue
+                        if message.get("target") != "ReceiveTick":
+                            continue
+
+                        arguments = message.get("arguments")
+                        if not isinstance(arguments, list):
+                            continue
+                        for item in arguments:
+                            if not isinstance(item, dict):
+                                continue
+                            item_symbol = str(item.get("symbol", "")).upper()
+                            if item_symbol != symbol:
+                                continue
+                            try:
+                                yield _quote_from_payload(item, symbol)
+                            except ProviderError:
+                                continue
+        except ProviderError:
+            raise
+        except (OSError, asyncio.TimeoutError, json.JSONDecodeError, Exception) as exc:
+            raise ProviderError(f"BiQuote stream unavailable: {exc}") from exc
 
 
 def _quote_from_payload(payload: dict[str, Any], symbol: str) -> Quote:
