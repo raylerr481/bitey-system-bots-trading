@@ -7,6 +7,7 @@ never fabricates prices.
 
 from __future__ import annotations
 
+import asyncio
 import json
 from collections.abc import AsyncIterator
 
@@ -74,9 +75,12 @@ class BiQuoteProvider(MarketDataProvider):
             if not isinstance(row, dict):
                 continue
             try:
+                timestamp = row.get("timestamp", row.get("time"))
+                if timestamp is None:
+                    continue
                 candles.append(
                     Candle(
-                        timestamp=row.get("timestamp", row.get("time")),
+                        timestamp=timestamp,
                         open=float(row["open"]),
                         high=float(row["high"]),
                         low=float(row["low"]),
@@ -90,21 +94,16 @@ class BiQuoteProvider(MarketDataProvider):
         return candles
 
     async def stream(self, symbol: str) -> AsyncIterator[Quote]:
-        """Stream ticks through BiQuote SignalR.
-
-        SignalR transport is deliberately isolated here so the SBT API never
-        exposes provider-specific wire formats to its clients.
-        """
+        """Stream ticks from BiQuote SignalR without exposing its wire format."""
         try:
             from signalrcore.hub_connection_builder import HubConnectionBuilder
         except ImportError as exc:
-            raise ProviderError("signalrcore is required for BiQuote streaming") from exc
+            raise ProviderError(
+                "BiQuote streaming requires the optional signalrcore dependency"
+            ) from exc
 
-        import asyncio
-        import threading
-
-        queue: asyncio.Queue[Quote] = asyncio.Queue()
         loop = asyncio.get_running_loop()
+        queue: asyncio.Queue[Quote] = asyncio.Queue()
         connection = (
             HubConnectionBuilder()
             .with_url(f"{self.base_url.replace('https://', 'wss://')}/hubs/tick")
@@ -141,7 +140,6 @@ class BiQuoteProvider(MarketDataProvider):
                 yield await queue.get()
         finally:
             connection.stop()
-            await asyncio.to_thread(threading.current_thread)
 
 
 def _number(value: object) -> float | None:
