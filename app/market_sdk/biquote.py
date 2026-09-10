@@ -8,8 +8,8 @@ never fabricates prices.
 from __future__ import annotations
 
 import asyncio
-import json
 from collections.abc import AsyncIterator
+from typing import Any
 
 import httpx
 
@@ -18,6 +18,8 @@ from .providers import MarketDataProvider, ProviderError
 
 
 class BiQuoteProvider(MarketDataProvider):
+    """Read-only BiQuote adapter using REST + SignalR."""
+
     name = "biquote"
     base_url = "https://biquote.io"
 
@@ -34,27 +36,14 @@ class BiQuoteProvider(MarketDataProvider):
         except (httpx.HTTPError, ValueError) as exc:
             raise ProviderError(f"BiQuote quote unavailable: {exc}") from exc
 
-        bid = _number(payload.get("bid"))
-        ask = _number(payload.get("ask"))
-        mid = _number(payload.get("mid"))
-        if mid is None and bid is not None and ask is not None:
-            mid = (bid + ask) / 2
-        if bid is None and ask is None and mid is None:
-            raise ProviderError("BiQuote returned no valid price")
-
-        return Quote(
-            source=self.name,
-            symbol=symbol,
-            timestamp=payload.get("timestamp"),
-            bid=bid,
-            ask=ask,
-            mid=mid,
-            spread=(ask - bid) if bid is not None and ask is not None else None,
-        )
+        if not isinstance(payload, dict):
+            raise ProviderError("BiQuote returned an invalid quote payload")
+        return _quote_from_payload(payload, symbol)
 
     async def candles(self, symbol: str, timeframe: str, limit: int) -> list[Candle]:
         symbol = symbol.upper()
         interval = _interval(timeframe)
+        limit = max(1, min(int(limit), 1000))
         try:
             async with httpx.AsyncClient(timeout=10) as client:
                 response = await client.get(
@@ -66,16 +55,16 @@ class BiQuoteProvider(MarketDataProvider):
         except (httpx.HTTPError, ValueError) as exc:
             raise ProviderError(f"BiQuote candles unavailable: {exc}") from exc
 
-        rows = payload.get("candles", payload) if isinstance(payload, dict) else payload
+        rows: Any = payload.get("bars") if isinstance(payload, dict) else None
         if not isinstance(rows, list):
-            raise ProviderError("BiQuote returned an invalid candle payload")
+            raise ProviderError("BiQuote returned an invalid candle envelope")
 
         candles: list[Candle] = []
-        for row in rows:
+        for row in reversed(rows):
             if not isinstance(row, dict):
                 continue
             try:
-                timestamp = row.get("timestamp", row.get("time"))
+                timestamp = row.get("openTime", row.get("timestamp", row.get("time")))
                 if timestamp is None:
                     continue
                 candles.append(
@@ -89,57 +78,84 @@ class BiQuoteProvider(MarketDataProvider):
                 )
             except (KeyError, TypeError, ValueError):
                 continue
+
         if not candles:
             raise ProviderError("BiQuote returned no valid candles")
         return candles
 
     async def stream(self, symbol: str) -> AsyncIterator[Quote]:
-        """Stream ticks from BiQuote SignalR without exposing its wire format."""
+        """Stream ReceiveTick events from BiQuote SignalR."""
         try:
-            from signalrcore.hub_connection_builder import HubConnectionBuilder
+            from pysignalr.client import SignalRClient
         except ImportError as exc:
             raise ProviderError(
-                "BiQuote streaming requires the optional signalrcore dependency"
+                "BiQuote streaming requires the pysignalr dependency"
             ) from exc
 
+        symbol = symbol.upper()
         loop = asyncio.get_running_loop()
         queue: asyncio.Queue[Quote] = asyncio.Queue()
-        connection = (
-            HubConnectionBuilder()
-            .with_url(f"{self.base_url.replace('https://', 'wss://')}/hubs/tick")
-            .build()
-        )
+        client = SignalRClient(f"{self.base_url}/hubs/tick")
 
-        def on_tick(payload: object) -> None:
+        async def on_tick(payload: list[dict[str, Any]]) -> None:
+            for item in payload:
+                if not isinstance(item, dict):
+                    continue
+                item_symbol = str(item.get("symbol", "")).upper()
+                if item_symbol != symbol:
+                    continue
+                try:
+                    quote = _quote_from_payload(item, symbol)
+                except ProviderError:
+                    continue
+                await queue.put(quote)
+
+        def on_open() -> None:
+            client.send("Subscribe", [[symbol]])
+
+        client.on("ReceiveTick", on_tick)
+        client.on_open(on_open)
+
+        async def run_client() -> None:
             try:
-                data = payload if isinstance(payload, dict) else json.loads(str(payload))
-                bid = _number(data.get("bid"))
-                ask = _number(data.get("ask"))
-                mid = _number(data.get("mid"))
-                if mid is None and bid is not None and ask is not None:
-                    mid = (bid + ask) / 2
-                if mid is None:
-                    return
-                quote = Quote(
-                    source=self.name,
-                    symbol=str(data.get("symbol", symbol)).upper(),
-                    timestamp=data.get("timestamp"),
-                    bid=bid,
-                    ask=ask,
-                    mid=mid,
-                    spread=(ask - bid) if bid is not None and ask is not None else None,
+                await client.run()
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                await queue.put(
+                    ProviderError(f"BiQuote stream unavailable: {exc}")
                 )
-                asyncio.run_coroutine_threadsafe(queue.put(quote), loop)
-            except (TypeError, ValueError, json.JSONDecodeError):
-                return
 
-        connection.on("tick", on_tick)
-        connection.start()
+        task = asyncio.create_task(run_client())
         try:
             while True:
-                yield await queue.get()
+                item = await queue.get()
+                if isinstance(item, ProviderError):
+                    raise item
+                yield item
         finally:
-            connection.stop()
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+
+
+def _quote_from_payload(payload: dict[str, Any], symbol: str) -> Quote:
+    bid = _number(payload.get("bid"))
+    ask = _number(payload.get("ask"))
+    mid = _number(payload.get("mid"))
+    if mid is None and bid is not None and ask is not None:
+        mid = (bid + ask) / 2
+    if bid is None and ask is None and mid is None:
+        raise ProviderError("BiQuote returned no valid price")
+
+    return Quote(
+        source="biquote",
+        symbol=str(payload.get("symbol", symbol)).upper(),
+        timestamp=payload.get("timestamp", payload.get("time")),
+        bid=bid,
+        ask=ask,
+        mid=mid,
+        spread=(ask - bid) if bid is not None and ask is not None else None,
+    )
 
 
 def _number(value: object) -> float | None:
