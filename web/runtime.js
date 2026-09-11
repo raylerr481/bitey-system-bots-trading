@@ -14,9 +14,14 @@
     catch (_) { return null; }
   }
   function loadWebTrader() {
-    if (window.BiteyWebTrader) { window.BiteyWebTrader.init(); return; }
+    if (window.BiteyWebTrader) { window.BiteyWebTrader.init(); loadChartInteractions(); return; }
     if (document.querySelector('script[data-bitey-web-trader]')) return;
     const script = document.createElement('script'); script.src = '/web-trader.js?v=20260911'; script.defer = true; script.dataset.biteyWebTrader = '1'; document.head.appendChild(script);
+    script.addEventListener('load', () => loadChartInteractions(), { once:true });
+  }
+  function loadChartInteractions() {
+    if (document.querySelector('script[data-bitey-chart-interactions]')) return;
+    const script = document.createElement('script'); script.src = '/chart-interactions.js?v=20260911'; script.defer = true; script.dataset.biteyChartInteractions = '1'; document.head.appendChild(script);
   }
   function loadTradingMode() {
     if (window.BiteySBTTradingMode) { window.BiteySBTTradingMode.init(); return; }
