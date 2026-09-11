@@ -26,11 +26,14 @@ jobs:
           from pathlib import Path
           p = Path('web/index.html')
           s = p.read_text(encoding='utf-8')
-          loader = '<script src="/runtime.js?v=20260910" defer></script>\n'
+          loader = '<script src="/runtime.js?v=20260911" defer></script>\n'
           legacy = '<script src="/runtime.js" defer></script>\n'
+          old = '<script src="/runtime.js?v=20260910" defer></script>\n'
           if legacy in s:
               s = s.replace(legacy, loader, 1)
-          elif '/runtime.js?v=20260910' not in s:
+          elif old in s:
+              s = s.replace(old, loader, 1)
+          elif '/runtime.js?v=20260911' not in s:
               s = s.replace('</body>', loader + '</body>', 1)
           p.write_text(s, encoding='utf-8')
           PY
