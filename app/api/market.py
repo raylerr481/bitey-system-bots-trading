@@ -74,8 +74,11 @@ def _apply_tick(candle: Candle | None, quote: Any) -> Candle | None:
 @router.get("/connections")
 def connections() -> dict[str, Any]:
     provider = os.getenv("SBT_MARKET_PROVIDER", "none").strip().lower()
-    approved = os.getenv("SBT_BIQUOTE_PUBLIC_APPROVED", "false").lower() == "true"
-    configured = provider == "biquote" and approved
+    biquote_approved = os.getenv("SBT_BIQUOTE_PUBLIC_APPROVED", "false").lower() == "true"
+    mt5_configured = bool(os.getenv("MT5_BRIDGE_URL", "").strip())
+    biquote_configured = provider == "biquote" and biquote_approved
+    mt5_active = provider == "mt5" and mt5_configured
+    configured = biquote_configured or mt5_active
     return {
         "owner": "bitey-sbt",
         "contract": "sbt-market-v1",
@@ -83,17 +86,29 @@ def connections() -> dict[str, Any]:
         "execution_enabled": False,
         "connections": [
             {
-                "id": provider,
-                "name": "BiQuote" if provider == "biquote" else "No public provider",
+                "id": "biquote",
+                "name": "BiQuote",
                 "kind": "market-data-provider",
-                "market_data": configured,
-                "real_time_quotes": configured,
-                "real_time_charts": configured,
-                "ohlc_candles": configured,
+                "market_data": biquote_configured,
+                "real_time_quotes": biquote_configured,
+                "real_time_charts": biquote_configured,
+                "ohlc_candles": biquote_configured,
                 "execution_authority": "disabled",
-                "configured": configured,
-            }
+                "configured": biquote_configured,
+            },
+            {
+                "id": "mt5",
+                "name": "MetaTrader 5 read-only bridge",
+                "kind": "market-data-provider",
+                "market_data": mt5_active,
+                "real_time_quotes": mt5_active,
+                "real_time_charts": mt5_active,
+                "ohlc_candles": mt5_active,
+                "execution_authority": "disabled",
+                "configured": mt5_configured,
+            },
         ],
+        "active_provider": provider if configured else None,
         "credentials_boundary": "SBT consumes normalized market data only; no broker credentials or order execution are exposed.",
     }
 
