@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import asyncio
 import os
-from typing import Any, Iterator
+from collections.abc import AsyncIterator
+from typing import Any
 
 import httpx
 
@@ -17,11 +19,13 @@ class MT5Provider(MarketDataProvider):
     is exposed here and this provider cannot enable live trading.
     """
 
+    name = "mt5"
     source = "metatrader5"
 
     def __init__(self, bridge_url: str | None = None) -> None:
         self.bridge_url = (bridge_url or os.getenv("MT5_BRIDGE_URL", "")).rstrip("/")
         self.timeout = float(os.getenv("MT5_BRIDGE_TIMEOUT", "10"))
+        self.poll_interval = max(float(os.getenv("MT5_QUOTE_POLL_INTERVAL", "1.0")), 0.25)
 
     def _request(self, path: str, params: dict[str, Any] | None = None) -> Any:
         if not self.bridge_url:
@@ -47,8 +51,8 @@ class MT5Provider(MarketDataProvider):
             raise ProviderError(f"MT5 bridge returned invalid {key} payload")
         return [item for item in value if isinstance(item, dict)]
 
-    def quote(self, symbol: str) -> Quote:
-        data = self._request(f"/quote/{symbol.upper()}")
+    @staticmethod
+    def _quote_from_payload(symbol: str, data: Any) -> Quote:
         if not isinstance(data, dict):
             raise ProviderError("MT5 bridge returned invalid quote payload")
         bid = data.get("bid")
@@ -57,7 +61,7 @@ class MT5Provider(MarketDataProvider):
         mid = (float(bid) + float(ask)) / 2 if bid is not None and ask is not None else last
         spread = float(ask) - float(bid) if bid is not None and ask is not None else None
         return Quote(
-            source=self.source,
+            source="metatrader5",
             symbol=symbol.upper(),
             timestamp=data.get("timestamp"),
             bid=float(bid) if bid is not None else None,
@@ -66,8 +70,13 @@ class MT5Provider(MarketDataProvider):
             spread=spread,
         )
 
-    def candles(self, symbol: str, timeframe: str = "M5", limit: int = 200) -> list[Candle]:
-        data = self._request(
+    async def quote(self, symbol: str) -> Quote:
+        data = await asyncio.to_thread(self._request, f"/quote/{symbol.upper()}")
+        return self._quote_from_payload(symbol, data)
+
+    async def candles(self, symbol: str, timeframe: str = "M5", limit: int = 200) -> list[Candle]:
+        data = await asyncio.to_thread(
+            self._request,
             f"/candles/{symbol.upper()}",
             {"timeframe": timeframe, "limit": min(max(int(limit), 1), 1000)},
         )
@@ -88,8 +97,13 @@ class MT5Provider(MarketDataProvider):
                 raise ProviderError("MT5 bridge returned invalid candle data") from exc
         return candles
 
-    def stream(self, symbol: str) -> Iterator[Quote]:
-        raise ProviderError(
-            "MT5 live tick stream is not exposed by the current bridge contract; "
-            "historical candles are supported only when /candles/{symbol} exists"
-        )
+    async def stream(self, symbol: str) -> AsyncIterator[Quote]:
+        """Poll real MT5 quotes through the bridge; never synthesize prices."""
+        last_signature: tuple[Any, ...] | None = None
+        while True:
+            quote = await self.quote(symbol)
+            signature = (quote.timestamp, quote.bid, quote.ask, quote.mid)
+            if signature != last_signature:
+                last_signature = signature
+                yield quote
+            await asyncio.sleep(self.poll_interval)
