@@ -16,12 +16,12 @@
   function loadWebTrader() {
     if (window.BiteyWebTrader) { window.BiteyWebTrader.init(); return; }
     if (document.querySelector('script[data-bitey-web-trader]')) return;
-    const script = document.createElement('script'); script.src = '/web-trader.js'; script.defer = true; script.dataset.biteyWebTrader = '1'; document.head.appendChild(script);
+    const script = document.createElement('script'); script.src = '/web-trader.js?v=20260911'; script.defer = true; script.dataset.biteyWebTrader = '1'; document.head.appendChild(script);
   }
   function loadTradingMode() {
     if (window.BiteySBTTradingMode) { window.BiteySBTTradingMode.init(); return; }
     if (document.querySelector('script[data-bitey-trading-mode]')) return;
-    const script = document.createElement('script'); script.src = '/trading-mode.js'; script.defer = true; script.dataset.biteyTradingMode = '1'; document.head.appendChild(script);
+    const script = document.createElement('script'); script.src = '/trading-mode.js?v=20260911'; script.defer = true; script.dataset.biteyTradingMode = '1'; document.head.appendChild(script);
   }
   async function openThesisLab() {
     if (document.getElementById('thesis-lab-page')) return activateThesisLab();
