@@ -144,9 +144,9 @@ def _is_impulse(bar: Bar, previous_average_range: float, side: Side, config: Str
 def _build_box(candle: Bar, side: Side, config: StrategyConfig) -> Box:
     """Mirror the transcript's three box types around the trend direction."""
     body = max(_body(candle), 1e-12)
+    body_low, body_high = sorted((candle.open, candle.close))
     if side == "long":
         wick = _upper_wick(candle)
-        body_low, body_high = sorted((candle.open, candle.close))
         ratio = wick / body
         if ratio >= config.wick_to_body_type1:
             low, high, candle_type = body_high, candle.high, 1
@@ -156,7 +156,6 @@ def _build_box(candle: Bar, side: Side, config: StrategyConfig) -> Box:
             low, high, candle_type = candle.low, candle.high, 3
     else:
         wick = _lower_wick(candle)
-        body_low, body_high = sorted((candle.open, candle.close))
         ratio = wick / body
         if ratio >= config.wick_to_body_type1:
             low, high, candle_type = candle.low, body_low, 1
@@ -167,25 +166,31 @@ def _build_box(candle: Bar, side: Side, config: StrategyConfig) -> Box:
     return Box(side, candle.timestamp, min(low, high), max(low, high), candle_type)
 
 
-def _latest_countertrend_box(
+def _find_box_after_breakout(
     bars: Sequence[Bar],
     side: Side,
     breakout_index: int,
     config: StrategyConfig,
 ) -> Box | None:
-    """Find the latest opposite candle before a qualifying impulse."""
-    start = max(1, breakout_index - config.max_box_age_bars)
-    for index in range(breakout_index, start - 1, -1):
+    """Find the first qualifying impulse after the opening-range breakout.
+
+    The box is built from the last counter-trend candle immediately preceding
+    that impulse, matching the transcript's "last bearish/bullish candle before
+    continuation" concept.
+    """
+    end = min(len(bars), breakout_index + config.max_box_age_bars + 1)
+    for index in range(breakout_index + 1, end):
         candle = bars[index]
         previous_average = _average_range(bars, index)
         if not _is_impulse(candle, previous_average, side, config):
             continue
-        for candidate_index in range(index - 1, start - 1, -1):
+        for candidate_index in range(index - 1, breakout_index, -1):
             candidate = bars[candidate_index]
             if side == "long" and candidate.close < candidate.open:
                 return _build_box(candidate, side, config)
             if side == "short" and candidate.close > candidate.open:
                 return _build_box(candidate, side, config)
+        # An impulse without a valid counter-trend candle does not create a box.
     return None
 
 
@@ -243,12 +248,16 @@ def generate_signal(
     if m5_bars is not None and not _m5_bias(m5_bars, side, range_high, range_low, config):
         return None
 
-    box = _latest_countertrend_box(m1_bars, side, breakout_index, config)
+    box = _find_box_after_breakout(m1_bars, side, breakout_index, config)
     if box is None:
         return None
 
     contacted = False
-    for index in range(breakout_index + 1, len(m1_bars) - 1):
+    box_index = next((i for i, bar in enumerate(m1_bars) if bar.timestamp == box.source_timestamp), None)
+    if box_index is None:
+        return None
+
+    for index in range(box_index + 1, len(m1_bars) - 1):
         bar = m1_bars[index]
         if bar.high >= box.low and bar.low <= box.high:
             contacted = True
