@@ -9,11 +9,16 @@ from __future__ import annotations
 import os
 
 from .biquote import BiQuoteProvider
+from .mt5 import MT5Provider
 from .providers import MarketDataProvider, ProviderError
 
 
 def build_provider(name: str | None = None) -> MarketDataProvider:
     selected = (name or os.getenv("SBT_MARKET_PROVIDER", "none")).strip().lower()
+    if selected == "mt5":
+        if not os.getenv("MT5_BRIDGE_URL", "").strip():
+            raise ProviderError("MT5 market provider selected but MT5_BRIDGE_URL is not configured")
+        return MT5Provider()
     if selected == "biquote":
         if os.getenv("SBT_BIQUOTE_PUBLIC_APPROVED", "false").lower() != "true":
             raise ProviderError("BiQuote is installed but not approved for public SBT display")
