@@ -26,10 +26,13 @@ jobs:
           from pathlib import Path
           p = Path('web/index.html')
           s = p.read_text(encoding='utf-8')
-          loader = '<script src="/runtime.js" defer></script>\n'
-          if loader not in s:
+          loader = '<script src="/runtime.js?v=20260910" defer></script>\n'
+          legacy = '<script src="/runtime.js" defer></script>\n'
+          if legacy in s:
+              s = s.replace(legacy, loader, 1)
+          elif '/runtime.js?v=20260910' not in s:
               s = s.replace('</body>', loader + '</body>', 1)
-              p.write_text(s, encoding='utf-8')
+          p.write_text(s, encoding='utf-8')
           PY
       - uses: actions/setup-node@v4
         with:
@@ -51,7 +54,7 @@ jobs:
           printf '%s' "$thesis" | grep -q "Random Walk Baseline"
           printf '%s' "$thesis" | grep -q "GARCH(1,1)"
           health=$(curl -fsSL --retry 5 --retry-delay 3 https://bitey-system-bots-trading.raylerr481.workers.dev/health)
-          printf '%s' "$health" | grep -q '"live":false'
-          printf '%s' "$health" | grep -q '"real_money":false'
-          printf '%s' "$health" | grep -q '"broker_orders":0'
+          printf '%s' "$health" | grep -q '\"live\":false'
+          printf '%s' "$health" | grep -q '\"real_money\":false'
+          printf '%s' "$health" | grep -q '\"broker_orders\":0'
 # trigger after Cloudflare Actions credential setup
