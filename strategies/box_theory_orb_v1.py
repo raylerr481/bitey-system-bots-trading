@@ -107,19 +107,22 @@ def _opening_range(bars: Sequence[Bar], config: StrategyConfig) -> tuple[float, 
     return max(bar.high for bar in target), min(bar.low for bar in target)
 
 
-def _session_bias(bars: Sequence[Bar], config: StrategyConfig) -> tuple[Side, float, float] | None:
+def _session_bias(bars: Sequence[Bar], config: StrategyConfig) -> tuple[Side, float, float, int] | None:
     opening = _opening_range(bars, config)
     if opening is None:
         return None
     range_high, range_low = opening
     for index, bar in enumerate(bars):
         local = _ny_time(bar.timestamp, config.timezone)
-        if local.hour < config.opening_hour or (local.hour == config.opening_hour and local.minute < config.opening_minute + config.opening_range_minutes):
+        if local.hour < config.opening_hour or (
+            local.hour == config.opening_hour
+            and local.minute < config.opening_minute + config.opening_range_minutes
+        ):
             continue
         if bar.close > range_high * (1.0 + config.breakout_buffer_pct):
-            return "long", range_high, range_low
+            return "long", range_high, range_low, index
         if bar.close < range_low * (1.0 - config.breakout_buffer_pct):
-            return "short", range_high, range_low
+            return "short", range_high, range_low, index
     return None
 
 
@@ -143,12 +146,7 @@ def _build_box(candle: Bar, side: Side, config: StrategyConfig) -> Box:
     body = max(_body(candle), 1e-12)
     if side == "long":
         wick = _upper_wick(candle)
-        if candle.close >= candle.open:
-            # A bullish source candle is not the required counter-trend candle;
-            # callers only pass bearish candles, but keep the geometry defensive.
-            body_low, body_high = sorted((candle.open, candle.close))
-        else:
-            body_low, body_high = candle.close, candle.open
+        body_low, body_high = sorted((candle.open, candle.close))
         ratio = wick / body
         if ratio >= config.wick_to_body_type1:
             low, high, candle_type = body_high, candle.high, 1
@@ -158,10 +156,7 @@ def _build_box(candle: Bar, side: Side, config: StrategyConfig) -> Box:
             low, high, candle_type = candle.low, candle.high, 3
     else:
         wick = _lower_wick(candle)
-        if candle.close >= candle.open:
-            body_low, body_high = candle.open, candle.close
-        else:
-            body_low, body_high = candle.close, candle.open
+        body_low, body_high = sorted((candle.open, candle.close))
         ratio = wick / body
         if ratio >= config.wick_to_body_type1:
             low, high, candle_type = candle.low, body_low, 1
@@ -178,7 +173,7 @@ def _latest_countertrend_box(
     breakout_index: int,
     config: StrategyConfig,
 ) -> Box | None:
-    """Find the latest opposite candle immediately before a qualifying impulse."""
+    """Find the latest opposite candle before a qualifying impulse."""
     start = max(1, breakout_index - config.max_box_age_bars)
     for index in range(breakout_index, start - 1, -1):
         candle = bars[index]
@@ -194,17 +189,25 @@ def _latest_countertrend_box(
     return None
 
 
-def _m5_bias(m5_bars: Sequence[Bar], side: Side, config: StrategyConfig) -> bool:
+def _m5_bias(
+    m5_bars: Sequence[Bar],
+    side: Side,
+    range_high: float,
+    range_low: float,
+    config: StrategyConfig,
+) -> bool:
     if not config.require_m5_confirmation:
         return True
-    opening = _opening_range(m5_bars, config)
-    if opening is None:
-        return False
-    high, low = opening
     for bar in m5_bars:
-        if side == "long" and bar.close > high * (1.0 + config.breakout_buffer_pct):
+        local = _ny_time(bar.timestamp, config.timezone)
+        if local.hour < config.opening_hour or (
+            local.hour == config.opening_hour
+            and local.minute < config.opening_minute + config.opening_range_minutes
+        ):
+            continue
+        if side == "long" and bar.close > range_high * (1.0 + config.breakout_buffer_pct):
             return True
-        if side == "short" and bar.close < low * (1.0 - config.breakout_buffer_pct):
+        if side == "short" and bar.close < range_low * (1.0 - config.breakout_buffer_pct):
             return True
     return False
 
@@ -222,31 +225,24 @@ def generate_signal(
     m5_bars: Sequence[Bar] | None = None,
     config: StrategyConfig | None = None,
 ) -> Signal | None:
-    """Generate a confirmed Box Theory signal after NY opening-range direction.
+    """Generate one confirmed Box Theory signal after NY opening-range direction.
 
     Entry is the open of the candle after a confirmation candle. The box must
-    first be contacted by price. A confirmed user-configured reward/risk >= 2:1
-    is required. This function is deterministic and contains no broker execution.
+    first be contacted by price. A reward/risk of at least 2:1 is required.
+    This function is deterministic and contains no broker execution.
     """
     config = config or StrategyConfig()
     if len(m1_bars) < 20:
-        return None
-    if m5_bars is not None and not _m5_bias(m5_bars, "long", config) and not _m5_bias(m5_bars, "short", config):
         return None
 
     bias = _session_bias(m1_bars, config)
     if bias is None:
         return None
-    side, range_high, range_low = bias
-    breakout_index = next(
-        (
-            i for i, bar in enumerate(m1_bars)
-            if (bar.close > range_high * (1.0 + config.breakout_buffer_pct) if side == "long" else bar.close < range_low * (1.0 - config.breakout_buffer_pct))
-        ),
-        None,
-    )
-    if breakout_index is None:
+    side, range_high, range_low, breakout_index = bias
+
+    if m5_bars is not None and not _m5_bias(m5_bars, side, range_high, range_low, config):
         return None
+
     box = _latest_countertrend_box(m1_bars, side, breakout_index, config)
     if box is None:
         return None
@@ -258,9 +254,9 @@ def generate_signal(
             contacted = True
         if not contacted:
             continue
-        confirmation = m1_bars[index]
-        if not _confirmation(confirmation, side, box, config):
+        if not _confirmation(bar, side, box, config):
             continue
+
         entry = m1_bars[index + 1].open
         if side == "long":
             stop = box.low * (1.0 - config.stop_buffer_pct)
@@ -274,6 +270,7 @@ def generate_signal(
             if risk <= 0:
                 return None
             target = entry - risk * config.reward_risk
+
         return Signal(
             side=side,
             timestamp=m1_bars[index + 1].timestamp,
