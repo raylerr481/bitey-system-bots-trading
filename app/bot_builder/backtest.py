@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from statistics import mean, pstdev
-
 from app.bot_builder.spec import BotSpecification
 from app.quant.engine import bollinger, ema, macd, rsi, sma
 from app.services.backtest import run_backtest
@@ -12,11 +10,9 @@ def _rci(prices: list[float], period: int) -> float:
     if len(prices) < period:
         raise ValueError(f"Need at least {period} observations for RCI")
     window = prices[-period:]
-    price_ranks = {i: rank for rank, i in enumerate(sorted(range(period), key=lambda j: (window[j], j)), 1)}
-    d2 = 0.0
-    for time_rank, index in enumerate(range(period), 1):
-        d = price_ranks[index] - time_rank
-        d2 += d * d
+    ordered = sorted(range(period), key=lambda j: (window[j], j))
+    ranks = {index: rank for rank, index in enumerate(ordered, 1)}
+    d2 = sum((ranks[index] - (index + 1)) ** 2 for index in range(period))
     return (1.0 - (6.0 * d2) / (period * (period * period - 1.0))) * 100.0
 
 
@@ -28,8 +24,8 @@ def _value(prices: list[float], indicator: str, period: int) -> float:
     if name == "rci": return _rci(prices, period)
     if name == "macd": return macd(prices, fast=period, slow=max(period + 14, 26), signal=9)["macd"]
     if name == "bollinger": return bollinger(prices, period)["middle"]
-    if name == "rolling_high": return max(prices[-period:])
-    if name == "rolling_low": return min(prices[-period:])
+    if name == "rolling_high": return max(prices[-period-1:-1])
+    if name == "rolling_low": return min(prices[-period-1:-1])
     if name == "atr": return 0.0
     raise ValueError(f"Unsupported backtest indicator: {indicator}")
 
@@ -54,10 +50,10 @@ def build_signal(spec: BotSpecification):
         return values
 
     def signal(prices, i):
-        if i < max_period:
+        if i < max_period + 1:
             return "hold"
         current = snapshot(prices, i)
-        previous = snapshot(prices, i - 1) if i > max_period else {}
+        previous = snapshot(prices, i - 1)
 
         def value(values, ref):
             return values.get(ref) if isinstance(ref, str) else float(ref)
