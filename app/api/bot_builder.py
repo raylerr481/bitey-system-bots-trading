@@ -6,6 +6,7 @@ from app.bot_builder.backtest import run_spec_backtest
 from app.bot_builder.pipeline import run_pipeline
 from app.bot_builder.generator import generate_candidates
 from app.bot_builder.batch import rank_candidates
+from app.bot_builder.robustness import robustness_report, oos_test, parameter_sensitivity, cost_stress, monte_carlo_paths, walk_forward
 from app.bot_builder.ar001 import ar001_spec, size_staged_entries, evaluate_ar001_evidence, backtest_ar001_ohlc
 from app.bot_builder.ar001_evidence import run_ar001_ohlc_evidence
 from app.bot_builder.ar002 import ar002_spec, detect_liquidity_events, liquidity_signal_backtest
@@ -14,7 +15,7 @@ router = APIRouter(prefix="/api/v1/bot-builder", tags=["bot-builder"])
 
 @router.get("/catalog")
 def catalog():
-    return {"contract":"sbt-bot-v1","languages":["python","mql5","pine","typescript"],"steps":["specify","generate","quant","batch-backtest","rank","stress-test","risk-gate","virtual-validation","generate-code"],"hypotheses":["AR-001","AR-002"],"live":False,"real_money":False,"broker_orders":0}
+    return {"contract":"sbt-bot-v1","languages":["python","mql5","pine","typescript"],"steps":["specify","generate","quant","batch-backtest","rank","robustness","oos","monte-carlo","walk-forward","stress-test","risk-gate","virtual-validation","generate-code"],"hypotheses":["AR-001","AR-002"],"live":False,"real_money":False,"broker_orders":0}
 
 class GenerateRequest(BaseModel):
     symbol: str = Field(default="EURUSD", min_length=1, max_length=32)
@@ -37,6 +38,44 @@ class BatchBacktestRequest(BaseModel):
 def batch_backtest(request: BatchBacktestRequest):
     ranked = rank_candidates(request.candidates, request.prices, request.fee_pct, request.top_n)
     return {"contract":"sbt-batch-backtest-v1","mode":"research-ranking","candidate_count":len(request.candidates),"returned":len(ranked),"ranking":ranked,"safety":{"live":False,"real_money":False,"broker_orders":0},"next_stage":"robustness-oos-monte-carlo-walk-forward"}
+
+class ResearchRequest(BaseModel):
+    specification: BotSpecification
+    prices: list[float] = Field(min_length=60, max_length=10000)
+    fee_pct: float = Field(default=0.001, ge=0, lt=0.1)
+    monte_carlo_samples: int = Field(default=200, ge=200, le=2000)
+
+@router.post("/robustness")
+def robustness(request: ResearchRequest):
+    return robustness_report(request.specification, request.prices, request.fee_pct, request.monte_carlo_samples)
+
+@router.post("/oos")
+def oos(request: ResearchRequest):
+    return oos_test(request.specification, request.prices, 70.0, request.fee_pct)
+
+@router.post("/sensitivity")
+def sensitivity(request: ResearchRequest):
+    return parameter_sensitivity(request.specification, request.prices, request.fee_pct)
+
+@router.post("/cost-stress")
+def cost_stress_endpoint(request: ResearchRequest):
+    return cost_stress(request.specification, request.prices, request.fee_pct)
+
+@router.post("/monte-carlo")
+def monte_carlo(request: ResearchRequest):
+    return monte_carlo_paths(request.specification, request.prices, request.fee_pct, request.monte_carlo_samples)
+
+class WalkForwardRequest(BaseModel):
+    specification: BotSpecification
+    prices: list[float] = Field(min_length=90, max_length=10000)
+    train_size: int = Field(default=120, ge=30, le=2000)
+    test_size: int = Field(default=60, ge=20, le=1000)
+    step: int = Field(default=60, ge=1, le=1000)
+    fee_pct: float = Field(default=0.001, ge=0, lt=0.1)
+
+@router.post("/walk-forward")
+def walk_forward_endpoint(request: WalkForwardRequest):
+    return walk_forward(request.specification, request.prices, request.train_size, request.test_size, request.step, request.fee_pct)
 
 @router.get("/hypotheses/ar-001")
 def get_ar001(): return ar001_spec()
