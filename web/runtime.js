@@ -1,9 +1,9 @@
 (() => {
   const API=(window.SBT_API_URL||'https://bitey-system-bots-trading-api.onrender.com').replace(/\/$/,'');
   window.SBT_LIVE_TRADING_ENABLED=false;window.SBT_SAFETY={live:false,real_money:false,broker_orders:0};
-  const ASSET_VERSION='20260912auth1';
+  const ASSET_VERSION='20260912auth2';
   function banner(){const el=document.createElement('div');el.textContent='RESEARCH / DEMO ONLY · LIVE=false · REAL_MONEY=false · BROKER_ORDERS=0';el.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:9999;padding:8px;text-align:center;background:#111;color:#fff;font:600 12px system-ui;letter-spacing:.04em';document.body.appendChild(el)}
-  async function health(){try{const r=await fetch(API+'/api/v1/system');if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}catch(_){return null}}
+  async function health(){try{const r=await fetch(API+'/api/v1/system');if(!r.ok)throw new Error('HTTP '+r.status);const data=await r.json();window.SBT_SAFETY={live:Boolean(data.live_trading_enabled),real_money:Boolean(data.real_money_enabled),broker_orders:Number(data.broker_orders||0)};window.SBT_LIVE_TRADING_ENABLED=false;return data}catch(_){return null}}
   function loadScript(src,attr,ready,init){if(ready){init&&init();return}if(document.querySelector(`script[${attr}]`))return;const s=document.createElement('script');s.src=src;s.defer=true;s.setAttribute(attr,'1');document.head.appendChild(s);s.addEventListener('load',()=>init&&init(),{once:true})}
   function loadAuth(){loadScript('/auth.js?v='+ASSET_VERSION,'data-bitey-sbt-auth',false)}
   function loadWebTrader(){if(window.BiteyWebTrader){window.BiteyWebTrader.init();loadChartInteractions();loadMarketUniverse();loadM1Timeframe();loadUiFixes();loadBotBridge();loadDemoExecution();loadMarketPulse();loadAlgorithmicEngine();return}loadScript('/web-trader.js?v='+ASSET_VERSION,'data-bitey-web-trader',false,()=>{loadChartInteractions();loadMarketUniverse();loadM1Timeframe();loadUiFixes();loadBotBridge();loadDemoExecution();loadMarketPulse();loadAlgorithmicEngine()})}
@@ -27,7 +27,21 @@
   function installBotLabNav(){const nav=document.querySelector('.nav');if(!nav||nav.querySelector('[data-page="bots"]'))return;const small=Array.from(nav.querySelectorAll('small')).find(x=>x.textContent.trim().toLowerCase()==='workspace');const b=document.createElement('button');b.dataset.page='bots';b.textContent='◉ Bot Lab';b.addEventListener('click',()=>openBotLab().catch(e=>console.error(e)));if(small)small.insertAdjacentElement('afterend',b);else nav.appendChild(b)}
   function installWebTraderNav(){const nav=document.querySelector('.nav');if(!nav||nav.querySelector('[data-page="web-trader"]'))return;const bot=nav.querySelector('[data-page="bots"]');const b=document.createElement('button');b.dataset.page='web-trader';b.textContent='▣ Web Trader';b.addEventListener('click',()=>openWebTrader().catch(e=>console.error(e)));if(bot)bot.insertAdjacentElement('afterend',b);else nav.appendChild(b)}
   function interceptExistingBotButton(){document.querySelectorAll('[data-page="bots"]').forEach(b=>{if(b.dataset.botLabWired)return;b.dataset.botLabWired='1';b.addEventListener('click',event=>{event.preventDefault();event.stopImmediatePropagation();closeMobileMenu();openBotLab().catch(e=>console.error(e))},true)})}
-  function expose(){window.BiteySBT={api:API,safety:window.SBT_SAFETY,health,async validation(){const r=await fetch(API+'/api/v1/validation/virtual',{method:'POST',headers:{'content-type':'application/json'},body:'{}'});if(!r.ok)throw new Error('Validation HTTP '+r.status);return r.json()},async strategyRegistry(){const r=await fetch(API+'/api/v1/strategy/registry');if(!r.ok)throw new Error('Registry HTTP '+r.status);return r.json()},async riskGateEvaluate(payload){const r=await fetch(API+'/api/v1/strategy/risk-gate/evaluate',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});if(!r.ok)throw new Error('Risk Gate HTTP '+r.status);return r.json()},openThesisLab,openBotLab,openWebTrader}}
-  function boot(){expose();banner();loadAuth();installThesisNav();installBotLabNav();installWebTraderNav();interceptExistingBotButton();health()}
+  async function realMoneyGate(){
+    const session=window.BiteyAuth?.getSession?.();
+    if(!session) return {allowed:false,state:'registration_required',message:'Real-money trading requires a registered account.'};
+    const headers={Authorization:'Bearer '+session.access_token};
+    const r=await fetch(API+'/api/v1/trading/live/eligibility',{headers});
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok) return {allowed:false,state:'gate_blocked',...data};
+    return {allowed:false,state:'live_disabled',...data};
+  }
+  function installRealMoneyGate(){
+    if(document.querySelector('[data-sbt-real-money-gate]'))return;
+    const buttons=Array.from(document.querySelectorAll('button,a')).filter(b=>/dinero real|real money|live trading|trading real/i.test((b.textContent||'').trim()));
+    buttons.forEach(b=>{b.dataset.sbtRealMoneyGate='1';b.addEventListener('click',async e=>{e.preventDefault();e.stopImmediatePropagation();const result=await realMoneyGate().catch(err=>({allowed:false,state:'error',message:err.message}));if(!result.allowed){alert(result.message||'Real-money trading is currently unavailable.');return}} ,true)});
+  }
+  function expose(){window.BiteySBT={api:API,safety:window.SBT_SAFETY,health,realMoneyGate,async validation(){const r=await fetch(API+'/api/v1/validation/virtual',{method:'POST',headers:{'content-type':'application/json'},body:'{}'});if(!r.ok)throw new Error('Validation HTTP '+r.status);return r.json()},async strategyRegistry(){const r=await fetch(API+'/api/v1/strategy/registry');if(!r.ok)throw new Error('Registry HTTP '+r.status);return r.json()},async riskGateEvaluate(payload){const r=await fetch(API+'/api/v1/strategy/risk-gate/evaluate',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});if(!r.ok)throw new Error('Risk Gate HTTP '+r.status);return r.json()},openThesisLab,openBotLab,openWebTrader}}
+  function boot(){expose();banner();loadAuth();installThesisNav();installBotLabNav();installWebTraderNav();interceptExistingBotButton();health().finally(()=>installRealMoneyGate())}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
