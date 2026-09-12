@@ -1,5 +1,28 @@
 (() => {
+  function patchWebSocket() {
+    if (window.__biteySbtTimeframeWsPatched) return;
+    const NativeWebSocket = window.WebSocket;
+    if (!NativeWebSocket) return;
+    const PatchedWebSocket = function(url, protocols) {
+      try {
+        const text = String(url);
+        if (text.includes('/api/v1/market/stream/')) {
+          const trader = window.BiteyWebTrader;
+          const timeframe = String(trader?.state?.timeframe || 'M5').toUpperCase();
+          const separator = text.includes('?') ? '&' : '?';
+          url = `${text}${separator}timeframe=${encodeURIComponent(timeframe)}`;
+        }
+      } catch (_) {}
+      return protocols === undefined ? new NativeWebSocket(url) : new NativeWebSocket(url, protocols);
+    };
+    PatchedWebSocket.prototype = NativeWebSocket.prototype;
+    Object.setPrototypeOf(PatchedWebSocket, NativeWebSocket);
+    window.WebSocket = PatchedWebSocket;
+    window.__biteySbtTimeframeWsPatched = true;
+  }
+
   function install() {
+    patchWebSocket();
     const page = document.getElementById('bot-lab-page');
     const toolbar = page?.querySelector('.mt-toolbar');
     if (!page || !toolbar) return false;
