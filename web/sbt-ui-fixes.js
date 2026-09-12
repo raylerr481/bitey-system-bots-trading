@@ -8,13 +8,11 @@
     const page = document.getElementById('bot-lab-page');
     const toolbar = page?.querySelector('.mt-toolbar');
     if (!page || !toolbar) return false;
-
-    const existing = new Map(Array.from(toolbar.querySelectorAll('[data-tf]')).map(b => [b.dataset.tf, b]));
     const anchor = toolbar.querySelector('[data-tf]');
     if (!anchor) return false;
 
     TIMEFRAMES.forEach(([tf, label]) => {
-      let button = existing.get(tf);
+      let button = toolbar.querySelector(`[data-tf="${tf}"]`);
       if (!button) {
         button = document.createElement('button');
         button.type = 'button';
@@ -23,30 +21,32 @@
         button.title = `${label} timeframe`;
         anchor.parentElement.insertBefore(button, anchor);
       }
-      button.addEventListener('click', () => selectTimeframe(tf, button), { once: true });
+      if (button.dataset.sbtTimeframeWired !== '1') {
+        button.dataset.sbtTimeframeWired = '1';
+        button.addEventListener('click', () => selectTimeframe(tf));
+      }
     });
     return true;
   }
 
-  function selectTimeframe(tf, button) {
+  function selectTimeframe(tf) {
     const trader = window.BiteyWebTrader;
     const page = document.getElementById('bot-lab-page');
     if (!page) return;
     page.querySelectorAll('.mt-toolbar [data-tf]').forEach(b => b.classList.toggle('active', b.dataset.tf === tf));
-    if (trader?.state) {
-      trader.state.timeframe = tf;
-      trader.state.viewEnd = null;
-      const pair = trader.state.symbol || 'EURUSD';
-      const tfNode = document.getElementById('mtTf');
-      const overlay = document.getElementById('mtOverlay');
-      if (tfNode) tfNode.textContent = `${tf} · BiQuote`;
-      if (overlay) overlay.textContent = `Bitey SBT · ${pair} · ${tf}`;
-      if (typeof trader.resetView === 'function') trader.resetView();
-      if (typeof trader.drawChart === 'function') trader.drawChart();
-      window.dispatchEvent(new CustomEvent('bitey:sbt-timeframe', { detail: { timeframe: tf } }));
-      const refresh = document.getElementById('mtRefresh');
-      if (refresh) refresh.click();
-    }
+    if (!trader?.state) return;
+    trader.state.timeframe = tf;
+    trader.state.viewEnd = null;
+    const pair = trader.state.symbol || 'EURUSD';
+    const tfNode = document.getElementById('mtTf');
+    const overlay = document.getElementById('mtOverlay');
+    if (tfNode) tfNode.textContent = `${tf} · BiQuote`;
+    if (overlay) overlay.textContent = `Bitey SBT · ${pair} · ${tf}`;
+    if (typeof trader.resetView === 'function') trader.resetView();
+    if (typeof trader.drawChart === 'function') trader.drawChart();
+    window.dispatchEvent(new CustomEvent('bitey:sbt-timeframe', { detail: { timeframe: tf } }));
+    const refresh = document.getElementById('mtRefresh');
+    if (refresh) refresh.click();
   }
 
   function boot() {
