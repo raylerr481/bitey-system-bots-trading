@@ -1,0 +1,108 @@
+<section class="page" id="expected-value-page">
+  <div class="hero">
+    <span class="eyebrow">Bitey SBT · Quantitative Research</span>
+    <h2>Calculadora de Valor Esperado</h2>
+    <p>Evalúa escenarios probabilísticos y estima el valor esperado de una estrategia. Esta herramienta es analítica: no ejecuta operaciones y no constituye una recomendación financiera.</p>
+  </div>
+
+  <div class="card ev-card">
+    <div class="ev-header">
+      <div>
+        <h3>Expected Value</h3>
+        <p class="muted">E(X) = Σ (resultado × probabilidad)</p>
+      </div>
+      <span class="ev-badge">RESEARCH / DEMO</span>
+    </div>
+
+    <div class="ev-table-wrap">
+      <table class="ev-table">
+        <thead>
+          <tr><th>Escenario</th><th>Resultado</th><th>Probabilidad %</th><th>Valor ponderado</th><th></th></tr>
+        </thead>
+        <tbody id="evRows"></tbody>
+      </table>
+    </div>
+
+    <div class="ev-actions">
+      <button class="btn" id="evAdd">+ Añadir escenario</button>
+      <button class="btn" id="evTradingPreset">Preset trading</button>
+      <button class="btn" id="evClear">Limpiar</button>
+    </div>
+
+    <div class="ev-summary">
+      <div class="ev-kpi"><span>Probabilidad total</span><strong id="evProbability">0%</strong></div>
+      <div class="ev-kpi"><span>Valor esperado</span><strong id="evExpected">0.00</strong></div>
+      <div class="ev-kpi"><span>Estado</span><strong id="evStatus">Completa los escenarios</strong></div>
+    </div>
+
+    <div class="ev-note" id="evNote">Las probabilidades deben sumar exactamente 100% para validar el cálculo.</div>
+  </div>
+
+  <div class="card ev-trading">
+    <h3>Lectura para trading</h3>
+    <div class="ev-grid">
+      <label>Capital de referencia<input id="evCapital" type="number" min="0" step="0.01" value="10000"></label>
+      <label>Riesgo por operación %<input id="evRisk" type="number" min="0" step="0.1" value="1"></label>
+      <label>Resultado esperado por operación<input id="evTradeExpected" type="text" readonly value="—"></label>
+    </div>
+    <p class="muted">El resultado esperado de la tabla puede expresarse en R. Con riesgo fijo, el sistema puede mostrar una estimación monetaria del valor esperado por operación sin convertirla en una promesa de rentabilidad.</p>
+  </div>
+
+  <style>
+    #expected-value-page{--ev-bg:#090b0f;--ev-panel:#101318;--ev-line:#242a32;--ev-text:#d9dee7;--ev-muted:#7f8997;--ev-green:#19c77a;--ev-red:#ef5b68;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+    #expected-value-page .ev-card,#expected-value-page .ev-trading{background:var(--ev-panel);border:1px solid var(--ev-line);border-radius:14px;padding:18px}
+    #expected-value-page .ev-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+    #expected-value-page .ev-header h3{margin:0 0 5px;color:var(--ev-text)}
+    #expected-value-page .muted{color:var(--ev-muted);font-size:12px;line-height:1.5}
+    #expected-value-page .ev-badge{font-size:10px;border:1px solid var(--ev-line);border-radius:8px;padding:7px 9px;color:var(--ev-muted)}
+    #expected-value-page .ev-table-wrap{overflow:auto;margin-top:16px}
+    #expected-value-page .ev-table{width:100%;border-collapse:collapse;min-width:650px}
+    #expected-value-page th,#expected-value-page td{padding:9px;border-bottom:1px solid var(--ev-line);text-align:left;font-size:11px}
+    #expected-value-page th{color:var(--ev-muted);font-weight:600}
+    #expected-value-page input{width:100%;box-sizing:border-box;background:#080d13;border:1px solid var(--ev-line);color:#fff;border-radius:7px;padding:9px;outline:0}
+    #expected-value-page td input{min-width:100px}
+    #expected-value-page .ev-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    #expected-value-page .ev-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:16px}
+    #expected-value-page .ev-kpi{background:#090e14;border:1px solid var(--ev-line);border-radius:9px;padding:12px}
+    #expected-value-page .ev-kpi span{display:block;color:var(--ev-muted);font-size:10px}.ev-kpi strong{display:block;margin-top:5px;font-size:17px;color:#fff}
+    #expected-value-page .ev-note{margin-top:12px;padding:10px;border:1px solid #3b331d;border-radius:8px;background:#15140d;color:#d8c58b;font-size:11px;line-height:1.45}
+    #expected-value-page .ev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+    #expected-value-page .ev-grid label{color:var(--ev-muted);font-size:10px}.ev-grid input{display:block;margin-top:6px}
+    #expected-value-page .ev-remove{background:transparent;border:1px solid var(--ev-line);color:var(--ev-muted);border-radius:7px;padding:8px;cursor:pointer}
+    #expected-value-page .positive{color:var(--ev-green)!important}.negative{color:var(--ev-red)!important}
+    @media(max-width:750px){#expected-value-page .ev-summary,#expected-value-page .ev-grid{grid-template-columns:1fr}.ev-badge{display:none}}
+  </style>
+
+  <script>
+  (()=>{
+    const root=document.getElementById('expected-value-page');
+    if(!root||root.dataset.ready)return; root.dataset.ready='1';
+    const rows=root.querySelector('#evRows');
+    const presets=[['Ganancia','2','45'],['Pérdida','-1','45'],['Break-even','0','10']];
+    function addRow(name='',result='',prob=''){
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td><input class="ev-name" value="${name}"></td><td><input class="ev-result" type="number" step="0.01" value="${result}"></td><td><input class="ev-prob" type="number" min="0" max="100" step="0.01" value="${prob}"></td><td class="ev-weight">0.00</td><td><button class="ev-remove" type="button">×</button></td>`;
+      tr.querySelectorAll('input').forEach(i=>i.addEventListener('input',calc));
+      tr.querySelector('.ev-remove').addEventListener('click',()=>{tr.remove();calc()}); rows.appendChild(tr);
+    }
+    function calc(){
+      let p=0,e=0;
+      rows.querySelectorAll('tr').forEach(tr=>{const r=Number(tr.querySelector('.ev-result').value)||0;const q=Number(tr.querySelector('.ev-prob').value)||0;const w=r*q/100;p+=q;e+=w;tr.querySelector('.ev-weight').textContent=w.toFixed(4)});
+      root.querySelector('#evProbability').textContent=p.toFixed(2)+'%';
+      const out=root.querySelector('#evExpected'); out.textContent=e.toFixed(4); out.classList.toggle('positive',e>0);out.classList.toggle('negative',e<0);
+      const status=root.querySelector('#evStatus');
+      if(Math.abs(p-100)<0.0001){status.textContent=e>0?'Valor esperado positivo':e<0?'Valor esperado negativo':'Valor esperado neutro'}
+      else status.textContent='Probabilidades incompletas';
+      status.classList.toggle('positive',Math.abs(p-100)<0.0001&&e>0);status.classList.toggle('negative',Math.abs(p-100)<0.0001&&e<0);
+      const note=root.querySelector('#evNote'); note.textContent=Math.abs(p-100)<0.0001?'Cálculo validado: las probabilidades suman 100%.':'Las probabilidades deben sumar exactamente 100% para validar el cálculo.';
+      const capital=Number(root.querySelector('#evCapital').value)||0;const risk=Number(root.querySelector('#evRisk').value)||0;
+      root.querySelector('#evTradeExpected').value=Math.abs(p-100)<0.0001?(capital*risk/100*e/100).toFixed(2):'—';
+    }
+    root.querySelector('#evAdd').addEventListener('click',()=>addRow('Escenario '+(rows.children.length+1),'0','0'));
+    root.querySelector('#evTradingPreset').addEventListener('click',()=>{rows.innerHTML='';presets.forEach(x=>addRow(...x));calc()});
+    root.querySelector('#evClear').addEventListener('click',()=>{rows.innerHTML='';addRow('Escenario 1','0','100');calc()});
+    root.querySelector('#evCapital').addEventListener('input',calc);root.querySelector('#evRisk').addEventListener('input',calc);
+    presets.forEach(x=>addRow(...x));calc();
+  })();
+  </script>
+</section>
