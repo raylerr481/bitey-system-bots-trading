@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, model_validator
 Language = Literal["python", "mql5", "pine", "typescript"]
 
 class IndicatorSpec(BaseModel):
-    name: Literal["sma", "ema", "rsi", "atr", "macd", "bollinger"]
+    name: Literal["sma", "ema", "rsi", "atr", "macd", "bollinger", "rci", "rolling_high", "rolling_low"]
     period: int = Field(default=14, ge=2, le=200)
 
 class RuleSpec(BaseModel):
