@@ -49,16 +49,17 @@ def _epoch_seconds(value: Any) -> float | None:
     return None
 
 
-def _m5_bucket(timestamp: Any) -> int | None:
+def _bucket(timestamp: Any, seconds: int) -> int | None:
     epoch = _epoch_seconds(timestamp)
     if epoch is None:
         return None
-    return int(epoch // 300) * 300
+    return int(epoch // seconds) * seconds
 
 
-def _apply_tick(candle: Candle | None, quote: Any) -> Candle | None:
+def _apply_tick(candle: Candle | None, quote: Any, timeframe: str) -> Candle | None:
     price = quote.mid if quote.mid is not None else quote.bid
-    bucket = _m5_bucket(quote.timestamp)
+    interval = _timeframe_seconds(timeframe)
+    bucket = _bucket(quote.timestamp, interval)
     if price is None or bucket is None:
         return candle
     if candle is None or int(candle.timestamp) != bucket:
@@ -70,6 +71,23 @@ def _apply_tick(candle: Candle | None, quote: Any) -> Candle | None:
         low=min(candle.low, price),
         close=price,
     )
+
+
+def _timeframe_seconds(timeframe: str) -> int:
+    mapping = {
+        "M1": 60,
+        "M5": 300,
+        "M15": 900,
+        "M30": 1800,
+        "H1": 3600,
+        "H4": 14400,
+        "D1": 86400,
+        "W1": 604800,
+    }
+    key = timeframe.upper()
+    if key not in mapping:
+        raise ValueError(f"Unsupported timeframe: {timeframe}")
+    return mapping[key]
 
 
 @router.get("/instruments")
@@ -153,7 +171,7 @@ async def candles(
     provider = _provider_or_http_error()
     try:
         rows = await provider.candles(symbol, timeframe, limit)
-    except ProviderError as exc:
+    except (ProviderError, ValueError) as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     return {
         "contract": "sbt-candles-v1",
@@ -168,10 +186,25 @@ async def candles(
 @router.websocket("/stream/{symbol}")
 async def stream(websocket: WebSocket, symbol: str) -> None:
     await websocket.accept()
+    timeframe = websocket.query_params.get("timeframe", "M5").upper()
+    try:
+        _timeframe_seconds(timeframe)
+    except ValueError:
+        await websocket.send_json({
+            "contract": "sbt-market-stream-v1",
+            "source": "none",
+            "symbol": symbol.upper(),
+            "state": "OFFLINE",
+            "execution_enabled": False,
+            "error": f"Unsupported timeframe: {timeframe}",
+        })
+        await websocket.close(code=1008)
+        return
+
     try:
         provider = build_provider()
         symbol = symbol.upper()
-        history = await provider.candles(symbol, "M5", 200)
+        history = await provider.candles(symbol, timeframe, 200)
         current_candle = history[-1] if history else None
 
         await websocket.send_json(
@@ -181,12 +214,13 @@ async def stream(websocket: WebSocket, symbol: str) -> None:
                 "symbol": symbol,
                 "state": "CONNECTING",
                 "execution_enabled": False,
+                "candle_timeframe": timeframe,
                 "historical_candles": [row.as_dict() for row in history],
             }
         )
 
         async for quote in provider.stream(symbol):
-            next_candle = _apply_tick(current_candle, quote)
+            next_candle = _apply_tick(current_candle, quote, timeframe)
             candle_changed = next_candle is not None and next_candle != current_candle
             current_candle = next_candle
             payload = {
@@ -194,7 +228,7 @@ async def stream(websocket: WebSocket, symbol: str) -> None:
                 "state": "LIVE",
                 "execution_enabled": False,
                 "first_tick": True,
-                "candle_timeframe": "M5",
+                "candle_timeframe": timeframe,
                 "candle": current_candle.as_dict() if candle_changed else None,
             }
             await websocket.send_json(payload)
@@ -207,6 +241,7 @@ async def stream(websocket: WebSocket, symbol: str) -> None:
                     "symbol": symbol.upper(),
                     "state": "OFFLINE",
                     "execution_enabled": False,
+                    "candle_timeframe": timeframe,
                     "error": str(exc),
                 }
             )
