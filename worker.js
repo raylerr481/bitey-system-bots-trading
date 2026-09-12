@@ -44,13 +44,19 @@ export default {
     if (!nav || nav.querySelector('[data-sbt-terminal-link]')) return;
     const marker = Array.from(nav.querySelectorAll('button[data-page]')).find(b => b.dataset.page === 'bots');
     if (!marker) return;
-    const a = document.createElement('a');
-    a.href = '/terminal.html';
+    const a = document.createElement('button');
+    a.type = 'button';
     a.dataset.sbtTerminalLink = '1';
     a.textContent = '▣ Trading Terminal';
-    a.style.cssText = 'display:block;text-decoration:none;color:#91a0b1;padding:10px 12px;border-radius:10px;margin:2px 0;border:1px solid transparent;font-size:14px;';
-    a.onmouseenter = () => { a.style.background='#101720'; a.style.color='#fff'; a.style.borderColor='#1b2836'; };
-    a.onmouseleave = () => { a.style.background='transparent'; a.style.color='#91a0b1'; a.style.borderColor='transparent'; };
+    a.style.cssText = 'display:block;width:100%;text-align:left;background:transparent;color:#91a0b1;padding:10px 12px;border-radius:10px;margin:2px 0;border:1px solid transparent;font-size:14px;cursor:pointer;';
+    a.addEventListener('click', () => {
+      closeMobileMenu();
+      if (window.BiteySBT && typeof window.BiteySBT.openWebTrader === 'function') {
+        window.BiteySBT.openWebTrader().catch(err => console.error(err));
+      } else if (window.BiteySBT && typeof window.BiteySBT.openBotLab === 'function') {
+        window.BiteySBT.openBotLab().catch(err => console.error(err));
+      }
+    });
     marker.insertAdjacentElement('afterend', a);
   };
 
