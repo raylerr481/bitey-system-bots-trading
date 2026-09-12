@@ -95,9 +95,8 @@ MARKET_WIRING = '''<script>
   const closes=visible.map(c=>Number(c.close)),e9=emaSeries(closes,9),e21=emaSeries(closes,21);function line(series,dash,label,stroke){ctx.setLineDash(dash);ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.beginPath();let started=false;series.forEach((v,i)=>{if(v==null)return;const x=p.l+i*step+step/2;if(!started){ctx.moveTo(x,y(v));started=true;}else ctx.lineTo(x,y(v));});ctx.stroke();ctx.setLineDash([]);if(series.length){const v=series[series.length-1];if(v!=null){ctx.fillStyle=stroke;ctx.textAlign='left';ctx.font='10px Inter,system-ui,sans-serif';ctx.fillText(label+' '+v.toFixed(5),p.l+5,y(v)-5);}}}
   line(e9,[5,3],'EMA 9','#78a7ff');line(e21,[7,4],'EMA 21','#f2c76d');
   ctx.fillStyle='#edf3f8';ctx.textAlign='left';ctx.font='bold 11px Inter,system-ui,sans-serif';ctx.fillText('EURUSD · '+currentTimeframe+' · MT5',p.l,14);ctx.font='10px Inter,system-ui,sans-serif';ctx.fillStyle='#7d8997';ctx.fillText('Candles '+visible.length+' · EMA 9/21 · Crosshair · OHLC',p.l+170,14);
-  const cross={x:-1,y:-1};const tip=document.createElement('div');tip.className='mt5-tooltip';container.appendChild(tip);function redrawCross(){drawBase();if(cross.x<0)return;ctx.strokeStyle='#657487';ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(cross.x,p.t);ctx.lineTo(cross.x,h-p.b);ctx.stroke();ctx.beginPath();ctx.moveTo(p.l,cross.y);ctx.lineTo(w-p.r,cross.y);ctx.stroke();ctx.setLineDash([]);}
-  function drawBase(){/* canvas is redrawn by a compact recursive-safe snapshot below */}
-  canvas.addEventListener('mousemove',ev=>{const r=canvas.getBoundingClientRect(),mx=(ev.clientX-r.left)*W/r.width,my=(ev.clientY-r.top)*H/r.height,i=Math.max(0,Math.min(visible.length-1,Math.floor((mx-p.l)/step)));if(mx<p.l||mx>w-p.r){tip.style.display='none';return;}cross.x=p.l+i*step+step/2;cross.y=Math.max(p.t,Math.min(h-p.b,my));const c=visible[i],vals=[c.open,c.high,c.low,c.close].map(Number);tip.style.display='block';tip.style.left=Math.min(Math.max(cross.x,80),w-150)+'px';tip.style.top=Math.max(32,cross.y-65)+'px';tip.innerHTML='<b>'+currentTimeframe+'</b><br>O '+vals[0].toFixed(5)+' · H '+vals[1].toFixed(5)+'<br>L '+vals[2].toFixed(5)+' · C '+vals[3].toFixed(5);});
+  const tip=document.createElement('div');tip.className='mt5-tooltip';container.appendChild(tip);
+  canvas.addEventListener('mousemove',ev=>{const r=canvas.getBoundingClientRect(),mx=(ev.clientX-r.left)*W/r.width,my=(ev.clientY-r.top)*H/r.height,i=Math.max(0,Math.min(visible.length-1,Math.floor((mx-p.l)/step)));if(mx<p.l||mx>w-p.r){tip.style.display='none';return;}tip.style.display='block';tip.style.left=Math.min(Math.max(p.l+i*step+step/2,80),w-150)+'px';tip.style.top=Math.max(32,my-65)+'px';const c=visible[i],vals=[c.open,c.high,c.low,c.close].map(Number);tip.innerHTML='<b>'+currentTimeframe+'</b><br>O '+vals[0].toFixed(5)+' · H '+vals[1].toFixed(5)+'<br>L '+vals[2].toFixed(5)+' · C '+vals[3].toFixed(5);});
   canvas.addEventListener('mouseleave',()=>{tip.style.display='none';});
  }
  setTimeout(()=>{const chart=document.getElementById('marketChart');if(chart)ensureToolbar(chart);},50);
@@ -124,9 +123,46 @@ BOT_WIRING = '''<script>
   const card=document.createElement('div');card.className='card';card.style.marginTop='17px';card.innerHTML='<h3>Bot Lab · Backend</h3><p class="sub">Perfiles, señales y backtest ejecutados por el backend SBT. Los resultados no autorizan trading real.</p><div id="sbtBotsList" class="choice"></div><div class="result" id="sbtBotResult"></div>';page.appendChild(card);
   const list=document.getElementById('sbtBotsList'),out=document.getElementById('sbtBotResult');
   (async()=>{try{const r=await fetch(base()+'/api/v1/bot-profiles');if(!r.ok)throw new Error('API HTTP '+r.status);const profiles=await r.json();list.innerHTML=profiles.map(p=>'<button data-profile="'+p.id+'"><strong>'+p.name+'</strong><span>'+p.short_description+'</span></button>').join('');list.querySelectorAll('[data-profile]').forEach(b=>b.addEventListener('click',()=>runBot(b.dataset.profile)));}catch(e){list.innerHTML='<span class="small">Bot profiles unavailable: '+e.message+'</span>';}})();
-  async function runBot(id){out.style.display='block';out.textContent='Cargando perfil, market data y ejecutando estrategia…';try{const [pr,cr]=await Promise.all([fetch(base()+'/api/v1/bot-profiles/'+id),fetch(base()+'/api/v1/market/candles/EURUSD?timeframe=M5&limit=100')]);if(!pr.ok||!cr.ok)throw new Error('Backend market/profile unavailable');const p=await pr.json(),cd=await cr.json(),candles=Array.isArray(cd.candles)?cd.candles:[];const prices=candles.map(c=>Number(c.close)).filter(Number.isFinite);if(prices.length<30)throw new Error('Insuficientes velas reales para estrategia');const [sr,br,rr]=await Promise.all([fetch(base()+'/api/v1/strategy/signal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({symbol:'EURUSD',prices})}),fetch(base()+'/api/v1/backtest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prices,initial_capital:10000,fast_window:10,slow_window:30,fee_pct:0.001})}),fetch(base()+'/api/v1/bot-profiles/'+id+'/risk-preview?capital=10000')]);if(!sr.ok||!br.ok||!rr.ok)throw new Error('Strategy/backtest/risk API failure');const s=await sr.json(),b=await br.json(),risk=await rr.json();out.textContent='BOT '+p.name+' · señal '+String(s.action).toUpperCase()+' · confianza '+(Number(s.confidence)*100).toFixed(1)+'% · backtest P/L '+Number(b.total_pnl||b.realized_pnl||0).toFixed(2)+' · posición máxima R$ '+Number(risk.max_position_value).toFixed(2)+' · pérdida configurada por trade R$ '+Number(risk.configured_loss_per_trade).toFixed(2)+'. Datos: '+prices.length+' cierres M5 reales. Sin órdenes live.';}catch(e){out.textContent='Bot Lab unavailable: '+e.message+'. No se muestran métricas inventadas.';}}
+  async function runBot(id){out.style.display='block';out.textContent='Cargando perfil, market data y ejecutando estrategia…';try{const [pr,cr]=await Promise.all([fetch(base()+'/api/v1/bot-profiles/'+id),fetch(base()+'/api/v1/market/candles/EURUSD?timeframe=M5&limit=100')]);if(!pr.ok||!cr.ok)throw new Error('Backend market/profile unavailable');const p=await pr.json(),cd=await cr.json(),candles=Array.isArray(cd.candles)?cd.candles:[];const prices=candles.map(c=>Number(c.close)).filter(Number.isFinite);if(prices.length<30)throw new Error('Insuficientes velas reales para estrategia');const [sr,br,rr]=await Promise.all([fetch(base()+'/api/v1/strategy/signal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({symbol:'EURUSD',prices})}),fetch(base()+'/api/v1/backtest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prices,initial_capital:10000,fast_window:10,slow_window:30,fee_pct:0.001})}),fetch(base()+'/api/v1/bot-profiles/'+id+'/risk-preview?capital=10000')]);if(!sr.ok||!br.ok||!rr.ok)throw new Error('Strategy/backtest/risk API failure');const s=await sr.json(),b=await br.json(),risk=await rr.json();window.__sbtLastBacktest=b;window.dispatchEvent(new CustomEvent('sbt:backtest',{detail:{profile:p,backtest:b,symbol:'EURUSD',timeframe:'M5'}}));out.textContent='BOT '+p.name+' · señal '+String(s.action).toUpperCase()+' · confianza '+(Number(s.confidence)*100).toFixed(1)+'% · backtest P/L '+Number(b.total_pnl||b.realized_pnl||0).toFixed(2)+' · posición máxima R$ '+Number(risk.max_position_value).toFixed(2)+' · pérdida configurada por trade R$ '+Number(risk.configured_loss_per_trade).toFixed(2)+'. Datos: '+prices.length+' cierres M5 reales. Sin órdenes live.';}catch(e){out.textContent='Bot Lab unavailable: '+e.message+'. No se muestran métricas inventadas.';}}
  }
  document.addEventListener('click',e=>{const nav=e.target.closest('[data-page="bots"]');if(nav)setTimeout(wireBots,0);});setTimeout(wireBots,100);
+})();
+</script>'''
+
+EV_WIRING = '''<script>
+(function(){
+ async function mountEV(){
+  if(document.getElementById('expected-value-page'))return;
+  const nav=document.querySelector('.nav');
+  const research=nav&&nav.querySelector('[data-page="research"]');
+  if(!nav||!research)return;
+  const evNav=document.createElement('button');evNav.type='button';evNav.dataset.page='expected-value';evNav.textContent='∑ Expected Value';research.insertAdjacentElement('afterend',evNav);
+  const res=await fetch('/expected-value-calculator.html?module=ev');
+  if(!res.ok)return;
+  const html=await res.text();
+  const holder=document.createElement('div');holder.innerHTML=html;
+  const section=holder.querySelector('#expected-value-page');if(!section)return;
+  const validation=document.getElementById('validation');validation?validation.insertAdjacentElement('beforebegin',section):document.querySelector('.main')?.appendChild(section);
+  section.style.display='none';
+  section.querySelectorAll('script').forEach(old=>{const s=document.createElement('script');s.textContent=old.textContent;old.replaceWith(s);});
+  function showEV(){
+   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+   section.classList.add('active');section.style.display='block';
+   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));evNav.classList.add('active');
+   const title=document.getElementById('title');if(title)title.textContent='Quantitative Research · Expected Value';
+   document.getElementById('side')?.classList.remove('open');
+  }
+  evNav.addEventListener('click',showEV);
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-page="expected-value"]');if(b&&!b.isSameNode(evNav))showEV();});
+  const bots=document.getElementById('bots');
+  if(bots){const card=document.createElement('div');card.className='card';card.style.marginTop='17px';card.innerHTML='<h3>Quantitative flow · Expected Value</h3><p class="sub">Después de ejecutar un backtest, puedes enviar sus resultados a la capa EV. El cálculo permanece en Research/Demo y no autoriza órdenes.</p><div class="toolbar"><button class="btn blue" id="openEVFromBot">Abrir Expected Value</button><button class="btn" id="loadEVBacktest">Importar último backtest</button></div><div class="result" id="evBotStatus"></div>';bots.appendChild(card);
+   document.getElementById('openEVFromBot').onclick=showEV;
+   document.getElementById('loadEVBacktest').onclick=()=>{const b=window.__sbtLastBacktest;if(!b){const o=document.getElementById('evBotStatus');o.style.display='block';o.textContent='Primero ejecuta un backtest del Bot Lab.';return;}window.dispatchEvent(new CustomEvent('sbt:ev-load',{detail:b}));showEV();};
+  }
+  window.addEventListener('sbt:backtest',()=>{const o=document.getElementById('evBotStatus');if(o){o.style.display='block';o.textContent='Backtest disponible para análisis EV.';}});
+  window.addEventListener('sbt:ev-load',e=>{const b=e.detail||{};const root=document.getElementById('expected-value-page');if(!root)return;const trades=Array.isArray(b.trades_detail)?b.trades_detail:Array.isArray(b.trades)?b.trades:[];if(!trades.length){const o=document.getElementById('evBotStatus');if(o){o.style.display='block';o.textContent='Este backtest no expone trades_detail/trades; no se inventan probabilidades ni resultados.';}return;}const wins=trades.filter(t=>Number(t.pnl??t.profit??0)>0),losses=trades.filter(t=>Number(t.pnl??t.profit??0)<0);const wp=wins.length/trades.length*100,lp=losses.length/trades.length*100,aw=wins.length?wins.reduce((s,t)=>s+Number(t.pnl??t.profit??0),0)/wins.length:0,al=losses.length?losses.reduce((s,t)=>s+Number(t.pnl??t.profit??0),0)/losses.length:0;const rows=root.querySelector('#evRows');rows.innerHTML='';const add=(name,result,prob)=>{const tr=document.createElement('tr');tr.innerHTML='<td><input class="ev-name" value="'+name+'"></td><td><input class="ev-result" type="number" step="0.01" value="'+result.toFixed(4)+'"></td><td><input class="ev-prob" type="number" step="0.01" value="'+prob.toFixed(2)+'"></td><td class="ev-weight">0.00</td><td><button class="ev-remove" type="button">×</button></td>';tr.querySelectorAll('input').forEach(i=>i.addEventListener('input',()=>window.SBTExpectedValueCalc&&window.SBTExpectedValueCalc()));tr.querySelector('.ev-remove').onclick=()=>{tr.remove();window.SBTExpectedValueCalc&&window.SBTExpectedValueCalc()};rows.appendChild(tr)};if(wins.length)add('Backtest · Ganancia media',aw,wp);if(losses.length)add('Backtest · Pérdida media',al,lp);window.SBTExpectedValueCalc&&window.SBTExpectedValueCalc();});
+ }
+ setTimeout(mountEV,0);
 })();
 </script>'''
 
@@ -155,7 +191,8 @@ class Handler(SimpleHTTPRequestHandler):
             if "validation/virtual" not in index:index=index.replace("</body>",VALIDATION_WIRING+"</body>",1)
             if "sbt/market-intelligence/analyze" not in index:index=index.replace("</body>",CHART_STYLE+MARKET_WIRING+"</body>",1)
             if "api/v1/capabilities/delegate" not in index:index=index.replace("</body>",RESEARCH_WIRING+BOT_WIRING+"</body>",1)
-            body=index.encode("utf-8");self.send_response(200);self.send_header("Content-Type","text/html; charset=utf-8");self.send_header("Content-Length",str(len(body)));self.end_headers();self.wfile.write(body);return
+            if "expected-value-page" not in index:index=index.replace("</body>",EV_WIRING+"</body>",1)
+            body=index.encode("utf-8");self.send_response(200);self.send_header("Content-Type", "text/html; charset=utf-8");self.send_header("Content-Length",str(len(body)));self.end_headers();self.wfile.write(body);return
         super().do_GET()
 
 ThreadingHTTPServer(("0.0.0.0",port),Handler).serve_forever()
