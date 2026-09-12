@@ -13,6 +13,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query, WebSocket, WebSocketDisconnect
 
 from app.market_sdk import Candle, ProviderError
+from app.market_sdk.instruments import SUPPORTED_TIMEFRAMES, asset_classes, list_instruments
 from app.market_sdk.registry import build_provider
 
 router = APIRouter(prefix="/api/v1/market", tags=["market"])
@@ -69,6 +70,27 @@ def _apply_tick(candle: Candle | None, quote: Any) -> Candle | None:
         low=min(candle.low, price),
         close=price,
     )
+
+
+@router.get("/instruments")
+def instruments(
+    asset_class: str | None = Query(default=None, min_length=2, max_length=32),
+) -> dict[str, Any]:
+    """Return SBT's free canonical research universe.
+
+    Availability is provider-dependent. This endpoint intentionally does not
+    claim that every listed instrument currently has live data.
+    """
+    rows = list_instruments(asset_class)
+    return {
+        "contract": "sbt-instruments-v1",
+        "mode": "free-research-catalog",
+        "availability_rule": "provider-dependent",
+        "asset_classes": asset_classes(),
+        "supported_timeframes": list(SUPPORTED_TIMEFRAMES),
+        "count": len(rows),
+        "instruments": [row.as_dict() for row in rows],
+    }
 
 
 @router.get("/connections")
