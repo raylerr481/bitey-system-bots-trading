@@ -4,6 +4,7 @@ from app.bot_builder.engine import build_bot
 from app.bot_builder.spec import BotSpecification
 from app.bot_builder.backtest import run_spec_backtest
 from app.bot_builder.pipeline import run_pipeline
+from app.bot_builder.generator import generate_candidates
 from app.bot_builder.ar001 import ar001_spec, size_staged_entries, evaluate_ar001_evidence, backtest_ar001_ohlc
 from app.bot_builder.ar001_evidence import run_ar001_ohlc_evidence
 from app.bot_builder.ar002 import ar002_spec, detect_liquidity_events, liquidity_signal_backtest
@@ -12,7 +13,27 @@ router = APIRouter(prefix="/api/v1/bot-builder", tags=["bot-builder"])
 
 @router.get("/catalog")
 def catalog():
-    return {"contract":"sbt-bot-v1","languages":["python","mql5","pine","typescript"],"steps":["specify","quant","backtest","stress-test","risk-gate","virtual-validation","generate"],"hypotheses":["AR-001","AR-002"],"live":False,"real_money":False,"broker_orders":0}
+    return {"contract":"sbt-bot-v1","languages":["python","mql5","pine","typescript"],"steps":["specify","generate","quant","backtest","stress-test","risk-gate","virtual-validation","generate-code"],"hypotheses":["AR-001","AR-002"],"live":False,"real_money":False,"broker_orders":0}
+
+class GenerateRequest(BaseModel):
+    symbol: str = Field(default="EURUSD", min_length=1, max_length=32)
+    timeframe: str = Field(default="M5", min_length=2, max_length=8)
+    max_candidates: int = Field(default=100, ge=1, le=5000)
+    directions: list[str] = Field(default_factory=lambda: ["long", "short"], min_length=1, max_length=2)
+
+@router.post("/generate")
+def generate(request: GenerateRequest):
+    candidates = generate_candidates(request.symbol, request.timeframe, request.max_candidates, tuple(request.directions))
+    return {
+        "contract":"sbt-strategy-generation-v1",
+        "mode":"deterministic-candidate-generation",
+        "symbol":request.symbol,
+        "timeframe":request.timeframe,
+        "count":len(candidates),
+        "candidates":[candidate.model_dump() for candidate in candidates],
+        "safety":{"live":False,"real_money":False,"broker_orders":0},
+        "next_stage":"backtest-and-rank",
+    }
 
 @router.get("/hypotheses/ar-001")
 def get_ar001(): return ar001_spec()
