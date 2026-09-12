@@ -2,6 +2,7 @@
   const API = (window.SBT_API_URL || 'https://bitey-system-bots-trading-api.onrender.com').replace(/\/$/, '');
   window.SBT_LIVE_TRADING_ENABLED = false;
   window.SBT_SAFETY = { live: false, real_money: false, broker_orders: 0 };
+  const ASSET_VERSION = '20260912';
 
   function banner() {
     const el = document.createElement('div');
@@ -16,17 +17,18 @@
   function loadWebTrader() {
     if (window.BiteyWebTrader) { window.BiteyWebTrader.init(); loadChartInteractions(); return; }
     if (document.querySelector('script[data-bitey-web-trader]')) return;
-    const script = document.createElement('script'); script.src = '/web-trader.js?v=20260911'; script.defer = true; script.dataset.biteyWebTrader = '1'; document.head.appendChild(script);
+    const script = document.createElement('script'); script.src = '/web-trader.js?v=' + ASSET_VERSION; script.defer = true; script.dataset.biteyWebTrader = '1'; document.head.appendChild(script);
     script.addEventListener('load', () => loadChartInteractions(), { once:true });
   }
   function loadChartInteractions() {
     if (document.querySelector('script[data-bitey-chart-interactions]')) return;
-    const script = document.createElement('script'); script.src = '/chart-interactions.js?v=20260911'; script.defer = true; script.dataset.biteyChartInteractions = '1'; document.head.appendChild(script);
+    const script = document.createElement('script'); script.src = '/chart-interactions.js?v=' + ASSET_VERSION; script.defer = true; script.dataset.biteyChartInteractions = '1'; document.head.appendChild(script);
   }
   function loadTradingMode() {
     if (window.BiteySBTTradingMode) { window.BiteySBTTradingMode.init(); return; }
     if (document.querySelector('script[data-bitey-trading-mode]')) return;
-    const script = document.createElement('script'); script.src = '/trading-mode.js?v=20260911'; script.defer = true; script.dataset.biteyTradingMode = '1'; document.head.appendChild(script);
+    const script = document.createElement('script'); script.src = '/trading-mode.js?v=' + ASSET_VERSION; script.defer = true; document.head.appendChild(script);
+    script.dataset.biteyTradingMode = '1';
   }
   async function openThesisLab() {
     if (document.getElementById('thesis-lab-page')) return activateThesisLab();
