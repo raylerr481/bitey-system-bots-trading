@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bitey SBT — Strategy Factory</title>
+<style>
+:root{--bg:#05070a;--panel:#0b1016;--panel2:#101721;--line:#1e2936;--text:#edf3f8;--muted:#8491a2;--accent:#52e6a2;--blue:#78a7ff;--warn:#f2c76d;--danger:#ff7272}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#12382b 0,transparent 30%),var(--bg);color:var(--text);font:14px Inter,system-ui,sans-serif}.wrap{max-width:1250px;margin:auto;padding:28px}.top{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:18px}.eyebrow{color:var(--accent);font-size:10px;text-transform:uppercase;letter-spacing:.15em;font-weight:850}.top h1{margin:5px 0;font-size:30px}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:360px 1fr;gap:16px}.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:15px;padding:18px}.card h2,.card h3{margin-top:0}.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}.form label{display:grid;gap:6px;color:var(--muted);font-size:11px}.form input,.form select{width:100%;background:#080d13;border:1px solid var(--line);color:#fff;border-radius:8px;padding:9px;outline:none}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}.btn{border:1px solid var(--line);background:#090f16;color:#dce4ed;border-radius:9px;padding:10px 13px;cursor:pointer}.btn.primary{background:var(--accent);border-color:var(--accent);color:#06100b;font-weight:850}.btn.blue{background:#16243d;border-color:#2d4d80}.pipeline{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 16px}.step{padding:6px 9px;border:1px solid var(--line);border-radius:99px;color:#778496;font-size:10px}.step.active{border-color:var(--accent);color:var(--accent)}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}.kpi{padding:12px;border:1px solid var(--line);border-radius:9px;background:#090e14}.kpi small{display:block;color:var(--muted)}.kpi b{display:block;font-size:20px;margin-top:5px}.result{max-height:570px;overflow:auto}.candidate{border:1px solid var(--line);border-radius:10px;padding:11px;margin:8px 0;background:#080d13}.candidate-head{display:flex;justify-content:space-between;gap:10px}.badge{display:inline-flex;padding:4px 7px;border-radius:99px;background:#0e241b;color:var(--accent);font-size:9px;font-weight:800}.badge.warn{background:#282114;color:var(--warn)}pre{white-space:pre-wrap;word-break:break-word;color:#b9c7d5;font-size:10px;line-height:1.45}.notice{padding:11px 13px;border:1px solid #3b331d;background:#15140d;color:#d8c58b;border-radius:9px;line-height:1.45;margin-top:12px}.status{margin-top:10px;font-size:11px;color:var(--muted)}@media(max-width:850px){.grid{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><div><div class="eyebrow">Bitey SBT · Strategy Discovery</div><h1>Strategy Factory</h1><div class="muted">Generación, backtest y evolución determinista. IA puede proponer; SBT valida.</div></div><div class="badge">RESEARCH / DEMO · LIVE LOCKED</div></div>
+<div class="grid">
+<section class="card">
+<h2>Experimento</h2>
+<div class="form">
+<label>Activo<input id="symbol" value="EURUSD"></label>
+<label>Timeframe<select id="timeframe"><option>M1</option><option>M5</option><option>M15</option><option>M30</option><option>H1</option><option>H4</option><option>D1</option></select></label>
+<label>Candidatos<input id="candidates" type="number" value="250" min="10" max="1000"></label>
+<label>Seed<input id="seed" type="number" value="42" min="0"></label>
+<label>Máx. condiciones<input id="conditions" type="number" value="4" min="1" max="6"></label>
+<label>Mín. trades<input id="minTrades" type="number" value="10" min="0"></label>
+<label>Máx. drawdown %<input id="maxDd" type="number" value="35" min="0" max="100"></label>
+<label>Mín. Profit Factor<input id="minPf" type="number" value="0" min="0" max="20" step="0.1"></label>
+</div>
+<div class="actions"><button class="btn primary" id="generate">Generar estrategias</button><button class="btn blue" id="evolve">Evolucionar población</button></div>
+<div class="notice">Los precios deben proceder de datos reales del proveedor conectado. Esta pantalla no crea precios sintéticos ni afirma disponibilidad de mercado.</div>
+<div class="status" id="status">Listo.</div>
+</section>
+<section class="card">
+<h2>Pipeline SBT</h2>
+<div class="pipeline"><span class="step active">Generate</span><span class="step">Backtest</span><span class="step">Filter</span><span class="step">Rank</span><span class="step">Evolve</span><span class="step">OOS</span><span class="step">Cost stress</span><span class="step">Monte Carlo</span><span class="step">Walk-Forward</span><span class="step">Multi-market</span><span class="step">Portfolio</span><span class="step">Risk Gate</span></div>
+<div class="kpis"><div class="kpi"><small>Generadas</small><b id="generated">—</b></div><div class="kpi"><small>Evaluadas</small><b id="evaluated">—</b></div><div class="kpi"><small>Aceptadas</small><b id="accepted">—</b></div><div class="kpi"><small>Seed</small><b id="usedSeed">—</b></div></div>
+<div id="result" class="result"><div class="muted">Ejecuta una generación para ver las estrategias.</div></div>
+</section>
+</div>
+</div>
+<script>
+const API='https://bitey-system-bots-trading-api.onrender.com/api/v1/bot-builder';
+const $=id=>document.getElementById(id);
+function payload(){return {symbol:$('symbol').value.trim().toUpperCase(),timeframe:$('timeframe').value,candidates:+$('candidates').value,seed:+$('seed').value,max_conditions:+$('conditions').value,min_trades:+$('minTrades').value,max_drawdown_pct:+$('maxDd').value,min_profit_factor:+$('minPf').value,fee_pct:.001,initial_capital:10000};}
+function show(data){$('generated').textContent=data.generated??data.population??'—';$('evaluated').textContent=data.evaluated??'—';$('accepted').textContent=data.accepted??'—';$('usedSeed').textContent=data.seed??payload().seed;const list=data.candidates||data.best||[];$('result').innerHTML=Array.isArray(list)?list.slice(0,50).map((c,i)=>`<div class="candidate"><div class="candidate-head"><strong>#${i+1} ${c.specification?.name||c.strategy_name||c.name||'Strategy'}</strong><span class="badge">score ${Number(c.fitness??c.score??0).toFixed(2)}</span></div><pre>${JSON.stringify({metrics:c.metrics||{},complexity:c.complexity||0,specification:c.specification||c},null,2)}</pre></div>`).join(''):`<pre>${JSON.stringify(data,null,2)}</pre>`;}
+async function call(path,body){$('status').textContent='Ejecutando '+path+'…';try{const r=await fetch(API+path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});const data=await r.json();if(!r.ok)throw new Error(data.detail||JSON.stringify(data));show(data);$('status').textContent='Completado sin habilitar ejecución real.';}catch(e){$('status').textContent='Error: '+e.message;}}
+$('generate').onclick=()=>call('/strategy-discovery/generate',payload());
+$('evolve').onclick=()=>call('/strategy-discovery/evolve',{...payload(),population:Math.min(100,+$('candidates').value),generations:5,elite:10});
+</script>
+</body>
+</html>
