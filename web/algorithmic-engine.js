@@ -1,0 +1,23 @@
+(() => {
+  const state = { signal: 'FLAT', score: 0, confidence: 0, regime: 'UNKNOWN', volatility: 'UNKNOWN', risk: 'WAIT', reasons: [], lastTime: null };
+  const market = () => window.BiteySBTMarketState || null;
+  const candles = () => Array.isArray(market()?.candles) ? market().candles : [];
+  function ema(v,p){if(v.length<p)return null;let x=v.slice(0,p).reduce((a,b)=>a+b,0)/p,a=2/(p+1);for(let i=p;i<v.length;i++)x=a*v[i]+(1-a)*x;return x}
+  function rsi(v,p=14){if(v.length<=p)return null;let g=0,l=0;for(let i=1;i<=p;i++){const d=v[i]-v[i-1];g+=Math.max(d,0);l+=Math.max(-d,0)}let ag=g/p,al=l/p;for(let i=p+1;i<v.length;i++){const d=v[i]-v[i-1];ag=(ag*(p-1)+Math.max(d,0))/p;al=(al*(p-1)+Math.max(-d,0))/p}return al===0?100:100-(100/(1+ag/al))}
+  function atr(cs,p=14){if(cs.length<=p)return null;const tr=cs.slice(1).map((c,i)=>Math.max(c.high-c.low,Math.abs(c.high-cs[i].close),Math.abs(c.low-cs[i].close)));return tr.slice(-p).reduce((a,b)=>a+b,0)/p}
+  function evaluate(){const cs=candles();if(cs.length<30)return;const v=cs.map(c=>Number(c.close)), e9=ema(v,9), e21=ema(v,21), r=rsi(v), a=atr(cs), last=v[v.length-1], prev=v[Math.max(0,v.length-6)], momentum=prev?((last-prev)/prev)*100:0;if(!Number.isFinite(e9)||!Number.isFinite(e21)||!Number.isFinite(r))return;
+    let score=0,reasons=[]; if(e9>e21){score+=35;reasons.push('EMA9 > EMA21')} else if(e9<e21){score-=35;reasons.push('EMA9 < EMA21')}
+    if(r>=55&&r<=70){score+=25;reasons.push('RSI momentum bullish')} else if(r>=30&&r<=45){score-=25;reasons.push('RSI momentum bearish')} else if(r>70){score-=10;reasons.push('RSI overbought')} else if(r<30){score+=10;reasons.push('RSI oversold')}
+    if(momentum>0){score+=20;reasons.push('positive momentum')} else if(momentum<0){score-=20;reasons.push('negative momentum')}
+    const range=Math.max(...cs.slice(-20).map(c=>c.high))-Math.min(...cs.slice(-20).map(c=>c.low)); const vr=a&&range? a/range:0; const volatility=vr>0.18?'HIGH':vr<0.06?'LOW':'NORMAL';
+    const regime=Math.abs(e9-e21)/(a||Math.abs(last)*1e-6)>0.8?(e9>e21?'TREND_UP':'TREND_DOWN'):(Math.abs(momentum)<0.02?'RANGE':'TRANSITION');
+    const signal=score>=45?'BUY':score<=-45?'SELL':'FLAT'; const confidence=Math.min(99,Math.round(50+Math.abs(score)*0.5)); const risk=(volatility==='HIGH'||regime==='TRANSITION')?'REDUCED':'NORMAL';
+    Object.assign(state,{signal,score,confidence,regime,volatility,risk,reasons,lastTime:cs[cs.length-1].time});
+    window.dispatchEvent(new CustomEvent('bitey:sbt-algorithmic-signal',{detail:{...state,symbol:market()?.symbol,timeframe:market()?.timeframe,price:last,ema9:e9,ema21:e21,rsi:r,atr:a,momentum}})); render();
+  }
+  function render(){const page=document.getElementById('bot-lab-page');if(!page?.classList.contains('web-trader-only'))return;let h=document.getElementById('sbt-algo-panel');if(!h){h=document.createElement('div');h.id='sbt-algo-panel';const w=page.querySelector('.chart-wrap');if(w)w.appendChild(h)}if(!h)return;h.innerHTML='<div class="algo-title">ALGORITHMIC ENGINE · DEMO</div><div class="algo-signal">'+state.signal+' <span>'+state.confidence+'%</span></div><div>REGIME: '+state.regime+' · VOL: '+state.volatility+'</div><div>SCORE: '+state.score+' · RISK: '+state.risk+'</div><div class="algo-reasons">'+state.reasons.slice(0,3).join(' · ')+'</div><div class="algo-note">Research signal only · no broker orders</div>';}
+  function style(){if(document.getElementById('sbt-algo-style'))return;const s=document.createElement('style');s.id='sbt-algo-style';s.textContent='#sbt-algo-panel{position:absolute;right:12px;top:10px;z-index:7;min-width:245px;padding:9px 11px;border:1px solid #294052;border-radius:8px;background:rgba(8,13,19,.94);color:#d9e4ee;font:10px ui-monospace,SFMono-Regular,Consolas,monospace;pointer-events:none;backdrop-filter:blur(6px)}#sbt-algo-panel .algo-title{font-size:9px;letter-spacing:.08em;color:#8fa2b5}#sbt-algo-panel .algo-signal{font-weight:800;font-size:18px;margin:2px 0}#sbt-algo-panel .algo-signal span{font-size:10px;font-weight:500}#sbt-algo-panel .algo-reasons{margin-top:5px;color:#aab9c7;line-height:1.35}#sbt-algo-panel .algo-note{margin-top:6px;color:#728292;font-size:9px}';document.head.appendChild(s)}
+  function init(){style();evaluate();setInterval(evaluate,1000);setInterval(render,1000)}
+  window.BiteySBTAlgorithmic={state,evaluate,init};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
