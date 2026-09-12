@@ -9,6 +9,13 @@
     button.type = 'button';
     button.dataset.tf = 'M1';
     button.textContent = '1m';
+    button.addEventListener('click', () => {
+      const wired = toolbar.querySelector('[data-tf="M5"]') || first;
+      const original = wired.dataset.tf;
+      wired.dataset.tf = 'M1';
+      wired.click();
+      wired.dataset.tf = original;
+    });
     first.insertAdjacentElement('beforebegin', button);
     return true;
   }
