@@ -15,13 +15,14 @@ def _value(prices: list[float], indicator: str, period: int) -> float:
 
 def build_signal(spec: BotSpecification):
     indicators = [(i.name, i.period) for i in spec.indicators]
+    max_period = max((p for _, p in indicators), default=2)
+
     def signal(prices, i):
-        if i < max((p for _, p in indicators), default=2):
+        if i < max_period:
             return "hold"
-        current = {}
-        previous = {}
         history = list(prices[:i+1])
         prior_history = list(prices[:i])
+        current, previous = {}, {}
         for name, period in indicators:
             if name in {"sma", "ema", "rsi"}:
                 key = f"{name}_{period}"
@@ -29,9 +30,7 @@ def build_signal(spec: BotSpecification):
                 previous[key] = _value(prior_history, name, period) if len(prior_history) > period else None
 
         def value(values, ref):
-            if isinstance(ref, str):
-                return values.get(ref)
-            return float(ref)
+            return values.get(ref) if isinstance(ref, str) else float(ref)
 
         def matches(rule):
             left = current.get(rule.indicator)
@@ -46,10 +45,8 @@ def build_signal(spec: BotSpecification):
             prev_right = value(previous, rule.value)
             if prev_left is None or prev_right is None:
                 return False
-            if rule.operator == "cross_above":
-                return prev_left <= prev_right and left > right
-            if rule.operator == "cross_below":
-                return prev_left >= prev_right and left < right
+            if rule.operator == "cross_above": return prev_left <= prev_right and left > right
+            if rule.operator == "cross_below": return prev_left >= prev_right and left < right
             return False
 
         if spec.entry_rules and all(matches(r) for r in spec.entry_rules): return "buy"
