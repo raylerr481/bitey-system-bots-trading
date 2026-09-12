@@ -1,0 +1,54 @@
+<section class="page" id="expected-value-page">
+  <div class="hero">
+    <span class="eyebrow">Quant / Risk Analysis</span>
+    <h2>Calculadora de Valor Esperado</h2>
+    <p>Calcula el valor esperado de una distribución de resultados y, opcionalmente, el EV de una operación. SBT usa este resultado como apoyo cuantitativo; no es una garantía de rentabilidad ni una orden de trading.</p>
+    <div class="toolbar">
+      <button class="btn" id="evExample">Cargar ejemplo</button>
+      <a class="btn blue" href="https://www.calculatored.com/lang/es/expected-value-calculator" target="_blank" rel="noopener noreferrer">Abrir calculadora de referencia</a>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="card">
+      <h3>Resultados posibles</h3>
+      <p class="sub">Introduce X y P(X). Las probabilidades deben sumar 1 (100%).</p>
+      <div id="evRows"></div>
+      <div class="toolbar" style="margin-top:12px">
+        <button class="btn" id="evAdd">Añadir resultado</button>
+        <button class="btn primary" id="evCalculate">Calcular EV</button>
+        <button class="btn" id="evClear">Limpiar</button>
+      </div>
+      <div class="result" id="evResult"></div>
+    </div>
+
+    <div class="card">
+      <h3>EV de una operación</h3>
+      <p class="sub">Modelo simple: (probabilidad de ganancia × ganancia) − (probabilidad de pérdida × pérdida) − costes.</p>
+      <div class="form">
+        <label>Probabilidad de ganar (%)<input id="tradeWinProb" type="number" min="0" max="100" step="0.1" value="55"></label>
+        <label>Ganancia si gana<input id="tradeWin" type="number" step="0.01" value="100"></label>
+        <label>Probabilidad de perder (%)<input id="tradeLossProb" type="number" min="0" max="100" step="0.1" value="45"></label>
+        <label>Pérdida si pierde<input id="tradeLoss" type="number" step="0.01" value="80"></label>
+        <label>Costes / fees / slippage<input id="tradeCosts" type="number" min="0" step="0.01" value="0"></label>
+      </div>
+      <div class="toolbar" style="margin-top:14px"><button class="btn primary" id="tradeCalculate">Calcular EV de operación</button></div>
+      <div class="result" id="tradeResult"></div>
+      <div class="notice">Un EV positivo no significa que la próxima operación vaya a ganar. Es una medida estadística basada en los supuestos introducidos.</div>
+    </div>
+  </div>
+</section>
+<script>
+(() => {
+  const page=document.getElementById('expected-value-page'); if(!page) return;
+  const rows=document.getElementById('evRows');
+  const result=document.getElementById('evResult');
+  function addRow(x='',p=''){const n=rows.children.length+1;const d=document.createElement('div');d.className='form ev-row';d.style.marginBottom='8px';d.innerHTML=`<label>Resultado X #${n}<input class="ev-x" type="number" step="any" value="${x}"></label><label>Probabilidad P(X)<input class="ev-p" type="number" min="0" max="1" step="0.001" value="${p}"></label>`;rows.appendChild(d)}
+  function reset(){rows.innerHTML='';addRow();addRow()}
+  function calc(){const xs=[...rows.querySelectorAll('.ev-x')].map(x=>Number(x.value));const ps=[...rows.querySelectorAll('.ev-p')].map(x=>Number(x.value));if(xs.some(Number.isNaN)||ps.some(Number.isNaN)||xs.length===0){return show(result,'Introduce resultados y probabilidades válidos.',true)}const total=ps.reduce((a,b)=>a+b,0);if(Math.abs(total-1)>0.0005)return show(result,`La suma de probabilidades es ${(total*100).toFixed(2)}%. Debe ser 100%.`,true);const terms=xs.map((x,i)=>x*ps[i]);const ev=terms.reduce((a,b)=>a+b,0);show(result,`<strong>E(X) = ${ev.toFixed(4)}</strong><br>Probabilidad total: ${(total*100).toFixed(2)}%<br>Fórmula: E(X) = Σ [Xᵢ × P(Xᵢ)]`)}
+  function trade(){const wp=Number(document.getElementById('tradeWinProb').value)/100;const lp=Number(document.getElementById('tradeLossProb').value)/100;const win=Number(document.getElementById('tradeWin').value);const loss=Number(document.getElementById('tradeLoss').value);const costs=Number(document.getElementById('tradeCosts').value);if([wp,lp,win,loss,costs].some(Number.isNaN)||Math.abs(wp+lp-1)>0.0005)return show(document.getElementById('tradeResult'),'Las probabilidades de ganar y perder deben sumar 100%.',true);const ev=wp*win-lp*loss-costs;show(document.getElementById('tradeResult'),`<strong>EV por operación: ${ev.toFixed(2)}</strong><br>Ganancia ponderada: ${(wp*win).toFixed(2)} · Pérdida ponderada: ${(lp*loss).toFixed(2)} · Costes: ${costs.toFixed(2)}<br>${ev>0?'EV positivo bajo estos supuestos.':'EV no positivo bajo estos supuestos.'}`)}
+  function show(el,text,error=false){el.innerHTML=text;el.style.display='block';el.style.borderColor=error?'#633030':'#1b4a36';el.style.color=error?'#ffabab':'#aee8ca'}
+  document.getElementById('evAdd').onclick=()=>addRow();document.getElementById('evCalculate').onclick=calc;document.getElementById('evClear').onclick=reset;document.getElementById('tradeCalculate').onclick=trade;document.getElementById('evExample').onclick=()=>{rows.innerHTML='';[[2,.2],[3,.2],[4,.3],[5,.3]].forEach(r=>addRow(r[0],r[1]));calc()};
+  reset();
+})();
+</script>
