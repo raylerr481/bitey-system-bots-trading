@@ -4,7 +4,7 @@
 //| Real-money execution is intentionally blocked.                  |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.1"
+#property version   "1.2"
 #property description "EMA + RSI + ATR strategy with Fibonacci golden-zone filter and demo-only execution."
 
 #include <Trade\Trade.mqh>
@@ -39,6 +39,11 @@ datetime lastBarTime = 0;
 double dayStartEquity = 0.0;
 double monthStartEquity = 0.0;
 int trackedMonthKey = -1;
+
+int emaFastHandle = INVALID_HANDLE;
+int emaSlowHandle = INVALID_HANDLE;
+int rsiHandle = INVALID_HANDLE;
+int atrHandle = INVALID_HANDLE;
 
 int MonthKey()
   {
@@ -127,14 +132,13 @@ double CalculateLotSize(double slDistancePrice, double reduceFactor)
       return 0.0;
 
    double equity = AccountInfoDouble(ACCOUNT_EQUITY);
-   double point = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
    double tickValue = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
    double tickSize = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
    double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
    double maxLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX);
    double lotStep = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
 
-   if(equity <= 0.0 || point <= 0.0 || tickValue <= 0.0 || tickSize <= 0.0 ||
+   if(equity <= 0.0 || tickValue <= 0.0 || tickSize <= 0.0 ||
       minLot <= 0.0 || maxLot <= 0.0 || lotStep <= 0.0)
       return 0.0;
 
@@ -167,6 +171,19 @@ bool IsNewBar()
    return true;
   }
 
+bool ReadIndicatorValue(int handle, int shift, double &value)
+  {
+   if(handle == INVALID_HANDLE)
+      return false;
+
+   double buffer[1];
+   if(CopyBuffer(handle, 0, shift, 1, buffer) != 1)
+      return false;
+
+   value = buffer[0];
+   return (value != EMPTY_VALUE);
+  }
+
 int OnInit()
   {
    // Hard safety boundary for this SBT reference EA.
@@ -176,11 +193,35 @@ int OnInit()
       return INIT_FAILED;
      }
 
+   if(EMA_Fast <= 0 || EMA_Slow <= 0 || EMA_Fast >= EMA_Slow ||
+      RSI_Period <= 0 || ATR_Period <= 0)
+      return INIT_PARAMETERS_INCORRECT;
+
+   emaFastHandle = iMA(_Symbol, Trade_TF, EMA_Fast, 0, MODE_EMA, PRICE_CLOSE);
+   emaSlowHandle = iMA(_Symbol, Trade_TF, EMA_Slow, 0, MODE_EMA, PRICE_CLOSE);
+   rsiHandle = iRSI(_Symbol, Trade_TF, RSI_Period, PRICE_CLOSE);
+   atrHandle = iATR(_Symbol, Trade_TF, ATR_Period);
+
+   if(emaFastHandle == INVALID_HANDLE || emaSlowHandle == INVALID_HANDLE ||
+      rsiHandle == INVALID_HANDLE || atrHandle == INVALID_HANDLE)
+     {
+      Print("Indicator initialization failed.");
+      return INIT_FAILED;
+     }
+
    trade.SetExpertMagicNumber(Magic_Number);
    ResetDailyTracking();
    ResetMonthlyTracking();
    Print("EA_EMA_RSI_ATR demo-safe reference initialized on ", _Symbol);
    return INIT_SUCCEEDED;
+  }
+
+void OnDeinit(const int reason)
+  {
+   if(emaFastHandle != INVALID_HANDLE) IndicatorRelease(emaFastHandle);
+   if(emaSlowHandle != INVALID_HANDLE) IndicatorRelease(emaSlowHandle);
+   if(rsiHandle != INVALID_HANDLE) IndicatorRelease(rsiHandle);
+   if(atrHandle != INVALID_HANDLE) IndicatorRelease(atrHandle);
   }
 
 void OnTick()
@@ -202,16 +243,14 @@ void OnTick()
    if(!IsNewBar())
       return;
 
-   double emaFast0 = iMA(_Symbol, Trade_TF, EMA_Fast, 0, MODE_EMA, PRICE_CLOSE, 0);
-   double emaFast1 = iMA(_Symbol, Trade_TF, EMA_Fast, 0, MODE_EMA, PRICE_CLOSE, 1);
-   double emaSlow0 = iMA(_Symbol, Trade_TF, EMA_Slow, 0, MODE_EMA, PRICE_CLOSE, 0);
-   double emaSlow1 = iMA(_Symbol, Trade_TF, EMA_Slow, 0, MODE_EMA, PRICE_CLOSE, 1);
-   double rsi0 = iRSI(_Symbol, Trade_TF, RSI_Period, PRICE_CLOSE, 0);
-   double atr0 = iATR(_Symbol, Trade_TF, ATR_Period, 0);
-
-   if(emaFast0 == EMPTY_VALUE || emaFast1 == EMPTY_VALUE ||
-      emaSlow0 == EMPTY_VALUE || emaSlow1 == EMPTY_VALUE ||
-      rsi0 == EMPTY_VALUE || atr0 == EMPTY_VALUE || atr0 <= 0.0)
+   // Evaluate the just-closed candles for deterministic signal generation.
+   double emaFast0, emaFast1, emaSlow0, emaSlow1, rsi0, atr0;
+   if(!ReadIndicatorValue(emaFastHandle, 1, emaFast0) ||
+      !ReadIndicatorValue(emaFastHandle, 2, emaFast1) ||
+      !ReadIndicatorValue(emaSlowHandle, 1, emaSlow0) ||
+      !ReadIndicatorValue(emaSlowHandle, 2, emaSlow1) ||
+      !ReadIndicatorValue(rsiHandle, 1, rsi0) ||
+      !ReadIndicatorValue(atrHandle, 1, atr0) || atr0 <= 0.0)
       return;
 
    bool buySignal = (emaFast1 <= emaSlow1 && emaFast0 > emaSlow0 && rsi0 >= RSI_Buy_Min);
