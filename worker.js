@@ -2,6 +2,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const BUILD = 'f5-market-state-no-store';
+    // Public verification marker: this Worker must report BUILD on every /health request.
     if (url.pathname === '/health') {
       return new Response(JSON.stringify({
         service: 'bitey-system-bots-trading',
