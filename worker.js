@@ -39,6 +39,20 @@ export default {
     requestAnimationFrame(() => requestAnimationFrame(redraw));
   };
 
+  const syncMarketReadiness = () => {
+    const rows = Array.from(document.querySelectorAll('.risk'));
+    const row = rows.find(item => item.querySelector('span')?.textContent?.trim().toLowerCase() === 'market data');
+    if (!row) return;
+    const badge = row.querySelector('b');
+    if (!badge) return;
+    const state = window.BiteySBTMarketState;
+    const source = String(state?.source || state?.provider || 'none').trim().toLowerCase();
+    const feed = String(state?.feedState || 'OFFLINE').trim().toUpperCase();
+    const available = source !== 'none' && ['CONNECTING', 'HISTORICAL', 'LIVE'].includes(feed);
+    badge.textContent = available ? 'READY' : 'OFFLINE';
+    badge.style.color = available ? 'var(--accent)' : 'var(--danger)';
+  };
+
   const addTerminalLink = () => {
     const nav = document.querySelector('.nav');
     if (!nav || nav.querySelector('[data-sbt-terminal-link]')) return;
@@ -65,6 +79,7 @@ export default {
     if (target) {
       closeMobileMenu();
       if (target.dataset.page === 'bots') redrawSbtChart();
+      syncMarketReadiness();
     }
   }, true);
 
@@ -79,6 +94,8 @@ export default {
     if (!side.contains(event.target) && event.target !== hamburger) closeMobileMenu();
   });
 
+  window.addEventListener('bitesbt:market-state', syncMarketReadiness);
+
   const watchChartVisibility = () => {
     const page = document.getElementById('bot-lab-page');
     const chartWrap = page && page.querySelector('.chart-wrap');
@@ -91,10 +108,12 @@ export default {
     document.addEventListener('DOMContentLoaded', () => {
       watchChartVisibility();
       addTerminalLink();
+      syncMarketReadiness();
     }, { once: true });
   } else {
     watchChartVisibility();
     addTerminalLink();
+    syncMarketReadiness();
   }
 })();
 </script>`, { html: true });
