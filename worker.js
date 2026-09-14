@@ -26,6 +26,34 @@ export default {
     if (side) side.classList.remove('open');
   };
 
+  const getMarketRow = () => Array.from(document.querySelectorAll('.risk')).find(item =>
+    item.querySelector('span')?.textContent?.trim().toLowerCase() === 'market data'
+  );
+
+  const syncMarketReadiness = () => {
+    const row = getMarketRow();
+    if (!row) return false;
+    const badge = row.querySelector('b');
+    if (!badge) return false;
+    const state = window.BiteySBTMarketState;
+    const source = String(state?.source || state?.provider || 'none').trim().toLowerCase();
+    const feed = String(state?.feedState || 'OFFLINE').trim().toUpperCase();
+    const available = source !== 'none' && ['CONNECTING', 'HISTORICAL', 'LIVE'].includes(feed);
+    badge.textContent = available ? 'READY' : 'OFFLINE';
+    badge.style.color = available ? 'var(--accent)' : 'var(--danger)';
+    return true;
+  };
+
+  const failClosedMarketReadiness = () => {
+    const row = getMarketRow();
+    if (!row) return false;
+    const badge = row.querySelector('b');
+    if (!badge) return false;
+    badge.textContent = 'OFFLINE';
+    badge.style.color = 'var(--danger)';
+    return true;
+  };
+
   const redrawSbtChart = () => {
     const page = document.getElementById('bot-lab-page');
     if (!page || !page.classList.contains('active')) return;
@@ -37,20 +65,6 @@ export default {
       } catch (_) {}
     };
     requestAnimationFrame(() => requestAnimationFrame(redraw));
-  };
-
-  const syncMarketReadiness = () => {
-    const rows = Array.from(document.querySelectorAll('.risk'));
-    const row = rows.find(item => item.querySelector('span')?.textContent?.trim().toLowerCase() === 'market data');
-    if (!row) return;
-    const badge = row.querySelector('b');
-    if (!badge) return;
-    const state = window.BiteySBTMarketState;
-    const source = String(state?.source || state?.provider || 'none').trim().toLowerCase();
-    const feed = String(state?.feedState || 'OFFLINE').trim().toUpperCase();
-    const available = source !== 'none' && ['CONNECTING', 'HISTORICAL', 'LIVE'].includes(feed);
-    badge.textContent = available ? 'READY' : 'OFFLINE';
-    badge.style.color = available ? 'var(--accent)' : 'var(--danger)';
   };
 
   const addTerminalLink = () => {
@@ -104,16 +118,23 @@ export default {
     observer.observe(chartWrap);
   };
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      watchChartVisibility();
-      addTerminalLink();
-      syncMarketReadiness();
-    }, { once: true });
-  } else {
+  const boot = () => {
+    failClosedMarketReadiness();
+    syncMarketReadiness();
     watchChartVisibility();
     addTerminalLink();
-    syncMarketReadiness();
+    let attempts = 0;
+    const timer = setInterval(() => {
+      attempts += 1;
+      syncMarketReadiness();
+      if (window.BiteySBTMarketState || attempts >= 20) clearInterval(timer);
+    }, 250);
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot, { once: true });
+  } else {
+    boot();
   }
 })();
 </script>`, { html: true });
