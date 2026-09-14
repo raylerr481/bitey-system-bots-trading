@@ -59,11 +59,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          body=$(curl -fsSL --retry 5 --retry-delay 3 https://bitey-system-bots-trading.raylerr481.workers.dev/)
+          body=$(curl -fsSL --retry 5 --retry-delay 3 "https://bitey-system-bots-trading.raylerr481.workers.dev/?probe=${GITHUB_SHA}")
           printf '%s' "$body" | grep -q 'Bitey SBT'
           printf '%s' "$body" | grep -q 'Trading Laboratory'
-          health=$(curl -fsSL --retry 5 --retry-delay 3 https://bitey-system-bots-trading.raylerr481.workers.dev/health)
+          health=$(curl -fsSL --retry 5 --retry-delay 3 "https://bitey-system-bots-trading.raylerr481.workers.dev/health?probe=${GITHUB_SHA}")
           printf '%s' "$health" | grep -q '"live":false'
           printf '%s' "$health" | grep -q '"real_money":false'
           printf '%s' "$health" | grep -q '"broker_orders":0'
-          printf '%s' "$health" | grep -q '"web_build":"5c010c0"'
+          printf '%s' "$health" | grep -q '"web_build":"f5-market-state-no-store"'
