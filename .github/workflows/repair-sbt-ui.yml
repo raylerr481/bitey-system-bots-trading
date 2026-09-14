@@ -47,3 +47,23 @@ jobs:
           git add web/index.html
           git commit -m 'chore: restore SBT UI'
           git push
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Deploy SBT Worker
+        run: npx wrangler deploy --config wrangler.toml
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Smoke test deployed Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          body=$(curl -fsSL --retry 5 --retry-delay 3 https://bitey-system-bots-trading.raylerr481.workers.dev/)
+          printf '%s' "$body" | grep -q 'Bitey SBT'
+          printf '%s' "$body" | grep -q 'Trading Laboratory'
+          health=$(curl -fsSL --retry 5 --retry-delay 3 https://bitey-system-bots-trading.raylerr481.workers.dev/health)
+          printf '%s' "$health" | grep -q '"live":false'
+          printf '%s' "$health" | grep -q '"real_money":false'
+          printf '%s' "$health" | grep -q '"broker_orders":0'
+          printf '%s' "$health" | grep -q '"web_build":"5c010c0"'
