@@ -49,18 +49,20 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       - name: Smoke test deployed Worker
+        env:
+          SBT_URL: https://bitey-system-bots-trading.raylerr481.workers.dev
         run: |
-          set -e
-          body=$(curl -fsSL --retry 5 --retry-delay 3 https://bitey-system-bots-trading.raylerr481.workers.dev/)
+          set -euo pipefail
+          body=$(curl -fsSL --retry 5 --retry-delay 3 "$SBT_URL/?probe=$GITHUB_SHA")
           printf '%s' "$body" | grep -q "Bitey SBT"
           printf '%s' "$body" | grep -q "Trading Laboratory"
           printf '%s' "$body" | grep -q "Market Intelligence"
-          thesis=$(curl -fsSL --retry 5 --retry-delay 3 https://bitey-system-bots-trading.raylerr481.workers.dev/thesis-lab.html)
+          thesis=$(curl -fsSL --retry 5 --retry-delay 3 "$SBT_URL/thesis-lab.html?probe=$GITHUB_SHA")
           printf '%s' "$thesis" | grep -q "Mathematical Market Thesis Lab"
           printf '%s' "$thesis" | grep -q "Random Walk Baseline"
           printf '%s' "$thesis" | grep -q "GARCH(1,1)"
-          health=$(curl -fsSL --retry 5 --retry-delay 3 https://bitey-system-bots-trading.raylerr481.workers.dev/health)
-          printf '%s' "$health" | grep -q '\"live\":false'
-          printf '%s' "$health" | grep -q '\"real_money\":false'
-          printf '%s' "$health" | grep -q '\"broker_orders\":0'
-# trigger after Cloudflare Actions credential setup
+          health=$(curl -fsSL --retry 5 --retry-delay 3 "$SBT_URL/health?probe=$GITHUB_SHA")
+          printf '%s' "$health" | grep -q '"live":false'
+          printf '%s' "$health" | grep -q '"real_money":false'
+          printf '%s' "$health" | grep -q '"broker_orders":0'
+          printf '%s' "$health" | grep -q '"web_build":"f5-market-state-no-store"'
