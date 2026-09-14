@@ -1,6 +1,7 @@
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    const BUILD = 'f5-market-state-no-store';
     if (url.pathname === '/health') {
       return new Response(JSON.stringify({
         service: 'bitey-system-bots-trading',
@@ -9,8 +10,8 @@ export default {
         live: false,
         real_money: false,
         broker_orders: 0,
-        web_build: 'f4-market-state'
-      }), { headers: { 'content-type': 'application/json; charset=utf-8' } });
+        web_build: BUILD
+      }), { headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store, no-cache, must-revalidate, max-age=0', 'x-sbt-build': BUILD } });
     }
 
     const response = await env.ASSETS.fetch(request);
@@ -66,6 +67,10 @@ export default {
 </script>`, { html: true });
         }
       })
-      .transform(response);
+      .transform(new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: new Headers(response.headers)
+      }));
   }
 };
