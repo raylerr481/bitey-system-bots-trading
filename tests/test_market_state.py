@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.core.market_state import mark_connecting, mark_quote, read_market_state
+from app.core.market_state import mark_connecting, mark_live, read_market_state
 
 
 class _Provider:
@@ -54,15 +54,15 @@ def test_configured_provider_is_not_reported_live(monkeypatch) -> None:
 
 
 def test_observed_quote_promotes_state_to_live() -> None:
-    state = mark_connecting("mt5", "EURUSD", "M1", candles_available=True)
+    state = mark_connecting("EURUSD", "M1", "mt5")
     assert state.state == "CONNECTING"
     assert state.quote_available is False
-    assert state.stream_available is False
+    assert state.stream_available is True
 
-    live = mark_quote(
-        "mt5",
+    live = mark_live(
         "EURUSD",
         "M1",
+        "mt5",
         {"symbol": "EURUSD", "mid": 1.1, "timestamp": 1000},
         {"timestamp": 960, "open": 1.0, "high": 1.1, "low": 1.0, "close": 1.1},
         latency=0.25,
