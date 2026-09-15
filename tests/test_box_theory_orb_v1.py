@@ -22,8 +22,8 @@ def test_box_theory_long_signal_uses_ny_opening_range_and_2_to_1_target() -> Non
         # Strong continuation impulse; it clears the box without being the pullback contact.
         # Its range is intentionally above the configured 1.20x impulse threshold.
         Bar(ts(37), 101.1, 104.0, 102.3, 103.6),
-        # Pullback contacts the box and closes above it.
-        Bar(ts(38), 103.0, 103.1, 101.5, 102.6),
+        # Pullback contacts the box and closes above it with a qualifying body ratio.
+        Bar(ts(38), 101.5, 103.1, 101.5, 102.6),
         # Entry is the next candle's open.
         Bar(ts(39), 102.7, 103.0, 102.5, 102.9),
     ]
