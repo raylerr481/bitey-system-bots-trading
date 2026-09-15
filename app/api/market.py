@@ -7,11 +7,13 @@ the Market SDK and no endpoint fabricates market data or submits orders.
 from __future__ import annotations
 
 import os
+import time
 from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, WebSocket, WebSocketDisconnect
 
+from app.core.market_state import mark_connecting, mark_error, mark_quote
 from app.market_sdk import Candle, ProviderError
 from app.market_sdk.instruments import SUPPORTED_TIMEFRAMES, asset_classes, list_instruments
 from app.market_sdk.registry import build_provider
@@ -187,33 +189,42 @@ async def candles(
 async def stream(websocket: WebSocket, symbol: str) -> None:
     await websocket.accept()
     timeframe = websocket.query_params.get("timeframe", "M5").upper()
+    symbol = symbol.upper()
     try:
         _timeframe_seconds(timeframe)
     except ValueError:
-        await websocket.send_json({
-            "contract": "sbt-market-stream-v1",
-            "source": "none",
-            "symbol": symbol.upper(),
-            "state": "OFFLINE",
-            "execution_enabled": False,
-            "error": f"Unsupported timeframe: {timeframe}",
-        })
-        await websocket.close(code=1008)
-        return
-
-    try:
-        provider = build_provider()
-        symbol = symbol.upper()
-        history = await provider.candles(symbol, timeframe, 200)
-        current_candle = history[-1] if history else None
-
         await websocket.send_json(
             {
                 "contract": "sbt-market-stream-v1",
-                "source": provider.name,
+                "source": "none",
                 "symbol": symbol,
-                "state": "CONNECTING",
+                "state": "OFFLINE",
                 "execution_enabled": False,
+                "error": f"Unsupported timeframe: {timeframe}",
+            }
+        )
+        await websocket.close(code=1008)
+        return
+
+    provider_name: str | None = None
+    try:
+        provider = build_provider()
+        provider_name = provider.name
+        history = await provider.candles(symbol, timeframe, 200)
+        current_candle = history[-1] if history else None
+        connecting_state = mark_connecting(
+            provider.name,
+            symbol,
+            timeframe,
+            candles_available=bool(history),
+            last_candle=current_candle.as_dict() if current_candle else None,
+        )
+
+        await websocket.send_json(
+            {
+                **connecting_state.as_dict(),
+                "contract": "sbt-market-stream-v1",
+                "source": provider.name,
                 "candle_timeframe": timeframe,
                 "historical_candles": [row.as_dict() for row in history],
             }
@@ -223,24 +234,35 @@ async def stream(websocket: WebSocket, symbol: str) -> None:
             next_candle = _apply_tick(current_candle, quote, timeframe)
             candle_changed = next_candle is not None and next_candle != current_candle
             current_candle = next_candle
-            payload = {
-                **quote.as_dict(),
-                "state": "LIVE",
-                "execution_enabled": False,
-                "first_tick": True,
-                "candle_timeframe": timeframe,
-                "candle": current_candle.as_dict() if candle_changed else None,
-            }
-            await websocket.send_json(payload)
+            quote_payload = quote.as_dict()
+            quote_timestamp = _epoch_seconds(quote.timestamp)
+            latency = max(0.0, time.time() - quote_timestamp) if quote_timestamp is not None else None
+            live_state = mark_quote(
+                provider.name,
+                symbol,
+                timeframe,
+                quote_payload,
+                current_candle.as_dict() if current_candle else None,
+                latency=latency,
+            )
+            await websocket.send_json(
+                {
+                    **quote_payload,
+                    **live_state.as_dict(),
+                    "contract": "sbt-market-stream-v1",
+                    "source": provider.name,
+                    "candle_timeframe": timeframe,
+                    "candle": current_candle.as_dict() if candle_changed else None,
+                }
+            )
     except ProviderError as exc:
+        error_state = mark_error(provider_name, symbol, timeframe)
         try:
             await websocket.send_json(
                 {
+                    **error_state.as_dict(),
                     "contract": "sbt-market-stream-v1",
-                    "source": "none",
-                    "symbol": symbol.upper(),
-                    "state": "OFFLINE",
-                    "execution_enabled": False,
+                    "source": provider_name or "none",
                     "candle_timeframe": timeframe,
                     "error": str(exc),
                 }
