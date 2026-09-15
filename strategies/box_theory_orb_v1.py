@@ -237,7 +237,11 @@ def generate_signal(
     This function is deterministic and contains no broker execution.
     """
     config = config or StrategyConfig()
-    if len(m1_bars) < 20:
+    # Do not impose an arbitrary 20-bar minimum: the actual prerequisites are
+    # the configured opening range plus enough subsequent bars to form and
+    # confirm a box. This keeps the detector faithful to its contract and testable
+    # on compact deterministic fixtures.
+    if len(m1_bars) < config.opening_range_minutes + 2:
         return None
 
     bias = _session_bias(m1_bars, config)
