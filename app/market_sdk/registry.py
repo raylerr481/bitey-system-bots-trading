@@ -1,7 +1,7 @@
 """Provider registry for Bitey SBT market data.
 
-Provider activation is explicit. No external provider is selected implicitly,
-and the SDK has no synthetic-data fallback.
+The default public research feed is BiQuote's anonymous read-only API.
+SBT never uses it for order execution and never fabricates market data.
 """
 
 from __future__ import annotations
@@ -14,10 +14,13 @@ from .providers import MarketDataProvider, ProviderError
 
 
 def build_provider(name: str | None = None) -> MarketDataProvider:
-    selected = (name or os.getenv("SBT_MARKET_PROVIDER", "none")).strip().lower()
+    selected = (name or os.getenv("SBT_MARKET_PROVIDER", "biquote")).strip().lower()
     if selected == "biquote":
-        if os.getenv("SBT_BIQUOTE_PUBLIC_APPROVED", "false").lower() != "true":
-            raise ProviderError("BiQuote is installed but not approved for public SBT display")
+        # BiQuote exposes public read-only market data without credentials.
+        # An explicit false opt-out is still available for operators that do not
+        # want the public feed enabled.
+        if os.getenv("SBT_BIQUOTE_PUBLIC_APPROVED", "true").lower() != "true":
+            raise ProviderError("BiQuote public feed disabled by SBT_BIQUOTE_PUBLIC_APPROVED")
         return BiQuoteProvider()
     if selected == "mt5":
         if not os.getenv("MT5_BRIDGE_URL", "").strip():
