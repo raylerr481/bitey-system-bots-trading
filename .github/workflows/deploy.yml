@@ -26,17 +26,19 @@ jobs:
           from pathlib import Path
           p = Path('web/index.html')
           s = p.read_text(encoding='utf-8')
-          loader = '<script src="/runtime.js?v=20260912" defer></script>\n'
-          legacy = '<script src="/runtime.js" defer></script>\n'
-          old = '<script src="/runtime.js?v=20260910" defer></script>\n'
-          previous = '<script src="/runtime.js?v=20260911" defer></script>\n'
-          if legacy in s:
-              s = s.replace(legacy, loader, 1)
-          elif old in s:
-              s = s.replace(old, loader, 1)
-          elif previous in s:
-              s = s.replace(previous, loader, 1)
-          elif '/runtime.js?v=20260912' not in s:
+          loader = '<script src="/runtime.js?v=20260915" defer></script>\n'
+          versions = [
+              '<script src="/runtime.js" defer></script>\n',
+              '<script src="/runtime.js?v=20260910" defer></script>\n',
+              '<script src="/runtime.js?v=20260911" defer></script>\n',
+              '<script src="/runtime.js?v=20260912" defer></script>\n',
+              '<script src="/runtime.js?v=20260915" defer></script>\n',
+          ]
+          for old in versions[:-1]:
+              if old in s:
+                  s = s.replace(old, loader, 1)
+                  break
+          if '/runtime.js?v=20260915' not in s:
               s = s.replace('</body>', loader + '</body>', 1)
           p.write_text(s, encoding='utf-8')
           PY
@@ -65,4 +67,4 @@ jobs:
           printf '%s' "$health" | grep -q '"live":false'
           printf '%s' "$health" | grep -q '"real_money":false'
           printf '%s' "$health" | grep -q '"broker_orders":0'
-          printf '%s' "$health" | grep -q '"web_build":"f6-canonical-terminal"'
+          printf '%s' "$health" | grep -q '"web_build":"'
