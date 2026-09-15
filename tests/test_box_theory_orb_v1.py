@@ -19,10 +19,11 @@ def test_box_theory_long_signal_uses_ny_opening_range_and_2_to_1_target() -> Non
         Bar(ts(35), 99.9, 102.0, 99.7, 101.5),
         # Counter-trend bearish candle; its upper wick defines a type-1 box.
         Bar(ts(36), 101.6, 102.2, 100.8, 101.1),
-        # Strong continuation impulse.
-        Bar(ts(37), 101.1, 103.4, 100.9, 103.2),
-        # Pullback contacts the box and closes above it.
-        Bar(ts(38), 103.0, 103.1, 101.5, 102.6),
+        # Strong continuation impulse; it clears the box without being the pullback contact.
+        # Its range is intentionally above the configured 1.20x impulse threshold.
+        Bar(ts(37), 101.1, 104.0, 102.3, 103.6),
+        # Pullback contacts the box and closes above it with a qualifying body ratio.
+        Bar(ts(38), 101.5, 103.1, 101.5, 102.6),
         # Entry is the next candle's open.
         Bar(ts(39), 102.7, 103.0, 102.5, 102.9),
     ]

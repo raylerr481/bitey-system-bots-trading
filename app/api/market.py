@@ -12,6 +12,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, WebSocket, WebSocketDisconnect
 
+from app.core.market_state import mark_connecting, mark_error, mark_historical, mark_live
 from app.market_sdk import Candle, ProviderError
 from app.market_sdk.instruments import SUPPORTED_TIMEFRAMES, asset_classes, list_instruments
 from app.market_sdk.registry import build_provider
@@ -94,11 +95,6 @@ def _timeframe_seconds(timeframe: str) -> int:
 def instruments(
     asset_class: str | None = Query(default=None, min_length=2, max_length=32),
 ) -> dict[str, Any]:
-    """Return SBT's free canonical research universe.
-
-    Availability is provider-dependent. This endpoint intentionally does not
-    claim that every listed instrument currently has live data.
-    """
     rows = list_instruments(asset_class)
     return {
         "contract": "sbt-instruments-v1",
@@ -125,28 +121,8 @@ def connections() -> dict[str, Any]:
         "mode": "market-data-only",
         "execution_enabled": False,
         "connections": [
-            {
-                "id": "biquote",
-                "name": "BiQuote",
-                "kind": "market-data-provider",
-                "market_data": biquote_configured,
-                "real_time_quotes": biquote_configured,
-                "real_time_charts": biquote_configured,
-                "ohlc_candles": biquote_configured,
-                "execution_authority": "disabled",
-                "configured": biquote_configured,
-            },
-            {
-                "id": "mt5",
-                "name": "MetaTrader 5 read-only bridge",
-                "kind": "market-data-provider",
-                "market_data": mt5_active,
-                "real_time_quotes": mt5_active,
-                "real_time_charts": mt5_active,
-                "ohlc_candles": mt5_active,
-                "execution_authority": "disabled",
-                "configured": mt5_configured,
-            },
+            {"id": "biquote", "name": "BiQuote", "kind": "market-data-provider", "market_data": biquote_configured, "real_time_quotes": biquote_configured, "real_time_charts": biquote_configured, "ohlc_candles": biquote_configured, "execution_authority": "disabled", "configured": biquote_configured},
+            {"id": "mt5", "name": "MetaTrader 5 read-only bridge", "kind": "market-data-provider", "market_data": mt5_active, "real_time_quotes": mt5_active, "real_time_charts": mt5_active, "ohlc_candles": mt5_active, "execution_authority": "disabled", "configured": mt5_configured},
         ],
         "active_provider": provider if configured else None,
         "credentials_boundary": "SBT consumes normalized market data only; no broker credentials or order execution are exposed.",
@@ -163,88 +139,52 @@ async def quote(symbol: str) -> dict[str, Any]:
 
 
 @router.get("/candles/{symbol}")
-async def candles(
-    symbol: str,
-    timeframe: str = Query(default="M5", min_length=2, max_length=4),
-    limit: int = Query(default=100, ge=20, le=500),
-) -> dict[str, Any]:
+async def candles(symbol: str, timeframe: str = Query(default="M5", min_length=2, max_length=4), limit: int = Query(default=100, ge=20, le=500)) -> dict[str, Any]:
     provider = _provider_or_http_error()
     try:
         rows = await provider.candles(symbol, timeframe, limit)
     except (ProviderError, ValueError) as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
-    return {
-        "contract": "sbt-candles-v1",
-        "source": provider.name,
-        "symbol": symbol.upper(),
-        "timeframe": timeframe.upper(),
-        "limit": len(rows),
-        "candles": [row.as_dict() for row in rows],
-    }
+    return {"contract": "sbt-candles-v1", "source": provider.name, "symbol": symbol.upper(), "timeframe": timeframe.upper(), "limit": len(rows), "candles": [row.as_dict() for row in rows]}
 
 
 @router.websocket("/stream/{symbol}")
 async def stream(websocket: WebSocket, symbol: str) -> None:
     await websocket.accept()
     timeframe = websocket.query_params.get("timeframe", "M5").upper()
+    symbol = symbol.upper()
     try:
         _timeframe_seconds(timeframe)
     except ValueError:
-        await websocket.send_json({
-            "contract": "sbt-market-stream-v1",
-            "source": "none",
-            "symbol": symbol.upper(),
-            "state": "OFFLINE",
-            "execution_enabled": False,
-            "error": f"Unsupported timeframe: {timeframe}",
-        })
+        await websocket.send_json({"contract": "sbt-market-stream-v1", "source": "none", "symbol": symbol, "state": "OFFLINE", "execution_enabled": False, "error": f"Unsupported timeframe: {timeframe}"})
         await websocket.close(code=1008)
         return
 
+    provider_name = None
     try:
         provider = build_provider()
-        symbol = symbol.upper()
+        provider_name = provider.name
+        mark_connecting(symbol, timeframe, provider_name)
         history = await provider.candles(symbol, timeframe, 200)
         current_candle = history[-1] if history else None
+        if history:
+            mark_historical(symbol, timeframe, provider_name)
 
-        await websocket.send_json(
-            {
-                "contract": "sbt-market-stream-v1",
-                "source": provider.name,
-                "symbol": symbol,
-                "state": "CONNECTING",
-                "execution_enabled": False,
-                "candle_timeframe": timeframe,
-                "historical_candles": [row.as_dict() for row in history],
-            }
-        )
+        await websocket.send_json({"contract": "sbt-market-stream-v1", "source": provider.name, "symbol": symbol, "state": "CONNECTING", "execution_enabled": False, "candle_timeframe": timeframe, "historical_candles": [row.as_dict() for row in history]})
 
         async for quote in provider.stream(symbol):
             next_candle = _apply_tick(current_candle, quote, timeframe)
             candle_changed = next_candle is not None and next_candle != current_candle
             current_candle = next_candle
-            payload = {
-                **quote.as_dict(),
-                "state": "LIVE",
-                "execution_enabled": False,
-                "first_tick": True,
-                "candle_timeframe": timeframe,
-                "candle": current_candle.as_dict() if candle_changed else None,
-            }
+            quote_payload = quote.as_dict()
+            candle_payload = current_candle.as_dict() if candle_changed else None
+            mark_live(symbol, timeframe, provider_name, quote_payload, candle_payload)
+            payload = {**quote_payload, "contract": "sbt-market-stream-v1", "source": provider.name, "state": "LIVE", "execution_enabled": False, "first_tick": True, "candle_timeframe": timeframe, "candle": candle_payload}
             await websocket.send_json(payload)
     except ProviderError as exc:
+        mark_error(symbol, timeframe, provider_name, str(exc))
         try:
-            await websocket.send_json(
-                {
-                    "contract": "sbt-market-stream-v1",
-                    "source": "none",
-                    "symbol": symbol.upper(),
-                    "state": "OFFLINE",
-                    "execution_enabled": False,
-                    "candle_timeframe": timeframe,
-                    "error": str(exc),
-                }
-            )
+            await websocket.send_json({"contract": "sbt-market-stream-v1", "source": provider_name or "none", "symbol": symbol, "state": "OFFLINE", "execution_enabled": False, "candle_timeframe": timeframe, "error": str(exc)})
         except RuntimeError:
             pass
     except WebSocketDisconnect:
