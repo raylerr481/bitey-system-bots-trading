@@ -26,7 +26,6 @@ export default {
 (() => {
   const closeMobileMenu = () => { const side = document.getElementById('side'); if (side) side.classList.remove('open'); };
   const getMarketRow = () => Array.from(document.querySelectorAll('.risk')).find(item => item.querySelector('span')?.textContent?.trim().toLowerCase() === 'market data');
-
   const canonical = () => window.BiteySBTMarketState?.canonical || null;
 
   const syncMarketReadiness = () => {
@@ -44,7 +43,6 @@ export default {
     const state = window.BiteySBTMarketState;
     const c = canonical();
     if (!state || !c?.state) { syncMarketReadiness(); return; }
-
     const canonicalState = String(c.state).toUpperCase();
     const labels = {
       OFFLINE: '● MARKET OFFLINE',
@@ -55,20 +53,17 @@ export default {
       STALE: '● STALE MARKET DATA',
       ERROR: '● MARKET ERROR'
     };
-
     state.feedState = canonicalState;
     state.error = canonicalState === 'ERROR' && c.last_quote?.error ? c.last_quote.error : null;
     if (c.provider) {
       state.provider = String(c.provider);
       state.source = String(c.provider).toLowerCase();
     }
-
     const status = document.getElementById('mtFeedStatus');
-    if (status) status.textContent = `${labels[canonicalState] || labels.OFFLINE} · ${c.symbol || state.symbol} · ${c.timeframe || state.timeframe}`;
-
+    if (status) status.textContent = labels[canonicalState] || labels.OFFLINE;
+    if (status) status.textContent += ' · ' + (c.symbol || state.symbol) + ' · ' + (c.timeframe || state.timeframe);
     const overlay = document.getElementById('mtOverlay');
-    if (overlay) overlay.textContent = `Bitey SBT · ${c.symbol || state.symbol} · ${c.timeframe || state.timeframe} · ${canonicalState}`;
-
+    if (overlay) overlay.textContent = 'Bitey SBT · ' + (c.symbol || state.symbol) + ' · ' + (c.timeframe || state.timeframe) + ' · ' + canonicalState;
     syncMarketReadiness();
   };
 
@@ -124,16 +119,7 @@ export default {
       enforceMarketReadiness();
     }
   }, true);
-
   document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMobileMenu(); });
-
-  document.addEventListener('click', event => {
-    const side = document.getElementById('side');
-    const hamburger = document.getElementById('hamb');
-    if (!side || !side.classList.contains('open')) return;
-    if (!side.contains(event.target) && event.target !== hamburger) closeMobileMenu();
-  });
-
   window.addEventListener('bitesbt:market-state', enforceMarketReadiness);
 
   const watchChartVisibility = () => {
@@ -149,7 +135,6 @@ export default {
     addTerminalLink();
     setInterval(enforceMarketReadiness, 1000);
   };
-
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
   else boot();
 })();
