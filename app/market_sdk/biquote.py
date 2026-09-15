@@ -1,8 +1,7 @@
 """BiQuote adapter for the Bitey SBT market-data SDK.
 
-This adapter is intentionally dormant until provider licensing is approved for
-public SBT display. It normalizes BiQuote data into the SBT-owned contract and
-never fabricates prices.
+This adapter is read-only and normalizes BiQuote data into the SBT-owned
+contract. It never fabricates prices or sends execution orders.
 """
 
 from __future__ import annotations
@@ -86,13 +85,14 @@ class BiQuoteProvider(MarketDataProvider):
         return candles
 
     async def stream(self, symbol: str) -> AsyncIterator[Quote]:
-        """Stream ReceiveTick events from BiQuote SignalR without extra packages."""
+        """Stream ReceiveTick events from BiQuote SignalR."""
         symbol = symbol.upper()
-        url = f"{self.base_url}/hubs/tick"
+        # websockets requires a WebSocket URI; the public hub is HTTPS-backed
+        # but must be addressed as WSS by the WebSocket client.
+        url = f"{self.base_url.replace('https://', 'wss://', 1).replace('http://', 'ws://', 1)}/hubs/tick"
 
         try:
             async with connect(url, open_timeout=10, ping_interval=20, ping_timeout=20) as ws:
-                # SignalR JSON Hub Protocol handshake.
                 await ws.send(json.dumps({"protocol": "json", "version": 1}) + "\x1e")
                 handshake = await asyncio.wait_for(ws.recv(), timeout=10)
                 if isinstance(handshake, bytes):
@@ -105,7 +105,6 @@ class BiQuoteProvider(MarketDataProvider):
                             f"BiQuote SignalR handshake failed: {handshake_payload['error']}"
                         )
 
-                # Hub invocation: Subscribe([["EURUSD"]]).
                 await ws.send(
                     json.dumps(
                         {
@@ -129,15 +128,12 @@ class BiQuoteProvider(MarketDataProvider):
                         except json.JSONDecodeError:
                             continue
 
-                        # SignalR completion/error for the subscription invocation.
                         if message.get("type") == 3 and message.get("error"):
                             raise ProviderError(
                                 f"BiQuote subscription failed: {message['error']}"
                             )
 
-                        if message.get("type") != 1:
-                            continue
-                        if message.get("target") != "ReceiveTick":
+                        if message.get("type") != 1 or message.get("target") != "ReceiveTick":
                             continue
 
                         arguments = message.get("arguments")
@@ -155,7 +151,7 @@ class BiQuoteProvider(MarketDataProvider):
                                 continue
         except ProviderError:
             raise
-        except (OSError, asyncio.TimeoutError, json.JSONDecodeError, Exception) as exc:
+        except (OSError, asyncio.TimeoutError, json.JSONDecodeError) as exc:
             raise ProviderError(f"BiQuote stream unavailable: {exc}") from exc
 
 
