@@ -1,7 +1,7 @@
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const BUILD = 'f6-canonical-terminal';
+    const BUILD = 'f7-terminal-launcher';
 
     if (url.pathname === '/health') {
       return new Response(JSON.stringify({
@@ -60,8 +60,7 @@ export default {
       state.source = String(c.provider).toLowerCase();
     }
     const status = document.getElementById('mtFeedStatus');
-    if (status) status.textContent = labels[canonicalState] || labels.OFFLINE;
-    if (status) status.textContent += ' · ' + (c.symbol || state.symbol) + ' · ' + (c.timeframe || state.timeframe);
+    if (status) status.textContent = (labels[canonicalState] || labels.OFFLINE) + ' · ' + (c.symbol || state.symbol) + ' · ' + (c.timeframe || state.timeframe);
     const overlay = document.getElementById('mtOverlay');
     if (overlay) overlay.textContent = 'Bitey SBT · ' + (c.symbol || state.symbol) + ' · ' + (c.timeframe || state.timeframe) + ' · ' + canonicalState;
     syncMarketReadiness();
@@ -90,7 +89,7 @@ export default {
     const marker = document.querySelector('.nav button[data-page="bots"]');
     if (marker) {
       marker.click();
-      redrawSbtChart();
+      setTimeout(redrawSbtChart, 250);
       return;
     }
     if (window.BiteySBT?.openWebTrader) window.BiteySBT.openWebTrader().catch(console.error);
@@ -99,9 +98,9 @@ export default {
 
   const addTerminalLink = () => {
     const nav = document.querySelector('.nav');
-    if (!nav || nav.querySelector('[data-sbt-terminal-link]')) return;
+    if (!nav || nav.querySelector('[data-sbt-terminal-link]')) return !!nav;
     const marker = nav.querySelector('button[data-page="bots"]');
-    if (!marker) return;
+    if (!marker) return false;
     const a = document.createElement('button');
     a.type = 'button';
     a.dataset.sbtTerminalLink = '1';
@@ -109,13 +108,33 @@ export default {
     a.style.cssText = 'display:block;width:100%;text-align:left;background:transparent;color:#91a0b1;padding:10px 12px;border-radius:10px;margin:2px 0;border:1px solid transparent;font-size:14px;cursor:pointer;';
     a.addEventListener('click', openTerminal);
     marker.insertAdjacentElement('afterend', a);
+    return true;
+  };
+
+  const addDashboardTerminalButton = () => {
+    const toolbar = document.querySelector('#dashboard .hero .toolbar');
+    if (!toolbar || toolbar.querySelector('[data-sbt-terminal-launcher]')) return false;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.sbtTerminalLauncher = '1';
+    b.className = 'btn primary';
+    b.textContent = '▣ Abrir Trading Terminal';
+    b.addEventListener('click', openTerminal);
+    toolbar.insertBefore(b, toolbar.firstChild);
+    return true;
+  };
+
+  const wireUi = () => {
+    addTerminalLink();
+    addDashboardTerminalButton();
+    enforceMarketReadiness();
   };
 
   document.addEventListener('click', event => {
     const target = event.target.closest('[data-page]');
     if (target) {
       closeMobileMenu();
-      if (target.dataset.page === 'bots') redrawSbtChart();
+      if (target.dataset.page === 'bots') setTimeout(redrawSbtChart, 250);
       enforceMarketReadiness();
     }
   }, true);
@@ -130,9 +149,17 @@ export default {
   };
 
   const boot = () => {
-    enforceMarketReadiness();
+    wireUi();
     watchChartVisibility();
-    addTerminalLink();
+    let attempts = 0;
+    const timer = setInterval(() => {
+      wireUi();
+      attempts += 1;
+      if (attempts >= 30 || document.querySelector('[data-sbt-terminal-link]')) clearInterval(timer);
+    }, 250);
+    if (new URL(location.href).searchParams.get('terminal') === '1') {
+      setTimeout(openTerminal, 800);
+    }
     setInterval(enforceMarketReadiness, 1000);
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
