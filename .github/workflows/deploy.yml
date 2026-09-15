@@ -65,4 +65,4 @@ jobs:
           printf '%s' "$health" | grep -q '"live":false'
           printf '%s' "$health" | grep -q '"real_money":false'
           printf '%s' "$health" | grep -q '"broker_orders":0'
-          printf '%s' "$health" | grep -q '"web_build":"f5-market-state-no-store"'
+          printf '%s' "$health" | grep -q '"web_build":"f6-canonical-terminal"'
