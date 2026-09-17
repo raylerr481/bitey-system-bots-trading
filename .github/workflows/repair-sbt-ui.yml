@@ -98,12 +98,32 @@ jobs:
           print(f'Market candle smoke test OK: {len(candles)} EURUSD M5 candles')
           PY
           bot=$(curl -fsSL --retry 5 --retry-delay 3 "$SBT_URL/bot-lab.html?probe=${GITHUB_SHA}")
-          printf '%s' "$bot" | grep -q 'id="mtChart"'
-          printf '%s' "$bot" | grep -q 'id="mtChartEmpty"'
-          printf '%s' "$bot" | grep -q 'class="chart-wrap"'
-          printf '%s' "$bot" | grep -q 'min-height:500px'
           trader=$(curl -fsSL --retry 5 --retry-delay 3 "$SBT_URL/web-trader.js?probe=${GITHUB_SHA}")
-          printf '%s' "$trader" | grep -q 'api/v1/market/candles/'
-          printf '%s' "$trader" | grep -q 'requestAnimationFrame(() => drawChart())'
-          printf '%s' "$trader" | grep -q 'execution_enabled:false'
-          echo 'SBT deployed market-feed and chart contract smoke tests OK.'
+          BOT="$bot" TRADER="$trader" python - <<'PY'
+          import os, sys
+          bot = os.environ['BOT']
+          trader = os.environ['TRADER']
+          checks = [
+              ('bot chart canvas', 'id="mtChart"' in bot),
+              ('bot chart empty state', 'id="mtChartEmpty"' in bot),
+              ('bot chart wrapper', 'class="chart-wrap"' in bot),
+              ('bot chart min-height', 'min-height:500px' in bot),
+              ('trader candle API', 'api/v1/market/candles/' in trader),
+              ('trader post-layout redraw', 'requestAnimationFrame(()=>drawChart())' in trader),
+              ('trader execution disabled', 'execution_enabled:false' in trader),
+          ]
+          failed = [name for name, ok in checks if not ok]
+          if failed:
+              print('Chart smoke checks failed:', ', '.join(failed))
+              print('bot markers:', {name: (needle in bot) for name, needle in [
+                  ('mtChart','id="mtChart"'), ('mtChartEmpty','id="mtChartEmpty"'),
+                  ('chart-wrap','class="chart-wrap"'), ('min-height','min-height:500px')
+              ]})
+              print('trader markers:', {name: (needle in trader) for name, needle in [
+                  ('candles','api/v1/market/candles/'),
+                  ('redraw','requestAnimationFrame(()=>drawChart())'),
+                  ('execution','execution_enabled:false')
+              ]})
+              sys.exit(1)
+          print('SBT deployed market-feed and chart contract smoke tests OK.')
+          PY
