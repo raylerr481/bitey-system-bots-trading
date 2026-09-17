@@ -46,7 +46,7 @@ async function yahooChart(symbol, timeframe, limit = 200) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const BUILD = 'f8-market-feed-same-origin';
+    const BUILD = 'f9-runtime-bootstrap';
 
     if (url.pathname === '/health') return json({ service: 'bitey-system-bots-trading', status: 'ok', mode: 'research-demo', live: false, real_money: false, broker_orders: 0, web_build: BUILD });
 
@@ -87,6 +87,7 @@ export default {
 
     return new HTMLRewriter().on('body', {
       element(element) {
+        element.append(`<script src="/runtime.js?v=20260917"></script>`, { html: true });
         element.append(`<script>
 (() => {
   const closeMobileMenu=()=>{const side=document.getElementById('side');if(side)side.classList.remove('open');};
