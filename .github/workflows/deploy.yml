@@ -68,3 +68,17 @@ jobs:
           printf '%s' "$health" | grep -q '"real_money":false'
           printf '%s' "$health" | grep -q '"broker_orders":0'
           printf '%s' "$health" | grep -q '"web_build":"'
+          candles=$(curl -fsSL --retry 5 --retry-delay 3 "$SBT_URL/api/v1/market/candles/EURUSD?timeframe=M5&limit=200&probe=$GITHUB_SHA")
+          CANDLES="$candles" python - <<'PY'
+          import json, os, sys
+          payload = json.loads(os.environ['CANDLES'])
+          candles = payload.get('candles') or []
+          if payload.get('ok') is not True or len(candles) < 20:
+              print('Market candle smoke test failed:', json.dumps(payload)[:2000])
+              sys.exit(1)
+          required = ('time', 'open', 'high', 'low', 'close')
+          if not all(all(k in c for k in required) for c in candles[:20]):
+              print('Market candle contract failed: missing OHLC fields')
+              sys.exit(1)
+          print(f'Market candle smoke test OK: {len(candles)} EURUSD M5 candles')
+          PY
