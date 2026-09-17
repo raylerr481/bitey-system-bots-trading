@@ -70,11 +70,40 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          body=$(curl -fsSL --retry 5 --retry-delay 3 "https://bitey-system-bots-trading.raylerr481.workers.dev/?probe=${GITHUB_SHA}")
+          SBT_URL='https://bitey-system-bots-trading.raylerr481.workers.dev'
+          body=$(curl -fsSL --retry 5 --retry-delay 3 "$SBT_URL/?probe=${GITHUB_SHA}")
           printf '%s' "$body" | grep -q 'Bitey SBT'
           printf '%s' "$body" | grep -q 'Trading Laboratory'
-          health=$(curl -fsSL --retry 5 --retry-delay 3 "https://bitey-system-bots-trading.raylerr481.workers.dev/health?probe=${GITHUB_SHA}")
+          printf '%s' "$body" | grep -q 'Market Intelligence'
+          health=$(curl -fsSL --retry 5 --retry-delay 3 "$SBT_URL/health?probe=${GITHUB_SHA}")
           printf '%s' "$health" | grep -q '"live":false'
           printf '%s' "$health" | grep -q '"real_money":false'
           printf '%s' "$health" | grep -q '"broker_orders":0'
           printf '%s' "$health" | grep -q '"web_build":"'
+          candles=$(curl -fsSL --retry 5 --retry-delay 3 "$SBT_URL/api/v1/market/candles/EURUSD?timeframe=M5&limit=200&probe=${GITHUB_SHA}")
+          CANDLES="$candles" python - <<'PY'
+          import json, os, sys
+          payload = json.loads(os.environ['CANDLES'])
+          candles = payload.get('candles') or []
+          if payload.get('ok') is not True or len(candles) < 20:
+              print('Market candle smoke test failed:', json.dumps(payload)[:2000])
+              sys.exit(1)
+          required = ('time', 'open', 'high', 'low', 'close')
+          if not all(all(k in c for k in required) for c in candles[:20]):
+              print('Market candle contract failed: missing OHLC fields')
+              sys.exit(1)
+          if payload.get('execution_enabled') is not False:
+              print('Safety contract failed: execution_enabled must be false')
+              sys.exit(1)
+          print(f'Market candle smoke test OK: {len(candles)} EURUSD M5 candles')
+          PY
+          bot=$(curl -fsSL --retry 5 --retry-delay 3 "$SBT_URL/bot-lab.html?probe=${GITHUB_SHA}")
+          printf '%s' "$bot" | grep -q 'id="mtChart"'
+          printf '%s' "$bot" | grep -q 'id="mtChartEmpty"'
+          printf '%s' "$bot" | grep -q 'class="chart-wrap"'
+          printf '%s' "$bot" | grep -q 'min-height:500px'
+          trader=$(curl -fsSL --retry 5 --retry-delay 3 "$SBT_URL/web-trader.js?probe=${GITHUB_SHA}")
+          printf '%s' "$trader" | grep -q 'api/v1/market/candles/'
+          printf '%s' "$trader" | grep -q 'requestAnimationFrame(() => drawChart())'
+          printf '%s' "$trader" | grep -q 'execution_enabled:false'
+          echo 'SBT deployed market-feed and chart contract smoke tests OK.'
