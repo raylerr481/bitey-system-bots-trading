@@ -6,6 +6,7 @@ controls promotion of learning hypotheses into versioned strategy evidence.
 
 from dataclasses import dataclass, field
 from enum import Enum
+from math import isfinite
 from typing import Optional
 
 
@@ -38,8 +39,10 @@ class RiskProfile:
     max_exposure_pct: float = 25.0
 
     def risk_per_trade_pct(self) -> float:
-        table = {1: 0.10, 2: 0.15, 3: 0.25, 4: 0.35, 5: 0.50,
-                 6: 0.60, 7: 0.75, 8: 0.85, 9: 0.95, 10: 1.00}
+        table = {
+            1: 0.10, 2: 0.15, 3: 0.25, 4: 0.35, 5: 0.50,
+            6: 0.60, 7: 0.75, 8: 0.85, 9: 0.95, 10: 1.00,
+        }
         return table[max(1, min(10, self.aggression))]
 
 
@@ -74,6 +77,10 @@ class GateDecision:
     effective_risk_pct: float = 0.0
 
 
+def _positive_finite(value: Optional[float]) -> bool:
+    return value is not None and isfinite(value) and value > 0
+
+
 def validate_proposal(
     proposal: AIProposal,
     market: MarketState,
@@ -83,6 +90,12 @@ def validate_proposal(
     """Apply deterministic controls to an AI proposal."""
     if mode == LabMode.LIVE:
         return GateDecision(False, "live execution is disabled by the AI Trading Lab")
+    if not _positive_finite(market.price):
+        return GateDecision(False, "invalid market price")
+    if not isfinite(market.volatility_pct) or market.volatility_pct < 0:
+        return GateDecision(False, "invalid market volatility")
+    if not isfinite(market.spread_pct) or market.spread_pct < 0:
+        return GateDecision(False, "invalid market spread")
     if not market.data_fresh:
         return GateDecision(False, "market data is stale")
     if not market.liquidity_ok:
@@ -95,16 +108,25 @@ def validate_proposal(
         return GateDecision(False, "spread gate failed")
     if proposal.direction == Direction.WAIT:
         return GateDecision(False, "AI proposal is WAIT")
+    if not isinstance(proposal.confidence, int) or isinstance(proposal.confidence, bool):
+        return GateDecision(False, "invalid confidence")
     if not 0 <= proposal.confidence <= 100:
         return GateDecision(False, "invalid confidence")
     if proposal.confidence < 60:
         return GateDecision(False, "minimum AI confidence not reached")
-    if proposal.entry is None or proposal.stop_loss is None:
-        return GateDecision(False, "entry and stop loss are required")
+    if not _positive_finite(proposal.entry) or not _positive_finite(proposal.stop_loss):
+        return GateDecision(False, "entry and stop loss must be positive finite values")
     if proposal.direction == Direction.LONG and proposal.stop_loss >= proposal.entry:
         return GateDecision(False, "invalid LONG stop loss")
     if proposal.direction == Direction.SHORT and proposal.stop_loss <= proposal.entry:
         return GateDecision(False, "invalid SHORT stop loss")
+    if proposal.take_profit is not None:
+        if not _positive_finite(proposal.take_profit):
+            return GateDecision(False, "take profit must be a positive finite value")
+        if proposal.direction == Direction.LONG and proposal.take_profit <= proposal.entry:
+            return GateDecision(False, "invalid LONG take profit")
+        if proposal.direction == Direction.SHORT and proposal.take_profit >= proposal.entry:
+            return GateDecision(False, "invalid SHORT take profit")
 
     effective = risk.risk_per_trade_pct()
     if market.volatility_pct > 8.0:
