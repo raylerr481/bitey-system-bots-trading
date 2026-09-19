@@ -46,7 +46,7 @@ async function yahooChart(symbol, timeframe, limit = 200) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const BUILD = 'canonical-market-contract-v1';
+    const BUILD = 'canonical-market-contract-v2';
 
     if (url.pathname === '/health') return json({ service: 'bitey-system-bots-trading', status: 'ok', mode: 'research-demo', live: false, real_money: false, broker_orders: 0, web_build: BUILD });
 
@@ -59,7 +59,7 @@ export default {
         const m = await yahooChart(symbol, tf, 50);
         const spread = Math.max(0, m.ask - m.bid);
         return json({ ok: true, state: 'HISTORICAL', symbol, timeframe: tf, source: 'yahoo-public', provider: 'yahoo-public', price: m.price, last: m.price, bid: m.bid, ask: m.ask, spread, previous_close: m.previous, currency: m.currency, exchange: m.exchange, market_available: m.candles.length >= 20, stream_available: false, execution_enabled: false, live: false, real_money: false, broker_orders: 0 });
-      } catch (e) { return json({ ok: false, available: false, error: String(e?.message || e), execution_enabled: false }, 502); }
+      } catch (e) { return json({ ok: false, state: 'ERROR', available: false, error: String(e?.message || e), market_available: false, stream_available: false, quote_available: false, execution_enabled: false, live: false, real_money: false, broker_orders: 0 }, 502); }
     }
 
     if (url.pathname.startsWith('/api/v1/market/candles/')) {
