@@ -22,7 +22,7 @@ BITEY_IA_WIDGET = '''
 '''
 
 API_BOOTSTRAP = '''<script>
-window.SBT_API_URL = "https://bitey-system-bots-trading-api.onrender.com";
+window.SBT_API_URL = window.location.origin;
 window.SBT_LIVE_TRADING_ENABLED = false;
 try { if (!localStorage.getItem('sbt_api_base')) localStorage.setItem('sbt_api_base', window.SBT_API_URL); } catch (_) {}
 </script>'''
@@ -70,9 +70,9 @@ MARKET_WIRING = '''<script>
  }
  async function loadMarket(tf){
   const chart=document.getElementById('marketChart');ensureToolbar(chart);refresh.disabled=true;refresh.textContent='Analizando…';
-  const status=document.getElementById('apiStatus');if(status)status.textContent='Consultando MT5 market data real · '+tf+'…';
+  const status=document.getElementById('apiStatus');if(status)status.textContent='Consultando market data público · '+tf+'…';
   try{
-   const [qr,cr]=await Promise.all([fetch(base()+'/api/v1/market/quote/EURUSD',{headers:{'Accept':'application/json'}}),fetch(base()+'/api/v1/market/candles/EURUSD?timeframe='+encodeURIComponent(tf)+'&limit=200',{headers:{'Accept':'application/json'}})]);
+   const [qr,cr]=await Promise.all([fetch(base()+'/api/v1/market/quote?symbol=EURUSD&timeframe='+encodeURIComponent(tf),{headers:{'Accept':'application/json'}}),fetch(base()+'/api/v1/market/candles/EURUSD?timeframe='+encodeURIComponent(tf)+'&limit=200',{headers:{'Accept':'application/json'}})]);
    if(!qr.ok)throw new Error('Quote HTTP '+qr.status);if(!cr.ok)throw new Error('Candles HTTP '+cr.status);
    const q=await qr.json(),cd=await cr.json(),candles=Array.isArray(cd)?cd:(Array.isArray(cd.candles)?cd.candles:[]);
    if(candles.length<35)throw new Error('Solo hay '+candles.length+' velas; se requieren al menos 35');
@@ -80,8 +80,8 @@ MARKET_WIRING = '''<script>
    if(!ar.ok)throw new Error('Analysis HTTP '+ar.status);const a=await ar.json();
    currentCandles=candles;currentAnalysis=a;zoom=Math.min(60,candles.length);
    const price=q.last??q.bid??q.ask;set('miPrice',price!=null?Number(price).toFixed(5):'—');set('miBias',a.bias||'NEUTRAL');const atr=a.technical&&a.technical.atr?a.technical.atr.value:null;set('miVol',atr!=null?Number(atr).toFixed(6):'—');set('miConfidence',a.confidence!=null?(Number(a.confidence)*100).toFixed(1)+'%':'—');drawMT5Chart(chart,candles,a);
-   if(status)status.textContent='Market Intelligence connected · MT5 · EURUSD '+tf;
-  }catch(e){set('miPrice','—');set('miBias','UNAVAILABLE');set('miVol','—');set('miConfidence','—');if(chart)chart.innerHTML='<div class="mt5-empty">MT5 market data unavailable · no invented metrics</div>';if(status)status.textContent='MT5 market data unavailable · no invented metrics';}
+   if(status)status.textContent='Market Intelligence connected · public historical · EURUSD '+tf;
+  }catch(e){set('miPrice','—');set('miBias','UNAVAILABLE');set('miVol','—');set('miConfidence','—');if(chart)chart.innerHTML='<div class="mt5-empty">MT5 market data unavailable · no invented metrics</div>';if(status)status.textContent='Market data unavailable · no invented metrics';}
   finally{refresh.disabled=false;refresh.textContent='Actualizar análisis';}
  }
  function emaSeries(values,period){if(values.length<period)return[];let v=values.slice(0,period).reduce((a,b)=>a+b,0)/period;const a=2/(period+1),out=new Array(values.length).fill(null);out[period-1]=v;for(let i=period;i<values.length;i++){v=a*values[i]+(1-a)*v;out[i]=v;}return out;}
