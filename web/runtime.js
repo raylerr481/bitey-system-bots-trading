@@ -2,7 +2,7 @@
   const API=(window.SBT_API_URL||window.location.origin).replace(/\/$/,'');
   window.SBT_API_URL=API;
   window.SBT_LIVE_TRADING_ENABLED=false;window.SBT_SAFETY={live:false,real_money:false,broker_orders:0};
-  const ASSET_VERSION='20260915marketfeed7';
+  const ASSET_VERSION='20260919marketfeed8';
   function banner(){const el=document.createElement('div');el.textContent='RESEARCH / DEMO ONLY · LIVE=false · REAL_MONEY=false · BROKER_ORDERS=0';el.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:9999;padding:8px;text-align:center;background:#111;color:#fff;font:600 12px system-ui;letter-spacing:.04em';document.body.appendChild(el)}
   async function health(){try{const r=await fetch(API+'/api/v1/system');if(!r.ok)throw new Error('HTTP '+r.status);const data=await r.json();window.SBT_SAFETY={live:Boolean(data.live_trading_enabled),real_money:Boolean(data.real_money_enabled),broker_orders:Number(data.broker_orders||0)};window.SBT_LIVE_TRADING_ENABLED=false;return data}catch(_){return null}}
   function loadScript(src,attr,ready,init){if(ready){init&&init();return}if(document.querySelector(`script[${attr}]`))return;const s=document.createElement('script');s.src=src;s.defer=true;s.setAttribute(attr,'1');document.head.appendChild(s);s.addEventListener('load',()=>init&&init(),{once:true})}
