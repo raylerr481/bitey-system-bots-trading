@@ -56,6 +56,32 @@
   </div>
 </div>
 
+<div class="bot-type-area">
+  <h3>Elegir tipo de bot</h3>
+  <div class="bot-type-grid" id="botTypeGrid">
+    <button class="bot-type selected" data-bot-type="trend"><b>↗ Trend</b><span>EMA / RSI / ATR y reglas direccionales.</span></button>
+    <button class="bot-type" data-bot-type="grid"><b>▦ Grid Bot</b><span>Compra y venta automática dentro de un rango.</span></button>
+    <button class="bot-type" data-bot-type="dca"><b>◉ DCA</b><span>Entradas escalonadas y control de coste.</span></button>
+    <button class="bot-type" data-bot-type="rebalance"><b>⇄ Rebalance</b><span>Reequilibra una cartera según pesos.</span></button>
+    <button class="bot-type" data-bot-type="custom"><b>⚙ Custom</b><span>Construye una estrategia determinista propia.</span></button>
+  </div>
+  <div class="grid-config" id="gridConfig">
+    <div class="grid-config-title"><strong>Grid Bot · configuración</strong><span class="muted">Modo investigación / Demo / Paper</span></div>
+    <div class="form">
+      <label>Precio mínimo<input id="gridLow" type="number" step="any" value="1.05000"></label>
+      <label>Precio máximo<input id="gridHigh" type="number" step="any" value="1.10000"></label>
+      <label>Número de grids<input id="gridCount" type="number" min="2" max="200" value="20"></label>
+      <label>Distribución<select id="gridMode"><option value="arithmetic">Aritmética</option><option value="geometric">Geométrica</option></select></label>
+      <label>Capital<input id="gridCapital" type="number" min="1" step="any" value="1000"></label>
+      <label>Stop Loss<input id="gridStop" type="number" step="any" value="1.04000"></label>
+      <label>Take Profit<input id="gridTake" type="number" step="any" value="1.11000"></label>
+      <label>Dirección<select id="gridDirection"><option value="neutral">Neutral</option><option value="long">Long</option><option value="short">Short</option></select></label>
+    </div>
+    <div class="grid-preview"><div>Vista previa de la malla</div><div class="grid-lines" id="gridLines"></div><div class="grid-summary"><span>Rango <b id="gridRange">—</b></span><span>Separación <b id="gridStep">—</b></span><span>Capital/grid <b id="gridPer">—</b></span></div></div>
+    <div class="toolbar" style="margin-top:9px"><button class="btn primary" id="gridApply">Usar configuración Grid</button><button class="btn" id="gridReset">Restablecer</button></div>
+  </div>
+</div>
+
 <div class="lab-controls">
   <div class="card">
     <h3>Bot Lab · criação e validação</h3>
@@ -74,10 +100,18 @@
 <script>
 (function(){
   const api=()=>((window.SBT_API_URL||localStorage.getItem('sbt_api_base')||'').replace(/\/$/,''));
-  let symbol='EURUSD',timeframe='H1',candles=[],spec=null,lastBacktest=null,riskDecision=null;
+  let symbol='EURUSD',timeframe='H1',candles=[],spec=null,lastBacktest=null,riskDecision=null,botType='trend';
   const $=id=>document.getElementById(id);
   const get=async(path)=>{const r=await fetch(api()+path,{headers:{accept:'application/json'}});if(!r.ok)throw new Error(path+' HTTP '+r.status);return r.json()};
   const post=async(path,payload)=>{const r=await fetch(api()+path,{method:'POST',headers:{'content-type':'application/json',accept:'application/json'},body:JSON.stringify(payload)});if(!r.ok)throw new Error(path+' HTTP '+r.status);return r.json()};
+  const gridState=()=>({low:Number($('gridLow').value),high:Number($('gridHigh').value),count:Number($('gridCount').value),mode:$('gridMode').value,capital:Number($('gridCapital').value),stop:Number($('gridStop').value),take:Number($('gridTake').value),direction:$('gridDirection').value});
+  function renderGridPreview(){const g=gridState(),n=Math.max(2,Math.min(200,g.count||20)),range=g.high-g.low,step=g.mode==='geometric'&&g.low>0?Math.pow(g.high/g.low,1/(n-1))-1:range/(n-1);$('gridRange').textContent=Number.isFinite(range)?range.toFixed(6):'—';$('gridStep').textContent=Number.isFinite(step)?(g.mode==='geometric'?(step*100).toFixed(3)+'%':step.toFixed(6)):'—';$('gridPer').textContent=Number.isFinite(g.capital/n)?g.capital/n.toFixed?Number(g.capital/n).toFixed(2):'—':'—';$('gridLines').innerHTML=Array.from({length:Math.min(n,24)},(_,i)=>'<i style="height:'+((25+(i%7)*10))+'%"></i>').join('');}
+  document.querySelectorAll('[data-bot-type]').forEach(b=>b.onclick=()=>{botType=b.dataset.botType;document.querySelectorAll('[data-bot-type]').forEach(x=>x.classList.toggle('selected',x===b));$('gridConfig').classList.toggle('open',botType==='grid');if(botType==='grid')renderGridPreview();});
+  ['gridLow','gridHigh','gridCount','gridMode','gridCapital','gridStop','gridTake','gridDirection'].forEach(id=>$(id)?.addEventListener('input',renderGridPreview));
+  $('gridReset')?.addEventListener('click',()=>{Object.assign($('gridLow'),{value:'1.05000'});Object.assign($('gridHigh'),{value:'1.10000'});Object.assign($('gridCount'),{value:'20'});Object.assign($('gridCapital'),{value:'1000'});Object.assign($('gridStop'),{value:'1.04000'});Object.assign($('gridTake'),{value:'1.11000'});$('gridMode').value='arithmetic';$('gridDirection').value='neutral';renderGridPreview();});
+  $('gridApply')?.addEventListener('click',()=>{const g=gridState();$('blPrompt').value='Grid Bot '+symbol+' '+timeframe+' | range '+g.low+'-'+g.high+' | '+g.count+' grids | '+g.mode+' | capital '+g.capital+' | SL '+g.stop+' | TP '+g.take+' | '+g.direction;add('Configuración Grid preparada. Pulsa “Construir bot” para convertirla en sbt-bot-v1.','system');stage('build');});
+  renderGridPreview();
+
   const priceOf=c=>Number(c.close??c.last??c.price); const openOf=c=>Number(c.open??c.o??priceOf(c)); const highOf=c=>Number(c.high??c.h??Math.max(openOf(c),priceOf(c))); const lowOf=c=>Number(c.low??c.l??Math.min(openOf(c),priceOf(c)));
   function ema(vals,p){if(vals.length<p)return null;let k=2/(p+1),e=vals.slice(0,p).reduce((a,b)=>a+b,0)/p;for(let i=p;i<vals.length;i++)e=vals[i]*k+e*(1-k);return e}
   function rsi(vals,p=14){if(vals.length<=p)return null;let g=0,l=0;for(let i=1;i<=p;i++){let d=vals[i]-vals[i-1];if(d>=0)g+=d;else l-=d}let ag=g/p,al=l/p;for(let i=p+1;i<vals.length;i++){let d=vals[i]-vals[i-1];ag=((ag*(p-1))+(d>0?d:0))/p;al=((al*(p-1))+(d<0?-d:0))/p}return al===0?100:100-(100/(1+ag/al))}
