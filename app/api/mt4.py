@@ -17,6 +17,7 @@ BITEY_TRADING_URL = os.getenv(
 ).rstrip("/")
 _latest: dict[str, Any] | None = None
 _history: list[dict[str, Any]] = []
+_backtests: list[dict[str, Any]] = []
 
 
 class MT4TradingReport(BaseModel):
@@ -103,3 +104,38 @@ def latest_report():
 def report_history(limit: int = 20):
     limit = max(1, min(limit, 100))
     return {"items": list(reversed(_history[-limit:])), "count": len(_history)}
+
+
+@router.post("/bitey-backtest")
+async def ingest_backtest(
+    report: MT4TradingReport,
+    x_mt4_token: str | None = Header(default=None),
+):
+    """Store a Strategy Tester/research result without treating it as live trading evidence."""
+    _check_token(x_mt4_token)
+    if report.report_type not in {"backtest", "strategy_tester", "research"}:
+        report.report_type = "backtest"
+
+    payload = report.model_dump()
+    payload["timestamp"] = payload["timestamp"] or datetime.now(timezone.utc).isoformat()
+    payload["source_module"] = "Bitey System Bots Trading"
+    payload["evidence_class"] = "BACKTEST"
+    payload["execution"] = "none"
+    _backtests.append(payload)
+    if len(_backtests) > 100:
+        del _backtests[:-100]
+
+    return {
+        "accepted": True,
+        "stored": True,
+        "evidence_class": "BACKTEST",
+        "source": report.source,
+        "timestamp": payload["timestamp"],
+        "live_execution": False,
+    }
+
+
+@router.get("/bitey-backtests")
+def backtest_history(limit: int = 20):
+    limit = max(1, min(limit, 100))
+    return {"items": list(reversed(_backtests[-limit:])), "count": len(_backtests), "evidence_class": "BACKTEST"}
