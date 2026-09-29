@@ -20,6 +20,40 @@ _history: list[dict[str, Any]] = []
 _backtests: list[dict[str, Any]] = []
 
 
+class MT4EntryDiagnostic(BaseModel):
+    ticket: int | None = None
+    symbol: str = Field(min_length=1, max_length=32)
+    timeframe: str = Field(min_length=2, max_length=12)
+    side: str = Field(pattern=r"^(BUY|SELL)$")
+    timestamp: str | None = None
+    entry_price: float | None = None
+    exit_price: float | None = None
+    pnl: float = 0.0
+    r_multiple: float | None = None
+    score: float | None = None
+    score_gap: float | None = None
+    rsi: float | None = None
+    adx: float | None = None
+    atr: float | None = None
+    ema_fast: float | None = None
+    ema_slow: float | None = None
+    ema_200: float | None = None
+    regime: str = "UNKNOWN"
+    htf_direction: str = "NEUTRAL"
+    exit_reason: str = "UNKNOWN"
+    duration_bars: int | None = None
+    mae_pct: float | None = None
+    mfe_pct: float | None = None
+
+
+class MT4EntryDiagnosticsReport(BaseModel):
+    source: str = "AI_Trading_Bot_v1.34_Bitey"
+    symbol: str = Field(min_length=1, max_length=32)
+    timeframe: str = Field(min_length=2, max_length=12)
+    report_type: str = "entry_diagnostics"
+    trades: list[MT4EntryDiagnostic] = Field(default_factory=list, max_length=5000)
+
+
 class MT4TradingReport(BaseModel):
     source: str = "AI_Trading_Bot_v1.34_Bitey"
     symbol: str = Field(min_length=1, max_length=32)
@@ -132,6 +166,85 @@ async def ingest_backtest(
         "source": report.source,
         "timestamp": payload["timestamp"],
         "live_execution": False,
+    }
+
+
+def _bucket(value: float | None, edges: list[float]) -> str:
+    if value is None:
+        return "UNKNOWN"
+    for edge in edges:
+        if value < edge:
+            return f"<{edge:g}"
+    return f">={edges[-1]:g}"
+
+
+def _diagnostic_summary(trades: list[MT4EntryDiagnostic]) -> dict[str, Any]:
+    def group(rows: list[MT4EntryDiagnostic]) -> dict[str, Any]:
+        wins = sum(1 for t in rows if t.pnl > 0)
+        losses = sum(1 for t in rows if t.pnl < 0)
+        pnl = sum(t.pnl for t in rows)
+        return {
+            "trades": len(rows),
+            "wins": wins,
+            "losses": losses,
+            "win_rate": wins / len(rows) if rows else None,
+            "net_pnl": pnl,
+            "expectancy": pnl / len(rows) if rows else None,
+        }
+
+    losses = [t for t in trades if t.pnl < 0]
+    score_buckets: dict[str, list[MT4EntryDiagnostic]] = {}
+    for t in trades:
+        score_buckets.setdefault(_bucket(t.score, [5, 6, 7, 8]), []).append(t)
+
+    side = {s: group([t for t in trades if t.side == s]) for s in ("BUY", "SELL")}
+    regime = {}
+    for t in trades:
+        regime.setdefault(t.regime, []).append(t)
+    regime = {k: group(v) for k, v in regime.items()}
+
+    exit_reason = {}
+    for t in trades:
+        exit_reason.setdefault(t.exit_reason, []).append(t)
+    exit_reason = {k: group(v) for k, v in exit_reason.items()}
+
+    loss_patterns = {
+        "losses_by_score_bucket": {k: group(v) for k, v in score_buckets.items()},
+        "losses_by_side": {k: group([t for t in losses if t.side == k]) for k in ("BUY", "SELL")},
+        "losses_by_regime": {k: group([t for t in losses if t.regime == k]) for k in sorted({t.regime for t in losses})},
+        "losses_by_exit_reason": {k: group([t for t in losses if t.exit_reason == k]) for k in sorted({t.exit_reason for t in losses})},
+        "low_adx_losses": group([t for t in losses if t.adx is not None and t.adx < 20]),
+        "high_rsi_buy_losses": group([t for t in losses if t.side == "BUY" and t.rsi is not None and t.rsi > 65]),
+        "low_rsi_sell_losses": group([t for t in losses if t.side == "SELL" and t.rsi is not None and t.rsi < 35]),
+    }
+
+    return {
+        "contract": "bitey-mt4-entry-diagnostics-v1",
+        "trades": group(trades),
+        "loss_count": len(losses),
+        "loss_patterns": loss_patterns,
+        "instruction": "DIAGNOSTIC_ONLY: do not change entry thresholds, SL, TP, ATR or risk from this report alone.",
+    }
+
+
+@router.post("/bitey-entry-diagnostics")
+def ingest_entry_diagnostics(report: MT4EntryDiagnosticsReport, x_mt4_token: str | None = Header(default=None)):
+    """Analyze individual MT4 entries before any strategy optimization."""
+    _check_token(x_mt4_token)
+    payload = report.model_dump()
+    payload["timestamp"] = datetime.now(timezone.utc).isoformat()
+    payload["source_module"] = "Bitey System Bots Trading"
+    payload["analysis"] = _diagnostic_summary(report.trades)
+    return payload
+
+
+@router.get("/bitey-entry-diagnostics")
+def entry_diagnostics_help():
+    return {
+        "contract": "bitey-mt4-entry-diagnostics-v1",
+        "purpose": "Find which combinations produced losing MT4 entries before optimization.",
+        "required_fields": ["side", "pnl", "score", "rsi", "adx", "atr", "regime", "exit_reason"],
+        "optimization_locked": True,
     }
 
 
