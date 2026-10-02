@@ -71,3 +71,21 @@ Then use dry-run:
     docker compose run --rm freqtrade trade --config /freqtrade/user_data/config.freqai.dryrun.json --strategy BiteyFreqAI_v1 --freqaimodel LightGBMRegressor
 
 FreqAI performs periodic retraining and can emulate that process during backtesting. The SBT integration treats its predictions as research evidence, not as authorization to trade real money. Features must remain causal and must not look ahead into future candles.
+
+## 100% free operating mode
+
+The default research path is designed to avoid subscription, paid API and exchange-key requirements:
+
+- Freqtrade + FreqAI are open-source/not-for-profit software components.
+- Exchange credentials remain empty; public market data is sufficient for data download and dry-run research.
+- No Xiomex, paid AI API, hosted trading service or funded-account program is required.
+- The default config keeps Freqtrade REST disabled. An optional localhost-only API example is provided for SBT read integration.
+- The optional API example is still dry-run and uses no exchange credentials. Replace its local username/password/JWT values before use and never expose port 8080 publicly.
+
+Freqtrade documents a dedicated stable_freqai Docker image for FreqAI dependencies and recommends Docker for Windows experimentation/backtesting. FreqAI supports periodic retraining in both backtesting and dry-run modes. See the official documentation for the current image and commands.
+
+### Optional SBT read-only REST bridge
+
+Copy `user_data/config.freqai.dryrun.api.example.json` to a local config, replace the `REPLACE_WITH_*` values, and keep the listener on `127.0.0.1`. Then configure the SBT read-only adapter with `BITEY_FREQTRADE_URL`, `BITEY_FREQTRADE_USER` and `BITEY_FREQTRADE_PASSWORD`.
+
+The adapter exposes only `ping`, `status`, `balance` and `trades`. It does not expose Freqtrade execution commands such as `forceenter` or `forceexit`.
