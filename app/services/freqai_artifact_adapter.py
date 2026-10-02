@@ -9,6 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 import json
+import zipfile
 
 
 def _number(value: Any, default: float = 0.0) -> float:
@@ -62,8 +63,20 @@ def _extract_report_metrics(report: dict[str, Any]) -> tuple[int, float, dict[st
 
 
 def load_json_artifact(path: str | Path) -> dict[str, Any]:
-    """Load a JSON artifact produced by Freqtrade/FreqAI."""
-    return json.loads(Path(path).read_text(encoding="utf-8"))
+    """Load a JSON artifact produced by Freqtrade/FreqAI.
+
+    Freqtrade may package modern backtest exports as ZIP files. In that case
+    the first JSON report inside the archive is used.
+    """
+    source = Path(path)
+    if source.suffix.lower() == ".zip":
+        with zipfile.ZipFile(source) as archive:
+            candidates = [name for name in archive.namelist() if name.lower().endswith(".json")]
+            if not candidates:
+                raise ValueError(f"No JSON report found in {source}")
+            with archive.open(candidates[0]) as handle:
+                return json.loads(handle.read().decode("utf-8"))
+    return json.loads(source.read_text(encoding="utf-8"))
 
 
 def build_evidence_from_artifacts(
