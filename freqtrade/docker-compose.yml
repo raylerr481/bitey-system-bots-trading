@@ -1,6 +1,6 @@
 services:
   freqtrade:
-    image: freqtradeorg/freqtrade:stable
+    image: freqtradeorg/freqtrade:stable_freqai
     container_name: bitey-sbt-freqtrade
     restart: "no"
     volumes:
