@@ -55,3 +55,19 @@ The compose file keeps the API bound to localhost. Do not expose the Freqtrade A
 6. Keep LIVE disabled until the SBT real-money gate exists.
 
 See the official Freqtrade documentation for installation, strategy development, REST API and FreqAI.
+
+
+## FreqAI research mode
+
+The repository now includes an isolated `BiteyFreqAI_v1` research strategy and a `config.freqai.dryrun.json` configuration. FreqAI is enabled, but the config keeps `dry_run: true` and contains no exchange credentials.
+
+Run the deterministic baseline first:
+
+    docker compose run --rm freqtrade download-data --config /freqtrade/user_data/config.freqai.dryrun.json --pairs BTC/USDT ETH/USDT --days 60 -t 1h
+    docker compose run --rm freqtrade backtesting --config /freqtrade/user_data/config.freqai.dryrun.json --strategy BiteyFreqAI_v1 --freqaimodel LightGBMRegressor --timerange 20260901-20261001 -i 1h
+
+Then use dry-run:
+
+    docker compose run --rm freqtrade trade --config /freqtrade/user_data/config.freqai.dryrun.json --strategy BiteyFreqAI_v1 --freqaimodel LightGBMRegressor
+
+FreqAI performs periodic retraining and can emulate that process during backtesting. The SBT integration treats its predictions as research evidence, not as authorization to trade real money. Features must remain causal and must not look ahead into future candles.
