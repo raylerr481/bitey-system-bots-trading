@@ -14,6 +14,7 @@ PLATFORMS = [
     {"id": "mt5", "name": "MetaTrader 5", "modes": ["demo"], "transport": ["bridge", "api"], "live_enabled": False, "bidirectional": True},
     {"id": "tradingview", "name": "TradingView", "modes": ["webhook", "paper"], "transport": ["webhook"], "live_enabled": False, "bidirectional": True},
     {"id": "alpaca", "name": "Alpaca", "modes": ["paper"], "transport": ["api", "sdk"], "live_enabled": False, "bidirectional": True},
+    {"id": "freqtrade", "name": "Freqtrade + FreqAI", "modes": ["research", "backtest", "demo"], "transport": ["docker", "rest"], "live_enabled": False, "bidirectional": True},
     {"id": "webhook-generic", "name": "Generic Webhook", "modes": ["demo", "paper"], "transport": ["webhook"], "live_enabled": False, "bidirectional": True},
     {"id": "api-generic", "name": "Generic REST API", "modes": ["demo", "paper"], "transport": ["api"], "live_enabled": False, "bidirectional": True},
 ]
