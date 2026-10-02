@@ -22,11 +22,12 @@ def test_negative_shifts_are_confined_to_targets():
 def test_entry_exit_use_predictions_not_raw_targets():
     source = STRATEGY.read_text(encoding="utf-8")
     section = source[source.index("def populate_entry_trend"):source.index("def custom_exit")]
-    assert "&-future_return_mean" in section
+    assert '_prediction(dataframe, "future_return")' in section
     assert '&-future_return"' not in section
     assert '&-future_max_profit"' not in section
     assert '&-future_max_loss"' not in section
     assert '&-trade_outcome"' not in section
+    assert '&-future_return_std' in section
 
 def test_no_iloc_or_expanding():
     source = STRATEGY.read_text(encoding="utf-8")
