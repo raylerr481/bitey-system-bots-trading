@@ -1,0 +1,11 @@
+user_data/*.sqlite
+user_data/*.sqlite-shm
+user_data/*.sqlite-wal
+user_data/logs/
+user_data/.last_result.json
+user_data/config.json
+user_data/config.*.json
+!user_data/config.dryrun.json
+__pycache__/
+*.pyc
+.env
