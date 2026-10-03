@@ -57,3 +57,30 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 })();
+
+
+(() => {
+  const BOT_CATALOG = [
+    {id:'grid',cat:'crypto',icon:'▦',name:'Grid Bot',market:'BTC/USDT',risk:'Medium',desc:'Opera una malla de órdenes dentro de un rango definido.'},
+    {id:'dca',cat:'portfolio',icon:'◉',name:'DCA Bot',market:'BTC/USDT',risk:'Low / Medium',desc:'Entradas escalonadas con control de capital y exposición.'},
+    {id:'trend',cat:'forex',icon:'↗',name:'Trend Bot',market:'EUR/USD',risk:'Medium',desc:'EMA + RSI + ATR para seguimiento de tendencia.'},
+    {id:'breakout',cat:'crypto',icon:'⇧',name:'Breakout Bot',market:'BTC/USDT',risk:'Medium / High',desc:'Rupturas confirmadas mediante filtro de volatilidad.'},
+    {id:'mean-reversion',cat:'forex',icon:'↔',name:'Mean Reversion',market:'EUR/USD',risk:'Medium',desc:'Retorno a la media con filtros de régimen.'},
+    {id:'rebalance',cat:'portfolio',icon:'⇄',name:'Rebalance Bot',market:'Multi-asset',risk:'Low',desc:'Mantiene pesos objetivo de una cartera.'}
+  ];
+  function mountBotCenter(){
+    const page=document.getElementById('bot-lab-page'); if(!page||page.dataset.botCenterV1)return;
+    page.dataset.botCenterV1='1';
+    const host=page.querySelector('.bot-type-area'); if(!host)return;
+    const box=document.createElement('section'); box.className='card'; box.style.cssText='margin:18px 0;padding:20px';
+    box.innerHTML='<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><span class="eyebrow">BITEY BOT CENTER</span><h2 style="margin:5px 0">Bots incorporados</h2><p class="sub">Elige un bot listo para configurar. Backtest y Risk Gate siguen siendo obligatorios.</p></div><span class="badge">DEMO / PAPER · LIVE LOCKED</span></div><div class="choice" data-bot-filters><button class="selected" data-bot-filter="all"><strong>Todos</strong><span>Catálogo completo</span></button><button data-bot-filter="crypto"><strong>Crypto</strong><span>BTC · ETH</span></button><button data-bot-filter="forex"><strong>Forex</strong><span>EUR/USD</span></button><button data-bot-filter="portfolio"><strong>Portfolio</strong><span>DCA · Rebalance</span></button></div><div id="biteyBotCatalog" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px"></div><div id="biteyBotSpec" class="result" style="display:none"></div>';
+    host.parentNode.insertBefore(box,host);
+    const grid=box.querySelector('#biteyBotCatalog'),spec=box.querySelector('#biteyBotSpec');
+    const render=(filter)=>{grid.innerHTML=BOT_CATALOG.filter(b=>filter==='all'||b.cat===filter).map(b=>'<article class="card" style="padding:15px"><div style="display:flex;justify-content:space-between"><span style="font-size:24px;color:var(--accent)">'+b.icon+'</span><span class="badge">'+b.risk+'</span></div><h3 style="margin:10px 0 5px">'+b.name+'</h3><p class="sub">'+b.desc+'</p><div class="small" style="margin:8px 0">'+b.market+'</div><div class="toolbar"><button class="btn blue" data-bot-view="'+b.id+'">Ver configuración</button><button class="btn" data-bot-test="'+b.id+'">Backtest</button></div></article>').join('');};
+    render('all');
+    box.querySelectorAll('[data-bot-filter]').forEach(b=>b.addEventListener('click',()=>{box.querySelectorAll('[data-bot-filter]').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');render(b.dataset.botFilter)}));
+    box.addEventListener('click',e=>{const btn=e.target.closest('[data-bot-view],[data-bot-test]');if(!btn)return;const b=BOT_CATALOG.find(x=>x.id===(btn.dataset.botView||btn.dataset.botTest));if(!b)return;spec.style.display='block';spec.textContent=(btn.dataset.botTest?'BACKTEST REQUEST':'BOT SPECIFICATION')+'\\n\\nName: '+b.name+'\\nMarket: '+b.market+'\\nRisk: '+b.risk+'\\nMode: DEMO/PAPER\\nLifecycle: DRAFT → SIMULATED → ROBUSTNESS → VALIDATED → DEMO → PAPER\\n\\n'+b.desc+'\\n\\nNo live order is authorized by this action.';spec.scrollIntoView({behavior:'smooth',block:'nearest'});});
+  }
+  function boot(){mountBotCenter(); if(!document.getElementById('bot-lab-page')||document.getElementById('bot-lab-page')?.dataset.botCenterV1)return;setTimeout(boot,250)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
