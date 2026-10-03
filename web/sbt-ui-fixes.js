@@ -230,7 +230,7 @@
     btn.dataset.myBotsHooked='1';
     btn.addEventListener('click',()=>{
       const c=selectedConfig();if(!c?.bot_type)return;
-      const bots=load();const b={id:c.bot_type+'-'+Date.now(),bot_type:c.bot_type,name:(SPECS?.[c.bot_type]?.title)||c.bot_type,config:c,stage:'DRAFT',strategy_score:null,robustness_score:null,updated_at:new Date().toISOString()};
+      const bots=load();const b={id:c.bot_type+'-'+Date.now(),bot_type:c.bot_type,name:({grid:'Grid Bot',dca:'DCA Bot',trend:'Trend Bot',breakout:'Breakout Bot','mean-reversion':'Mean Reversion',rebalance:'Rebalance Bot'}[c.bot_type]||c.bot_type),config:c,stage:'DRAFT',strategy_score:null,robustness_score:null,updated_at:new Date().toISOString()};
       bots.unshift(b);save(bots);window.dispatchEvent(new CustomEvent('sbt:bot-saved',{detail:b}));
     });
   }
