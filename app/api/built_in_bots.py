@@ -1,0 +1,106 @@
+"""Built-in SBT bot strategies for deterministic demo/paper backtesting."""
+from fastapi import APIRouter
+from pydantic import BaseModel, Field
+
+router = APIRouter(prefix="/api/v1/built-in-bots", tags=["built-in-bots"])
+
+
+class BuiltInBotRequest(BaseModel):
+    bot_type: str = Field(min_length=2, max_length=32)
+    prices: list[float] = Field(min_length=40)
+    initial_capital: float = Field(default=10000, gt=0)
+    config: dict = Field(default_factory=dict)
+
+
+def _sma(x, n):
+    return sum(x[-n:]) / n if len(x) >= n else None
+
+
+def _ema_series(x, n):
+    if len(x) < n:
+        return []
+    a = 2 / (n + 1)
+    out = [sum(x[:n]) / n]
+    for p in x[n:]:
+        out.append(a * p + (1 - a) * out[-1])
+    return out
+
+
+def _rsi(x, n=14):
+    if len(x) <= n:
+        return 50.0
+    gains = [max(0.0, x[i] - x[i-1]) for i in range(1, len(x))]
+    losses = [max(0.0, x[i-1] - x[i]) for i in range(1, len(x))]
+    ag = sum(gains[-n:]) / n
+    al = sum(losses[-n:]) / n
+    return 100.0 if al == 0 else 100 - 100 / (1 + ag / al)
+
+
+def _atr(x, n=14):
+    if len(x) <= n:
+        return 0.0
+    return sum(abs(x[i] - x[i-1]) for i in range(len(x)-n, len(x))) / n
+
+
+def _run(prices, capital, signal_fn, fee=0.001):
+    cash=float(capital); qty=0.0; entry=None; trades=wins=0; peak=capital; max_dd=0.0
+    for i, price in enumerate(prices):
+        action=signal_fn(prices,i)
+        if action=="buy" and qty==0:
+            qty=cash/(price*(1+fee)); cash=0.0; entry=price; trades+=1
+        elif action=="sell" and qty>0:
+            cash=qty*price*(1-fee)
+            if entry is not None and price>entry: wins+=1
+            qty=0.0; entry=None
+        equity=cash+qty*price; peak=max(peak,equity)
+        max_dd=max(max_dd,(peak-equity)/peak*100)
+    final=cash+qty*prices[-1]
+    return {"initial_capital":capital,"final_equity":final,"total_return_pct":(final/capital-1)*100,
+            "trades":trades,"wins":wins,"losses":max(0,trades-wins),
+            "win_rate_pct":wins/trades*100 if trades else 0,"max_drawdown_pct":max_dd,
+            "mode":"DEMO/PAPER","live":False}
+
+
+def _signal(kind,c):
+    def fn(p,i):
+        if i<35:return "hold"
+        if kind=="grid":
+            lo=float(c.get("lower",min(p[-30:]))); hi=float(c.get("upper",max(p[-30:])))
+            grids=max(2,int(c.get("grids",20))); step=(hi-lo)/grids
+            if step<=0:return "hold"
+            a=round((p[i]-lo)/step); b=round((p[i-1]-lo)/step)
+            return "buy" if a<b and p[i]<=hi else ("sell" if a>b and p[i]>=lo else "hold")
+        if kind=="dca":
+            step=float(c.get("step",3))/100; take=float(c.get("take",2))/100
+            return "buy" if p[i]<p[i-1]*(1-step) else ("sell" if p[i]>p[i-1]*(1+take) else "hold")
+        if kind=="trend":
+            fast=int(c.get("emaFast",9)); slow=int(c.get("emaSlow",21)); r=float(c.get("rsi",50))
+            ef=_ema_series(p[:i+1],fast); es=_ema_series(p[:i+1],slow)
+            if not ef or not es:return "hold"
+            return "buy" if ef[-1]>es[-1] and _rsi(p[:i+1])>=r else ("sell" if ef[-1]<es[-1] else "hold")
+        if kind=="breakout":
+            n=int(c.get("lookback",20)); a=float(c.get("atr",1.5))*_atr(p[:i+1])
+            hi=max(p[i-n:i]); lo=min(p[i-n:i])
+            return "buy" if p[i]>hi+a else ("sell" if p[i]<lo-a else "hold")
+        if kind=="mean-reversion":
+            n=20; mid=_sma(p[:i+1],n)
+            dev=(sum((v-mid)**2 for v in p[i-n+1:i+1])/n)**0.5
+            r=_rsi(p[:i+1]); low=float(c.get("rsiLow",30)); high=float(c.get("rsiHigh",70))
+            return "buy" if p[i]<mid-2*dev and r<=low else ("sell" if p[i]>mid+2*dev and r>=high else "hold")
+        if kind=="rebalance":
+            return "buy" if i==35 else ("sell" if (i-35)%20==0 else "hold")
+        return "hold"
+    return fn
+
+
+@router.post("/backtest")
+def built_in_backtest(request: BuiltInBotRequest):
+    kind=request.bot_type.lower()
+    if kind not in {"grid","dca","trend","breakout","mean-reversion","rebalance"}:
+        return {"valid":False,"error":"Unsupported built-in bot type","live":False}
+    prices=[float(x) for x in request.prices]
+    if any(x<=0 for x in prices):
+        return {"valid":False,"error":"Prices must be positive","live":False}
+    return {"valid":True,"contract":"sbt-built-in-bot-v1","bot_type":kind,
+            **_run(prices,request.initial_capital,_signal(kind,request.config)),
+            "note":"Deterministic close-price simulation; not a live execution forecast."}
