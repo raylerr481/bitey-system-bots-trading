@@ -12,6 +12,12 @@ class BuiltInBotRequest(BaseModel):
     config: dict = Field(default_factory=dict)
 
 
+class BuiltInRiskRequest(BaseModel):
+    bot_type: str = Field(min_length=2, max_length=32)
+    initial_capital: float = Field(default=10000, gt=0)
+    config: dict = Field(default_factory=dict)
+
+
 def _sma(x, n):
     return sum(x[-n:]) / n if len(x) >= n else None
 
@@ -108,7 +114,7 @@ def built_in_backtest(request: BuiltInBotRequest):
 
 
 @router.post("/risk-preview")
-def built_in_risk_preview(request: BuiltInBotRequest):
+def built_in_risk_preview(request: BuiltInRiskRequest):
     kind=request.bot_type.lower()
     limits = {
         "grid": (0.20, 0.02, 0.04),
@@ -176,3 +182,36 @@ def built_in_robustness(request: BuiltInBotRequest):
         "live": False,
         "note": "Heurística de robustness para screening; no constituye garantía ni optimización estadística."
     }
+
+
+@router.post("/demo/simulate")
+def built_in_demo_simulate(request: BuiltInBotRequest):
+    """Run a deterministic virtual session. This endpoint never places live orders."""
+    kind = request.bot_type.lower()
+    allowed = {"grid", "dca", "trend", "breakout", "mean-reversion", "rebalance"}
+    if kind not in allowed:
+        return {"valid": False, "error": "Unsupported built-in bot type", "live": False}
+    prices = [float(x) for x in request.prices]
+    if any(x <= 0 for x in prices):
+        return {"valid": False, "error": "Prices must be positive", "live": False}
+    signal = _signal(kind, request.config)
+    result = _run(prices, request.initial_capital, signal)
+    equity = []
+    cash = float(request.initial_capital)
+    qty = 0.0
+    fee = 0.001
+    for i, price in enumerate(prices):
+        action = signal(prices, i)
+        if action == "buy" and qty == 0:
+            qty = cash / (price * (1 + fee)); cash = 0.0
+        elif action == "sell" and qty > 0:
+            cash = qty * price * (1 - fee); qty = 0.0
+        equity.append(round(cash + qty * price, 8))
+    return {"valid": True, "contract": "sbt-built-in-demo-v1", "bot_type": kind,
+            "session_mode": "VIRTUAL", "live": False, "virtual_orders": True,
+            "initial_capital": request.initial_capital, "final_equity": result["final_equity"],
+            "total_return_pct": result["total_return_pct"], "trades": result["trades"],
+            "wins": result["wins"], "losses": result["losses"],
+            "win_rate_pct": result["win_rate_pct"], "max_drawdown_pct": result["max_drawdown_pct"],
+            "equity_curve": equity,
+            "note": "Simulación virtual determinista. No se envían órdenes a ningún broker o exchange."}
