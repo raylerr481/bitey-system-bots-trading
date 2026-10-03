@@ -287,10 +287,22 @@ def built_in_paper_simulate(request: BuiltInBotRequest):
         return {"valid": False, "error": "Prices must be positive", "live": False}
     signal = _signal(kind, request.config)
     result = _run(prices, request.initial_capital, signal)
+    equity = []
+    cash = float(request.initial_capital)
+    qty = 0.0
+    fee = 0.001
+    for i, price in enumerate(prices):
+        action = signal(prices, i)
+        if action == "buy" and qty == 0:
+            qty = cash / (price * (1 + fee)); cash = 0.0
+        elif action == "sell" and qty > 0:
+            cash = qty * price * (1 - fee); qty = 0.0
+        equity.append(round(cash + qty * price, 8))
     return {"valid": True, "contract": "sbt-built-in-paper-v1", "bot_type": kind,
             "session_mode": "PAPER", "live": False, "virtual_orders": True,
             "initial_capital": request.initial_capital, "final_equity": result["final_equity"],
             "total_return_pct": result["total_return_pct"], "trades": result["trades"],
             "wins": result["wins"], "losses": result["losses"],
             "win_rate_pct": result["win_rate_pct"], "max_drawdown_pct": result["max_drawdown_pct"],
+            "equity_curve": equity,
             "note": "Paper trading broker-free. No orders are sent to any broker or exchange."}
