@@ -293,3 +293,41 @@
   function boot(){mountDemoPanel();if(!document.querySelector('#bot-lab-page[data-bot-demo-v1]'))setTimeout(boot,250)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
+
+
+(() => {
+  function mountPaperPanel(){
+    const page=document.getElementById('bot-lab-page');
+    const demo=page?.querySelector('#sbtStartDemo')?.closest('section');
+    if(!page||!demo||page.dataset.botPaperV1)return;
+    page.dataset.botPaperV1='1';
+    const p=document.createElement('section');p.className='card';p.style.cssText='margin:18px 0;padding:20px';
+    p.innerHTML='<span class="eyebrow">PAPER TRADING</span><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><h2 style="margin:5px 0">Paper</h2><p class="sub">Simulación continua sin dinero real. Requiere bot VALIDATED y Demo completada.</p></div><span class="badge">PAPER · NO LIVE ORDERS</span></div><div class="toolbar" style="margin-top:14px"><button class="btn primary" id="sbtStartPaper">Iniciar Paper</button></div><div id="sbtPaperResult" class="result" style="margin-top:14px">Paper bloqueado hasta completar Demo.</div>';
+    demo.insertAdjacentElement('afterend',p);
+    const out=p.querySelector('#sbtPaperResult');
+    async function run(){
+      const d=window.__sbtLastDemo, c=window.__sbtSelectedBotConfig;
+      if(!(d?.valid&&c?.bot_type)){out.textContent='PAPER BLOQUEADO · ejecuta una Demo válida primero.';return;}
+      const base=((window.SBT_API_URL||localStorage.getItem('sbt_api_base')||'').replace(/\/$/,''));
+      const symbol=c.symbol||'EURUSD',tf=c.timeframe||'M5';
+      out.textContent='Preparando Paper…';
+      try{
+        const mr=await fetch(base+'/api/v1/market/candles/'+encodeURIComponent(symbol)+'?timeframe='+encodeURIComponent(tf)+'&limit=200');
+        if(!mr.ok)throw new Error('Market data HTTP '+mr.status);
+        const md=await mr.json(), candles=Array.isArray(md)?md:(Array.isArray(md.candles)?md.candles:[]);
+        const prices=candles.map(x=>Number(x.close)).filter(Number.isFinite);
+        if(prices.length<40)throw new Error('Insuficientes datos: '+prices.length);
+        const pr=await fetch(base+'/api/v1/built-in-bots/paper/simulate',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({bot_type:c.bot_type,prices,initial_capital:Number(c.capital||10000),config:c})});
+        if(!pr.ok)throw new Error('Paper HTTP '+pr.status);
+        const x=await pr.json();if(x.valid===false)throw new Error(x.error||'Paper rejected');
+        window.__sbtLastPaper=x;
+        localStorage.setItem('sbt.paper.last',JSON.stringify({config:c,result:x,updated_at:new Date().toISOString()}));
+        out.textContent='PAPER ACTIVO · Equity '+Number(x.final_equity||0).toFixed(2)+' · Return '+Number(x.total_return_pct||0).toFixed(2)+'% · Trades '+Number(x.trades||0)+' · Win rate '+Number(x.win_rate_pct||0).toFixed(1)+'% · DD '+Number(x.max_drawdown_pct||0).toFixed(2)+'%. PAPER · NO LIVE ORDERS.';
+      }catch(e){out.textContent='Paper unavailable: '+e.message+'.';}
+    }
+    p.querySelector('#sbtStartPaper').onclick=run;
+    try{const saved=JSON.parse(localStorage.getItem('sbt.paper.last')||'null');if(saved?.result)out.textContent='Último Paper · Equity '+Number(saved.result.final_equity||0).toFixed(2)+' · Return '+Number(saved.result.total_return_pct||0).toFixed(2)+'% · '+new Date(saved.updated_at).toLocaleString()+' · PAPER.';}catch(_e){}
+  }
+  function boot(){mountPaperPanel();if(!document.querySelector('#bot-lab-page[data-bot-paper-v1]'))setTimeout(boot,250)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
