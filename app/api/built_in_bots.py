@@ -104,3 +104,75 @@ def built_in_backtest(request: BuiltInBotRequest):
     return {"valid":True,"contract":"sbt-built-in-bot-v1","bot_type":kind,
             **_run(prices,request.initial_capital,_signal(kind,request.config)),
             "note":"Deterministic close-price simulation; not a live execution forecast."}
+
+
+
+@router.post("/risk-preview")
+def built_in_risk_preview(request: BuiltInBotRequest):
+    kind=request.bot_type.lower()
+    limits = {
+        "grid": (0.20, 0.02, 0.04),
+        "dca": (0.15, 0.02, 0.04),
+        "trend": (0.10, 0.015, 0.03),
+        "breakout": (0.10, 0.02, 0.04),
+        "mean-reversion": (0.10, 0.015, 0.03),
+        "rebalance": (0.25, 0.01, 0.02),
+    }
+    if kind not in limits:
+        return {"valid": False, "error": "Unsupported built-in bot type", "live": False}
+    position_pct, trade_loss_pct, daily_loss_pct = limits[kind]
+    capital = request.initial_capital
+    return {
+        "valid": True,
+        "contract": "sbt-built-in-risk-v1",
+        "bot_type": kind,
+        "capital": capital,
+        "max_position_value": round(capital * position_pct, 8),
+        "max_position_pct": position_pct * 100,
+        "configured_loss_per_trade": round(capital * trade_loss_pct, 8),
+        "configured_loss_per_trade_pct": trade_loss_pct * 100,
+        "configured_daily_loss": round(capital * daily_loss_pct, 8),
+        "configured_daily_loss_pct": daily_loss_pct * 100,
+        "mode": "DEMO/PAPER",
+        "live": False,
+        "warning": "Configuración preventiva; no protege contra gaps, slippage ni fallos de ejecución."
+    }
+
+
+@router.post("/robustness")
+def built_in_robustness(request: BuiltInBotRequest):
+    kind=request.bot_type.lower()
+    if kind not in {"grid", "dca", "trend", "breakout", "mean-reversion", "rebalance"}:
+        return {"valid": False, "error": "Unsupported built-in bot type", "live": False}
+    prices=[float(x) for x in request.prices]
+    if any(x <= 0 for x in prices):
+        return {"valid": False, "error": "Prices must be positive", "live": False}
+    split=max(20, int(len(prices) * 0.70))
+    if split >= len(prices) - 10:
+        return {"valid": False, "error": "Insufficient data for robustness split", "live": False}
+    train=prices[:split]
+    test=prices[split:]
+    base=_run(prices, request.initial_capital, _signal(kind, request.config))
+    oos=_run(test, request.initial_capital, _signal(kind, request.config))
+    stress=_run(prices, request.initial_capital, _signal(kind, request.config), fee=0.002)
+    score=0.0
+    score += max(0.0, min(40.0, oos["total_return_pct"] * 4.0 + 20.0))
+    score += max(0.0, min(30.0, 30.0 - oos["max_drawdown_pct"] * 2.0))
+    score += 15.0 if oos["trades"] >= 3 else 7.5 if oos["trades"] >= 1 else 0.0
+    score += 15.0 if stress["total_return_pct"] >= -2.0 else 5.0 if stress["total_return_pct"] >= -5.0 else 0.0
+    status="PASS" if score >= 60 and oos["trades"] >= 1 else "REVIEW"
+    return {
+        "valid": True,
+        "contract": "sbt-built-in-robustness-v1",
+        "bot_type": kind,
+        "score": round(score, 2),
+        "status": status,
+        "in_sample_points": len(train),
+        "out_of_sample_points": len(test),
+        "base": base,
+        "out_of_sample": oos,
+        "fee_stress_0_20pct": stress,
+        "mode": "DEMO/PAPER",
+        "live": False,
+        "note": "Heurística de robustness para screening; no constituye garantía ni optimización estadística."
+    }
