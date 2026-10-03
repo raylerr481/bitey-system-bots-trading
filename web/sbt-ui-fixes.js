@@ -105,7 +105,7 @@
     function render(id){selected=SPECS[id]?id:null;if(!selected){title.textContent='Selecciona un bot';form.innerHTML='<div class="small">Usa “Ver configuración” en el catálogo.</div>';return;}const s=SPECS[id];title.textContent=s.title;form.innerHTML=s.fields.map(([k,l,v,t,o])=>t==='select'?'<label>'+l+'<select data-bot-field="'+k+'">'+o.split(',').map(x=>'<option>'+x+'</option>').join('')+'</select></label>':'<label>'+l+'<input data-bot-field="'+k+'" type="'+t+'" value="'+v+'" step="any"></label>').join('');const saved=JSON.parse(sessionStorage.getItem('sbt.bot.'+id)||'null');if(saved)Object.entries(saved).forEach(([k,v])=>{const e=form.querySelector('[data-bot-field="'+k+'"]');if(e)e.value=v;});}
     const read=()=>{const o={bot_type:selected};form.querySelectorAll('[data-bot-field]').forEach(e=>o[e.dataset.botField]=e.value);return o;};
     p.querySelector('#sbtBotSave').onclick=()=>{if(!selected)return;sessionStorage.setItem('sbt.bot.'+selected,JSON.stringify(read()));out.style.display='block';out.textContent='Configuración guardada en esta sesión · '+SPECS[selected].title+'.';};
-    p.querySelector('#sbtBotRisk').onclick=async()=>{if(!selected){out.style.display='block';out.textContent='Selecciona un bot primero.';return;}out.style.display='block';out.textContent='Consultando Risk Gate…';try{const base=((window.SBT_API_URL||localStorage.getItem('sbt_api_base')||'').replace(/\/$/,''));const cfg=read();const r=await fetch(base+'/api/v1/built-in-bots/risk-preview',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({bot_type:selected,prices:[1,1],initial_capital:Number(cfg.capital||10000),config:cfg})});if(!r.ok)throw new Error('API HTTP '+r.status);const d=await r.json();if(d.valid===false)throw new Error(d.error||'Risk preview rejected');window.__sbtLastRisk=d;window.dispatchEvent(new CustomEvent('sbt:risk-preview',{detail:{risk:d,config:cfg}}));out.textContent='RISK GATE · posición máxima '+Number(d.max_position_value||0).toFixed(2)+' · pérdida/trade '+Number(d.configured_loss_per_trade||0).toFixed(2)+' · pérdida diaria '+Number(d.configured_daily_loss||0).toFixed(2)+'. DEMO/PAPER · LIVE LOCKED.';}catch(e){out.textContent='Risk Gate unavailable: '+e.message+'. No se muestran límites inventados.';}};
+    p.querySelector('#sbtBotRisk').onclick=async()=>{if(!selected){out.style.display='block';out.textContent='Selecciona un bot primero.';return;}out.style.display='block';out.textContent='Consultando Risk Gate…';try{const base=((window.SBT_API_URL||localStorage.getItem('sbt_api_base')||'').replace(/\/$/,''));const cfg=read();const r=await fetch(base+'/api/v1/built-in-bots/risk-preview',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({bot_type:selected,initial_capital:Number(cfg.capital||10000),config:cfg})});if(!r.ok)throw new Error('API HTTP '+r.status);const d=await r.json();if(d.valid===false)throw new Error(d.error||'Risk preview rejected');window.__sbtLastRisk=d;window.dispatchEvent(new CustomEvent('sbt:risk-preview',{detail:{risk:d,config:cfg}}));out.textContent='RISK GATE · posición máxima '+Number(d.max_position_value||0).toFixed(2)+' · pérdida/trade '+Number(d.configured_loss_per_trade||0).toFixed(2)+' · pérdida diaria '+Number(d.configured_daily_loss||0).toFixed(2)+'. DEMO/PAPER · LIVE LOCKED.';}catch(e){out.textContent='Risk Gate unavailable: '+e.message+'. No se muestran límites inventados.';}};
     p.querySelector('#sbtBotBacktest').onclick=()=>{if(!selected){out.style.display='block';out.textContent='Selecciona un bot primero.';return;}const c=read();window.__sbtSelectedBotConfig=c;window.dispatchEvent(new CustomEvent('sbt:bot-config',{detail:c}));out.style.display='block';out.textContent='BACKTEST PREPARADO · '+SPECS[selected].title+' · '+(c.symbol||c.assets)+' · DEMO/PAPER. No se autoriza live.';};
     page.addEventListener('click',e=>{const b=e.target.closest('[data-bot-view]');if(b)setTimeout(()=>render(b.dataset.botView),0);});
     render(null);
@@ -125,7 +125,7 @@
       if(!r.ok)throw new Error('Market data HTTP '+r.status);
       const d=await r.json(), candles=Array.isArray(d)?d:(Array.isArray(d.candles)?d.candles:[]);
       const prices=candles.map(x=>Number(x.close)).filter(Number.isFinite);
-      if(prices.length<30)throw new Error('Insuficientes datos: '+prices.length+' cierres');
+      if(prices.length<40)throw new Error('Insuficientes datos: '+prices.length+' cierres; se requieren al menos 40');
       const br=await fetch(base+'/api/v1/built-in-bots/backtest',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({bot_type:c.bot_type,prices,initial_capital:Number(c.capital||10000),config:c})});
       if(!br.ok)throw new Error('Backtest HTTP '+br.status);
       const b=await br.json(); if(b.valid===false)throw new Error(b.error||'Backtest rejected'); window.__sbtLastBacktest=b;
@@ -134,7 +134,7 @@
         const rr=await fetch(base+'/api/v1/built-in-bots/robustness',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({bot_type:c.bot_type,prices,initial_capital:Number(c.capital||10000),config:c})});
         if(rr.ok){const rb=await rr.json();window.__sbtLastRobustness=rb;window.dispatchEvent(new CustomEvent('sbt:robustness',{detail:{robustness:rb,config:c,symbol,timeframe:tf}}));}
       }catch(_e){/* robustness is advisory; backtest remains available */}
-      out.textContent='BACKTEST DISPONIBLE · '+c.bot_type+' · '+symbol+' '+tf+' · '+prices.length+' cierres · P/L '+Number(b.total_pnl??b.realized_pnl??0).toFixed(2)+'. Este resultado usa el motor SBT disponible; parámetros no soportados por el endpoint no se simulan. Sin órdenes live.';
+      out.textContent='BACKTEST DISPONIBLE · '+c.bot_type+' · '+symbol+' '+tf+' · '+prices.length+' cierres · Equity final '+Number(b.final_equity||0).toFixed(2)+' · Return '+Number(b.total_return_pct||0).toFixed(2)+'% · Trades '+Number(b.trades||0)+' · Win rate '+Number(b.win_rate_pct||0).toFixed(1)+'% · DD '+Number(b.max_drawdown_pct||0).toFixed(2)+'%. Sin órdenes live.';
     }catch(e){out.textContent='Backtest unavailable: '+e.message+'. No se muestran métricas inventadas.';}
   });
 })();
@@ -248,5 +248,48 @@
   window.addEventListener('sbt:backtest',syncEvaluationToBot);
   window.addEventListener('sbt:robustness',syncEvaluationToBot);
   window.addEventListener('sbt:risk-preview',syncEvaluationToBot);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
+
+
+(() => {
+  function mountDemoPanel(){
+    const page=document.getElementById('bot-lab-page');
+    const evalPanel=page?.querySelector('#sbtEvalDecision')?.closest('section');
+    if(!page||!evalPanel||page.dataset.botDemoV1)return;
+    page.dataset.botDemoV1='1';
+    const p=document.createElement('section'); p.className='card'; p.style.cssText='margin:18px 0;padding:20px';
+    p.innerHTML='<span class="eyebrow">DEMO BOT</span><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><h2 style="margin:5px 0">Demo virtual</h2><p class="sub">Ejecuta el bot con capital virtual usando el mismo motor determinista. No conecta dinero real.</p></div><span class="badge">VIRTUAL · NO LIVE ORDERS</span></div><div class="toolbar" style="margin-top:14px"><button class="btn primary" id="sbtStartDemo">Iniciar Demo</button><button class="btn" id="sbtRefreshDemo">Actualizar</button></div><div id="sbtDemoResult" class="result" style="margin-top:14px">Demo bloqueado hasta VALIDATED.</div>';
+    evalPanel.insertAdjacentElement('afterend',p);
+    const out=p.querySelector('#sbtDemoResult');
+    async function run(){
+      const b=window.__sbtLastBacktest||{}, rb=window.__sbtLastRobustness||{}, risk=window.__sbtLastRisk;
+      const c=window.__sbtSelectedBotConfig;
+      if(!(b.valid&&rb.valid&&rb.status==='PASS'&&risk&&c?.bot_type)){out.textContent='DEMO BLOQUEADO · primero completa Backtest + Robustness PASS + Risk Gate.';return;}
+      const base=((window.SBT_API_URL||localStorage.getItem('sbt_api_base')||'').replace(/\/$/,''));
+      const symbol=c.symbol||'EURUSD', tf=c.timeframe||'M5';
+      out.textContent='Iniciando sesión virtual…';
+      try{
+        const mr=await fetch(base+'/api/v1/market/candles/'+encodeURIComponent(symbol)+'?timeframe='+encodeURIComponent(tf)+'&limit=200');
+        if(!mr.ok)throw new Error('Market data HTTP '+mr.status);
+        const md=await mr.json(), candles=Array.isArray(md)?md:(Array.isArray(md.candles)?md.candles:[]);
+        const prices=candles.map(x=>Number(x.close)).filter(Number.isFinite);
+        if(prices.length<40)throw new Error('Insuficientes datos para Demo: '+prices.length);
+        const dr=await fetch(base+'/api/v1/built-in-bots/demo/simulate',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({bot_type:c.bot_type,prices,initial_capital:Number(c.capital||10000),config:c})});
+        if(!dr.ok)throw new Error('Demo HTTP '+dr.status);
+        const d=await dr.json(); if(d.valid===false)throw new Error(d.error||'Demo rejected');
+        window.__sbtLastDemo=d;
+        localStorage.setItem('sbt.demo.last',JSON.stringify({config:c,result:d,updated_at:new Date().toISOString()}));
+        out.textContent='DEMO ACTIVA · Capital virtual '+Number(d.initial_capital||0).toFixed(2)+' · Equity '+Number(d.final_equity||0).toFixed(2)+' · Return '+Number(d.total_return_pct||0).toFixed(2)+'% · Trades virtuales '+Number(d.trades||0)+' · Win rate '+Number(d.win_rate_pct||0).toFixed(1)+'% · DD '+Number(d.max_drawdown_pct||0).toFixed(2)+'%. VIRTUAL · NO LIVE ORDERS.';
+      }catch(e){out.textContent='Demo unavailable: '+e.message+'. No se muestran métricas inventadas.';}
+    }
+    p.querySelector('#sbtStartDemo').onclick=run;
+    p.querySelector('#sbtRefreshDemo').onclick=run;
+    try{
+      const saved=JSON.parse(localStorage.getItem('sbt.demo.last')||'null');
+      if(saved?.result)out.textContent='Última Demo · Equity '+Number(saved.result.final_equity||0).toFixed(2)+' · Return '+Number(saved.result.total_return_pct||0).toFixed(2)+'% · '+new Date(saved.updated_at).toLocaleString()+' · VIRTUAL.';
+    }catch(_e){}
+  }
+  function boot(){mountDemoPanel();if(!document.querySelector('#bot-lab-page[data-bot-demo-v1]'))setTimeout(boot,250)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
