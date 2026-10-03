@@ -113,3 +113,24 @@
   function boot(){mount();if(!document.querySelector('#bot-lab-page[data-bot-config-v1]'))setTimeout(boot,250);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
+
+(() => {
+  window.addEventListener('sbt:bot-config', async (event) => {
+    const c=event.detail||{}, out=document.getElementById('sbtBotConfigResult'); if(!c.bot_type||!out)return;
+    const base=((window.SBT_API_URL||localStorage.getItem('sbt_api_base')||'').replace(/\/$/,''));
+    const symbol=c.symbol||'EURUSD', tf=c.timeframe||'M5';
+    out.style.display='block'; out.textContent='Consultando market data para preparar el backtest…';
+    try{
+      const r=await fetch(base+'/api/v1/market/candles/'+encodeURIComponent(symbol)+'?timeframe='+encodeURIComponent(tf)+'&limit=200');
+      if(!r.ok)throw new Error('Market data HTTP '+r.status);
+      const d=await r.json(), candles=Array.isArray(d)?d:(Array.isArray(d.candles)?d.candles:[]);
+      const prices=candles.map(x=>Number(x.close)).filter(Number.isFinite);
+      if(prices.length<30)throw new Error('Insuficientes datos: '+prices.length+' cierres');
+      const br=await fetch(base+'/api/v1/backtest',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({prices,initial_capital:Number(c.capital||10000),fast_window:Number(c.emaFast||10),slow_window:Number(c.emaSlow||30),fee_pct:0.001})});
+      if(!br.ok)throw new Error('Backtest HTTP '+br.status);
+      const b=await br.json(); window.__sbtLastBacktest=b;
+      window.dispatchEvent(new CustomEvent('sbt:backtest',{detail:{backtest:b,config:c,symbol,timeframe:tf}}));
+      out.textContent='BACKTEST DISPONIBLE · '+c.bot_type+' · '+symbol+' '+tf+' · '+prices.length+' cierres · P/L '+Number(b.total_pnl??b.realized_pnl??0).toFixed(2)+'. Este resultado usa el motor SBT disponible; parámetros no soportados por el endpoint no se simulan. Sin órdenes live.';
+    }catch(e){out.textContent='Backtest unavailable: '+e.message+'. No se muestran métricas inventadas.';}
+  });
+})();
