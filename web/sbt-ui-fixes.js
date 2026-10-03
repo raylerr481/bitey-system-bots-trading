@@ -138,3 +138,60 @@
     }catch(e){out.textContent='Backtest unavailable: '+e.message+'. No se muestran métricas inventadas.';}
   });
 })();
+
+
+(() => {
+  function mountEvaluationPanel() {
+    const page=document.getElementById('bot-lab-page');
+    const config=page?.querySelector('#sbtBotConfigResult')?.closest('section');
+    if(!page||!config||page.dataset.botEvaluationV1)return;
+    page.dataset.botEvaluationV1='1';
+    const p=document.createElement('section');
+    p.className='card';
+    p.style.cssText='margin:18px 0;padding:20px';
+    p.innerHTML='<span class="eyebrow">BOT EVALUATION</span><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><h2 id="sbtEvalTitle" style="margin:5px 0">Evaluación SBT</h2><p class="sub">Backtest, Robustness y Risk Gate determinan el estado del bot. No es una garantía de rendimiento.</p></div><span id="sbtEvalStage" class="badge">DRAFT</span></div><div id="sbtEvalMetrics" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:15px"></div><div id="sbtEvalDecision" class="result" style="margin-top:14px">Esperando backtest…</div>';
+    config.insertAdjacentElement('afterend',p);
+    page.querySelector('#sbtEvalMetrics').innerHTML=['Return','Win Rate','Max Drawdown','Trades','Robustness','Risk Gate','Strategy Score','Lifecycle'].map(x=>'<div class="card" style="padding:12px"><div class="small">'+x+'</div><strong data-metric="'+x.toLowerCase().replace(/ /g,'-')+'">—</strong></div>').join('');
+  }
+
+  function score(backtest, robustness, risk) {
+    const ret=Number(backtest?.total_return_pct||0);
+    const wr=Number(backtest?.win_rate_pct||0);
+    const dd=Number(backtest?.max_drawdown_pct||0);
+    const trades=Number(backtest?.trades||0);
+    const rb=Number(robustness?.score||0);
+    const riskScore=risk?100:0;
+    const returnScore=Math.max(0,Math.min(25,ret*2+12.5));
+    const winScore=Math.max(0,Math.min(20,wr*0.2));
+    const ddScore=Math.max(0,Math.min(20,20-dd*2));
+    const tradeScore=trades>=10?10:trades>=3?7:trades>=1?4:0;
+    return Math.round(Math.max(0,Math.min(100,returnScore+winScore+ddScore+tradeScore+(rb*0.25)+(riskScore*0.05))));
+  }
+
+  function updateEvaluation() {
+    const b=window.__sbtLastBacktest||{}, rb=window.__sbtLastRobustness||{};
+    const risk=window.__sbtLastRisk||null;
+    const page=document.getElementById('bot-lab-page'); if(!page)return;
+    const set=(key,value)=>{const e=page.querySelector('[data-metric="'+key+'"]');if(e)e.textContent=value;};
+    set('return',Number(b.total_return_pct||0).toFixed(2)+'%');
+    set('win-rate',Number(b.win_rate_pct||0).toFixed(1)+'%');
+    set('max-drawdown',Number(b.max_drawdown_pct||0).toFixed(2)+'%');
+    set('trades',String(b.trades||0));
+    set('robustness',rb.valid?Number(rb.score||0).toFixed(1)+' / 100':'—');
+    set('risk-gate',risk?'READY':'PENDING');
+    const ready=!!b.valid&&!!rb.valid&&rb.status==='PASS'&&!!risk;
+    const s=score(b,rb,risk);
+    set('strategy-score',ready?s+' / 100':s+' / 100 · REVIEW');
+    const stage=ready?'VALIDATED':b.valid?'ROBUSTNESS':'DRAFT';
+    set('lifecycle',stage);
+    const stageEl=page.querySelector('#sbtEvalStage');if(stageEl)stageEl.textContent=stage;
+    const d=page.querySelector('#sbtEvalDecision');
+    if(d)d.textContent=ready?'VALIDATED · El bot supera el screening configurado y puede pasar a DEMO. Live continúa bloqueado.':b.valid?'REVIEW · Completa Robustness y Risk Gate antes de considerar DEMO.':'DRAFT · Ejecuta un backtest válido para iniciar la evaluación.';
+  }
+
+  window.addEventListener('sbt:backtest',e=>{window.__sbtLastBacktest=e.detail?.backtest||window.__sbtLastBacktest;updateEvaluation();});
+  window.addEventListener('sbt:robustness',e=>{window.__sbtLastRobustness=e.detail?.robustness||window.__sbtLastRobustness;updateEvaluation();});
+  window.addEventListener('sbt:risk-preview',e=>{window.__sbtLastRisk=e.detail?.risk||e.detail?.riskPreview||window.__sbtLastRisk;updateEvaluation();});
+  function boot(){mountEvaluationPanel();if(!document.querySelector('#bot-lab-page[data-bot-evaluation-v1]'))setTimeout(boot,250);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
