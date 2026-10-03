@@ -215,3 +215,24 @@ def built_in_demo_simulate(request: BuiltInBotRequest):
             "win_rate_pct": result["win_rate_pct"], "max_drawdown_pct": result["max_drawdown_pct"],
             "equity_curve": equity,
             "note": "Simulación virtual determinista. No se envían órdenes a ningún broker o exchange."}
+
+
+@router.post("/paper/simulate")
+def built_in_paper_simulate(request: BuiltInBotRequest):
+    """Run a broker-free paper session using the deterministic SBT engine."""
+    kind = request.bot_type.lower()
+    allowed = {"grid", "dca", "trend", "breakout", "mean-reversion", "rebalance"}
+    if kind not in allowed:
+        return {"valid": False, "error": "Unsupported built-in bot type", "live": False}
+    prices = [float(x) for x in request.prices]
+    if any(x <= 0 for x in prices):
+        return {"valid": False, "error": "Prices must be positive", "live": False}
+    signal = _signal(kind, request.config)
+    result = _run(prices, request.initial_capital, signal)
+    return {"valid": True, "contract": "sbt-built-in-paper-v1", "bot_type": kind,
+            "session_mode": "PAPER", "live": False, "virtual_orders": True,
+            "initial_capital": request.initial_capital, "final_equity": result["final_equity"],
+            "total_return_pct": result["total_return_pct"], "trades": result["trades"],
+            "wins": result["wins"], "losses": result["losses"],
+            "win_rate_pct": result["win_rate_pct"], "max_drawdown_pct": result["max_drawdown_pct"],
+            "note": "Paper trading broker-free. No orders are sent to any broker or exchange."}
