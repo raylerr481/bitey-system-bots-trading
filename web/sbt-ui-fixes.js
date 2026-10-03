@@ -279,6 +279,7 @@
         if(!dr.ok)throw new Error('Demo HTTP '+dr.status);
         const d=await dr.json(); if(d.valid===false)throw new Error(d.error||'Demo rejected');
         window.__sbtLastDemo=d;
+        window.dispatchEvent(new CustomEvent("sbt:demo",{detail:{demo:d,config:c}}));
         localStorage.setItem('sbt.demo.last',JSON.stringify({config:c,result:d,updated_at:new Date().toISOString()}));
         out.textContent='DEMO ACTIVA · Capital virtual '+Number(d.initial_capital||0).toFixed(2)+' · Equity '+Number(d.final_equity||0).toFixed(2)+' · Return '+Number(d.total_return_pct||0).toFixed(2)+'% · Trades virtuales '+Number(d.trades||0)+' · Win rate '+Number(d.win_rate_pct||0).toFixed(1)+'% · DD '+Number(d.max_drawdown_pct||0).toFixed(2)+'%. VIRTUAL · NO LIVE ORDERS.';
       }catch(e){out.textContent='Demo unavailable: '+e.message+'. No se muestran métricas inventadas.';}
@@ -321,6 +322,7 @@
         if(!pr.ok)throw new Error('Paper HTTP '+pr.status);
         const x=await pr.json();if(x.valid===false)throw new Error(x.error||'Paper rejected');
         window.__sbtLastPaper=x;
+        window.dispatchEvent(new CustomEvent("sbt:paper",{detail:{paper:x,config:c}}));
         localStorage.setItem('sbt.paper.last',JSON.stringify({config:c,result:x,updated_at:new Date().toISOString()}));
         out.textContent='PAPER ACTIVO · Equity '+Number(x.final_equity||0).toFixed(2)+' · Return '+Number(x.total_return_pct||0).toFixed(2)+'% · Trades '+Number(x.trades||0)+' · Win rate '+Number(x.win_rate_pct||0).toFixed(1)+'% · DD '+Number(x.max_drawdown_pct||0).toFixed(2)+'%. PAPER · NO LIVE ORDERS.';
       }catch(e){out.textContent='Paper unavailable: '+e.message+'.';}
@@ -329,5 +331,48 @@
     try{const saved=JSON.parse(localStorage.getItem('sbt.paper.last')||'null');if(saved?.result)out.textContent='Último Paper · Equity '+Number(saved.result.final_equity||0).toFixed(2)+' · Return '+Number(saved.result.total_return_pct||0).toFixed(2)+'% · '+new Date(saved.updated_at).toLocaleString()+' · PAPER.';}catch(_e){}
   }
   function boot(){mountPaperPanel();if(!document.querySelector('#bot-lab-page[data-bot-paper-v1]'))setTimeout(boot,250)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
+
+
+(() => {
+  const KEY='sbt.performance.v1';
+  function mountPerformance(){
+    const page=document.getElementById('bot-lab-page');
+    const paper=page?.querySelector('#sbtStartPaper')?.closest('section');
+    if(!page||!paper||page.dataset.performanceMonitorV1)return;
+    page.dataset.performanceMonitorV1='1';
+    const p=document.createElement('section');p.className='card';p.style.cssText='margin:18px 0;padding:20px';
+    p.innerHTML='<span class="eyebrow">PERFORMANCE MONITOR</span><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><h2 style="margin:5px 0">Performance</h2><p class="sub">Monitor de equity para Demo/Paper. Solo muestra resultados de simulación.</p></div><span id="sbtPerfMode" class="badge">WAITING</span></div><div id="sbtPerfMetrics" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:15px"></div><div id="sbtPerfChart" style="margin-top:14px;min-height:150px"></div><div id="sbtPerfResult" class="result" style="margin-top:14px">Esperando una sesión Demo o Paper…</div>';
+    paper.insertAdjacentElement('afterend',p);
+    p.querySelector('#sbtPerfMetrics').innerHTML=['Equity','P&L','Return','Drawdown','Trades','Win Rate','Profit Factor','Status'].map(x=>'<div class="card" style="padding:12px"><div class="small">'+x+'</div><strong data-perf="'+x.toLowerCase().replace(/ /g,'-')+'">—</strong></div>').join('');
+  }
+  function esc(v){return String(v).replace(/[&<>"]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x]));}
+  function renderChart(curve){
+    const host=document.getElementById('sbtPerfChart');if(!host||!curve?.length){return;}
+    const w=700,h=150,pad=10,min=Math.min(...curve),max=Math.max(...curve),span=max-min||1;
+    const pts=curve.map((v,i)=>{const x=pad+(i/(curve.length-1))*(w-pad*2);const y=h-pad-((v-min)/span)*(h-pad*2);return x.toFixed(1)+','+y.toFixed(1)}).join(' ');
+    host.innerHTML='<svg viewBox="0 0 '+w+' '+h+'" width="100%" height="150" role="img" aria-label="Equity curve"><polyline points="'+esc(pts)+'" fill="none" stroke="currentColor" stroke-width="2"/><text x="10" y="18" font-size="11" fill="currentColor">Equity curve · simulated</text></svg>';
+  }
+  async function update(result,config,mode){
+    const out=document.getElementById('sbtPerfResult');if(!out||!result)return;
+    const curve=Array.isArray(result.equity_curve)?result.equity_curve:[];
+    if(curve.length<2){out.textContent='Performance unavailable: la sesión no contiene equity curve.';return;}
+    const base=((window.SBT_API_URL||localStorage.getItem('sbt_api_base')||'').replace(/\/$/,''));
+    try{
+      const r=await fetch(base+'/api/v1/built-in-bots/performance/snapshot',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({equity_curve:curve,trades:Number(result.trades||0),wins:Number(result.wins||0),initial_capital:Number(result.initial_capital||config?.capital||10000),mode})});
+      if(!r.ok)throw new Error('Performance HTTP '+r.status);
+      const d=await r.json();if(d.valid===false)throw new Error(d.error||'Performance rejected');
+      window.__sbtLastPerformance=d;localStorage.setItem(KEY,JSON.stringify({result:d,config,updated_at:new Date().toISOString()}));
+      const set=(k,v)=>{const e=document.querySelector('[data-perf="'+k+'"]');if(e)e.textContent=v;};
+      set('equity',Number(d.final_equity||0).toFixed(2));set('p&l',Number(d.pnl||0).toFixed(2));set('return',Number(d.return_pct||0).toFixed(2)+'%');set('drawdown',Number(d.max_drawdown_pct||0).toFixed(2)+'%');set('trades',String(d.trades||0));set('win-rate',Number(d.win_rate_pct||0).toFixed(1)+'%');set('profit-factor',d.profit_factor>900?'∞':Number(d.profit_factor||0).toFixed(2));set('status',d.status||'—');
+      const modeEl=document.getElementById('sbtPerfMode');if(modeEl)modeEl.textContent=mode+' · NO LIVE ORDERS';
+      out.textContent='PERFORMANCE · '+mode+' · Equity '+Number(d.final_equity||0).toFixed(2)+' · P&L '+Number(d.pnl||0).toFixed(2)+' · Return '+Number(d.return_pct||0).toFixed(2)+'% · DD '+Number(d.max_drawdown_pct||0).toFixed(2)+'%. Solo simulación.';
+      renderChart(curve);
+    }catch(e){out.textContent='Performance unavailable: '+e.message+'. No se muestran métricas inventadas.';}
+  }
+  function boot(){mountPerformance();if(!document.querySelector('#bot-lab-page[data-performance-monitor-v1]'))setTimeout(boot,250);}
+  window.addEventListener('sbt:demo',e=>update(e.detail?.demo,e.detail?.config,'DEMO'));
+  window.addEventListener('sbt:paper',e=>update(e.detail?.paper,e.detail?.config,'PAPER'));
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
