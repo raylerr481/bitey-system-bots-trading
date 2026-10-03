@@ -217,6 +217,64 @@ def built_in_demo_simulate(request: BuiltInBotRequest):
             "note": "Simulación virtual determinista. No se envían órdenes a ningún broker o exchange."}
 
 
+
+class PerformanceSnapshotRequest(BaseModel):
+    equity_curve: list[float] = Field(min_length=2)
+    trades: int = Field(default=0, ge=0)
+    wins: int = Field(default=0, ge=0)
+    initial_capital: float = Field(default=10000, gt=0)
+    mode: str = Field(default="PAPER", max_length=16)
+
+
+@router.post("/performance/snapshot")
+def built_in_performance_snapshot(request: PerformanceSnapshotRequest):
+    """Summarize a deterministic demo/paper equity curve. Never places orders."""
+    curve = [float(x) for x in request.equity_curve]
+    if any(x <= 0 for x in curve):
+        return {"valid": False, "error": "Equity values must be positive", "live": False}
+    peak = curve[0]
+    max_dd = 0.0
+    for equity in curve:
+        peak = max(peak, equity)
+        if peak > 0:
+            max_dd = max(max_dd, (peak - equity) / peak * 100.0)
+    final = curve[-1]
+    pnl = final - request.initial_capital
+    returns = pnl / request.initial_capital * 100.0
+    losses = max(0, request.trades - request.wins)
+    avg_trade = pnl / request.trades if request.trades else 0.0
+    gross_profit = 0.0
+    gross_loss = 0.0
+    for prev, curr in zip(curve, curve[1:]):
+        delta = curr - prev
+        if delta > 0:
+            gross_profit += delta
+        elif delta < 0:
+            gross_loss += abs(delta)
+    profit_factor = gross_profit / gross_loss if gross_loss > 0 else (999.0 if gross_profit > 0 else 0.0)
+    return {
+        "valid": True,
+        "contract": "sbt-performance-v1",
+        "mode": request.mode.upper(),
+        "live": False,
+        "initial_capital": request.initial_capital,
+        "final_equity": final,
+        "pnl": pnl,
+        "return_pct": returns,
+        "peak_equity": peak,
+        "max_drawdown_pct": max_dd,
+        "trades": request.trades,
+        "wins": min(request.wins, request.trades),
+        "losses": losses,
+        "win_rate_pct": (request.wins / request.trades * 100.0) if request.trades else 0.0,
+        "profit_factor": profit_factor,
+        "avg_trade": avg_trade,
+        "equity_curve": curve,
+        "status": "POSITIVE" if pnl > 0 else "FLAT" if pnl == 0 else "NEGATIVE",
+        "note": "Resumen de performance de una simulación DEMO/PAPER; no es una previsión de rentabilidad."
+    }
+
+
 @router.post("/paper/simulate")
 def built_in_paper_simulate(request: BuiltInBotRequest):
     """Run a broker-free paper session using the deterministic SBT engine."""
