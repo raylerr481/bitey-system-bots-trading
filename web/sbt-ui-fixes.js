@@ -84,3 +84,32 @@
   function boot(){mountBotCenter(); const page=document.getElementById('bot-lab-page'); if(!page||!page.dataset.botCenterV1)setTimeout(boot,250)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
+
+(() => {
+  const SPECS = {
+    grid:{title:'Grid Bot',fields:[['symbol','Símbolo','BTC/USDT','text'],['capital','Capital','10000','number'],['lower','Rango inferior','90000','number'],['upper','Rango superior','120000','number'],['grids','Número de grids','20','number'],['stop','Stop loss %','5','number'],['take','Take profit %','2','number']]},
+    dca:{title:'DCA Bot',fields:[['symbol','Símbolo','BTC/USDT','text'],['capital','Capital','10000','number'],['initial','Orden inicial','500','number'],['safety','Órdenes de seguridad','5','number'],['step','Paso %','3','number'],['multiplier','Multiplicador','1.25','number'],['take','Take profit %','2','number']]},
+    trend:{title:'Trend Bot',fields:[['symbol','Símbolo','EURUSD','text'],['timeframe','Timeframe','H1','select','M5,H1,H4,D1'],['capital','Capital','10000','number'],['emaFast','EMA rápida','9','number'],['emaSlow','EMA lenta','21','number'],['rsi','RSI mínimo','50','number'],['atr','ATR SL multiplier','1.5','number'],['risk','Riesgo %','0.25','number']]},
+    breakout:{title:'Breakout Bot',fields:[['symbol','Símbolo','BTC/USDT','text'],['timeframe','Timeframe','H1','select','M15,H1,H4,D1'],['capital','Capital','10000','number'],['lookback','Lookback','20','number'],['atr','ATR multiplier','1.5','number'],['risk','Riesgo %','0.5','number']]},
+    'mean-reversion':{title:'Mean Reversion',fields:[['symbol','Símbolo','EURUSD','text'],['timeframe','Timeframe','H1','select','M15,H1,H4,D1'],['capital','Capital','10000','number'],['rsiLow','RSI sobreventa','30','number'],['rsiHigh','RSI sobrecompra','70','number'],['deviation','Desviación','2','number'],['take','Take profit %','1','number'],['stop','Stop loss %','2','number']]},
+    rebalance:{title:'Rebalance Bot',fields:[['assets','Activos','BTC/USDT,ETH/USDT,USDT','text'],['capital','Capital','10000','number'],['btc','BTC %','50','number'],['eth','ETH %','30','number'],['cash','Cash %','20','number'],['threshold','Umbral rebalance %','5','number']]}
+  };
+  function mount(){
+    const page=document.getElementById('bot-lab-page'); const center=page?.querySelector('[data-bot-filters]')?.closest('section');
+    if(!page||!center||page.dataset.botConfigV1)return;
+    page.dataset.botConfigV1='1';
+    const p=document.createElement('section');p.className='card';p.style.cssText='margin:18px 0;padding:20px';
+    p.innerHTML='<span class="eyebrow">BOT CONFIGURATION</span><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><h2 id="sbtBotConfigTitle" style="margin:5px 0">Selecciona un bot</h2><p class="sub">Parámetros por estrategia. Configurar no ejecuta órdenes.</p></div><span class="badge">DEMO / PAPER · LIVE LOCKED</span></div><div id="sbtBotForm" class="form"></div><div class="toolbar" style="margin-top:14px"><button class="btn primary" id="sbtBotBacktest">Preparar backtest</button><button class="btn" id="sbtBotRisk">Previsualizar Risk Gate</button><button class="btn" id="sbtBotSave">Guardar configuración</button></div><div id="sbtBotConfigResult" class="result"></div>';
+    center.insertAdjacentElement('afterend',p);
+    const form=p.querySelector('#sbtBotForm'),title=p.querySelector('#sbtBotConfigTitle'),out=p.querySelector('#sbtBotConfigResult');let selected=null;
+    function render(id){selected=SPECS[id]?id:null;if(!selected){title.textContent='Selecciona un bot';form.innerHTML='<div class="small">Usa “Ver configuración” en el catálogo.</div>';return;}const s=SPECS[id];title.textContent=s.title;form.innerHTML=s.fields.map(([k,l,v,t,o])=>t==='select'?'<label>'+l+'<select data-bot-field="'+k+'">'+o.split(',').map(x=>'<option>'+x+'</option>').join('')+'</select></label>':'<label>'+l+'<input data-bot-field="'+k+'" type="'+t+'" value="'+v+'" step="any"></label>').join('');const saved=JSON.parse(sessionStorage.getItem('sbt.bot.'+id)||'null');if(saved)Object.entries(saved).forEach(([k,v])=>{const e=form.querySelector('[data-bot-field="'+k+'"]');if(e)e.value=v;});}
+    const read=()=>{const o={bot_type:selected};form.querySelectorAll('[data-bot-field]').forEach(e=>o[e.dataset.botField]=e.value);return o;};
+    p.querySelector('#sbtBotSave').onclick=()=>{if(!selected)return;sessionStorage.setItem('sbt.bot.'+selected,JSON.stringify(read()));out.style.display='block';out.textContent='Configuración guardada en esta sesión · '+SPECS[selected].title+'.';};
+    p.querySelector('#sbtBotRisk').onclick=async()=>{if(!selected){out.style.display='block';out.textContent='Selecciona un bot primero.';return;}out.style.display='block';out.textContent='Consultando Risk Gate…';try{const base=((window.SBT_API_URL||localStorage.getItem('sbt_api_base')||'').replace(/\/$/,''));const r=await fetch(base+'/api/v1/bot-profiles/'+encodeURIComponent(selected)+'/risk-preview?capital='+encodeURIComponent(Number(read().capital||10000)));if(!r.ok)throw new Error('API HTTP '+r.status);const d=await r.json();out.textContent='RISK PREVIEW · posición máxima R$ '+Number(d.max_position_value||0).toFixed(2)+' · pérdida por trade R$ '+Number(d.configured_loss_per_trade||0).toFixed(2)+'. Sin órdenes live.';}catch(e){out.textContent='Risk Gate unavailable: '+e.message+'. No se muestran límites inventados.';}};
+    p.querySelector('#sbtBotBacktest').onclick=()=>{if(!selected){out.style.display='block';out.textContent='Selecciona un bot primero.';return;}const c=read();window.__sbtSelectedBotConfig=c;window.dispatchEvent(new CustomEvent('sbt:bot-config',{detail:c}));out.style.display='block';out.textContent='BACKTEST PREPARADO · '+SPECS[selected].title+' · '+(c.symbol||c.assets)+' · DEMO/PAPER. No se autoriza live.';};
+    page.addEventListener('click',e=>{const b=e.target.closest('[data-bot-view]');if(b)setTimeout(()=>render(b.dataset.botView),0);});
+    render(null);
+  }
+  function boot(){mount();if(!document.querySelector('#bot-lab-page[data-bot-config-v1]'))setTimeout(boot,250);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
