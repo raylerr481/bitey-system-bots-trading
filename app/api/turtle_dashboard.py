@@ -19,7 +19,7 @@ async def turtle_dashboard() -> dict[str, Any]:
     """Return the read-only MT4 + Turtle dashboard snapshot."""
     client = MT4GatewayClient()
 
-    status, account, positions, market = await asyncio.gather(
+    status, account, market, positions = await asyncio.gather(
         client.status(),
         _safe_get(client.account_status),
         _safe_get(lambda: client.market_data("EURUSD")),
