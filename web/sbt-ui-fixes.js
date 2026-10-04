@@ -562,9 +562,9 @@
           const metrics='Return '+Number(b.return_pct||0).toFixed(2)+'% · DD '+Number(b.drawdown_pct||0).toFixed(2)+'% · Score '+(b.strategy_score??'—');
           const when=b.published_at?new Date(b.published_at).toLocaleString():'';
           return '<article class="card" style="padding:15px">'+
-            '<div style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:24px">'+c.icon+'</span><span class="badge">PUBLISHED · NO LIVE</span></div>'+
+            '<div style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:24px">'+c.icon+'</span><span class="badge">'+(b.recommended?'CURRENT · NO LIVE':'PUBLISHED · NO LIVE')+'</span></div>'+
             '<h3 style="margin:10px 0 4px">'+esc(b.name||c.name)+'</h3>'+
-            '<div class="small">'+esc(c.cat)+' · '+esc(c.market)+' · v'+Number(b.version||1)+'</div>'+
+            '<div class="small">'+esc(c.cat)+' · '+esc(c.market)+' · v'+Number(b.version||1)+(b.risk_gate_passed===true?' · RISK PASS':'')+'</div>'+
             '<p class="sub" style="min-height:42px">'+esc(c.desc)+'</p>'+
             '<div class="small" style="margin:8px 0">'+esc(metrics)+(when?' · '+esc(when):'')+'</div>'+
             '<button class="btn primary sbt-market-use" data-kind="published" data-id="'+esc(b.id)+'">Usar bot</button></article>';
