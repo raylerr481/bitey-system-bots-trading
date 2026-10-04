@@ -691,7 +691,7 @@
       if(best){
         rankBox.innerHTML=rankBox.textContent+'<br><strong>SBT RECOMMENDATION · '+esc(best.name||names[best.bot_type]||best.bot_type)+' v'+Number(best.version||1)+' · '+best.sbt_rank_score.toFixed(1)+'/100</strong><br><span class="small">Elegible porque completó VALIDATED + DEMO + PAPER + PERFORMANCE + Robustness PASS + Risk Gate PASS.</span><br><button type="button" class="btn primary" id="sbtAdoptTopVersion" style="margin-top:8px">Adoptar como CURRENT</button><br><span class="small">Ranking: Return 30% · Drawdown 25% · Robustness 20% · Strategy Score 15% · Risk Gate 10%. Orientativo; no garantiza rendimiento.</span>';
         const adopt=p.querySelector('#sbtAdoptTopVersion');
-        if(adopt)adopt.onclick=()=>{const all=read(KEY);all.forEach(x=>{if(x.bot_type===best.bot_type)x.recommended=String(x.id)===String(best.id);});const i=all.findIndex(x=>String(x.id)===String(best.id));if(i>=0){all[i].recommended_at=new Date().toISOString();write(KEY,all);selected=all[i];window.dispatchEvent(new CustomEvent('sbt:recommended',{detail:{id:best.id,bot_type:best.bot_type,source:'sbt-ranking'}}));render();}};
+        if(adopt)adopt.onclick=()=>{const i=read(KEY).findIndex(x=>String(x.id)===String(best.id));if(i>=0){window.__sbtRegistry?.setCurrent?.(best.id);const all=read(KEY);all[i].recommended=true;all[i].recommended_at=new Date().toISOString();write(KEY,all);selected=all[i];window.dispatchEvent(new CustomEvent('sbt:recommended',{detail:{id:best.id,bot_type:best.bot_type,source:'sbt-ranking'}}));render();}};
       }else{
         const reason=topOverall&&!topOverall.validation?'Las versiones publicadas antes de esta validación no contienen evidencia completa de Demo/Paper/Performance.':'Ninguna versión publicada cumple todos los gates de elegibilidad.';
         rankBox.innerHTML=rankBox.textContent+'<br><strong>SBT RECOMMENDATION · SIN CANDIDATO ELEGIBLE</strong><br><span class="small">'+esc(reason)+' Publica una nueva versión tras completar todo el ciclo de validación.</span><br><span class="small">El ranking no promueve una versión que no tenga evidencia completa.</span>';
@@ -702,7 +702,7 @@
       if(!selected)return;const cfg={...(selected.config||{})};delete cfg.bot_id;const clone={id:selected.bot_type+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),bot_type:selected.bot_type,name:(selected.name||names[selected.bot_type]||selected.bot_type)+' Clone v'+Number(selected.version||1),config:cfg,stage:'DRAFT',strategy_score:null,robustness_score:null,created_at:new Date().toISOString(),updated_at:new Date().toISOString(),cloned_from:selected.id};
       const my=read(MY);my.unshift(clone);write(MY,my);window.__sbtSelectedBotConfig={...cfg,bot_type:selected.bot_type,bot_id:clone.id};window.dispatchEvent(new CustomEvent('sbt:bot-saved',{detail:clone}));window.dispatchEvent(new CustomEvent('sbt:bot-config',{detail:window.__sbtSelectedBotConfig}));p.querySelector('#sbtBotDetailResult').textContent='CLONADO · '+clone.name+' · DRAFT. Debe volver a pasar Backtest → Robustness → Risk Gate → Demo → Paper.';
     }
-    p.addEventListener('click',e=>{const v=e.target.closest('.sbt-version-select');if(v){selected=read(KEY).find(x=>String(x.id)===String(v.dataset.id))||null;render();return;}const mark=e.target.closest('.sbt-mark-current');if(mark){const all=read(KEY),target=all.find(x=>String(x.id)===String(mark.dataset.id));if(!target)return;all.forEach(x=>{if(x.bot_type===target.bot_type)x.recommended=String(x.id)===String(target.id);});const now=new Date().toISOString();const i=all.findIndex(x=>String(x.id)===String(target.id));if(i>=0)all[i].recommended_at=now;write(KEY,all);selected=all[i];window.dispatchEvent(new CustomEvent('sbt:recommended',{detail:{id:target.id,bot_type:target.bot_type}}));render();}});
+    p.addEventListener('click',e=>{const v=e.target.closest('.sbt-version-select');if(v){selected=read(KEY).find(x=>String(x.id)===String(v.dataset.id))||null;render();return;}const mark=e.target.closest('.sbt-mark-current');if(mark){const all=read(KEY),target=all.find(x=>String(x.id)===String(mark.dataset.id));if(!target)return;window.__sbtRegistry?.setCurrent?.(target.id);const next=read(KEY),i=next.findIndex(x=>String(x.id)===String(target.id));if(i>=0){next[i].recommended=true;next[i].recommended_at=new Date().toISOString();write(KEY,next);selected=next[i];}window.dispatchEvent(new CustomEvent('sbt:recommended',{detail:{id:target.id,bot_type:target.bot_type}}));render();}});
     p.querySelector('#sbtBotDetailUse').onclick=useSelected;p.querySelector('#sbtBotDetailClone').onclick=cloneSelected;
     window.addEventListener('sbt:market-detail',e=>{selected=read(KEY).find(x=>String(x.id)===String(e.detail?.id))||null;render();});
     window.addEventListener('sbt:registry-sync',()=>{if(selected)render();});
@@ -957,9 +957,9 @@
   const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(_e){return[]}};
   const readReg=()=>{try{return JSON.parse(localStorage.getItem(REG)||'{}')}catch(_e){return{}}};
   const writeReg=v=>localStorage.setItem(REG,JSON.stringify(v));
-  const stage=(v)=>{
+  const stage=(v,currentByType)=>{
     const x=v.validation||{};
-    if(v.recommended===true)return 'CURRENT';
+    if(String(currentByType?.[v.bot_type]||'')===String(v.id))return 'CURRENT';
     if(x.performance===true&&x.validated===true&&x.demo===true&&x.paper===true&&x.robustness_status==='PASS'&&x.risk_gate===true&&v.risk_gate_passed===true)return 'PUBLISHED';
     if(x.paper===true)return 'PAPER';
     if(x.demo===true)return 'DEMO';
@@ -969,9 +969,15 @@
   const sync=()=>{
     const bots=read(), reg=readReg(), now=new Date().toISOString();
     const next={...reg};
+    const currentByType={...(next.current_by_type||{})};
+    if(!Object.keys(currentByType).length){
+      bots.forEach(v=>{if(v.recommended===true&&!currentByType[v.bot_type])currentByType[v.bot_type]=String(v.id);});
+    }
+    const liveIds=new Set(bots.map(v=>String(v.id)));
+    Object.keys(currentByType).forEach(type=>{if(!liveIds.has(String(currentByType[type])))delete currentByType[type];});
     bots.forEach(v=>{
       const id=String(v.id);
-      const candidate=stage(v);
+      const candidate=stage(v,currentByType);
       const old=next[id];
       const s=normalizeStage(candidate,old?.stage);
       if(!old){
@@ -984,8 +990,20 @@
     });
     const liveIds=new Set(bots.map(v=>String(v.id)));
     Object.keys(next).forEach(id=>{if(!liveIds.has(id))delete next[id]});
+    next.current_by_type=currentByType;
     writeReg(next);
     return next;
+  };
+  const setCurrent=(id)=>{
+    const bots=read(), target=bots.find(v=>String(v.id)===String(id));
+    if(!target)return null;
+    const reg=sync();
+    const currentByType={...(reg.current_by_type||{})};
+    currentByType[target.bot_type]=String(target.id);
+    writeReg({...reg,current_by_type:currentByType});
+    sync();
+    window.dispatchEvent(new CustomEvent('sbt:registry-sync',{detail:{id:target.id,bot_type:target.bot_type,stage:'CURRENT',source:'registry'}}));
+    return sync();
   };
   const names={grid:'Grid Bot',dca:'DCA Bot',trend:'Trend Bot',breakout:'Breakout Bot','mean-reversion':'Mean Reversion',rebalance:'Rebalance Bot'};
   const stageOrder=['DRAFT','VALIDATED','DEMO','PAPER','PUBLISHED','CURRENT'];
@@ -1032,7 +1050,8 @@
     window.__sbtRegistry={
       sync,
       get(id){return sync()[String(id)]||null;},
-      stage(id){return sync()[String(id)]?.stage||'DRAFT';}
+      stage(id){return sync()[String(id)]?.stage||'DRAFT';},
+      setCurrent
     };
     render();
   }
