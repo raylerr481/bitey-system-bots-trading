@@ -241,7 +241,7 @@
     const b=bots[idx], rb=window.__sbtLastRobustness, bt=window.__sbtLastBacktest;
     b.strategy_score=(bt&&rb&&rb.valid)?Math.round(Math.max(0,Math.min(100,Number(bt.total_return_pct||0)*2+Number(bt.win_rate_pct||0)*0.2+(20-Number(bt.max_drawdown_pct||0)*2)+Number(rb.score||0)*0.25+5))):b.strategy_score;
     b.robustness_score=rb?.valid?Number(rb.score||0):b.robustness_score;
-    if(bt?.valid&&rb?.valid&&rb.status==='PASS'&&window.__sbtLastRisk)b.stage='VALIDATED';
+    if(bt?.valid&&rb?.valid&&rb.status==='PASS'&&window.__sbtLastRisk&&b.stage!=='PUBLISHED')b.stage='VALIDATED';
     b.updated_at=new Date().toISOString();save(bots);window.dispatchEvent(new CustomEvent('sbt:bot-saved',{detail:b}));
   }
   function boot(){mountMyBots();hookSave();syncEvaluationToBot();if(!document.querySelector('#bot-lab-page[data-my-bots-v1]'))setTimeout(boot,250)}
