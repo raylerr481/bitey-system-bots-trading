@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import os
 from typing import Any
 
@@ -9,6 +10,8 @@ from mcp.server.transport_security import TransportSecuritySettings
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.api.integrations import PERMISSIONS, PLATFORMS
+from app.turtle import TurtleController
+from app.integrations.mt4_gateway import MT4GatewayClient
 
 MCP_TOKEN = os.getenv("SBT_MCP_TOKEN", "").strip()
 MT5_BRIDGE_URL = os.getenv("MT5_BRIDGE_URL", "").rstrip("/")
@@ -43,6 +46,91 @@ async def _json_error(send: Send, status: int, detail: str) -> None:
 
 
 mcp = MCPServer("Bitey SBT MCP")
+
+
+_turtle_controller = TurtleController()
+
+
+@mcp.tool()
+def turtle_status() -> dict[str, Any]:
+    """Return the immutable Classic Turtle v1.22 baseline and automation boundary."""
+    return {
+        "contract": "classic-turtle-mt4-v1.22",
+        "baseline": _turtle_controller.baseline(),
+        "automation": "bounded",
+        "optimization_locked": True,
+        "live_execution": False,
+    }
+
+
+@mcp.tool()
+def turtle_diagnose(
+    issues: list[str] | None = None,
+    config: dict[str, Any] | None = None,
+    metrics: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Diagnose an MT4 Turtle implementation without changing trading rules."""
+    return _turtle_controller.diagnose({
+        "issues": issues or [],
+        "config": config or {},
+        "metrics": metrics or {},
+        "source": "mcp",
+    })
+
+
+@mcp.tool()
+def turtle_autocorrection_plan(
+    issues: list[str] | None = None,
+    config: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Create a bounded, dry-run correction plan for Turtle v1.22."""
+    diagnosis = _turtle_controller.diagnose({
+        "issues": issues or [],
+        "config": config or {},
+        "source": "mcp",
+    })
+    return {
+        "diagnosis": diagnosis,
+        "plan": _turtle_controller.correction_plan(diagnosis),
+    }
+
+
+@mcp.tool()
+async def turtle_mt4_dashboard() -> dict[str, Any]:
+    """Return the read-only MT4 snapshot plus the Classic Turtle v1.22 boundary."""
+    client = MT4GatewayClient()
+    status = await client.status()
+    result: dict[str, Any] = {
+        "module": "Bitey SBT Turtle/MT4 Dashboard",
+        "read_only": True,
+        "live_execution": False,
+        "trading_enabled": False,
+        "mt4": {"status": status},
+        "turtle": {
+            "contract": "classic-turtle-mt4-v1.22",
+            "baseline": _turtle_controller.baseline(),
+            "state": "READY",
+            "automation": "bounded",
+            "optimization_locked": True,
+        },
+    }
+    if not status.get("reachable"):
+        result["mt4"]["error"] = status.get("error", "MT4 gateway unavailable")
+        return result
+    try:
+        account, positions, market = await asyncio.gather(
+            client.account_status(),
+            client.open_positions(),
+            client.market_data("EURUSD"),
+        )
+        result["mt4"].update({
+            "account": account,
+            "positions": positions,
+            "market": market,
+        })
+    except Exception as exc:
+        result["mt4"]["error"] = str(exc)
+    return result
 
 
 @mcp.tool()
