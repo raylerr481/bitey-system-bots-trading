@@ -788,7 +788,8 @@
       body.innerHTML='<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><strong style="font-size:18px">'+esc(role)+' · '+esc(names[selected.bot_type]||selected.bot_type)+' v'+Number(selected.version||1)+'</strong><span class="badge">'+s.toFixed(1)+'/100</span></div><p class="sub" style="margin:8px 0">'+esc(reason)+'</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">'+['VALIDATED','DEMO','PAPER','PERFORMANCE','ROBUSTNESS','RISK GATE'].map((k,i)=>'<div class="card" style="padding:9px"><div class="small">'+k+'</div><strong>'+ (vals[i]?'PASS':'PENDING')+'</strong></div>').join('')+'</div>'+(rs.length?'<div class="small" style="margin-top:10px"><strong>Bloqueos:</strong> '+esc(rs.join(' · '))+'</div>':'<div class="small" style="margin-top:10px">Sin bloqueos de elegibilidad. Ranking orientativo; no garantiza rendimiento.</div>')+(top&&String(top.id)!==String(selected.id)?'<button type="button" class="btn primary" id="sbtCompareTop" style="margin-top:10px">Comparar con SBT TOP v'+Number(top.version||1)+'</button>':'');
       const btn=p.querySelector('#sbtCompareTop'); if(btn)btn.onclick=()=>window.dispatchEvent(new CustomEvent('sbt:compare-top',{detail:{bot_type:selected.bot_type,selected_id:selected.id,top_id:top.id}}));
     }
-    window.addEventListener('sbt:market-detail',e=>{selected=read().find(x=>String(x.id)===String(e.detail?.id))||null;render();});
+    window.addEventListener('sbt:market-detail',async e=>{selected=read().find(x=>String(x.id)===String(e.detail?.id))||null;render();});
+    window.addEventListener('sbt:published',()=>{if(selected)render();});
     window.addEventListener('sbt:recommended',render); window.addEventListener('sbt:published',render); render();
   }
   function boot(){mount();if(!document.querySelector('#bot-lab-page[data-sbt-decision-v1]'))setTimeout(boot,250)}
