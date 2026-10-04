@@ -926,3 +926,81 @@
   function boot(){mount();if(!document.querySelector('#bot-lab-page[data-sbt-decision-v2]'))setTimeout(boot,250)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
+
+
+(() => {
+  const KEY='sbt.publishedBots.v1';
+  const REG='sbt.botRegistry.v1';
+  const esc=v=>String(v??'').replace(/[&<>"]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x]));
+  const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(_e){return[]}};
+  const readReg=()=>{try{return JSON.parse(localStorage.getItem(REG)||'{}')}catch(_e){return{}}};
+  const writeReg=v=>localStorage.setItem(REG,JSON.stringify(v));
+  const stage=(v)=>{
+    const x=v.validation||{};
+    if(v.recommended===true)return 'CURRENT';
+    if(x.performance===true&&x.validated===true&&x.demo===true&&x.paper===true&&x.robustness_status==='PASS'&&x.risk_gate===true&&v.risk_gate_passed===true)return 'PUBLISHED';
+    if(x.paper===true)return 'PAPER';
+    if(x.demo===true)return 'DEMO';
+    if(x.validated===true)return 'VALIDATED';
+    return 'DRAFT';
+  };
+  const sync=()=>{
+    const bots=read(), reg=readReg(), now=new Date().toISOString();
+    const next={...reg};
+    bots.forEach(v=>{
+      const id=String(v.id);
+      const s=stage(v);
+      const old=next[id];
+      if(!old){
+        next[id]={id:v.id,bot_type:v.bot_type,version:Number(v.version||1),stage:s,created_at:now,updated_at:now,lifecycle_history:[{stage:s,at:now,source:'registry_sync'}]};
+      }else{
+        const hist=Array.isArray(old.lifecycle_history)?old.lifecycle_history.slice():[];
+        if(old.stage!==s)hist.push({stage:s,at:now,source:'registry_sync'});
+        next[id]={...old,bot_type:v.bot_type,version:Number(v.version||1),stage:s,updated_at:old.stage===s?old.updated_at:now,lifecycle_history:hist};
+      }
+    });
+    const liveIds=new Set(bots.map(v=>String(v.id)));
+    Object.keys(next).forEach(id=>{if(!liveIds.has(id))delete next[id]});
+    writeReg(next);
+    return next;
+  };
+  const names={grid:'Grid Bot',dca:'DCA Bot',trend:'Trend Bot',breakout:'Breakout Bot','mean-reversion':'Mean Reversion',rebalance:'Rebalance Bot'};
+  const stageOrder=['DRAFT','VALIDATED','DEMO','PAPER','PUBLISHED','CURRENT'];
+  const stageClass=s=>s==='CURRENT'?'PASS':s==='PUBLISHED'?'PASS':s==='PAPER'?'PASS':s==='DEMO'?'PASS':s==='VALIDATED'?'PASS':'PENDING';
+
+  function mount(){
+    const page=document.getElementById('bot-lab-page');
+    const anchor=page?.querySelector('[data-sbt-decision-v2]');
+    if(!page||!anchor||page.dataset.sbtRegistryV1)return;
+    page.dataset.sbtRegistryV1='1';
+    const p=document.createElement('section');
+    p.className='card';
+    p.style.cssText='margin-top:12px;padding:18px';
+    p.innerHTML='<span class="eyebrow">BOT REGISTRY</span><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><h3 style="margin:5px 0">Lifecycle & Audit Trail</h3><p class="sub">Registro unificado de evidencia local. SBT TOP no convierte una versión en CURRENT.</p></div><span class="badge">LIVE LOCKED</span></div><div id="sbtRegistryBody" style="margin-top:12px"></div>';
+    anchor.insertAdjacentElement('afterend',p);
+    const body=p.querySelector('#sbtRegistryBody');
+
+    function render(){
+      const bots=read(), reg=sync();
+      if(!bots.length){body.innerHTML='<div class="small">Aún no hay versiones publicadas en el registro.</div>';return;}
+      const rows=bots.slice().sort((a,b)=>String(a.bot_type).localeCompare(String(b.bot_type))||Number(b.version||0)-Number(a.version||0)).map(v=>{
+        const r=reg[String(v.id)]||{}, hist=Array.isArray(r.lifecycle_history)?r.lifecycle_history:[];
+        const last=hist[hist.length-1];
+        return '<div style="padding:12px 0;border-top:1px solid rgba(127,127,127,.18)">'+
+          '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><strong>'+esc(names[v.bot_type]||v.bot_type)+' · v'+esc(v.version||1)+'</strong><span class="badge">'+esc(r.stage||'DRAFT')+'</span></div>'+
+          '<div class="small" style="margin-top:6px">Lifecycle: '+stageOrder.map(s=>(s===r.stage?'<strong>'+s+'</strong>':s)).join(' → ')+'</div>'+
+          '<div class="small" style="margin-top:5px">Última transición: '+esc(last?.stage||r.stage||'DRAFT')+' · '+esc(last?.at||r.updated_at||'')+'</div>'+
+          '<div class="small" style="margin-top:5px">Eventos registrados: '+hist.length+' · Evidencia: validation='+esc(JSON.stringify(v.validation||{}))+' · risk_gate='+String(v.risk_gate_passed===true)+'</div>'+
+        '</div>';
+      }).join('');
+      body.innerHTML=rows+'<div class="small" style="margin-top:10px">El registro es local al navegador y funciona como auditoría de lifecycle; no sustituye persistencia de servidor. LIVE permanece bloqueado.</div>';
+    }
+    window.addEventListener('sbt:published',render);
+    window.addEventListener('sbt:recommended',render);
+    window.addEventListener('sbt:market-detail',render);
+    window.addEventListener('sbt:decision-refresh',render);
+    render();
+  }
+  function boot(){mount();if(!document.querySelector('#bot-lab-page[data-sbt-registry-v1]'))setTimeout(boot,250)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
