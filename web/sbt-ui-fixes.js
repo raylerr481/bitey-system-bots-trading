@@ -546,13 +546,13 @@
         if(q&&!hay.includes(q))return null;
         return {kind:'published',id:b.id,bot:b,c,label,c};
       }).filter(Boolean);
-      const publishedTypes=new Set(pub.map(x=>x.bot_type));
       const templates=CATALOG.filter(c=>{
         const text=(c.name+' '+c.market+' '+c.cat+' '+c.desc).toLowerCase();
         return (filter==='ALL'||c.cat===filter)&&(!q||text.includes(q));
-      }).filter(c=>!publishedTypes.has(c.id)).map(c=>({kind:'template',id:c.id,c}));
+      }).map(c=>({kind:'template',id:c.id,c}));
       const cards=publishedCards.concat(templates);
-      p.querySelector('#sbtMarketStats').textContent=pub.length+' versión(es) publicada(s) · '+cards.length+' entrada(s) visibles · LIVE bloqueado';
+      const counts=pub.reduce((m,x)=>(m[x.bot_type]=(m[x.bot_type]||0)+1,m),{});
+      p.querySelector('#sbtMarketStats').textContent=pub.length+' versión(es) publicada(s) · '+cards.length+' entrada(s) visibles · '+Object.keys(counts).length+' bot(s) con versiones · LIVE bloqueado';
       p.querySelector('#sbtMarketGrid').innerHTML=cards.map(item=>{
         const c=item.c;
         if(item.kind==='published'){
