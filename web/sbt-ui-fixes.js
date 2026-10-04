@@ -970,7 +970,7 @@
 
   function mount(){
     const page=document.getElementById('bot-lab-page');
-    const anchor=page?.querySelector('[data-sbt-decision-v2]');
+    const anchor=page?.querySelector('#sbtDecisionBody')?.closest('section');
     if(!page||!anchor||page.dataset.sbtRegistryV1)return;
     page.dataset.sbtRegistryV1='1';
     const p=document.createElement('section');
