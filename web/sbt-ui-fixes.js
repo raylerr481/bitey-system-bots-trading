@@ -433,7 +433,8 @@
     function current(){
       const c=window.__sbtSelectedBotConfig;
       if(!c?.bot_type)return null;
-      const all=bots(), b=all.find(x=>x.bot_type===c.bot_type && JSON.stringify(x.config)===JSON.stringify(c))||all.find(x=>x.bot_type===c.bot_type);
+      const all=bots(), clean={...c}; delete clean.bot_id; const signature=JSON.stringify(clean);
+      const b=all.find(x=>c.bot_id&&x.id===c.bot_id)||all.find(x=>x.bot_type===c.bot_type && JSON.stringify(x.config||{})===signature)||all.find(x=>x.bot_type===c.bot_type);
       return {config:c,bot:b};
     }
     function checks(){
@@ -599,5 +600,47 @@
     render();
   }
   function boot(){mount();if(!document.querySelector('#bot-lab-page[data-bot-marketplace-v1]'))setTimeout(boot,250)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
+
+(() => {
+  const KEY='sbt.publishedBots.v1', MY='sbt.myBots.v1';
+  const names={grid:'Grid Bot',dca:'DCA Bot',trend:'Trend Bot',breakout:'Breakout Bot','mean-reversion':'Mean Reversion',rebalance:'Rebalance Bot'};
+  const read=k=>{try{return JSON.parse(localStorage.getItem(k)||'[]')}catch(_e){return[]}};
+  const write=(k,v)=>localStorage.setItem(k,JSON.stringify(v.slice(0,50)));
+  const esc=v=>String(v??'').replace(/[&<>"]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x]));
+  function mount(){
+    const page=document.getElementById('bot-lab-page'), market=page?.querySelector('#sbtMarketGrid')?.closest('section');
+    if(!page||!market||page.dataset.botMarketplaceDetailV1)return;
+    page.dataset.botMarketplaceDetailV1='1';
+    const p=document.createElement('section');p.className='card';p.style.cssText='margin:18px 0;padding:20px';
+    p.innerHTML='<span class="eyebrow">BOT DETAILS</span><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><h2 id="sbtBotDetailTitle" style="margin:5px 0">Selecciona una versión</h2><p id="sbtBotDetailSub" class="sub">Detalle, configuración y evolución de versiones.</p></div><span class="badge">DEMO / PAPER · LIVE LOCKED</span></div><div id="sbtBotDetailMetrics" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:15px"></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:15px"><div class="card" style="padding:14px"><div class="small">CONFIGURACIÓN</div><pre id="sbtBotDetailConfig" style="white-space:pre-wrap;overflow:auto;margin-top:8px">—</pre></div><div class="card" style="padding:14px"><div class="small">VERSION HISTORY</div><div id="sbtBotDetailHistory" style="margin-top:8px">—</div></div></div><div class="toolbar" style="margin-top:14px"><button class="btn primary" id="sbtBotDetailUse">Usar versión</button><button class="btn" id="sbtBotDetailClone">Clonar versión</button></div><div id="sbtBotDetailResult" class="result" style="margin-top:14px">LIVE permanece bloqueado.</div>';
+    market.insertAdjacentElement('afterend',p);
+    let selected=null;
+    function render(){
+      if(!selected){p.querySelector('#sbtBotDetailTitle').textContent='Selecciona una versión';p.querySelector('#sbtBotDetailSub').textContent='Abre una versión publicada desde el Marketplace para ver su detalle.';p.querySelector('#sbtBotDetailMetrics').innerHTML='';p.querySelector('#sbtBotDetailConfig').textContent='—';p.querySelector('#sbtBotDetailHistory').innerHTML='—';return;}
+      const all=read(KEY), versions=all.filter(x=>x.bot_id===selected.bot_id||x.bot_type===selected.bot_type).sort((a,b)=>Number(b.version||0)-Number(a.version||0));
+      const name=selected.name||names[selected.bot_type]||selected.bot_type;
+      p.querySelector('#sbtBotDetailTitle').textContent=name+' · v'+Number(selected.version||1);
+      p.querySelector('#sbtBotDetailSub').textContent=(selected.bot_type||'').toUpperCase()+' · '+(selected.symbol||selected.assets||'market')+' · PUBLISHED · NO LIVE';
+      const metrics=[['Return',Number(selected.return_pct||0).toFixed(2)+'%'],['Drawdown',Number(selected.drawdown_pct||0).toFixed(2)+'%'],['Strategy Score',selected.strategy_score??'—'],['Robustness',selected.robustness_score??'—'],['Risk Gate',selected.risk_position_pct!=null?'PASS':'—'],['Published',selected.published_at?new Date(selected.published_at).toLocaleString():'—']];
+      p.querySelector('#sbtBotDetailMetrics').innerHTML=metrics.map(x=>'<div class="card" style="padding:12px"><div class="small">'+esc(x[0])+'</div><strong>'+esc(x[1])+'</strong></div>').join('');
+      const cfg={...(selected.config||{})};delete cfg.bot_id;p.querySelector('#sbtBotDetailConfig').textContent=JSON.stringify(cfg,null,2);
+      p.querySelector('#sbtBotDetailHistory').innerHTML=versions.map(v=>'<button type="button" class="btn '+(String(v.id)===String(selected.id)?'primary':'')+' sbt-version-select" data-id="'+esc(v.id)+'" style="width:100%;text-align:left;margin-bottom:6px">v'+Number(v.version||1)+' · Return '+Number(v.return_pct||0).toFixed(2)+'% · DD '+Number(v.drawdown_pct||0).toFixed(2)+'% · Score '+esc(v.strategy_score??'—')+'</button>').join('')||'<div class="small">Sin historial.</div>';
+      p.querySelector('#sbtBotDetailResult').textContent=(selected.risk_position_pct!=null?'Risk Gate · posición '+Number(selected.risk_position_pct).toFixed(2)+'% · pérdida/trade '+Number(selected.risk_trade_pct||0).toFixed(2)+'% · pérdida diaria '+Number(selected.risk_daily_pct||0).toFixed(2)+'%':'Risk Gate registrado durante validación')+' · DEMO/PAPER · LIVE LOCKED.';
+    }
+    function useSelected(){if(!selected)return;window.__sbtSelectedBotConfig={...(selected.config||{}),bot_type:selected.bot_type,bot_id:selected.bot_id||selected.id};window.dispatchEvent(new CustomEvent('sbt:bot-config',{detail:window.__sbtSelectedBotConfig}));p.querySelector('#sbtBotDetailResult').textContent='Versión v'+Number(selected.version||1)+' cargada. Preparada para backtest; no ejecuta órdenes live.';}
+    function cloneSelected(){
+      if(!selected)return;const cfg={...(selected.config||{})};delete cfg.bot_id;const clone={id:selected.bot_type+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),bot_type:selected.bot_type,name:(selected.name||names[selected.bot_type]||selected.bot_type)+' Clone v'+Number(selected.version||1),config:cfg,stage:'DRAFT',strategy_score:null,robustness_score:null,created_at:new Date().toISOString(),updated_at:new Date().toISOString(),cloned_from:selected.id};
+      const my=read(MY);my.unshift(clone);write(MY,my);window.__sbtSelectedBotConfig={...cfg,bot_type:selected.bot_type,bot_id:clone.id};window.dispatchEvent(new CustomEvent('sbt:bot-saved',{detail:clone}));window.dispatchEvent(new CustomEvent('sbt:bot-config',{detail:window.__sbtSelectedBotConfig}));p.querySelector('#sbtBotDetailResult').textContent='CLONADO · '+clone.name+' · DRAFT. Debe volver a pasar Backtest → Robustness → Risk Gate → Demo → Paper.';
+    }
+    p.addEventListener('click',e=>{const v=e.target.closest('.sbt-version-select');if(v){selected=read(KEY).find(x=>String(x.id)===String(v.dataset.id))||null;render();}});
+    p.querySelector('#sbtBotDetailUse').onclick=useSelected;p.querySelector('#sbtBotDetailClone').onclick=cloneSelected;
+    window.addEventListener('sbt:market-detail',e=>{selected=read(KEY).find(x=>String(x.id)===String(e.detail?.id))||null;render();});
+    window.addEventListener('sbt:published',e=>{const risk=window.__sbtLastRisk;if(e.detail?.id&&risk){const pub=read(KEY),i=pub.findIndex(x=>String(x.id)===String(e.detail.id));if(i>=0){pub[i].risk_position_pct=Number(risk.max_position_pct??0);pub[i].risk_trade_pct=Number(risk.max_loss_per_trade_pct??0);pub[i].risk_daily_pct=Number(risk.max_daily_loss_pct??0);write(KEY,pub);selected=pub[i];}}render();});
+    render();
+  }
+  function wireMarketplace(){const page=document.getElementById('bot-lab-page'),grid=page?.querySelector('#sbtMarketGrid');if(!grid)return false;if(!grid.dataset.detailWired){grid.dataset.detailWired='1';grid.addEventListener('click',e=>{const btn=e.target.closest('.sbt-market-use');if(btn?.dataset.kind==='published')window.dispatchEvent(new CustomEvent('sbt:market-detail',{detail:{id:btn.dataset.id}}));});}return true;}
+  function boot(){mount();if(!wireMarketplace())setTimeout(boot,250)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
