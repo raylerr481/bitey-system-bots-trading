@@ -759,8 +759,27 @@
     p.innerHTML='<span class="eyebrow">SBT DECISION</span><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><h3 style="margin:5px 0">Decisión de versión</h3><p id="sbtDecisionSub" class="sub">La recomendación automática permanece separada de CURRENT.</p></div><span class="badge">LIVE LOCKED</span></div><div id="sbtDecisionBody" style="margin-top:12px">Selecciona una versión publicada.</div>';
     detail.insertAdjacentElement('afterend',p);
     const body=p.querySelector('#sbtDecisionBody'); let selected=null;
-    function render(){
+    async function backendDecision(v){
+      try{
+        const payload={bot_type:v.bot_type,version:Number(v.version||1),return_pct:v.return_pct??null,drawdown_pct:v.drawdown_pct??null,strategy_score:v.strategy_score??null,robustness_score:v.robustness_score??null,validation:v.validation||{},risk_gate_passed:v.risk_gate_passed===true};
+        const res=await fetch('/api/v1/built-in-bots/decision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        if(!res.ok)throw new Error('HTTP '+res.status);
+        return await res.json();
+      }catch(e){return null;}
+    }
+    async function render(){
       if(!selected){body.textContent='Selecciona una versión publicada.';return;}
+      body.innerHTML='<div class="small">Consultando Decision Engine…</div>';
+      const decision=await backendDecision(selected);
+      const all=read(), versions=all.filter(x=>x.bot_type===selected.bot_type), elig=versions.filter(eligible).sort((a,b)=>score(b)-score(a)), top=elig[0]||null;
+      const s=decision?.score??score(selected), current=selected.recommended===true, isTop=top&&String(top.id)===String(selected.id), rs=decision?.reasons||reasons(selected);
+      const decisionEligible=decision?.eligible??eligible(selected);
+      const role=isTop?'SBT TOP':(current?'CURRENT':(decisionEligible?'ELIGIBLE ALTERNATIVE':'NOT ELIGIBLE'));
+      const reason=decisionEligible?(isTop?'Es la mejor versión elegible por el ranking SBT.':current?'Está marcada manualmente como CURRENT; SBT TOP puede ser otra versión.':'Cumple los gates, pero otra versión elegible tiene mayor score.'):'No puede ser candidata: '+(rs.length?rs.join(' · '):'faltan evidencias de validación.');
+      const vals=decision?['validated','demo','paper','performance','robustness','risk_gate'].map(k=>decision.gates?.[k]===true):[selected.validation?.validated===true,selected.validation?.demo===true,selected.validation?.paper===true,selected.validation?.performance===true,selected.validation?.robustness_status==='PASS',selected.risk_gate_passed===true];
+      body.innerHTML='<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><strong style="font-size:18px">'+esc(role)+' · '+esc(names[selected.bot_type]||selected.bot_type)+' v'+Number(selected.version||1)+'</strong><span class="badge">'+Number(s).toFixed(1)+'/100</span><span class="badge">'+(decision?'BACKEND':'LOCAL FALLBACK')+'</span></div><p class="sub" style="margin:8px 0">'+esc(reason)+'</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">'+['VALIDATED','DEMO','PAPER','PERFORMANCE','ROBUSTNESS','RISK GATE'].map((k,i)=>'<div class="card" style="padding:9px"><div class="small">'+k+'</div><strong>'+ (vals[i]?'PASS':'PENDING')+'</strong></div>').join('')+'</div>'+(rs.length?'<div class="small" style="margin-top:10px"><strong>Bloqueos:</strong> '+esc(rs.join(' · '))+'</div>':'<div class="small" style="margin-top:10px">Sin bloqueos de elegibilidad. Ranking orientativo; no garantiza rendimiento.</div>')+(top&&String(top.id)!==String(selected.id)?'<button type="button" class="btn primary" id="sbtCompareTop" style="margin-top:10px">Comparar con SBT TOP v'+Number(top.version||1)+'</button>':'')+'<div class="small" style="margin-top:10px">Decision Engine: '+(decision?'backend autoritativo':'fallback local; backend no disponible')+'. LIVE LOCKED.</div>';
+      const btn=p.querySelector('#sbtCompareTop'); if(btn)btn.onclick=()=>window.dispatchEvent(new CustomEvent('sbt:compare-top',{detail:{bot_type:selected.bot_type,selected_id:selected.id,top_id:top.id}}));
+    }
       const all=read(), versions=all.filter(x=>x.bot_type===selected.bot_type), elig=versions.filter(eligible).sort((a,b)=>score(b)-score(a)), top=elig[0]||null;
       const s=score(selected), current=selected.recommended===true, isTop=top&&String(top.id)===String(selected.id), rs=reasons(selected);
       const role=isTop?'SBT TOP':(current?'CURRENT':(eligible(selected)?'ELIGIBLE ALTERNATIVE':'NOT ELIGIBLE'));
