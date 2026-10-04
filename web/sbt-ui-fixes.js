@@ -92,7 +92,7 @@
     trend:{title:'Trend Bot',fields:[['symbol','Símbolo','EURUSD','text'],['timeframe','Timeframe','H1','select','M5,H1,H4,D1'],['capital','Capital','10000','number'],['emaFast','EMA rápida','9','number'],['emaSlow','EMA lenta','21','number'],['rsi','RSI mínimo','50','number'],['atr','ATR SL multiplier','1.5','number'],['risk','Riesgo %','0.25','number']]},
     breakout:{title:'Breakout Bot',fields:[['symbol','Símbolo','BTC/USDT','text'],['timeframe','Timeframe','H1','select','M15,H1,H4,D1'],['capital','Capital','10000','number'],['lookback','Lookback','20','number'],['atr','ATR multiplier','1.5','number'],['risk','Riesgo %','0.5','number']]},
     'mean-reversion':{title:'Mean Reversion',fields:[['symbol','Símbolo','EURUSD','text'],['timeframe','Timeframe','H1','select','M15,H1,H4,D1'],['capital','Capital','10000','number'],['rsiLow','RSI sobreventa','30','number'],['rsiHigh','RSI sobrecompra','70','number'],['deviation','Desviación','2','number'],['take','Take profit %','1','number'],['stop','Stop loss %','2','number']]},
-    rebalance:{title:'Rebalance Bot',fields:[['assets','Activos','BTC/USDT,ETH/USDT,USDT','text'],['capital','Capital','10000','number'],['btc','BTC %','50','number'],['eth','ETH %','30','number'],['cash','Cash %','20','number'],['threshold','Umbral rebalance %','5','number']]}
+    rebalance:{title:'Rebalance Bot',fields:[['assets','Activos','BTC/USDT,ETH/USDT,USDT','text'],['capital','Capital','10000','number'],['btc','BTC %','50','number'],['eth','ETH %','30','number'],['cash','Cash %','20','number'],['threshold','Umbral rebalance %','5','number'],['frequency','Frecuencia rebalance','20','number']]}
   };
   function mount(){
     const page=document.getElementById('bot-lab-page'); const center=page?.querySelector('[data-bot-filters]')?.closest('section');
@@ -126,17 +126,48 @@
       const d=await r.json(), candles=Array.isArray(d)?d:(Array.isArray(d.candles)?d.candles:[]);
       const prices=candles.map(x=>Number(x.close)).filter(Number.isFinite);
       if(prices.length<40)throw new Error('Insuficientes datos: '+prices.length+' cierres; se requieren al menos 40');
-      const br=await fetch(base+'/api/v1/built-in-bots/backtest',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({bot_type:c.bot_type,prices,initial_capital:Number(c.capital||10000),config:c})});
+      const br=await fetch(base+'/api/v1/built-in-bots/backtest',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({bot_type:c.bot_type,prices,series,initial_capital:Number(c.capital||10000),config:c})});
       if(!br.ok)throw new Error('Backtest HTTP '+br.status);
       const b=await br.json(); if(b.valid===false)throw new Error(b.error||'Backtest rejected'); window.__sbtLastBacktest=b;
-      window.dispatchEvent(new CustomEvent('sbt:backtest',{detail:{backtest:b,config:c,symbol,timeframe:tf}}));
+      window.dispatchEvent(new CustomEvent('sbt:backtest',{detail:{backtest:b,config:c,symbol:symbolLabel||symbol,timeframe:tfLabel||tf}}));
       try{
-        const rr=await fetch(base+'/api/v1/built-in-bots/robustness',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({bot_type:c.bot_type,prices,initial_capital:Number(c.capital||10000),config:c})});
+        const rr=await fetch(base+'/api/v1/built-in-bots/robustness',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({bot_type:c.bot_type,prices,series,initial_capital:Number(c.capital||10000),config:c})});
         if(rr.ok){const rb=await rr.json();window.__sbtLastRobustness=rb;window.dispatchEvent(new CustomEvent('sbt:robustness',{detail:{robustness:rb,config:c,symbol,timeframe:tf}}));}
       }catch(_e){/* robustness is advisory; backtest remains available */}
       out.textContent='BACKTEST DISPONIBLE · '+c.bot_type+' · '+symbol+' '+tf+' · '+prices.length+' cierres · Equity final '+Number(b.final_equity||0).toFixed(2)+' · Return '+Number(b.total_return_pct||0).toFixed(2)+'% · Trades '+Number(b.trades||0)+' · Win rate '+Number(b.win_rate_pct||0).toFixed(1)+'% · DD '+Number(b.max_drawdown_pct||0).toFixed(2)+'%. Sin órdenes live.';
     }catch(e){out.textContent='Backtest unavailable: '+e.message+'. No se muestran métricas inventadas.';}
   });
+})();
+
+(() => {
+  window.sbtLoadBotMarket = async function(c, base) {
+    const tf=c.timeframe||'H1';
+    if(c.bot_type!=='rebalance') {
+      const symbol=c.symbol||'EURUSD';
+      const r=await fetch(base+'/api/v1/market/candles/'+encodeURIComponent(symbol)+'?timeframe='+encodeURIComponent(tf)+'&limit=200');
+      if(!r.ok)throw new Error('Market data HTTP '+r.status);
+      const d=await r.json(), candles=Array.isArray(d)?d:(Array.isArray(d.candles)?d.candles:[]);
+      const prices=candles.map(x=>Number(x.close)).filter(Number.isFinite);
+      if(prices.length<40)throw new Error('Insuficientes datos: '+prices.length+' cierres; se requieren al menos 40');
+      return {prices,series:{},symbol,timeframe:tf};
+    }
+    const assets=String(c.assets||'BTC/USDT,ETH/USDT,USDT').split(',').map(x=>x.trim()).filter(Boolean);
+    const series={}; let firstSymbol=null; let firstPrices=[];
+    for(const asset of assets) {
+      if(/^(USDT|USD|CASH)$/i.test(asset)) continue;
+      const r=await fetch(base+'/api/v1/market/candles/'+encodeURIComponent(asset)+'?timeframe='+encodeURIComponent(tf)+'&limit=200');
+      if(!r.ok)throw new Error('Market data '+asset+' HTTP '+r.status);
+      const d=await r.json(), candles=Array.isArray(d)?d:(Array.isArray(d.candles)?d.candles:[]);
+      const prices=candles.map(x=>Number(x.close)).filter(Number.isFinite);
+      if(prices.length<40)throw new Error('Insuficientes datos para '+asset+': '+prices.length);
+      if(!firstSymbol){firstSymbol=asset;firstPrices=prices;}
+      series[asset]=prices;
+    }
+    const lengths=Object.values(series).map(x=>x.length); const min=Math.min(...lengths);
+    if(!Number.isFinite(min)||min<40)throw new Error('Series multi-activo insuficientes');
+    Object.keys(series).forEach(k=>{series[k]=series[k].slice(-min);});
+    return {prices:firstPrices.slice(-min),series,symbol:assets.join(', '),timeframe:tf};
+  };
 })();
 
 
@@ -232,17 +263,19 @@
       const c=selectedConfig();if(!c?.bot_type)return;
       const bots=load();
       const name=({grid:'Grid Bot',dca:'DCA Bot',trend:'Trend Bot',breakout:'Breakout Bot','mean-reversion':'Mean Reversion',rebalance:'Rebalance Bot'}[c.bot_type]||c.bot_type);
-      const signature=JSON.stringify(c);
-      const existing=bots.find(x=>x.bot_type===c.bot_type && JSON.stringify(x.config||{})===signature);
+      const cleanConfig={...c};delete cleanConfig.bot_id;
+      const signature=JSON.stringify(cleanConfig);
+      const existing=bots.find(x=>(c.bot_id&&x.id===c.bot_id)|| (x.bot_type===c.bot_type && JSON.stringify(x.config||{})===signature));
       const b=existing||{id:c.bot_type+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),bot_type:c.bot_type,name,config:c,stage:'DRAFT',strategy_score:null,robustness_score:null,updated_at:new Date().toISOString()};
-      b.config=c;b.name=name;b.updated_at=new Date().toISOString();
+      b.config=cleanConfig;b.name=name;b.updated_at=new Date().toISOString();
       if(!existing)bots.unshift(b);save(bots);window.dispatchEvent(new CustomEvent('sbt:bot-saved',{detail:b}));
     });
   }
   function syncEvaluationToBot(){
     const bots=load(), c=selectedConfig();if(!c?.bot_type)return;
-    const signature=JSON.stringify(c);
-    const idx=bots.findIndex(x=>x.bot_type===c.bot_type && JSON.stringify(x.config||{})===signature);
+    const cleanConfig={...c};delete cleanConfig.bot_id;
+    const signature=JSON.stringify(cleanConfig);
+    const idx=bots.findIndex(x=>(c.bot_id&&x.id===c.bot_id)|| (x.bot_type===c.bot_type && JSON.stringify(x.config||{})===signature));
     if(idx<0)return;
     const b=bots[idx], rb=window.__sbtLastRobustness, bt=window.__sbtLastBacktest;
     b.strategy_score=(bt&&rb&&rb.valid)?Math.round(Math.max(0,Math.min(100,Number(bt.total_return_pct||0)*2+Number(bt.win_rate_pct||0)*0.2+(20-Number(bt.max_drawdown_pct||0)*2)+Number(rb.score||0)*0.25+5))):b.strategy_score;
@@ -276,12 +309,8 @@
       const symbol=c.symbol||'EURUSD', tf=c.timeframe||'M5';
       out.textContent='Iniciando sesión virtual…';
       try{
-        const mr=await fetch(base+'/api/v1/market/candles/'+encodeURIComponent(symbol)+'?timeframe='+encodeURIComponent(tf)+'&limit=200');
-        if(!mr.ok)throw new Error('Market data HTTP '+mr.status);
-        const md=await mr.json(), candles=Array.isArray(md)?md:(Array.isArray(md.candles)?md.candles:[]);
-        const prices=candles.map(x=>Number(x.close)).filter(Number.isFinite);
-        if(prices.length<40)throw new Error('Insuficientes datos para Demo: '+prices.length);
-        const dr=await fetch(base+'/api/v1/built-in-bots/demo/simulate',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({bot_type:c.bot_type,prices,initial_capital:Number(c.capital||10000),config:c})});
+        const market=await window.sbtLoadBotMarket(c,base), prices=market.prices, series=market.series;
+        const dr=await fetch(base+'/api/v1/built-in-bots/demo/simulate',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({bot_type:c.bot_type,prices,series,initial_capital:Number(c.capital||10000),config:c})});
         if(!dr.ok)throw new Error('Demo HTTP '+dr.status);
         const d=await dr.json(); if(d.valid===false)throw new Error(d.error||'Demo rejected');
         window.__sbtLastDemo=d;
