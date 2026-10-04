@@ -743,3 +743,35 @@
   function boot(){mount();if(!document.querySelector('#bot-lab-page[data-bot-version-compare-v2]'))setTimeout(boot,250)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();\n
+
+(() => {
+  const KEY='sbt.publishedBots.v1';
+  const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(_e){return[]}};
+  const esc=v=>String(v??'').replace(/[&<>]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[x]));
+  const names={grid:'Grid Bot',dca:'DCA Bot',trend:'Trend Bot',breakout:'Breakout Bot','mean-reversion':'Mean Reversion',rebalance:'Rebalance Bot'};
+  const eligible=v=>{const x=v.validation||{};return x.validated===true&&x.demo===true&&x.paper===true&&x.performance===true&&x.robustness_status==='PASS'&&x.risk_gate===true&&v.risk_gate_passed===true;};
+  const score=v=>{const ret=Math.max(0,Math.min(100,50+Number(v.return_pct||0)*5));const dd=Math.max(0,Math.min(100,100-Math.abs(Number(v.drawdown_pct||0))*5));const rb=Math.max(0,Math.min(100,Number(v.robustness_score||0)));const ss=Math.max(0,Math.min(100,Number(v.strategy_score||0)));const risk=v.risk_gate_passed===true?100:0;return ret*.30+dd*.25+rb*.20+ss*.15+risk*.10;};
+  const reasons=v=>{const x=v.validation||{},r=[];if(x.validated!==true)r.push('VALIDATED pendiente');if(x.demo!==true)r.push('DEMO pendiente');if(x.paper!==true)r.push('PAPER pendiente');if(x.performance!==true)r.push('PERFORMANCE pendiente');if(x.robustness_status!=='PASS')r.push('Robustness no PASS');if(x.risk_gate!==true||v.risk_gate_passed!==true)r.push('Risk Gate no PASS');if(v.strategy_score===null||v.strategy_score===undefined)r.push('Strategy Score ausente');if(v.robustness_score===null||v.robustness_score===undefined)r.push('Robustness Score ausente');return r;};
+  function mount(){
+    const page=document.getElementById('bot-lab-page'),detail=page?.querySelector('#sbtBotDetailHistory')?.closest('section');
+    if(!page||!detail||page.dataset.sbtDecisionV1)return; page.dataset.sbtDecisionV1='1';
+    const p=document.createElement('section');p.className='card';p.style.cssText='margin-top:12px;padding:18px';
+    p.innerHTML='<span class="eyebrow">SBT DECISION</span><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><h3 style="margin:5px 0">Decisión de versión</h3><p id="sbtDecisionSub" class="sub">La recomendación automática permanece separada de CURRENT.</p></div><span class="badge">LIVE LOCKED</span></div><div id="sbtDecisionBody" style="margin-top:12px">Selecciona una versión publicada.</div>';
+    detail.insertAdjacentElement('afterend',p);
+    const body=p.querySelector('#sbtDecisionBody'); let selected=null;
+    function render(){
+      if(!selected){body.textContent='Selecciona una versión publicada.';return;}
+      const all=read(), versions=all.filter(x=>x.bot_type===selected.bot_type), elig=versions.filter(eligible).sort((a,b)=>score(b)-score(a)), top=elig[0]||null;
+      const s=score(selected), current=selected.recommended===true, isTop=top&&String(top.id)===String(selected.id), rs=reasons(selected);
+      const role=isTop?'SBT TOP':(current?'CURRENT':(eligible(selected)?'ELIGIBLE ALTERNATIVE':'NOT ELIGIBLE'));
+      const reason=eligible(selected)?(isTop?'Es la mejor versión elegible por el ranking SBT.':current?'Está marcada manualmente como CURRENT; SBT TOP puede ser otra versión.':'Cumple los gates, pero otra versión elegible tiene mayor score.'):'No puede ser candidata: '+(rs.length?rs.join(' · '):'faltan evidencias de validación.');
+      const vals=[selected.validation?.validated===true,selected.validation?.demo===true,selected.validation?.paper===true,selected.validation?.performance===true,selected.validation?.robustness_status==='PASS',selected.risk_gate_passed===true];
+      body.innerHTML='<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><strong style="font-size:18px">'+esc(role)+' · '+esc(names[selected.bot_type]||selected.bot_type)+' v'+Number(selected.version||1)+'</strong><span class="badge">'+s.toFixed(1)+'/100</span></div><p class="sub" style="margin:8px 0">'+esc(reason)+'</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">'+['VALIDATED','DEMO','PAPER','PERFORMANCE','ROBUSTNESS','RISK GATE'].map((k,i)=>'<div class="card" style="padding:9px"><div class="small">'+k+'</div><strong>'+ (vals[i]?'PASS':'PENDING')+'</strong></div>').join('')+'</div>'+(rs.length?'<div class="small" style="margin-top:10px"><strong>Bloqueos:</strong> '+esc(rs.join(' · '))+'</div>':'<div class="small" style="margin-top:10px">Sin bloqueos de elegibilidad. Ranking orientativo; no garantiza rendimiento.</div>')+(top&&String(top.id)!==String(selected.id)?'<button type="button" class="btn primary" id="sbtCompareTop" style="margin-top:10px">Comparar con SBT TOP v'+Number(top.version||1)+'</button>':'');
+      const btn=p.querySelector('#sbtCompareTop'); if(btn)btn.onclick=()=>window.dispatchEvent(new CustomEvent('sbt:compare-top',{detail:{bot_type:selected.bot_type,selected_id:selected.id,top_id:top.id}}));
+    }
+    window.addEventListener('sbt:market-detail',e=>{selected=read().find(x=>String(x.id)===String(e.detail?.id))||null;render();});
+    window.addEventListener('sbt:recommended',render); window.addEventListener('sbt:published',render); render();
+  }
+  function boot(){mount();if(!document.querySelector('#bot-lab-page[data-sbt-decision-v1]'))setTimeout(boot,250)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
