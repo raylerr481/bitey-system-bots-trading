@@ -777,37 +777,150 @@
 })();\n
 
 (() => {
+  const KEY='sbt.publishedBots.v1';(() => {
   const KEY='sbt.publishedBots.v1';
   const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(_e){return[]}};
-  const esc=v=>String(v??'').replace(/[&<>]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[x]));
+  const esc=v=>String(v??'').replace(/[&<>"]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x]));
   const names={grid:'Grid Bot',dca:'DCA Bot',trend:'Trend Bot',breakout:'Breakout Bot','mean-reversion':'Mean Reversion',rebalance:'Rebalance Bot'};
-  const eligible=v=>{const x=v.validation||{};return x.validated===true&&x.demo===true&&x.paper===true&&x.performance===true&&x.robustness_status==='PASS'&&x.risk_gate===true&&v.risk_gate_passed===true;};
-  const score=v=>{const ret=Math.max(0,Math.min(100,50+Number(v.return_pct||0)*5));const dd=Math.max(0,Math.min(100,100-Math.abs(Number(v.drawdown_pct||0))*5));const rb=Math.max(0,Math.min(100,Number(v.robustness_score||0)));const ss=Math.max(0,Math.min(100,Number(v.strategy_score||0)));const risk=v.risk_gate_passed===true?100:0;return ret*.30+dd*.25+rb*.20+ss*.15+risk*.10;};
-  const reasons=v=>{const x=v.validation||{},r=[];if(x.validated!==true)r.push('VALIDATED pendiente');if(x.demo!==true)r.push('DEMO pendiente');if(x.paper!==true)r.push('PAPER pendiente');if(x.performance!==true)r.push('PERFORMANCE pendiente');if(x.robustness_status!=='PASS')r.push('Robustness no PASS');if(x.risk_gate!==true||v.risk_gate_passed!==true)r.push('Risk Gate no PASS');if(v.strategy_score===null||v.strategy_score===undefined)r.push('Strategy Score ausente');if(v.robustness_score===null||v.robustness_score===undefined)r.push('Robustness Score ausente');return r;};
+  const eligible=v=>{
+    const x=v.validation||{};
+    return x.validated===true&&x.demo===true&&x.paper===true&&x.performance===true&&x.robustness_status==='PASS'&&x.risk_gate===true&&v.risk_gate_passed===true;
+  };
+  const score=v=>{
+    const ret=Math.max(0,Math.min(100,50+Number(v.return_pct||0)*5));
+    const dd=Math.max(0,Math.min(100,100-Math.abs(Number(v.drawdown_pct||0))*5));
+    const rb=Math.max(0,Math.min(100,Number(v.robustness_score||0)));
+    const ss=Math.max(0,Math.min(100,Number(v.strategy_score||0)));
+    const risk=v.risk_gate_passed===true?100:0;
+    return ret*.30+dd*.25+rb*.20+ss*.15+risk*.10;
+  };
+  const reasons=v=>{
+    const x=v.validation||{},r=[];
+    if(x.validated!==true)r.push('VALIDATED pendiente');
+    if(x.demo!==true)r.push('DEMO pendiente');
+    if(x.paper!==true)r.push('PAPER pendiente');
+    if(x.performance!==true)r.push('PERFORMANCE pendiente');
+    if(x.robustness_status!=='PASS')r.push('Robustness no PASS');
+    if(x.risk_gate!==true||v.risk_gate_passed!==true)r.push('Risk Gate no PASS');
+    if(v.strategy_score===null||v.strategy_score===undefined)r.push('Strategy Score ausente');
+    if(v.robustness_score===null||v.robustness_score===undefined)r.push('Robustness Score ausente');
+    return r;
+  };
+
   function mount(){
-    const page=document.getElementById('bot-lab-page'),detail=page?.querySelector('#sbtBotDetailHistory')?.closest('section');
-    if(!page||!detail||page.dataset.sbtDecisionV1)return; page.dataset.sbtDecisionV1='1';
-    const p=document.createElement('section');p.className='card';p.style.cssText='margin-top:12px;padding:18px';
-    p.innerHTML='<span class="eyebrow">SBT DECISION</span><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><h3 style="margin:5px 0">Decisión de versión</h3><p id="sbtDecisionSub" class="sub">La recomendación automática permanece separada de CURRENT.</p></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button id="sbtDecisionRefresh" class="btn secondary">↻ Re-evaluar</button><span class="badge">LIVE LOCKED</span></div></div><div id="sbtDecisionBody" style="margin-top:12px">Selecciona una versión publicada.</div>';
+    const page=document.getElementById('bot-lab-page');
+    const detail=page?.querySelector('#sbtBotDetailHistory')?.closest('section');
+    if(!page||!detail||page.dataset.sbtDecisionV2)return;
+    page.dataset.sbtDecisionV2='1';
+
+    const p=document.createElement('section');
+    p.className='card';
+    p.style.cssText='margin-top:12px;padding:18px';
+    p.innerHTML='<span class="eyebrow">SBT DECISION</span><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><h3 style="margin:5px 0">Decisión de versión</h3><p id="sbtDecisionSub" class="sub">Decision Engine backend + fallback local. CURRENT permanece separado de SBT TOP.</p></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button id="sbtDecisionRefresh" class="btn secondary">↻ Re-evaluar</button><span class="badge">LIVE LOCKED</span></div></div><div id="sbtDecisionBody" style="margin-top:12px">Selecciona una versión publicada.</div>';
     detail.insertAdjacentElement('afterend',p);
-    const body=p.querySelector('#sbtDecisionBody'); let selected=null;
+
+    const body=p.querySelector('#sbtDecisionBody');
+    let selected=null;
+
     async function backendDecision(v){
       try{
         const payload={bot_type:v.bot_type,version:Number(v.version||1),return_pct:v.return_pct??null,drawdown_pct:v.drawdown_pct??null,strategy_score:v.strategy_score??null,robustness_score:v.robustness_score??null,validation:v.validation||{},risk_gate_passed:v.risk_gate_passed===true};
         const res=await fetch('/api/v1/built-in-bots/decision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
         if(!res.ok)throw new Error('HTTP '+res.status);
         return await res.json();
-      }catch(e){return null;}
+      }catch(_e){return null;}
     }
+
+    async function backendRank(versions){
+      try{
+        if(!versions.length)return null;
+        const payload={versions:versions.map(v=>({bot_type:v.bot_type,version:Number(v.version||1),return_pct:v.return_pct??null,drawdown_pct:v.drawdown_pct??null,strategy_score:v.strategy_score??null,robustness_score:v.robustness_score??null,validation:v.validation||{},risk_gate_passed:v.risk_gate_passed===true}))};
+        const res=await fetch('/api/v1/built-in-bots/decision/rank',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        if(!res.ok)throw new Error('HTTP '+res.status);
+        return await res.json();
+      }catch(_e){return null;}
+    }
+
+    async function refreshDecisions(){
+      const all=read();
+      if(!all.length)return null;
+      try{
+        const payload={versions:all.map(v=>({bot_type:v.bot_type,version:Number(v.version||1),return_pct:v.return_pct??null,drawdown_pct:v.drawdown_pct??null,strategy_score:v.strategy_score??null,robustness_score:v.robustness_score??null,validation:v.validation||{},risk_gate_passed:v.risk_gate_passed===true}))};
+        const res=await fetch('/api/v1/built-in-bots/decision/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        if(!res.ok)throw new Error('HTTP '+res.status);
+        const data=await res.json();
+        const checkedAt=data.checked_at||new Date().toISOString();
+        const fresh=read().map(v=>{
+          const hit=(data.results||[]).find(x=>x.bot_type===v.bot_type&&Number(x.version||1)===Number(v.version||1));
+          return hit?{...v,decision_snapshot:{decision:hit.decision,eligible:hit.eligible,score:hit.score,rank:hit.rank??null,checked_at:checkedAt,contract:data.contract}}:v;
+        });
+        localStorage.setItem(KEY,JSON.stringify(fresh));
+        if(selected)selected=fresh.find(x=>String(x.id)===String(selected.id))||selected;
+        return data;
+      }catch(_e){return null;}
+    }
+
     async function render(){
       if(!selected){body.textContent='Selecciona una versión publicada.';return;}
       body.innerHTML='<div class="small">Consultando Decision Engine…</div>';
       const decision=await backendDecision(selected);
-    p.querySelector('#sbtDecisionRefresh').addEventListener('click',async()=>{const b=p.querySelector('#sbtDecisionRefresh');b.disabled=true;b.textContent='↻ Evaluando…';const out=await refreshDecisions();b.disabled=false;b.textContent='↻ Re-evaluar';if(out)render();else{const note=p.querySelector('#sbtDecisionSub');if(note)note.textContent='No se pudo actualizar; se mantienen los últimos datos disponibles.';}});
-    window.addEventListener('sbt:market-detail',async e=>{selected=read().find(x=>String(x.id)===String(e.detail?.id))||null;render();});
+      const all=read();
+      const versions=all.filter(x=>x.bot_type===selected.bot_type);
+      const rankData=await backendRank(versions);
+      const ranked=(rankData?.results||[]).slice().sort((a,b)=>(Number(b.eligible)-Number(a.eligible))||((Number(b.score)||0)-(Number(a.score)||0)));
+      const localTop=versions.filter(eligible).sort((a,b)=>score(b)-score(a))[0]||null;
+      const backendTop=ranked.find(x=>x.eligible===true)||null;
+      const topId=backendTop?versions.find(v=>Number(v.version||1)===Number(backendTop.version||1))?.id:localTop?.id;
+      const isTop=topId&&String(topId)===String(selected.id);
+      const dEligible=decision?.eligible??eligible(selected);
+      const dScore=decision?.score??score(selected);
+      const rs=decision?.reasons||reasons(selected);
+      const snap=selected.decision_snapshot;
+      const source=decision?'BACKEND':'LOCAL FALLBACK';
+      const gate=v=>v?'PASS':'PENDIENTE';
+      const gates=decision?.gates||{
+        validated:selected.validation?.validated===true,
+        demo:selected.validation?.demo===true,
+        paper:selected.validation?.paper===true,
+        performance:selected.validation?.performance===true,
+        robustness:selected.validation?.robustness_status==='PASS',
+        risk_gate:selected.risk_gate_passed===true
+      };
+      body.innerHTML='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span class="badge">'+esc(source)+'</span><span class="badge">'+(dEligible?'ELIGIBLE':'NOT ELIGIBLE')+'</span><span class="badge">'+(isTop?'SBT TOP':'ELIGIBLE ALTERNATIVE')+'</span></div>'+
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px">'+
+        '<div class="stat"><span>Bot</span><strong>'+esc(names[selected.bot_type]||selected.bot_type)+'</strong></div>'+
+        '<div class="stat"><span>Versión</span><strong>v'+esc(selected.version||1)+'</strong></div>'+
+        '<div class="stat"><span>Score</span><strong>'+Number(dScore||0).toFixed(1)+'/100</strong></div>'+
+        '<div class="stat"><span>Return</span><strong>'+Number(selected.return_pct||0).toFixed(2)+'%</strong></div>'+
+        '<div class="stat"><span>Drawdown</span><strong>'+Number(selected.drawdown_pct||0).toFixed(2)+'%</strong></div>'+
+        '</div>'+
+        '<div style="margin-top:12px"><strong>Gates</strong><div class="small" style="margin-top:6px">VALIDATED '+gate(gates.validated)+' · DEMO '+gate(gates.demo)+' · PAPER '+gate(gates.paper)+' · PERFORMANCE '+gate(gates.performance)+' · ROBUSTNESS '+gate(gates.robustness)+' · RISK GATE '+gate(gates.risk_gate)+'</div></div>'+
+        '<div style="margin-top:12px"><strong>Bloqueos</strong><div class="small" style="margin-top:6px">'+(rs.length?rs.map(esc).join(' · '):'Ninguno')+'</div></div>'+
+        '<div class="small" style="margin-top:12px">TOP backend: '+(backendTop?'v'+backendTop.version+' · '+Number(backendTop.score||0).toFixed(1)+'/100':'no disponible')+' · Último refresh: '+esc(snap?.checked_at||'no registrado')+'.</div>'+
+        '<div class="small" style="margin-top:8px">Decision Engine es screening reproducible; no garantiza rendimiento y no autoriza trading live. LIVE LOCKED.</div>';
+    }
+
+    p.querySelector('#sbtDecisionRefresh').addEventListener('click',async()=>{
+      const b=p.querySelector('#sbtDecisionRefresh');
+      b.disabled=true;b.textContent='↻ Evaluando…';
+      const out=await refreshDecisions();
+      b.disabled=false;b.textContent='↻ Re-evaluar';
+      if(out)render();
+      else{
+        const note=p.querySelector('#sbtDecisionSub');
+        if(note)note.textContent='No se pudo actualizar; se mantienen los últimos datos disponibles.';
+      }
+    });
+
+    window.addEventListener('sbt:market-detail',e=>{
+      selected=read().find(x=>String(x.id)===String(e.detail?.id))||null;
+      render();
+    });
     window.addEventListener('sbt:published',()=>{if(selected)render();});
-    window.addEventListener('sbt:recommended',render); window.addEventListener('sbt:published',render); render();
+    window.addEventListener('sbt:recommended',()=>{if(selected)render();});
+    render();
   }
-  function boot(){mount();if(!document.querySelector('#bot-lab-page[data-sbt-decision-v1]'))setTimeout(boot,250)}
+
+  function boot(){mount();if(!document.querySelector('#bot-lab-page[data-sbt-decision-v2]'))setTimeout(boot,250)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
