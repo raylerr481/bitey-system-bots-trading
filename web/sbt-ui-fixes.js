@@ -535,13 +535,29 @@
     publish.insertAdjacentElement('afterend',p);
     let filter='ALL';
     const esc=v=>String(v??'').replace(/[&<>"]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x]));
-    function render(){
+    async function backendRank(pub){
+      try{
+        if(!pub.length)return {};
+        const payload={versions:pub.map(b=>({bot_type:b.bot_type,version:Number(b.version||1),return_pct:b.return_pct??null,drawdown_pct:b.drawdown_pct??null,strategy_score:b.strategy_score??null,robustness_score:b.robustness_score??null,validation:b.validation||{},risk_gate_passed:b.risk_gate_passed===true}))};
+        const res=await fetch('/api/v1/built-in-bots/decision/rank',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        if(!res.ok)throw new Error('HTTP '+res.status);
+        const data=await res.json(), out={};
+        (data.results||[]).forEach(x=>{if(x.eligible&&!out[x.bot_type])out[x.bot_type]={version:x.version,score:x.score};});
+        return out;
+      }catch(_e){return null;}
+    }
+    async function render(){
       const q=(p.querySelector('#sbtMarketSearch').value||'').toLowerCase().trim();
       const pub=read();
       const rankScore=b=>{const ret=Math.max(0,Math.min(100,50+Number(b.return_pct||0)*5));const dd=Math.max(0,Math.min(100,100-Math.abs(Number(b.drawdown_pct||0))*5));const rb=Math.max(0,Math.min(100,Number(b.robustness_score||0)));const ss=Math.max(0,Math.min(100,Number(b.strategy_score||0)));const risk=b.risk_gate_passed===true?100:0;return (ret*0.30)+(dd*0.25)+(rb*0.20)+(ss*0.15)+(risk*0.10);};
       const eligible=b=>{const v=b.validation||{};return v.validated===true&&v.demo===true&&v.paper===true&&v.performance===true&&v.robustness_status==='PASS'&&v.risk_gate===true&&b.risk_gate_passed===true;};
+      const backendTop=await backendRank(pub);
       const topByType={};
-      pub.filter(eligible).forEach(b=>{const score=rankScore(b);if(!topByType[b.bot_type]||score>topByType[b.bot_type].score)topByType[b.bot_type]={id:b.id,score};});
+      if(backendTop){
+        pub.forEach(b=>{const t=backendTop[b.bot_type];if(t&&Number(b.version||1)===Number(t.version))topByType[b.bot_type]={id:b.id,score:t.score,backend:true};});
+      }else{
+        pub.filter(eligible).forEach(b=>{const s=rankScore(b);if(!topByType[b.bot_type]||s>topByType[b.bot_type].score)topByType[b.bot_type]={id:b.id,score:s,backend:false};});
+      }
       const publishedCards=pub.map((b,i)=>{
         const c=CATALOG.find(x=>x.id===b.bot_type);
         if(!c)return null;
@@ -558,7 +574,7 @@
       }).map(c=>({kind:'template',id:c.id,c}));
       const cards=publishedCards.concat(templates);
       const counts=pub.reduce((m,x)=>(m[x.bot_type]=(m[x.bot_type]||0)+1,m),{});
-      p.querySelector('#sbtMarketStats').textContent=pub.length+' versión(es) publicada(s) · '+cards.length+' entrada(s) visibles · '+Object.keys(counts).length+' bot(s) con versiones · LIVE bloqueado';
+      p.querySelector('#sbtMarketStats').textContent=pub.length+' versión(es) publicada(s) · '+cards.length+' entrada(s) visibles · '+Object.keys(counts).length+' bot(s) con versiones · '+(backendTop?'RANKING BACKEND':'RANKING LOCAL FALLBACK')+' · LIVE bloqueado';
       p.querySelector('#sbtMarketGrid').innerHTML=cards.map(item=>{
         const c=item.c;
         if(item.kind==='published'){
