@@ -388,6 +388,29 @@ def built_in_paper_simulate(request: BuiltInBotRequest):
 
 
 
+class BuiltInDecisionBatchRequest(BaseModel):
+    versions: list[BuiltInDecisionRequest] = Field(min_length=1, max_length=200)
+
+
+@router.post("/decision/refresh")
+def built_in_decision_refresh(request: BuiltInDecisionBatchRequest):
+    """Refresh backend decisions for published-version snapshots."""
+    results=[built_in_decision(v) for v in request.versions]
+    eligible=[x for x in results if x.get("eligible") is True]
+    best=max(eligible,key=lambda x: float(x.get("score",0)),default=None)
+    return {
+        "valid":True,
+        "contract":"sbt-built-in-decision-refresh-v1",
+        "count":len(results),
+        "eligible_count":len(eligible),
+        "top":best,
+        "results":results,
+        "live":False,
+        "checked_at":__import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(),
+        "note":"Snapshot de screening; no autoriza trading live."
+    }
+
+
 class BuiltInDecisionRequest(BaseModel):
     bot_type: str = Field(min_length=2, max_length=32)
     version: int = Field(default=1, ge=1)
