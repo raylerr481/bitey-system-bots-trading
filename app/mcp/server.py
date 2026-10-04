@@ -10,6 +10,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.api.integrations import PERMISSIONS, PLATFORMS
 from app.turtle import TurtleController
+from app.integrations.mt4_gateway import MT4GatewayClient
 
 MCP_TOKEN = os.getenv("SBT_MCP_TOKEN", "").strip()
 MT5_BRIDGE_URL = os.getenv("MT5_BRIDGE_URL", "").rstrip("/")
