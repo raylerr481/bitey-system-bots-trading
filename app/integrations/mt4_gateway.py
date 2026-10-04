@@ -38,7 +38,7 @@ class MT4GatewayClient:
         return await self._get("/open_positions")
 
     async def market_data(self, symbol: str) -> dict[str, Any]:
-        return await self._get(f"/market_data/{symbol.upper()}")
+        return await self._get(f"/market_data?symbol={symbol.upper()}")
 
     async def trade_history(self) -> dict[str, Any]:
         return await self._get("/trade_history")
