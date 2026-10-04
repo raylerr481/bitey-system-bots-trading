@@ -266,10 +266,6 @@ def built_in_demo_simulate(request: BuiltInBotRequest):
         result=_run_rebalance(request.series,request.initial_capital,request.config)
         if not result.get("valid"): return {**result,"live":False}
         return {"valid":True,"contract":"sbt-built-in-demo-v2","bot_type":kind,"session_mode":"VIRTUAL","live":False,"virtual_orders":True,**{k:result[k] for k in ("initial_capital","final_equity","total_return_pct","trades","wins","losses","win_rate_pct","max_drawdown_pct","equity_curve","rebalance_count","target_weights_pct")},"note":"Simulación virtual multi-activo. No se envían órdenes."}
-    if kind == "rebalance":
-        result=_run_rebalance(request.series,request.initial_capital,request.config)
-        if not result.get("valid"): return {**result,"live":False}
-        return {"valid":True,"contract":"sbt-built-in-paper-v2","bot_type":kind,"session_mode":"PAPER","live":False,"virtual_orders":True,**{k:result[k] for k in ("initial_capital","final_equity","total_return_pct","trades","wins","losses","win_rate_pct","max_drawdown_pct","equity_curve","rebalance_count","target_weights_pct")},"note":"Paper multi-activo broker-free. No se envían órdenes."}
     prices = [float(x) for x in request.prices]
     if any(x <= 0 for x in prices):
         return {"valid": False, "error": "Prices must be positive", "live": False}
@@ -361,6 +357,10 @@ def built_in_paper_simulate(request: BuiltInBotRequest):
     allowed = {"grid", "dca", "trend", "breakout", "mean-reversion", "rebalance"}
     if kind not in allowed:
         return {"valid": False, "error": "Unsupported built-in bot type", "live": False}
+    if kind == "rebalance":
+        result=_run_rebalance(request.series,request.initial_capital,request.config)
+        if not result.get("valid"): return {**result,"live":False}
+        return {"valid":True,"contract":"sbt-built-in-paper-v2","bot_type":kind,"session_mode":"PAPER","live":False,"virtual_orders":True,**{k:result[k] for k in ("initial_capital","final_equity","total_return_pct","trades","wins","losses","win_rate_pct","max_drawdown_pct","equity_curve","rebalance_count","target_weights_pct")},"note":"Paper multi-activo broker-free. No se envían órdenes."}
     prices = [float(x) for x in request.prices]
     if any(x <= 0 for x in prices):
         return {"valid": False, "error": "Prices must be positive", "live": False}
