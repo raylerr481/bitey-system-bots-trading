@@ -10,6 +10,7 @@ class BuiltInBotRequest(BaseModel):
     prices: list[float] = Field(min_length=40)
     initial_capital: float = Field(default=10000, gt=0)
     config: dict = Field(default_factory=dict)
+    series: dict[str, list[float]] = Field(default_factory=dict)
 
 
 class BuiltInRiskRequest(BaseModel):
@@ -67,6 +68,54 @@ def _run(prices, capital, signal_fn, fee=0.001):
             "mode":"DEMO/PAPER","live":False}
 
 
+def _run_rebalance(series, capital, config, fee=0.001):
+    """Multi-asset close-price rebalance simulation using cash as the numeraire."""
+    clean={str(k): [float(v) for v in vals] for k, vals in (series or {}).items() if vals}
+    if not clean or any(len(v) < 40 for v in clean.values()):
+        return {"valid": False, "error": "Each rebalance asset needs at least 40 prices"}
+    lengths={len(v) for v in clean.values()}
+    if len(lengths) != 1 or any(any(x <= 0 for x in vals) for vals in clean.values()):
+        return {"valid": False, "error": "Rebalance series must have equal length and positive prices"}
+    assets=[a.strip() for a in str(config.get("assets", ",".join(clean))).split(",") if a.strip()]
+    assets=[a for a in assets if a in clean or a.upper() in {"USDT","USD","CASH"}]
+    investable=[a for a in assets if a in clean]
+    if not investable:
+        return {"valid": False, "error": "No investable asset series supplied"}
+    weights={}
+    for a in investable:
+        key="btc" if a.upper().startswith("BTC") else "eth" if a.upper().startswith("ETH") else a.lower().replace("/", "_").replace("-", "_")
+        weights[a]=max(0.0, float(config.get(key, 0))) / 100.0
+    cash_weight=max(0.0, float(config.get("cash", max(0.0, 100.0-sum(weights.values())*100.0)))) / 100.0
+    total=sum(weights.values())+cash_weight
+    if total <= 0: return {"valid": False, "error": "Target weights must be greater than zero"}
+    weights={a:w/total for a,w in weights.items()}; cash_weight=cash_weight/total
+    n=next(iter(lengths)); cash=capital*cash_weight
+    qty={a:(capital*weights[a]) / clean[a][0] for a in investable}
+    threshold=max(0.0, float(config.get("threshold", 5))) / 100.0
+    frequency=max(1, int(config.get("frequency", 20)))
+    trades=rebalance_count=0; wins=0; peak=capital; max_dd=0.0; equity_curve=[]; previous_equity=capital
+    for i in range(n):
+        equity=cash+sum(qty[a]*clean[a][i] for a in investable)
+        peak=max(peak,equity); max_dd=max(max_dd,(peak-equity)/peak*100.0); equity_curve.append(round(equity,8))
+        drift=max((abs((qty[a]*clean[a][i])/equity-weights[a]) for a in investable), default=0.0)
+        if i > 0 and (drift >= threshold or i % frequency == 0) and i < n-1:
+            fee_value=equity*fee; cash=max(0.0,cash-fee_value); trades += 1; rebalance_count += 1
+            for a in investable:
+                target_value=equity*weights[a]
+                qty[a]=target_value/clean[a][i]
+            cash=equity*cash_weight-fee_value
+            if equity > previous_equity: wins += 1
+        previous_equity=equity
+    final=equity_curve[-1]
+    return {"valid": True, "initial_capital": capital, "final_equity": final,
+            "total_return_pct": (final/capital-1)*100.0, "trades": trades,
+            "rebalance_count": rebalance_count, "wins": wins, "losses": max(0,trades-wins),
+            "win_rate_pct": wins/trades*100.0 if trades else 0.0,
+            "max_drawdown_pct": max_dd, "equity_curve": equity_curve,
+            "target_weights_pct": {a: round(weights[a]*100.0,2) for a in investable} | {"cash": round(cash_weight*100.0,2)},
+            "mode": "DEMO/PAPER", "live": False}
+
+
 def _signal(kind,c):
     def fn(p,i):
         if i<35:return "hold"
@@ -104,6 +153,10 @@ def built_in_backtest(request: BuiltInBotRequest):
     kind=request.bot_type.lower()
     if kind not in {"grid","dca","trend","breakout","mean-reversion","rebalance"}:
         return {"valid":False,"error":"Unsupported built-in bot type","live":False}
+    if kind == "rebalance":
+        result=_run_rebalance(request.series,request.initial_capital,request.config)
+        if not result.get("valid"): return {**result,"live":False}
+        return {"valid":True,"contract":"sbt-built-in-bot-v2","bot_type":kind,**result,"note":"Multi-asset close-price rebalance simulation; not a live execution forecast."}
     prices=[float(x) for x in request.prices]
     if any(x<=0 for x in prices):
         return {"valid":False,"error":"Prices must be positive","live":False}
