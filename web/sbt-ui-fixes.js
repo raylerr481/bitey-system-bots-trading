@@ -376,3 +376,62 @@
   window.addEventListener('sbt:paper',e=>update(e.detail?.paper,e.detail?.config,'PAPER'));
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
+
+(() => {
+  const KEY='sbt.myBots.v1';
+  const PUBLISH_KEY='sbt.publishedBots.v1';
+  const names={grid:'Grid Bot',dca:'DCA Bot',trend:'Trend Bot',breakout:'Breakout Bot','mean-reversion':'Mean Reversion',rebalance:'Rebalance Bot'};
+  function bots(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(_e){return[]}}
+  function save(a){localStorage.setItem(KEY,JSON.stringify(a.slice(0,50)))}
+  function published(){try{return JSON.parse(localStorage.getItem(PUBLISH_KEY)||'[]')}catch(_e){return[]}}
+  function savePublished(a){localStorage.setItem(PUBLISH_KEY,JSON.stringify(a.slice(0,50)))}
+  function mountPublishing(){
+    const page=document.getElementById('bot-lab-page');
+    const perf=page?.querySelector('#sbtPerfResult')?.closest('section');
+    if(!page||!perf||page.dataset.botPublishingV1)return;
+    page.dataset.botPublishingV1='1';
+    const p=document.createElement('section');p.className='card';p.style.cssText='margin:18px 0;padding:20px';
+    p.innerHTML='<span class="eyebrow">BOT PUBLISHING</span><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><h2 style="margin:5px 0">Publicar bot</h2><p class="sub">Publicar significa dejar el bot disponible en el catálogo SBT. No habilita dinero real.</p></div><span id="sbtPublishBadge" class="badge">PUBLISH LOCKED</span></div><div id="sbtPublishChecks" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:15px"></div><div class="toolbar" style="margin-top:14px"><button class="btn primary" id="sbtPublishBot">Publicar en SBT</button><button class="btn" id="sbtRefreshPublished">Actualizar</button></div><div id="sbtPublishResult" class="result" style="margin-top:14px">Selecciona un bot VALIDATED y completa Paper.</div><div id="sbtPublishedList" style="display:grid;gap:10px;margin-top:14px"></div>';
+    perf.insertAdjacentElement('afterend',p);
+    p.querySelector('#sbtPublishChecks').innerHTML=['VALIDATED','DEMO','PAPER','PERFORMANCE'].map(x=>'<div class="card" style="padding:12px"><div class="small">'+x+'</div><strong data-publish-check="'+x.toLowerCase()+'">PENDING</strong></div>').join('');
+    function current(){
+      const c=window.__sbtSelectedBotConfig;
+      if(!c?.bot_type)return null;
+      const all=bots(), b=all.find(x=>x.bot_type===c.bot_type && JSON.stringify(x.config)===JSON.stringify(c))||all.find(x=>x.bot_type===c.bot_type);
+      return {config:c,bot:b};
+    }
+    function checks(){
+      const cur=current(), bt=window.__sbtLastBacktest||{}, rb=window.__sbtLastRobustness||{}, risk=window.__sbtLastRisk, demo=window.__sbtLastDemo, paper=window.__sbtLastPaper, perf=window.__sbtLastPerformance||{};
+      const validated=!!(bt.valid&&rb.valid&&rb.status==='PASS'&&risk);
+      const demoOk=!!(demo?.valid&&demo?.session_mode==='VIRTUAL');
+      const paperOk=!!(paper?.valid&&paper?.session_mode==='PAPER');
+      const perfOk=!!(perf?.valid&&perf?.mode==='PAPER');
+      const ready=!!cur&&validated&&demoOk&&paperOk&&perfOk;
+      const set=(k,v)=>{const e=p.querySelector('[data-publish-check="'+k+'"]');if(e)e.textContent=v?'PASS':'PENDING';};
+      set('validated',validated);set('demo',demoOk);set('paper',paperOk);set('performance',perfOk);
+      const badge=p.querySelector('#sbtPublishBadge');if(badge)badge.textContent=ready?'READY TO PUBLISH':'PUBLISH LOCKED';
+      const out=p.querySelector('#sbtPublishResult');
+      if(out)out.textContent=ready?'Checklist completo · Publicar crea una entrada de catálogo, no una conexión de ejecución.':'Publicación bloqueada · requiere VALIDATED + DEMO + PAPER + PERFORMANCE.';
+      return {ready,cur,perf};
+    }
+    function render(){
+      const list=p.querySelector('#sbtPublishedList'), items=published();
+      list.innerHTML=items.length?items.map((b,i)=>'<article class="card" style="padding:14px"><div style="display:flex;justify-content:space-between;gap:10px"><div><strong>'+b.name+'</strong><div class="small">'+b.bot_type.toUpperCase()+' · '+(b.symbol||b.assets||'market')+'</div></div><span class="badge">PUBLISHED · NO LIVE</span></div><div class="small" style="margin-top:8px">Return '+Number(b.return_pct||0).toFixed(2)+'% · DD '+Number(b.drawdown_pct||0).toFixed(2)+'% · Score '+(b.strategy_score??'—')+' · '+new Date(b.published_at).toLocaleString()+'</div></article>').join(''):'<div class="small">No hay bots publicados todavía.</div>';
+      checks();
+    }
+    p.querySelector('#sbtPublishBot').onclick=()=>{
+      const q=checks();if(!q.ready||!q.cur?.bot){p.querySelector('#sbtPublishResult').textContent='PUBLISH BLOQUEADO · completa todos los controles.';return;}
+      const b=q.cur.bot, perf=q.perf;
+      const entry={id:b.id+'-pub-'+Date.now(),bot_type:b.bot_type,name:b.name,config:b.config,stage:'PUBLISHED',symbol:b.config.symbol,assets:b.config.assets,strategy_score:b.strategy_score,robustness_score:b.robustness_score,return_pct:Number(perf.return_pct||0),drawdown_pct:Number(perf.max_drawdown_pct||0),published_at:new Date().toISOString(),live:false};
+      const items=published();items.unshift(entry);savePublished(items);
+      b.stage='PUBLISHED';b.updated_at=new Date().toISOString();save(bots());
+      p.querySelector('#sbtPublishResult').textContent='PUBLISHED · '+b.name+' añadido al catálogo SBT. LIVE continúa bloqueado.';
+      window.dispatchEvent(new CustomEvent('sbt:published',{detail:entry}));render();
+    };
+    p.querySelector('#sbtRefreshPublished').onclick=render;
+    window.addEventListener('sbt:demo',checks);window.addEventListener('sbt:paper',checks);window.addEventListener('sbt:backtest',checks);window.addEventListener('sbt:robustness',checks);window.addEventListener('sbt:risk-preview',checks);window.addEventListener('sbt:published',render);
+    render();
+  }
+  function boot(){mountPublishing();if(!document.querySelector('#bot-lab-page[data-bot-publishing-v1]'))setTimeout(boot,250)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
