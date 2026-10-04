@@ -555,7 +555,7 @@
         const data=await res.json(), checkedAt=data.checked_at||new Date().toISOString(), results=data.results||[];
         const fresh=read().map(v=>{
           const hit=results.find(x=>x.bot_type===v.bot_type&&Number(x.version||1)===Number(v.version||1));
-          return hit?{...v,decision_snapshot:{decision:hit.decision,eligible:hit.eligible,score:hit.score,rank:hit.rank??null,checked_at:checkedAt,contract:data.contract}}:v;
+          return hit?{...v,decision_snapshot:{decision:hit.decision,eligible:hit.eligible,score:hit.score,rank:hit.rank??null,bot_type_rank:hit.bot_type_rank??null,bot_type_count:hit.bot_type_count??null,checked_at:checkedAt,contract:data.contract}}:v;
         });
         localStorage.setItem('sbt.publishedBots.v1',JSON.stringify(fresh));
         if(selected)selected=fresh.find(x=>String(x.id)===String(selected.id))||selected;
@@ -877,6 +877,8 @@
       const rs=decision?.reasons||reasons(selected);
       const snap=selected.decision_snapshot;
       const source=decision?'BACKEND':'LOCAL FALLBACK';
+      const storedRank=selected.decision_snapshot?.bot_type_rank??null;
+      const storedCount=selected.decision_snapshot?.bot_type_count??null;
       const gate=v=>v?'PASS':'PENDIENTE';
       const gates=decision?.gates||{
         validated:selected.validation?.validated===true,
@@ -896,7 +898,7 @@
         '</div>'+
         '<div style="margin-top:12px"><strong>Gates</strong><div class="small" style="margin-top:6px">VALIDATED '+gate(gates.validated)+' · DEMO '+gate(gates.demo)+' · PAPER '+gate(gates.paper)+' · PERFORMANCE '+gate(gates.performance)+' · ROBUSTNESS '+gate(gates.robustness)+' · RISK GATE '+gate(gates.risk_gate)+'</div></div>'+
         '<div style="margin-top:12px"><strong>Bloqueos</strong><div class="small" style="margin-top:6px">'+(rs.length?rs.map(esc).join(' · '):'Ninguno')+'</div></div>'+
-        '<div class="small" style="margin-top:12px">TOP backend: '+(backendTop?'v'+backendTop.version+' · '+Number(backendTop.score||0).toFixed(1)+'/100':'no disponible')+' · Último refresh: '+esc(snap?.checked_at||'no registrado')+'.</div>'+
+        '<div class="small" style="margin-top:12px">TOP backend: '+(backendTop?'v'+backendTop.version+' · '+Number(backendTop.score||0).toFixed(1)+'/100':'no disponible')+' · Posición: '+(storedRank?'#'+storedRank+(storedCount?' / '+storedCount:''):'no registrada')+' · Último refresh: '+esc(snap?.checked_at||'no registrado')+'.</div>'+
         '<div class="small" style="margin-top:8px">Decision Engine es screening reproducible; no garantiza rendimiento y no autoriza trading live. LIVE LOCKED.</div>';
     }
 
