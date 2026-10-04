@@ -220,7 +220,7 @@
       const loadBtn=e.target.closest('[data-load-bot]'),del=e.target.closest('[data-delete-bot]');
       const bots=load();
       if(del){bots.splice(Number(del.dataset.deleteBot),1);save(bots);render();return;}
-      if(loadBtn){const b=bots[Number(loadBtn.dataset.loadBot)];if(!b)return;sessionStorage.setItem('sbt.bot.'+b.bot_type,JSON.stringify(b.config));window.__sbtSelectedBotConfig=b.config;const v=document.querySelector('[data-bot-view="'+b.bot_type+'"]');if(v)v.click();setTimeout(()=>window.dispatchEvent(new CustomEvent('sbt:bot-config',{detail:b.config})),50);}
+      if(loadBtn){const b=bots[Number(loadBtn.dataset.loadBot)];if(!b)return;sessionStorage.setItem('sbt.bot.'+b.id,JSON.stringify(b.config));window.__sbtSelectedBotConfig={...b.config,bot_id:b.id};const v=document.querySelector('[data-bot-view="'+b.bot_type+'"]');if(v)v.click();setTimeout(()=>window.dispatchEvent(new CustomEvent('sbt:bot-config',{detail:b.config})),50);}
     });
     p.querySelector('#sbtRefreshBots').onclick=render;
     window.addEventListener('sbt:bot-saved',render);render();
@@ -230,13 +230,19 @@
     btn.dataset.myBotsHooked='1';
     btn.addEventListener('click',()=>{
       const c=selectedConfig();if(!c?.bot_type)return;
-      const bots=load();const b={id:c.bot_type+'-'+Date.now(),bot_type:c.bot_type,name:({grid:'Grid Bot',dca:'DCA Bot',trend:'Trend Bot',breakout:'Breakout Bot','mean-reversion':'Mean Reversion',rebalance:'Rebalance Bot'}[c.bot_type]||c.bot_type),config:c,stage:'DRAFT',strategy_score:null,robustness_score:null,updated_at:new Date().toISOString()};
-      bots.unshift(b);save(bots);window.dispatchEvent(new CustomEvent('sbt:bot-saved',{detail:b}));
+      const bots=load();
+      const name=({grid:'Grid Bot',dca:'DCA Bot',trend:'Trend Bot',breakout:'Breakout Bot','mean-reversion':'Mean Reversion',rebalance:'Rebalance Bot'}[c.bot_type]||c.bot_type);
+      const signature=JSON.stringify(c);
+      const existing=bots.find(x=>x.bot_type===c.bot_type && JSON.stringify(x.config||{})===signature);
+      const b=existing||{id:c.bot_type+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),bot_type:c.bot_type,name,config:c,stage:'DRAFT',strategy_score:null,robustness_score:null,updated_at:new Date().toISOString()};
+      b.config=c;b.name=name;b.updated_at=new Date().toISOString();
+      if(!existing)bots.unshift(b);save(bots);window.dispatchEvent(new CustomEvent('sbt:bot-saved',{detail:b}));
     });
   }
   function syncEvaluationToBot(){
     const bots=load(), c=selectedConfig();if(!c?.bot_type)return;
-    const idx=bots.findIndex(x=>x.bot_type===c.bot_type);
+    const signature=JSON.stringify(c);
+    const idx=bots.findIndex(x=>x.bot_type===c.bot_type && JSON.stringify(x.config||{})===signature);
     if(idx<0)return;
     const b=bots[idx], rb=window.__sbtLastRobustness, bt=window.__sbtLastBacktest;
     b.strategy_score=(bt&&rb&&rb.valid)?Math.round(Math.max(0,Math.min(100,Number(bt.total_return_pct||0)*2+Number(bt.win_rate_pct||0)*0.2+(20-Number(bt.max_drawdown_pct||0)*2)+Number(rb.score||0)*0.25+5))):b.strategy_score;
