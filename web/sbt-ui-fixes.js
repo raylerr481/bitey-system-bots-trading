@@ -462,7 +462,8 @@
       const items=published();
       const previous=items.filter(x=>x.bot_id===b.id||x.bot_type===b.bot_type);
       const version=previous.reduce((m,x)=>Math.max(m,Number(x.version||1)),0)+1;
-      const entry={id:b.id+'-pub-v'+version+'-'+Date.now(),bot_id:b.id,version,bot_type:b.bot_type,name:b.name,config:b.config,stage:'PUBLISHED',symbol:b.config.symbol,assets:b.config.assets,strategy_score:b.strategy_score,robustness_score:b.robustness_score,return_pct:Number(perf.return_pct||0),drawdown_pct:Number(perf.max_drawdown_pct||0),published_at:new Date().toISOString(),live:false};
+      const risk=window.__sbtLastRisk||{};
+      const entry={id:b.id+'-pub-v'+version+'-'+Date.now(),bot_id:b.id,version,bot_type:b.bot_type,name:b.name,config:{...(b.config||{})},stage:'PUBLISHED',symbol:b.config.symbol,assets:b.config.assets,strategy_score:b.strategy_score,robustness_score:b.robustness_score,return_pct:Number(perf.return_pct||0),drawdown_pct:Number(perf.max_drawdown_pct||0),risk_position_pct:Number(risk.max_position_pct||0),risk_trade_pct:Number(risk.max_loss_per_trade_pct||0),risk_daily_pct:Number(risk.max_daily_loss_pct||0),published_at:new Date().toISOString(),live:false};
       items.unshift(entry);savePublished(items);
       b.stage='PUBLISHED';b.updated_at=new Date().toISOString();save(bots());
       p.querySelector('#sbtPublishResult').textContent='PUBLISHED · '+b.name+' añadido al catálogo SBT. LIVE continúa bloqueado.';
@@ -642,5 +643,43 @@
   }
   function wireMarketplace(){const page=document.getElementById('bot-lab-page'),grid=page?.querySelector('#sbtMarketGrid');if(!grid)return false;if(!grid.dataset.detailWired){grid.dataset.detailWired='1';grid.addEventListener('click',e=>{const btn=e.target.closest('.sbt-market-use');if(btn?.dataset.kind==='published')window.dispatchEvent(new CustomEvent('sbt:market-detail',{detail:{id:btn.dataset.id}}));});}return true;}
   function boot(){mount();if(!wireMarketplace())setTimeout(boot,250)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
+
+
+(() => {
+  const KEY='sbt.publishedBots.v1';
+  const esc=v=>String(v??'').replace(/[&<>"]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x]));
+  const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(_e){return[]}};
+  function mount(){
+    const page=document.getElementById('bot-lab-page'), grid=page?.querySelector('#sbtMarketGrid');
+    const detail=page?.querySelector('#sbtBotDetailHistory')?.closest('section');
+    if(!page||!grid||!detail||page.dataset.botVersionCompareV1)return;
+    page.dataset.botVersionCompareV1='1';
+    const host=document.createElement('div');host.style.cssText='margin-top:12px';
+    host.innerHTML='<button class="btn" id="sbtCompareVersions">Comparar versiones</button><div id="sbtVersionCompare" class="result" style="display:none;margin-top:10px"></div>';
+    detail.appendChild(host);
+    let selectedIds=[];
+    function render(){
+      const out=host.querySelector('#sbtVersionCompare'), all=read();
+      if(selectedIds.length!==2){out.style.display='none';return;}
+      const a=all.find(x=>String(x.id)===String(selectedIds[0])),b=all.find(x=>String(x.id)===String(selectedIds[1]));
+      if(!a||!b){out.style.display='none';return;}
+      const delta=(x,y)=>Number(x||0)-Number(y||0);
+      out.style.display='block';
+      out.innerHTML='<strong>v'+Number(a.version||1)+' vs v'+Number(b.version||1)+'</strong>'+
+        '<div class="small" style="margin-top:8px">Return Δ '+delta(a.return_pct,b.return_pct).toFixed(2)+' pp · DD Δ '+delta(a.drawdown_pct,b.drawdown_pct).toFixed(2)+' pp · Strategy Score Δ '+delta(a.strategy_score,b.strategy_score).toFixed(2)+' · Robustness Δ '+delta(a.robustness_score,b.robustness_score).toFixed(2)+'</div>'+
+        '<div class="small" style="margin-top:6px">Risk posición '+Number(a.risk_position_pct||0).toFixed(2)+'% vs '+Number(b.risk_position_pct||0).toFixed(2)+'% · trade '+Number(a.risk_trade_pct||0).toFixed(2)+'% vs '+Number(b.risk_trade_pct||0).toFixed(2)+'% · diario '+Number(a.risk_daily_pct||0).toFixed(2)+'% vs '+Number(b.risk_daily_pct||0).toFixed(2)+'%</div>'+
+        '<div class="small" style="margin-top:6px">Comparación informativa; no autoriza ejecución live.</div>';
+    }
+    host.querySelector('#sbtCompareVersions').onclick=()=>{
+      const all=read();
+      const botType=window.__sbtSelectedBotConfig?.bot_type;
+      const versions=all.filter(x=>x.bot_type===botType).sort((a,b)=>Number(b.version||0)-Number(a.version||0));
+      if(versions.length<2){host.querySelector('#sbtVersionCompare').style.display='block';host.querySelector('#sbtVersionCompare').textContent='Se necesitan al menos dos versiones publicadas del mismo bot para comparar.';return;}
+      selectedIds=[versions[0].id,versions[1].id];render();
+    };
+  }
+  function boot(){mount();if(!document.querySelector('#bot-lab-page[data-bot-version-compare-v1]'))setTimeout(boot,250)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
