@@ -473,11 +473,20 @@ def built_in_decision_rank(request: BuiltInDecisionRankRequest):
     ranked=sorted(results,key=lambda x:(bool(x.get("eligible")),float(x.get("score",0))),reverse=True)
     for i,item in enumerate(ranked,1):
         item["rank"]=i
+    by_type={}
+    for item in ranked:
+        t=str(item.get("bot_type") or "")
+        by_type.setdefault(t,[]).append(item)
+    for t,items in by_type.items():
+        ordered=sorted(items,key=lambda x:(bool(x.get("eligible")),float(x.get("score",0))),reverse=True)
+        for i,item in enumerate(ordered,1):
+            item["bot_type_rank"]=i
+            item["bot_type_count"]=len(ordered)
     return {
         "valid":True,
-        "contract":"sbt-built-in-decision-rank-v1",
+        "contract":"sbt-built-in-decision-rank-v2",
         "count":len(ranked),
         "results":ranked,
         "live":False,
-        "note":"Ranking orientativo; no autoriza trading live."
+        "note":"Ranking orientativo por versión y por tipo de bot; no autoriza trading live."
     }
