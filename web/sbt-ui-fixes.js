@@ -460,7 +460,11 @@
     }
     function render(){
       const list=p.querySelector('#sbtPublishedList'), items=published();
-      list.innerHTML=items.length?items.map((b,i)=>'<article class="card" style="padding:14px"><div style="display:flex;justify-content:space-between;gap:10px"><div><strong>'+b.name+'</strong><div class="small">'+b.bot_type.toUpperCase()+' · '+(b.symbol||b.assets||'market')+'</div></div><span class="badge">PUBLISHED · NO LIVE</span></div><div class="small" style="margin-top:8px">Return '+Number(b.return_pct||0).toFixed(2)+'% · DD '+Number(b.drawdown_pct||0).toFixed(2)+'% · Score '+(b.strategy_score??'—')+' · '+new Date(b.published_at).toLocaleString()+'</div></article>').join(''):'<div class="small">No hay bots publicados todavía.</div>';
+      list.innerHTML=items.length?items.map((b,i)=>{
+        const stage=window.__sbtRegistry?.stage?.(b.id)||'PUBLISHED';
+        const badge=stage==='CURRENT'?'CURRENT · NO LIVE':(stage==='PUBLISHED'?'PUBLISHED · NO LIVE':stage+' · NO LIVE');
+        return '<article class="card" style="padding:14px"><div style="display:flex;justify-content:space-between;gap:10px"><div><strong>'+b.name+'</strong><div class="small">'+b.bot_type.toUpperCase()+' · '+(b.symbol||b.assets||'market')+'</div></div><span class="badge">'+badge+'</span></div><div class="small" style="margin-top:8px">Return '+Number(b.return_pct||0).toFixed(2)+'% · DD '+Number(b.drawdown_pct||0).toFixed(2)+'% · Score '+(b.strategy_score??'—')+' · '+new Date(b.published_at).toLocaleString()+'</div></article>';
+      }).join(''):'<div class="small">No hay bots publicados todavía.</div>';
       checks();
     }
     p.querySelector('#sbtPublishBot').onclick=()=>{
@@ -473,8 +477,11 @@
       const entry={id:b.id+'-pub-v'+version+'-'+Date.now(),bot_id:b.id,version,bot_type:b.bot_type,name:b.name,config:{...(b.config||{})},stage:'PUBLISHED',symbol:b.config.symbol,assets:b.config.assets,strategy_score:b.strategy_score,robustness_score:b.robustness_score,return_pct:Number(perf.return_pct||0),drawdown_pct:Number(perf.max_drawdown_pct||0),risk_gate_passed:!!risk,risk_position_pct:risk?Number(risk.max_position_pct??0):null,risk_trade_pct:risk?Number(risk.max_loss_per_trade_pct??0):null,risk_daily_pct:risk?Number(risk.max_daily_loss_pct??0):null,validation:{validated:true,demo:true,paper:true,performance:true,robustness_status:'PASS',risk_gate:true},published_at:new Date().toISOString(),live:false};
       items.unshift(entry);savePublished(items);
       b.stage='PUBLISHED';b.updated_at=new Date().toISOString();save(bots());
+      window.__sbtRegistry?.sync?.();
       p.querySelector('#sbtPublishResult').textContent='PUBLISHED · '+b.name+' añadido al catálogo SBT. LIVE continúa bloqueado.';
-      window.dispatchEvent(new CustomEvent('sbt:published',{detail:entry}));render();
+      window.dispatchEvent(new CustomEvent('sbt:published',{detail:entry}));
+      window.dispatchEvent(new CustomEvent('sbt:registry-sync',{detail:{id:entry.id,bot_type:entry.bot_type,stage:'PUBLISHED',source:'publish'}}));
+      render();
     };
     p.querySelector('#sbtRefreshPublished').onclick=render;
     window.addEventListener('sbt:demo',checks);window.addEventListener('sbt:paper',checks);window.addEventListener('sbt:backtest',checks);window.addEventListener('sbt:robustness',checks);window.addEventListener('sbt:risk-preview',checks);window.addEventListener('sbt:published',render);
