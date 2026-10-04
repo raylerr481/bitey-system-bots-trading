@@ -538,6 +538,10 @@
     function render(){
       const q=(p.querySelector('#sbtMarketSearch').value||'').toLowerCase().trim();
       const pub=read();
+      const rankScore=b=>{const ret=Math.max(0,Math.min(100,50+Number(b.return_pct||0)*5));const dd=Math.max(0,Math.min(100,100-Math.abs(Number(b.drawdown_pct||0))*5));const rb=Math.max(0,Math.min(100,Number(b.robustness_score||0)));const ss=Math.max(0,Math.min(100,Number(b.strategy_score||0)));const risk=b.risk_gate_passed===true?100:0;return (ret*0.30)+(dd*0.25)+(rb*0.20)+(ss*0.15)+(risk*0.10);};
+      const eligible=b=>{const v=b.validation||{};return v.validated===true&&v.demo===true&&v.paper===true&&v.performance===true&&v.robustness_status==='PASS'&&v.risk_gate===true&&b.risk_gate_passed===true;};
+      const topByType={};
+      pub.filter(eligible).forEach(b=>{const score=rankScore(b);if(!topByType[b.bot_type]||score>topByType[b.bot_type].score)topByType[b.bot_type]={id:b.id,score};});
       const publishedCards=pub.map((b,i)=>{
         const c=CATALOG.find(x=>x.id===b.bot_type);
         if(!c)return null;
@@ -562,7 +566,7 @@
           const metrics='Return '+Number(b.return_pct||0).toFixed(2)+'% · DD '+Number(b.drawdown_pct||0).toFixed(2)+'% · Score '+(b.strategy_score??'—');
           const when=b.published_at?new Date(b.published_at).toLocaleString():'';
           return '<article class="card" style="padding:15px">'+
-            '<div style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:24px">'+c.icon+'</span><span class="badge">'+(b.recommended?'CURRENT · NO LIVE':'PUBLISHED · NO LIVE')+'</span></div>'+
+            '<div style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:24px">'+c.icon+'</span><span class="badge">'+(b.recommended?'CURRENT · NO LIVE':(topByType[b.bot_type]?.id===b.id?'SBT TOP · NO LIVE':'PUBLISHED · NO LIVE'))+'</span></div>'+
             '<h3 style="margin:10px 0 4px">'+esc(b.name||c.name)+'</h3>'+
             '<div class="small">'+esc(c.cat)+' · '+esc(c.market)+' · v'+Number(b.version||1)+(b.risk_gate_passed===true?' · RISK PASS':'')+'</div>'+
             '<p class="sub" style="min-height:42px">'+esc(c.desc)+'</p>'+
