@@ -435,3 +435,85 @@
   function boot(){mountPublishing();if(!document.querySelector('#bot-lab-page[data-bot-publishing-v1]'))setTimeout(boot,250)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
+
+
+(() => {
+  const KEY='sbt.publishedBots.v1';
+  const CATALOG=[
+    {id:'grid',name:'Grid Bot',cat:'Crypto',icon:'▦',desc:'Malla de órdenes para mercados laterales.',market:'BTC/USDT'},
+    {id:'dca',name:'DCA Bot',cat:'Portfolio',icon:'◉',desc:'Entradas escalonadas con control de exposición.',market:'BTC/USDT'},
+    {id:'trend',name:'Trend Bot',cat:'Forex',icon:'↗',desc:'Seguimiento de tendencia con EMA + RSI + ATR.',market:'EUR/USD'},
+    {id:'breakout',name:'Breakout Bot',cat:'Crypto',icon:'⇧',desc:'Rupturas con confirmación de volatilidad.',market:'BTC/USDT'},
+    {id:'mean-reversion',name:'Mean Reversion',cat:'Forex',icon:'↔',desc:'Retorno a la media con filtro de régimen.',market:'EUR/USD'},
+    {id:'rebalance',name:'Rebalance Bot',cat:'Portfolio',icon:'⇄',desc:'Mantiene pesos objetivo de una cartera.',market:'Multi-asset'}
+  ];
+  function read(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(_e){return[]}}
+  function mount(){
+    const page=document.getElementById('bot-lab-page');
+    const publish=page?.querySelector('#sbtPublishResult')?.closest('section');
+    if(!page||!publish||page.dataset.botMarketplaceV1)return;
+    page.dataset.botMarketplaceV1='1';
+    const p=document.createElement('section');
+    p.className='card';
+    p.style.cssText='margin:18px 0;padding:20px';
+    p.innerHTML='<span class="eyebrow">BOT MARKETPLACE</span>'+
+      '<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">'+
+      '<div><h2 style="margin:5px 0">SBT Bot Marketplace</h2><p class="sub">Catálogo interno de bots validados y publicados. Seleccionar un bot prepara su configuración; no activa órdenes.</p></div>'+
+      '<span id="sbtMarketBadge" class="badge">NO LIVE</span></div>'+
+      '<div class="toolbar" style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">'+
+      '<input id="sbtMarketSearch" class="input" placeholder="Buscar bot, mercado o categoría…" style="min-width:240px">'+
+      '<button class="btn primary" data-market-filter="ALL">Todos</button>'+
+      '<button class="btn" data-market-filter="Crypto">Crypto</button>'+
+      '<button class="btn" data-market-filter="Forex">Forex</button>'+
+      '<button class="btn" data-market-filter="Portfolio">Portfolio</button></div>'+
+      '<div id="sbtMarketStats" class="small" style="margin-top:12px"></div>'+
+      '<div id="sbtMarketGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:14px"></div>'+
+      '<div id="sbtMarketResult" class="result" style="margin-top:14px">Los bots publicados aparecerán aquí.</div>';
+    publish.insertAdjacentElement('afterend',p);
+    let filter='ALL';
+    const esc=v=>String(v??'').replace(/[&<>"]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x]));
+    function render(){
+      const q=(p.querySelector('#sbtMarketSearch').value||'').toLowerCase().trim();
+      const pub=read();
+      const pubByType={};
+      pub.forEach(x=>{if(!pubByType[x.bot_type])pubByType[x.bot_type]=x;});
+      const visible=CATALOG.filter(c=>{
+        const text=(c.name+' '+c.market+' '+c.cat+' '+c.desc).toLowerCase();
+        return (filter==='ALL'||c.cat===filter)&&(!q||text.includes(q));
+      });
+      p.querySelector('#sbtMarketStats').textContent=pub.length+' publicado(s) · '+visible.length+' plantilla(s) visibles · LIVE bloqueado';
+      p.querySelector('#sbtMarketGrid').innerHTML=visible.map(c=>{
+        const b=pubByType[c.id];
+        const status=b?'PUBLISHED':'BUILT-IN TEMPLATE';
+        const metrics=b?'Return '+Number(b.return_pct||0).toFixed(2)+'% · DD '+Number(b.drawdown_pct||0).toFixed(2)+'% · Score '+(b.strategy_score??'—'):'Pendiente de validar y publicar';
+        return '<article class="card" style="padding:15px">'+
+          '<div style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:24px">'+c.icon+'</span><span class="badge">'+status+'</span></div>'+
+          '<h3 style="margin:10px 0 4px">'+esc(c.name)+'</h3>'+
+          '<div class="small">'+esc(c.cat)+' · '+esc(c.market)+'</div>'+
+          '<p class="sub" style="min-height:42px">'+esc(c.desc)+'</p>'+
+          '<div class="small" style="margin:8px 0">'+esc(metrics)+'</div>'+
+          '<button class="btn '+(b?'primary':'')+' sbt-market-use" data-id="'+esc(c.id)+'">'+(b?'Usar bot':'Ver plantilla')+'</button></article>';
+      }).join('')||'<div class="small">No hay coincidencias.</div>';
+      p.querySelectorAll('.sbt-market-use').forEach(btn=>btn.onclick=()=>{
+        const id=btn.dataset.id, b=pubByType[id], c=CATALOG.find(x=>x.id===id);
+        if(b?.config){
+          window.__sbtSelectedBotConfig={...b.config,bot_type:id};
+          window.dispatchEvent(new CustomEvent('sbt:bot-config',{detail:window.__sbtSelectedBotConfig}));
+          p.querySelector('#sbtMarketResult').textContent='Bot cargado: '+c.name+' · configuración preparada para backtest. DEMO/PAPER · NO LIVE.';
+        }else{
+          const defaults={grid:{bot_type:'grid',symbol:'BTC/USDT',capital:10000,lower:90000,upper:120000,grids:12},dca:{bot_type:'dca',symbol:'BTC/USDT',capital:10000,initial:1000,safety:500,step:2,multiplier:1.5},trend:{bot_type:'trend',symbol:'EUR/USD',timeframe:'H1',capital:10000,emaFast:8,emaSlow:21,rsi:14,atr:14},breakout:{bot_type:'breakout',symbol:'BTC/USDT',timeframe:'H1',capital:10000,lookback:20,atr:14},'mean-reversion':{bot_type:'mean-reversion',symbol:'EUR/USD',timeframe:'H1',capital:10000,rsiLow:30,rsiHigh:70},rebalance:{bot_type:'rebalance',assets:'BTC/USDT,ETH/USDT,USDT',capital:10000,btc:50,eth:30,cash:20,threshold:5}};
+          window.__sbtSelectedBotConfig=defaults[id]||{bot_type:id};
+          window.dispatchEvent(new CustomEvent('sbt:bot-config',{detail:window.__sbtSelectedBotConfig}));
+          p.querySelector('#sbtMarketResult').textContent='Plantilla '+c.name+' cargada. Ejecuta backtest y validación antes de publicar.';
+        }
+      });
+    }
+    p.querySelector('#sbtMarketSearch').oninput=render;
+    p.querySelectorAll('[data-market-filter]').forEach(btn=>btn.onclick=()=>{filter=btn.dataset.marketFilter;render();});
+    window.addEventListener('sbt:published',render);
+    window.addEventListener('sbt:bot-saved',render);
+    render();
+  }
+  function boot(){mount();if(!document.querySelector('#bot-lab-page[data-bot-marketplace-v1]'))setTimeout(boot,250)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
