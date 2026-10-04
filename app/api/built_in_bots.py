@@ -203,6 +203,22 @@ def built_in_robustness(request: BuiltInBotRequest):
     kind=request.bot_type.lower()
     if kind not in {"grid", "dca", "trend", "breakout", "mean-reversion", "rebalance"}:
         return {"valid": False, "error": "Unsupported built-in bot type", "live": False}
+    if kind == "rebalance":
+        lengths={len(v) for v in request.series.values()}
+        if not request.series or len(lengths) != 1 or min(lengths or {0}) < 40:
+            return {"valid": False, "error": "Rebalance robustness requires equal multi-asset series of at least 40 points", "live": False}
+        n=next(iter(lengths)); split=max(20, int(n*0.70))
+        train_series={k:v[:split] for k,v in request.series.items()}
+        test_series={k:v[split:] for k,v in request.series.items()}
+        base=_run_rebalance(request.series,request.initial_capital,request.config)
+        oos=_run_rebalance(test_series,request.initial_capital,request.config)
+        stress=_run_rebalance(request.series,request.initial_capital,request.config,fee=0.002)
+        score=max(0.0,min(40.0,oos.get("total_return_pct",0)*4+20))
+        score+=max(0.0,min(30.0,30.0-oos.get("max_drawdown_pct",0)*2))
+        score+=15.0 if oos.get("trades",0)>=3 else 7.5 if oos.get("trades",0)>=1 else 0.0
+        score+=15.0 if stress.get("total_return_pct",0)>=-2 else 5.0 if stress.get("total_return_pct",0)>=-5 else 0.0
+        status="PASS" if score>=60 and oos.get("trades",0)>=1 else "REVIEW"
+        return {"valid":True,"contract":"sbt-built-in-robustness-v2","bot_type":kind,"score":round(score,2),"status":status,"in_sample_points":split,"out_of_sample_points":n-split,"base":base,"out_of_sample":oos,"fee_stress_0_20pct":stress,"mode":"DEMO/PAPER","live":False,"note":"Heurística multi-activo de robustness; no constituye garantía."}
     prices=[float(x) for x in request.prices]
     if any(x <= 0 for x in prices):
         return {"valid": False, "error": "Prices must be positive", "live": False}
@@ -244,6 +260,14 @@ def built_in_demo_simulate(request: BuiltInBotRequest):
     allowed = {"grid", "dca", "trend", "breakout", "mean-reversion", "rebalance"}
     if kind not in allowed:
         return {"valid": False, "error": "Unsupported built-in bot type", "live": False}
+    if kind == "rebalance":
+        result=_run_rebalance(request.series,request.initial_capital,request.config)
+        if not result.get("valid"): return {**result,"live":False}
+        return {"valid":True,"contract":"sbt-built-in-demo-v2","bot_type":kind,"session_mode":"VIRTUAL","live":False,"virtual_orders":True,**{k:result[k] for k in ("initial_capital","final_equity","total_return_pct","trades","wins","losses","win_rate_pct","max_drawdown_pct","equity_curve","rebalance_count","target_weights_pct")},"note":"Simulación virtual multi-activo. No se envían órdenes."}
+    if kind == "rebalance":
+        result=_run_rebalance(request.series,request.initial_capital,request.config)
+        if not result.get("valid"): return {**result,"live":False}
+        return {"valid":True,"contract":"sbt-built-in-paper-v2","bot_type":kind,"session_mode":"PAPER","live":False,"virtual_orders":True,**{k:result[k] for k in ("initial_capital","final_equity","total_return_pct","trades","wins","losses","win_rate_pct","max_drawdown_pct","equity_curve","rebalance_count","target_weights_pct")},"note":"Paper multi-activo broker-free. No se envían órdenes."}
     prices = [float(x) for x in request.prices]
     if any(x <= 0 for x in prices):
         return {"valid": False, "error": "Prices must be positive", "live": False}
