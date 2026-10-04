@@ -518,6 +518,7 @@
     {id:'rebalance',name:'Rebalance Bot',cat:'Portfolio',icon:'⇄',desc:'Mantiene pesos objetivo de una cartera.',market:'Multi-asset'}
   ];
   function read(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(_e){return[]}}
+  const registryStage=id=>window.__sbtRegistry?.stage(id)||'DRAFT';
   function mount(){
     const page=document.getElementById('bot-lab-page');
     const publish=page?.querySelector('#sbtPublishResult')?.closest('section');
@@ -605,7 +606,7 @@
           const metrics='Return '+Number(b.return_pct||0).toFixed(2)+'% · DD '+Number(b.drawdown_pct||0).toFixed(2)+'% · Score '+(b.strategy_score??'—');
           const when=b.published_at?new Date(b.published_at).toLocaleString():'';
           return '<article class="card" style="padding:15px">'+
-            '<div style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:24px">'+c.icon+'</span><span class="badge">'+(b.recommended?'CURRENT · NO LIVE':(topByType[b.bot_type]?.id===b.id?'SBT TOP · NO LIVE':'PUBLISHED · NO LIVE'))+'</span></div>'+
+            '<div style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:24px">'+c.icon+'</span><span class="badge">'+(registryStage(b.id)==='CURRENT'?'CURRENT · NO LIVE':(topByType[b.bot_type]?.id===b.id?'SBT TOP · NO LIVE':'PUBLISHED · NO LIVE'))+'</span></div>'+
             '<h3 style="margin:10px 0 4px">'+esc(b.name||c.name)+'</h3>'+
             '<div class="small">'+esc(c.cat)+' · '+esc(c.market)+' · v'+Number(b.version||1)+(b.risk_gate_passed===true?' · RISK PASS':'')+'</div>'+
             '<p class="sub" style="min-height:42px">'+esc(c.desc)+'</p>'+
@@ -641,6 +642,8 @@
     p.querySelectorAll('[data-market-filter]').forEach(btn=>btn.onclick=()=>{filter=btn.dataset.marketFilter;render();});
     window.addEventListener('sbt:published',render);
     window.addEventListener('sbt:bot-saved',render);
+    window.addEventListener('sbt:recommended',render);
+    window.addEventListener('sbt:registry-sync',render);
     render();
   }
   function boot(){mount();if(!document.querySelector('#bot-lab-page[data-bot-marketplace-v1]'))setTimeout(boot,250)}
@@ -652,6 +655,7 @@
   const names={grid:'Grid Bot',dca:'DCA Bot',trend:'Trend Bot',breakout:'Breakout Bot','mean-reversion':'Mean Reversion',rebalance:'Rebalance Bot'};
   const read=k=>{try{return JSON.parse(localStorage.getItem(k)||'[]')}catch(_e){return[]}};
   const write=(k,v)=>localStorage.setItem(k,JSON.stringify(v.slice(0,50)));
+  const registryStage=id=>window.__sbtRegistry?.stage(id)||'DRAFT';
   const esc=v=>String(v??'').replace(/[&<>"]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x]));
   function mount(){
     const page=document.getElementById('bot-lab-page'), market=page?.querySelector('#sbtMarketGrid')?.closest('section');
@@ -667,11 +671,11 @@
       const name=selected.name||names[selected.bot_type]||selected.bot_type;
       p.querySelector('#sbtBotDetailTitle').textContent=name+' · v'+Number(selected.version||1);
       p.querySelector('#sbtBotDetailSub').textContent=(selected.bot_type||'').toUpperCase()+' · '+(selected.symbol||selected.assets||'market')+' · PUBLISHED · NO LIVE';
-      const metrics=[['Return',Number(selected.return_pct||0).toFixed(2)+'%'],['Drawdown',Number(selected.drawdown_pct||0).toFixed(2)+'%'],['Strategy Score',selected.strategy_score??'—'],['Robustness',selected.robustness_score??'—'],['Risk Gate',selected.risk_gate_passed===true?'PASS':'—'],['Status',selected.recommended?'CURRENT / RECOMMENDED':'PUBLISHED'],['Published',selected.published_at?new Date(selected.published_at).toLocaleString():'—']];
+      const metrics=[['Return',Number(selected.return_pct||0).toFixed(2)+'%'],['Drawdown',Number(selected.drawdown_pct||0).toFixed(2)+'%'],['Strategy Score',selected.strategy_score??'—'],['Robustness',selected.robustness_score??'—'],['Risk Gate',selected.risk_gate_passed===true?'PASS':'—'],['Status',registryStage(selected.id)==='CURRENT'?'CURRENT':'PUBLISHED'],['Published',selected.published_at?new Date(selected.published_at).toLocaleString():'—']];
       p.querySelector('#sbtBotDetailMetrics').innerHTML=metrics.map(x=>'<div class="card" style="padding:12px"><div class="small">'+esc(x[0])+'</div><strong>'+esc(x[1])+'</strong></div>').join('');
       const cfg={...(selected.config||{})};delete cfg.bot_id;p.querySelector('#sbtBotDetailConfig').textContent=JSON.stringify(cfg,null,2);
-      p.querySelector('#sbtBotDetailHistory').innerHTML=versions.map(v=>'<div style="display:flex;gap:6px;margin-bottom:6px"><button type="button" class="btn '+(String(v.id)===String(selected.id)?'primary':'')+' sbt-version-select" data-id="'+esc(v.id)+'" style="flex:1;text-align:left">v'+Number(v.version||1)+(v.recommended?' · CURRENT':'')+' · Return '+Number(v.return_pct||0).toFixed(2)+'% · DD '+Number(v.drawdown_pct||0).toFixed(2)+'% · Score '+esc(v.strategy_score??'—')+'</button><button type="button" class="btn sbt-mark-current" data-id="'+esc(v.id)+'">'+(v.recommended?'✓':'☆')+'</button></div>').join('')||'<div class="small">Sin historial.</div>';
-      p.querySelector('#sbtBotDetailResult').textContent=(selected.risk_gate_passed===true?'Risk Gate · posición '+Number(selected.risk_position_pct||0).toFixed(2)+'% · pérdida/trade '+Number(selected.risk_trade_pct||0).toFixed(2)+'% · pérdida diaria '+Number(selected.risk_daily_pct||0).toFixed(2)+'%':'Risk Gate no registrado como PASS')+' · '+(selected.recommended?'CURRENT / RECOMMENDED · ':'')+'DEMO/PAPER · LIVE LOCKED.';
+      p.querySelector('#sbtBotDetailHistory').innerHTML=versions.map(v=>'<div style="display:flex;gap:6px;margin-bottom:6px"><button type="button" class="btn '+(String(v.id)===String(selected.id)?'primary':'')+' sbt-version-select" data-id="'+esc(v.id)+'" style="flex:1;text-align:left">v'+Number(v.version||1)+(registryStage(v.id)==='CURRENT'?' · CURRENT':'')+' · Return '+Number(v.return_pct||0).toFixed(2)+'% · DD '+Number(v.drawdown_pct||0).toFixed(2)+'% · Score '+esc(v.strategy_score??'—')+'</button><button type="button" class="btn sbt-mark-current" data-id="'+esc(v.id)+'">'+(registryStage(v.id)==='CURRENT'?'✓':'☆')+'</button></div>').join('')||'<div class="small">Sin historial.</div>';
+      p.querySelector('#sbtBotDetailResult').textContent=(selected.risk_gate_passed===true?'Risk Gate · posición '+Number(selected.risk_position_pct||0).toFixed(2)+'% · pérdida/trade '+Number(selected.risk_trade_pct||0).toFixed(2)+'% · pérdida diaria '+Number(selected.risk_daily_pct||0).toFixed(2)+'%':'Risk Gate no registrado como PASS')+' · '+(registryStage(selected.id)==='CURRENT'?'CURRENT · ':'')+'DEMO/PAPER · LIVE LOCKED.';
       const eligible=v=>{const val=v.validation||{};return val.validated===true&&val.demo===true&&val.paper===true&&val.performance===true&&val.robustness_status==='PASS'&&val.risk_gate===true&&v.risk_gate_passed===true;};
       const ranking=versions.map(v=>{const ret=Math.max(0,Math.min(100,50+Number(v.return_pct||0)*5));const dd=Math.max(0,Math.min(100,100-Math.abs(Number(v.drawdown_pct||0))*5));const rb=Math.max(0,Math.min(100,Number(v.robustness_score||0)));const ss=Math.max(0,Math.min(100,Number(v.strategy_score||0)));const risk=v.risk_gate_passed===true?100:0;return {...v,eligible:eligible(v),sbt_rank_score:(ret*0.30)+(dd*0.25)+(rb*0.20)+(ss*0.15)+(risk*0.10)};}).sort((a,b)=>(Number(b.eligible)-Number(a.eligible))||b.sbt_rank_score-a.sbt_rank_score);
       const best=ranking.find(v=>v.eligible);
@@ -694,6 +698,7 @@
     p.addEventListener('click',e=>{const v=e.target.closest('.sbt-version-select');if(v){selected=read(KEY).find(x=>String(x.id)===String(v.dataset.id))||null;render();return;}const mark=e.target.closest('.sbt-mark-current');if(mark){const all=read(KEY),target=all.find(x=>String(x.id)===String(mark.dataset.id));if(!target)return;all.forEach(x=>{if(x.bot_type===target.bot_type)x.recommended=String(x.id)===String(target.id);});const now=new Date().toISOString();const i=all.findIndex(x=>String(x.id)===String(target.id));if(i>=0)all[i].recommended_at=now;write(KEY,all);selected=all[i];window.dispatchEvent(new CustomEvent('sbt:recommended',{detail:{id:target.id,bot_type:target.bot_type}}));render();}});
     p.querySelector('#sbtBotDetailUse').onclick=useSelected;p.querySelector('#sbtBotDetailClone').onclick=cloneSelected;
     window.addEventListener('sbt:market-detail',e=>{selected=read(KEY).find(x=>String(x.id)===String(e.detail?.id))||null;render();});
+    window.addEventListener('sbt:registry-sync',()=>{if(selected)render();});
     window.addEventListener('sbt:published',e=>{const risk=window.__sbtLastRisk;if(e.detail?.id){const pub=read(KEY),i=pub.findIndex(x=>String(x.id)===String(e.detail.id));if(i>=0){pub[i].risk_gate_passed=!!risk;pub[i].risk_position_pct=risk?Number(risk.max_position_pct??0):null;pub[i].risk_trade_pct=risk?Number(risk.max_loss_per_trade_pct??0):null;pub[i].risk_daily_pct=risk?Number(risk.max_daily_loss_pct??0):null;write(KEY,pub);selected=pub[i];}}render();});
     render();
   }
@@ -707,6 +712,7 @@
   const KEY='sbt.publishedBots.v1';
   const esc=v=>String(v??'').replace(/[&<>"]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x]));
   const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(_e){return[]}};
+  const registryStage=id=>window.__sbtRegistry?.stage(id)||'DRAFT';
   const cleanConfig=(b)=>{
     const c={...(b?.config||{})};
     delete c.bot_id;
@@ -732,6 +738,8 @@
       selectedIds=[];
       render();
     });
+    window.addEventListener('sbt:registry-sync',()=>render());
+    window.addEventListener('sbt:recommended',()=>render());
     function getVersions(){
       return read().filter(x=>x.bot_type===selectedBotType).sort((a,b)=>Number(b.version||0)-Number(a.version||0));
     }
@@ -757,8 +765,8 @@
       out.style.display='block';
       out.innerHTML='<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><strong>Comparador de versiones</strong><span class="badge">LIVE LOCKED</span></div>'+
         '<div class="toolbar" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">'+
-        '<label class="small">Versión A <select id="sbtCompareA">'+getVersions().map(v=>'<option value="'+esc(v.id)+'" '+(String(v.id)===String(a.id)?'selected':'')+'>v'+Number(v.version||1)+(v.recommended?' · CURRENT':'')+'</option>').join('')+'</select></label>'+
-        '<label class="small">Versión B <select id="sbtCompareB">'+getVersions().map(v=>'<option value="'+esc(v.id)+'" '+(String(v.id)===String(b.id)?'selected':'')+'>v'+Number(v.version||1)+(v.recommended?' · CURRENT':'')+'</option>').join('')+'</select></label></div>'+
+        '<label class="small">Versión A <select id="sbtCompareA">'+getVersions().map(v=>'<option value="'+esc(v.id)+'" '+(String(v.id)===String(a.id)?'selected':'')+'>v'+Number(v.version||1)+(registryStage(v.id)==='CURRENT'?' · CURRENT':'')+'</option>').join('')+'</select></label>'+
+        '<label class="small">Versión B <select id="sbtCompareB">'+getVersions().map(v=>'<option value="'+esc(v.id)+'" '+(String(v.id)===String(b.id)?'selected':'')+'>v'+Number(v.version||1)+(registryStage(v.id)==='CURRENT'?' · CURRENT':'')+'</option>').join('')+'</select></label></div>'+
         '<div class="small" style="margin-top:10px">v'+Number(a.version||1)+' → v'+Number(b.version||1)+' · Return Δ '+delta(b.return_pct,a.return_pct).toFixed(2)+' pp · DD Δ '+delta(b.drawdown_pct,a.drawdown_pct).toFixed(2)+' pp · Strategy Score Δ '+delta(b.strategy_score,a.strategy_score).toFixed(2)+' · Robustness Δ '+delta(b.robustness_score,a.robustness_score).toFixed(2)+'</div>'+
         '<div class="small" style="margin-top:6px">Risk posición '+Number(a.risk_position_pct||0).toFixed(2)+'% → '+Number(b.risk_position_pct||0).toFixed(2)+'% · trade '+Number(a.risk_trade_pct||0).toFixed(2)+'% → '+Number(b.risk_trade_pct||0).toFixed(2)+'% · diario '+Number(a.risk_daily_pct||0).toFixed(2)+'% → '+Number(b.risk_daily_pct||0).toFixed(2)+'%</div>'+
         '<div style="margin-top:12px"><strong>Diff de configuración · '+changed.length+' cambio(s)</strong></div>'+
