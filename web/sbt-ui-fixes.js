@@ -546,6 +546,22 @@
         return out;
       }catch(_e){return null;}
     }
+    async function refreshDecisions(){
+      const all=read(); if(!all.length)return null;
+      try{
+        const payload={versions:all.map(v=>({bot_type:v.bot_type,version:Number(v.version||1),return_pct:v.return_pct??null,drawdown_pct:v.drawdown_pct??null,strategy_score:v.strategy_score??null,robustness_score:v.robustness_score??null,validation:v.validation||{},risk_gate_passed:v.risk_gate_passed===true}))};
+        const res=await fetch('/api/v1/built-in-bots/decision/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        if(!res.ok)throw new Error('HTTP '+res.status);
+        const data=await res.json(), checkedAt=data.checked_at||new Date().toISOString(), results=data.results||[];
+        const fresh=read().map(v=>{
+          const hit=results.find(x=>x.bot_type===v.bot_type&&Number(x.version||1)===Number(v.version||1));
+          return hit?{...v,decision_snapshot:{decision:hit.decision,eligible:hit.eligible,score:hit.score,rank:hit.rank??null,checked_at:checkedAt,contract:data.contract}}:v;
+        });
+        localStorage.setItem('sbt.publishedBots.v1',JSON.stringify(fresh));
+        if(selected)selected=fresh.find(x=>String(x.id)===String(selected.id))||selected;
+        return {data,checkedAt};
+      }catch(_e){return null;}
+    }
     async function render(){
       const q=(p.querySelector('#sbtMarketSearch').value||'').toLowerCase().trim();
       const pub=read();
@@ -772,7 +788,7 @@
     const page=document.getElementById('bot-lab-page'),detail=page?.querySelector('#sbtBotDetailHistory')?.closest('section');
     if(!page||!detail||page.dataset.sbtDecisionV1)return; page.dataset.sbtDecisionV1='1';
     const p=document.createElement('section');p.className='card';p.style.cssText='margin-top:12px;padding:18px';
-    p.innerHTML='<span class="eyebrow">SBT DECISION</span><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><h3 style="margin:5px 0">Decisión de versión</h3><p id="sbtDecisionSub" class="sub">La recomendación automática permanece separada de CURRENT.</p></div><span class="badge">LIVE LOCKED</span></div><div id="sbtDecisionBody" style="margin-top:12px">Selecciona una versión publicada.</div>';
+    p.innerHTML='<span class="eyebrow">SBT DECISION</span><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><h3 style="margin:5px 0">Decisión de versión</h3><p id="sbtDecisionSub" class="sub">La recomendación automática permanece separada de CURRENT.</p></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button id="sbtDecisionRefresh" class="btn secondary">↻ Re-evaluar</button><span class="badge">LIVE LOCKED</span></div></div><div id="sbtDecisionBody" style="margin-top:12px">Selecciona una versión publicada.</div>';
     detail.insertAdjacentElement('afterend',p);
     const body=p.querySelector('#sbtDecisionBody'); let selected=null;
     async function backendDecision(v){
@@ -787,6 +803,7 @@
       if(!selected){body.textContent='Selecciona una versión publicada.';return;}
       body.innerHTML='<div class="small">Consultando Decision Engine…</div>';
       const decision=await backendDecision(selected);
+    p.querySelector('#sbtDecisionRefresh').addEventListener('click',async()=>{const b=p.querySelector('#sbtDecisionRefresh');b.disabled=true;b.textContent='↻ Evaluando…';const out=await refreshDecisions();b.disabled=false;b.textContent='↻ Re-evaluar';if(out)render();else{const note=p.querySelector('#sbtDecisionSub');if(note)note.textContent='No se pudo actualizar; se mantienen los últimos datos disponibles.';}});
     window.addEventListener('sbt:market-detail',async e=>{selected=read().find(x=>String(x.id)===String(e.detail?.id))||null;render();});
     window.addEventListener('sbt:published',()=>{if(selected)render();});
     window.addEventListener('sbt:recommended',render); window.addEventListener('sbt:published',render); render();
