@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import os
 from typing import Any
 
@@ -92,6 +93,44 @@ def turtle_autocorrection_plan(
         "diagnosis": diagnosis,
         "plan": _turtle_controller.correction_plan(diagnosis),
     }
+
+
+@mcp.tool()
+async def turtle_mt4_dashboard() -> dict[str, Any]:
+    """Return the read-only MT4 snapshot plus the Classic Turtle v1.22 boundary."""
+    client = MT4GatewayClient()
+    status = await client.status()
+    result: dict[str, Any] = {
+        "module": "Bitey SBT Turtle/MT4 Dashboard",
+        "read_only": True,
+        "live_execution": False,
+        "trading_enabled": False,
+        "mt4": {"status": status},
+        "turtle": {
+            "contract": "classic-turtle-mt4-v1.22",
+            "baseline": _turtle_controller.baseline(),
+            "state": "READY",
+            "automation": "bounded",
+            "optimization_locked": True,
+        },
+    }
+    if not status.get("reachable"):
+        result["mt4"]["error"] = status.get("error", "MT4 gateway unavailable")
+        return result
+    try:
+        account, positions, market = await asyncio.gather(
+            client.account_status(),
+            client.open_positions(),
+            client.market_data("EURUSD"),
+        )
+        result["mt4"].update({
+            "account": account,
+            "positions": positions,
+            "market": market,
+        })
+    except Exception as exc:
+        result["mt4"]["error"] = str(exc)
+    return result
 
 
 @mcp.tool()
