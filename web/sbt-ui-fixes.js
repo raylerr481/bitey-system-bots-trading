@@ -231,8 +231,12 @@
 
 (() => {
   const KEY='sbt.myBots.v1';
+  const REG='sbt.botRegistry.v1';
   function load(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(_e){return[]}}
   function save(a){localStorage.setItem(KEY,JSON.stringify(a.slice(0,50)))}
+  function registry(){try{return JSON.parse(localStorage.getItem(REG)||'{}')}catch(_e){return{}}}
+  function lifecycle(id,fallback){return registry()[String(id)]?.stage||fallback||'DRAFT'}
+  function notifyRegistry(){window.dispatchEvent(new CustomEvent('sbt:registry-sync'));}
   function selectedConfig(){return window.__sbtSelectedBotConfig||null}
   function mountMyBots(){
     const page=document.getElementById('bot-lab-page');
@@ -246,7 +250,7 @@
     function render(){
       const bots=load();
       if(!bots.length){list.innerHTML='<div class="small">No hay bots guardados todavía. Configura uno y pulsa “Guardar configuración”.</div>';return;}
-      list.innerHTML=bots.map((b,i)=>'<article class="card" style="padding:14px"><div style="display:flex;justify-content:space-between;gap:10px"><div><strong>'+b.name+'</strong><div class="small">'+b.bot_type.toUpperCase()+' · '+(b.symbol||b.assets||'market')+'</div></div><span class="badge">'+b.stage+'</span></div><div class="small" style="margin-top:8px">Strategy Score: '+(b.strategy_score??'—')+' · Robustness: '+(b.robustness_score??'—')+' · Updated: '+new Date(b.updated_at).toLocaleString()+'</div><div class="toolbar" style="margin-top:10px"><button class="btn" data-load-bot="'+i+'">Cargar</button><button class="btn" data-delete-bot="'+i+'">Eliminar</button></div></article>').join('');
+      list.innerHTML=bots.map((b,i)=>{const ls=lifecycle(b.id,b.stage);return '<article class="card" style="padding:14px"><div style="display:flex;justify-content:space-between;gap:10px"><div><strong>'+b.name+'</strong><div class="small">'+b.bot_type.toUpperCase()+' · '+(b.symbol||b.assets||'market')+'</div></div><span class="badge">'+esc(ls)+'</span></div><div class="small" style="margin-top:8px">Strategy Score: '+(b.strategy_score??'—')+' · Robustness: '+(b.robustness_score??'—')+' · Lifecycle: '+esc(ls)+' · Updated: '+new Date(b.updated_at).toLocaleString()+'</div><div class="toolbar" style="margin-top:10px"><button class="btn" data-load-bot="'+i+'">Cargar</button><button class="btn" data-delete-bot="'+i+'">Eliminar</button></div></article>'}).join('');
     }
     p.addEventListener('click',e=>{
       const loadBtn=e.target.closest('[data-load-bot]'),del=e.target.closest('[data-delete-bot]');
@@ -255,7 +259,10 @@
       if(loadBtn){const b=bots[Number(loadBtn.dataset.loadBot)];if(!b)return;sessionStorage.setItem('sbt.bot.'+b.id,JSON.stringify(b.config));window.__sbtSelectedBotConfig={...b.config,bot_id:b.id};const v=document.querySelector('[data-bot-view="'+b.bot_type+'"]');if(v)v.click();setTimeout(()=>window.dispatchEvent(new CustomEvent('sbt:bot-config',{detail:b.config})),50);}
     });
     p.querySelector('#sbtRefreshBots').onclick=render;
-    window.addEventListener('sbt:bot-saved',render);render();
+    window.addEventListener('sbt:bot-saved',render);
+    window.addEventListener('sbt:registry-sync',render);
+    window.addEventListener('sbt:recommended',render);
+    render();
   }
   function hookSave(){
     const btn=document.getElementById('sbtBotSave');if(!btn||btn.dataset.myBotsHooked)return;
@@ -269,7 +276,7 @@
       const existing=bots.find(x=>(c.bot_id&&x.id===c.bot_id)|| (x.bot_type===c.bot_type && JSON.stringify(x.config||{})===signature));
       const b=existing||{id:c.bot_type+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),bot_type:c.bot_type,name,config:c,stage:'DRAFT',strategy_score:null,robustness_score:null,updated_at:new Date().toISOString()};
       b.config=cleanConfig;b.name=name;b.updated_at=new Date().toISOString();
-      if(!existing)bots.unshift(b);save(bots);window.dispatchEvent(new CustomEvent('sbt:bot-saved',{detail:b}));
+      if(!existing)bots.unshift(b);save(bots);notifyRegistry();window.dispatchEvent(new CustomEvent('sbt:bot-saved',{detail:b}));
     });
   }
   function syncEvaluationToBot(){
@@ -282,7 +289,7 @@
     b.strategy_score=(bt&&rb&&rb.valid)?Math.round(Math.max(0,Math.min(100,Number(bt.total_return_pct||0)*2+Number(bt.win_rate_pct||0)*0.2+(20-Number(bt.max_drawdown_pct||0)*2)+Number(rb.score||0)*0.25+5))):b.strategy_score;
     b.robustness_score=rb?.valid?Number(rb.score||0):b.robustness_score;
     if(bt?.valid&&rb?.valid&&rb.status==='PASS'&&window.__sbtLastRisk&&b.stage!=='PUBLISHED')b.stage='VALIDATED';
-    b.updated_at=new Date().toISOString();save(bots);window.dispatchEvent(new CustomEvent('sbt:bot-saved',{detail:b}));
+    b.updated_at=new Date().toISOString();save(bots);notifyRegistry();window.dispatchEvent(new CustomEvent('sbt:bot-saved',{detail:b}));
   }
   function boot(){mountMyBots();hookSave();syncEvaluationToBot();if(!document.querySelector('#bot-lab-page[data-my-bots-v1]'))setTimeout(boot,250)}
   window.addEventListener('sbt:backtest',syncEvaluationToBot);
