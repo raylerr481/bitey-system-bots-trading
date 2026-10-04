@@ -126,15 +126,16 @@
       const d=await r.json(), candles=Array.isArray(d)?d:(Array.isArray(d.candles)?d.candles:[]);
       const prices=candles.map(x=>Number(x.close)).filter(Number.isFinite);
       if(prices.length<40)throw new Error('Insuficientes datos: '+prices.length+' cierres; se requieren al menos 40');
-      const br=await fetch(base+'/api/v1/built-in-bots/backtest',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({bot_type:c.bot_type,prices,series,initial_capital:Number(c.capital||10000),config:c})});
+      const market=await window.sbtLoadBotMarket(c,base);
+      const br=await fetch(base+'/api/v1/built-in-bots/backtest',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({bot_type:c.bot_type,prices:market.prices,series:market.series,initial_capital:Number(c.capital||10000),config:c})});
       if(!br.ok)throw new Error('Backtest HTTP '+br.status);
       const b=await br.json(); if(b.valid===false)throw new Error(b.error||'Backtest rejected'); window.__sbtLastBacktest=b;
-      window.dispatchEvent(new CustomEvent('sbt:backtest',{detail:{backtest:b,config:c,symbol:symbolLabel||symbol,timeframe:tfLabel||tf}}));
+      window.dispatchEvent(new CustomEvent('sbt:backtest',{detail:{backtest:b,config:c,symbol:market.symbol,timeframe:market.timeframe}}));
       try{
-        const rr=await fetch(base+'/api/v1/built-in-bots/robustness',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({bot_type:c.bot_type,prices,series,initial_capital:Number(c.capital||10000),config:c})});
+        const rr=await fetch(base+'/api/v1/built-in-bots/robustness',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({bot_type:c.bot_type,prices:market.prices,series:market.series,initial_capital:Number(c.capital||10000),config:c})});
         if(rr.ok){const rb=await rr.json();window.__sbtLastRobustness=rb;window.dispatchEvent(new CustomEvent('sbt:robustness',{detail:{robustness:rb,config:c,symbol,timeframe:tf}}));}
       }catch(_e){/* robustness is advisory; backtest remains available */}
-      out.textContent='BACKTEST DISPONIBLE · '+c.bot_type+' · '+symbol+' '+tf+' · '+prices.length+' cierres · Equity final '+Number(b.final_equity||0).toFixed(2)+' · Return '+Number(b.total_return_pct||0).toFixed(2)+'% · Trades '+Number(b.trades||0)+' · Win rate '+Number(b.win_rate_pct||0).toFixed(1)+'% · DD '+Number(b.max_drawdown_pct||0).toFixed(2)+'%. Sin órdenes live.';
+      out.textContent='BACKTEST DISPONIBLE · '+c.bot_type+' · '+market.symbol+' '+market.timeframe+' · '+market.prices.length+' cierres · Equity final '+Number(b.final_equity||0).toFixed(2)+' · Return '+Number(b.total_return_pct||0).toFixed(2)+'% · Trades '+Number(b.trades||0)+' · Win rate '+Number(b.win_rate_pct||0).toFixed(1)+'% · DD '+Number(b.max_drawdown_pct||0).toFixed(2)+'%. Sin órdenes live.';
     }catch(e){out.textContent='Backtest unavailable: '+e.message+'. No se muestran métricas inventadas.';}
   });
 })();
@@ -457,8 +458,11 @@
     p.querySelector('#sbtPublishBot').onclick=()=>{
       const q=checks();if(!q.ready||!q.cur?.bot){p.querySelector('#sbtPublishResult').textContent='PUBLISH BLOQUEADO · completa todos los controles.';return;}
       const b=q.cur.bot, perf=q.perf;
-      const entry={id:b.id+'-pub-'+Date.now(),bot_type:b.bot_type,name:b.name,config:b.config,stage:'PUBLISHED',symbol:b.config.symbol,assets:b.config.assets,strategy_score:b.strategy_score,robustness_score:b.robustness_score,return_pct:Number(perf.return_pct||0),drawdown_pct:Number(perf.max_drawdown_pct||0),published_at:new Date().toISOString(),live:false};
-      const items=published();items.unshift(entry);savePublished(items);
+      const items=published();
+      const previous=items.filter(x=>x.bot_id===b.id||x.bot_type===b.bot_type);
+      const version=previous.reduce((m,x)=>Math.max(m,Number(x.version||1)),0)+1;
+      const entry={id:b.id+'-pub-v'+version+'-'+Date.now(),bot_id:b.id,version,bot_type:b.bot_type,name:b.name,config:b.config,stage:'PUBLISHED',symbol:b.config.symbol,assets:b.config.assets,strategy_score:b.strategy_score,robustness_score:b.robustness_score,return_pct:Number(perf.return_pct||0),drawdown_pct:Number(perf.max_drawdown_pct||0),published_at:new Date().toISOString(),live:false};
+      items.unshift(entry);savePublished(items);
       b.stage='PUBLISHED';b.updated_at=new Date().toISOString();save(bots());
       p.querySelector('#sbtPublishResult').textContent='PUBLISHED · '+b.name+' añadido al catálogo SBT. LIVE continúa bloqueado.';
       window.dispatchEvent(new CustomEvent('sbt:published',{detail:entry}));render();
