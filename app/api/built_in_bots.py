@@ -93,7 +93,7 @@ def _run_rebalance(series, capital, config, fee=0.001):
     qty={a:(capital*weights[a]) / clean[a][0] for a in investable}
     threshold=max(0.0, float(config.get("threshold", 5))) / 100.0
     frequency=max(1, int(config.get("frequency", 20)))
-    trades=rebalance_count=0; wins=0; peak=capital; max_dd=0.0; equity_curve=[]; previous_equity=capital
+    trades=rebalance_count=0; wins=0; peak=capital; max_dd=0.0; equity_curve=[]; previous_equity=capital; rebalance_events=[]
     for i in range(n):
         equity=cash+sum(qty[a]*clean[a][i] for a in investable)
         peak=max(peak,equity); max_dd=max(max_dd,(peak-equity)/peak*100.0); equity_curve.append(round(equity,8))
@@ -104,6 +104,7 @@ def _run_rebalance(series, capital, config, fee=0.001):
                 target_value=equity*weights[a]
                 qty[a]=target_value/clean[a][i]
             cash=equity*cash_weight-fee_value
+            rebalance_events.append({"index":i,"equity":round(equity,8),"drift_pct":round(drift*100,3)})
             if equity > previous_equity: wins += 1
         previous_equity=equity
     final=equity_curve[-1]
@@ -113,7 +114,8 @@ def _run_rebalance(series, capital, config, fee=0.001):
             "win_rate_pct": wins/trades*100.0 if trades else 0.0,
             "max_drawdown_pct": max_dd, "equity_curve": equity_curve,
             "target_weights_pct": {a: round(weights[a]*100.0,2) for a in investable} | {"cash": round(cash_weight*100.0,2)},
-            "mode": "DEMO/PAPER", "live": False}
+            "final_weights_pct": {a: round((qty[a]*clean[a][-1]/final)*100.0,2) for a in investable} | {"cash": round((cash/final)*100.0,2)},
+            "rebalance_events": rebalance_events, "mode": "DEMO/PAPER", "live": False}
 
 
 def _signal(kind,c):
