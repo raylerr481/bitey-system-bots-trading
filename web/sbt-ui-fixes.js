@@ -471,6 +471,28 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
 
+(() => {
+  function mountRebalanceDiagnostics(){
+    const page=document.getElementById('bot-lab-page');
+    const evalPanel=page?.querySelector('#sbtEvalDecision')?.closest('section');
+    if(!page||!evalPanel||page.dataset.rebalanceDiagnosticsV1)return;
+    page.dataset.rebalanceDiagnosticsV1='1';
+    const p=document.createElement('section');p.className='card';p.style.cssText='margin:18px 0;padding:20px';
+    p.innerHTML='<span class="eyebrow">PORTFOLIO ALLOCATION</span><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><h2 style="margin:5px 0">Rebalance Monitor</h2><p class="sub">Comparación entre peso objetivo y peso final de la cartera simulada.</p></div><span class="badge">MULTI-ASSET · NO LIVE</span></div><div id="sbtRebalanceWeights" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:15px"></div><div id="sbtRebalanceEvents" class="result" style="margin-top:14px">Ejecuta un backtest de Rebalance para ver la composición.</div>';
+    evalPanel.insertAdjacentElement('afterend',p);
+    function render(){
+      const c=window.__sbtSelectedBotConfig||{}; const b=window.__sbtLastBacktest||{};
+      if(c.bot_type!=='rebalance'||!b.final_weights_pct){p.style.display=c.bot_type==='rebalance'?'block':'none';return;}
+      p.style.display='block'; const target=b.target_weights_pct||{}; const final=b.final_weights_pct||{}; const keys=Object.keys(target);
+      p.querySelector('#sbtRebalanceWeights').innerHTML=keys.map(k=>'<div class="card" style="padding:12px"><div class="small">'+k+'</div><strong>Objetivo '+Number(target[k]||0).toFixed(1)+'%</strong><div class="small">Final '+Number(final[k]||0).toFixed(1)+'% · Drift '+(Number(final[k]||0)-Number(target[k]||0)).toFixed(1)+' pp</div></div>').join('');
+      const events=b.rebalance_events||[];p.querySelector('#sbtRebalanceEvents').textContent=events.length?'Rebalances ejecutados: '+events.length+' · Último índice: '+events[events.length-1].index+' · Equity en último rebalance: '+Number(events[events.length-1].equity||0).toFixed(2)+' · Drift disparador: '+Number(events[events.length-1].drift_pct||0).toFixed(2)+'%.':'Sin rebalanceos durante la simulación.';
+    }
+    window.addEventListener('sbt:backtest',render);window.addEventListener('sbt:bot-config',render);render();
+  }
+  function boot(){mountRebalanceDiagnostics();if(!document.querySelector('#bot-lab-page[data-rebalance-diagnostics-v1]'))setTimeout(boot,250)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
+
 
 (() => {
   const KEY='sbt.publishedBots.v1';
