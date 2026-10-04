@@ -532,33 +532,56 @@
     function render(){
       const q=(p.querySelector('#sbtMarketSearch').value||'').toLowerCase().trim();
       const pub=read();
-      const pubByType={};
-      pub.forEach(x=>{if(!pubByType[x.bot_type])pubByType[x.bot_type]=x;});
-      const visible=CATALOG.filter(c=>{
+      const publishedCards=pub.map((b,i)=>{
+        const c=CATALOG.find(x=>x.id===b.bot_type);
+        if(!c)return null;
+        const version=Number(b.version||1);
+        const label=(b.name||c.name)+' · v'+version;
+        const hay=(label+' '+c.market+' '+c.cat+' '+c.desc+' '+(b.symbol||'')+' '+(b.assets||'')).toLowerCase();
+        if(filter!=='ALL'&&c.cat!==filter)return null;
+        if(q&&!hay.includes(q))return null;
+        return {kind:'published',id:b.id,bot:b,c,label,c};
+      }).filter(Boolean);
+      const publishedTypes=new Set(pub.map(x=>x.bot_type));
+      const templates=CATALOG.filter(c=>{
         const text=(c.name+' '+c.market+' '+c.cat+' '+c.desc).toLowerCase();
         return (filter==='ALL'||c.cat===filter)&&(!q||text.includes(q));
-      });
-      p.querySelector('#sbtMarketStats').textContent=pub.length+' publicado(s) · '+visible.length+' plantilla(s) visibles · LIVE bloqueado';
-      p.querySelector('#sbtMarketGrid').innerHTML=visible.map(c=>{
-        const b=pubByType[c.id];
-        const status=b?'PUBLISHED':'BUILT-IN TEMPLATE';
-        const metrics=b?'Return '+Number(b.return_pct||0).toFixed(2)+'% · DD '+Number(b.drawdown_pct||0).toFixed(2)+'% · Score '+(b.strategy_score??'—'):'Pendiente de validar y publicar';
+      }).filter(c=>!publishedTypes.has(c.id)).map(c=>({kind:'template',id:c.id,c}));
+      const cards=publishedCards.concat(templates);
+      p.querySelector('#sbtMarketStats').textContent=pub.length+' versión(es) publicada(s) · '+cards.length+' entrada(s) visibles · LIVE bloqueado';
+      p.querySelector('#sbtMarketGrid').innerHTML=cards.map(item=>{
+        const c=item.c;
+        if(item.kind==='published'){
+          const b=item.bot;
+          const metrics='Return '+Number(b.return_pct||0).toFixed(2)+'% · DD '+Number(b.drawdown_pct||0).toFixed(2)+'% · Score '+(b.strategy_score??'—');
+          const when=b.published_at?new Date(b.published_at).toLocaleString():'';
+          return '<article class="card" style="padding:15px">'+
+            '<div style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:24px">'+c.icon+'</span><span class="badge">PUBLISHED · NO LIVE</span></div>'+
+            '<h3 style="margin:10px 0 4px">'+esc(b.name||c.name)+'</h3>'+
+            '<div class="small">'+esc(c.cat)+' · '+esc(c.market)+' · v'+Number(b.version||1)+'</div>'+
+            '<p class="sub" style="min-height:42px">'+esc(c.desc)+'</p>'+
+            '<div class="small" style="margin:8px 0">'+esc(metrics)+(when?' · '+esc(when):'')+'</div>'+
+            '<button class="btn primary sbt-market-use" data-kind="published" data-id="'+esc(b.id)+'">Usar bot</button></article>';
+        }
         return '<article class="card" style="padding:15px">'+
-          '<div style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:24px">'+c.icon+'</span><span class="badge">'+status+'</span></div>'+
+          '<div style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:24px">'+c.icon+'</span><span class="badge">BUILT-IN TEMPLATE</span></div>'+
           '<h3 style="margin:10px 0 4px">'+esc(c.name)+'</h3>'+
           '<div class="small">'+esc(c.cat)+' · '+esc(c.market)+'</div>'+
           '<p class="sub" style="min-height:42px">'+esc(c.desc)+'</p>'+
-          '<div class="small" style="margin:8px 0">'+esc(metrics)+'</div>'+
-          '<button class="btn '+(b?'primary':'')+' sbt-market-use" data-id="'+esc(c.id)+'">'+(b?'Usar bot':'Ver plantilla')+'</button></article>';
+          '<div class="small" style="margin:8px 0">Pendiente de validar y publicar</div>'+
+          '<button class="btn sbt-market-use" data-kind="template" data-id="'+esc(c.id)+'">Ver plantilla</button></article>';
       }).join('')||'<div class="small">No hay coincidencias.</div>';
       p.querySelectorAll('.sbt-market-use').forEach(btn=>btn.onclick=()=>{
-        const id=btn.dataset.id, b=pubByType[id], c=CATALOG.find(x=>x.id===id);
-        if(b?.config){
-          window.__sbtSelectedBotConfig={...b.config,bot_type:id};
+        const id=btn.dataset.id, kind=btn.dataset.kind, c=CATALOG.find(x=>x.id===id);
+        if(!c)return;
+        if(kind==='published'){
+          const b=pub.find(x=>String(x.id)===String(id));
+          if(!b)return;
+          window.__sbtSelectedBotConfig={...(b.config||{}),bot_type:b.bot_type,bot_id:b.id};
           window.dispatchEvent(new CustomEvent('sbt:bot-config',{detail:window.__sbtSelectedBotConfig}));
-          p.querySelector('#sbtMarketResult').textContent='Bot cargado: '+c.name+' · configuración preparada para backtest. DEMO/PAPER · NO LIVE.';
+          p.querySelector('#sbtMarketResult').textContent='Versión cargada: '+(b.name||c.name)+' v'+Number(b.version||1)+' · configuración preparada para backtest. DEMO/PAPER · NO LIVE.';
         }else{
-          const defaults={grid:{bot_type:'grid',symbol:'BTC/USDT',capital:10000,lower:90000,upper:120000,grids:12},dca:{bot_type:'dca',symbol:'BTC/USDT',capital:10000,initial:1000,safety:500,step:2,multiplier:1.5},trend:{bot_type:'trend',symbol:'EUR/USD',timeframe:'H1',capital:10000,emaFast:8,emaSlow:21,rsi:14,atr:14},breakout:{bot_type:'breakout',symbol:'BTC/USDT',timeframe:'H1',capital:10000,lookback:20,atr:14},'mean-reversion':{bot_type:'mean-reversion',symbol:'EUR/USD',timeframe:'H1',capital:10000,rsiLow:30,rsiHigh:70},rebalance:{bot_type:'rebalance',assets:'BTC/USDT,ETH/USDT,USDT',capital:10000,btc:50,eth:30,cash:20,threshold:5}};
+          const defaults={grid:{bot_type:'grid',symbol:'BTC/USDT',capital:10000,lower:90000,upper:120000,grids:12},dca:{bot_type:'dca',symbol:'BTC/USDT',capital:10000,initial:1000,safety:500,step:2,multiplier:1.5},trend:{bot_type:'trend',symbol:'EUR/USD',timeframe:'H1',capital:10000,emaFast:8,emaSlow:21,rsi:14,atr:14},breakout:{bot_type:'breakout',symbol:'BTC/USDT',timeframe:'H1',capital:10000,lookback:20,atr:14},'mean-reversion':{bot_type:'mean-reversion',symbol:'EUR/USD',timeframe:'H1',capital:10000,rsiLow:30,rsiHigh:70},rebalance:{bot_type:'rebalance',assets:'BTC/USDT,ETH/USDT,USDT',capital:10000,btc:50,eth:30,cash:20,threshold:5,frequency:20}};
           window.__sbtSelectedBotConfig=defaults[id]||{bot_type:id};
           window.dispatchEvent(new CustomEvent('sbt:bot-config',{detail:window.__sbtSelectedBotConfig}));
           p.querySelector('#sbtMarketResult').textContent='Plantilla '+c.name+' cargada. Ejecuta backtest y validación antes de publicar.';
