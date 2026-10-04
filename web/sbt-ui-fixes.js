@@ -949,13 +949,14 @@
     const next={...reg};
     bots.forEach(v=>{
       const id=String(v.id);
-      const s=stage(v);
+      const candidate=stage(v);
       const old=next[id];
+      const s=normalizeStage(candidate,old?.stage);
       if(!old){
         next[id]={id:v.id,bot_type:v.bot_type,version:Number(v.version||1),stage:s,created_at:now,updated_at:now,lifecycle_history:[{stage:s,at:now,source:'registry_sync'}]};
       }else{
         const hist=Array.isArray(old.lifecycle_history)?old.lifecycle_history.slice():[];
-        if(old.stage!==s)hist.push({stage:s,at:now,source:'registry_sync'});
+        if(old.stage!==s)hist.push({stage:s,at:now,source:old.stage==='CURRENT'?'current_released':'registry_sync'});
         next[id]={...old,bot_type:v.bot_type,version:Number(v.version||1),stage:s,updated_at:old.stage===s?old.updated_at:now,lifecycle_history:hist};
       }
     });
@@ -967,6 +968,12 @@
   const names={grid:'Grid Bot',dca:'DCA Bot',trend:'Trend Bot',breakout:'Breakout Bot','mean-reversion':'Mean Reversion',rebalance:'Rebalance Bot'};
   const stageOrder=['DRAFT','VALIDATED','DEMO','PAPER','PUBLISHED','CURRENT'];
   const stageClass=s=>s==='CURRENT'?'PASS':s==='PUBLISHED'?'PASS':s==='PAPER'?'PASS':s==='DEMO'?'PASS':s==='VALIDATED'?'PASS':'PENDING';
+  const normalizeStage=(candidate,previous)=>{
+    if(!previous)return candidate;
+    if(previous==='CURRENT'&&candidate!=='CURRENT')return candidate==='PUBLISHED'?'PUBLISHED':'CURRENT';
+    const pi=stageOrder.indexOf(previous),ci=stageOrder.indexOf(candidate);
+    return ci<pi?previous:candidate;
+  };
 
   function mount(){
     const page=document.getElementById('bot-lab-page');
@@ -999,6 +1006,12 @@
     window.addEventListener('sbt:recommended',render);
     window.addEventListener('sbt:market-detail',render);
     window.addEventListener('sbt:decision-refresh',render);
+    window.addEventListener('sbt:registry-sync',render);
+    window.__sbtRegistry={
+      sync,
+      get(id){return sync()[String(id)]||null;},
+      stage(id){return sync()[String(id)]?.stage||'DRAFT';}
+    };
     render();
   }
   function boot(){mount();if(!document.querySelector('#bot-lab-page[data-sbt-registry-v1]'))setTimeout(boot,250)}
