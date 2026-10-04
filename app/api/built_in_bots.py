@@ -436,3 +436,25 @@ def built_in_decision(request: BuiltInDecisionRequest):
         "gates":gates,"reasons":reasons,"mode":"DEMO/PAPER","live":False,
         "note":"Screening reproducible; no garantiza rendimiento y no autoriza trading live."
     }
+
+
+
+class BuiltInDecisionRankRequest(BaseModel):
+    versions: list[BuiltInDecisionRequest] = Field(min_length=1, max_length=200)
+
+
+@router.post("/decision/rank")
+def built_in_decision_rank(request: BuiltInDecisionRankRequest):
+    """Rank a bounded set of published versions using the same SBT decision contract."""
+    results=[built_in_decision(v) for v in request.versions]
+    ranked=sorted(results,key=lambda x:(bool(x.get("eligible")),float(x.get("score",0))),reverse=True)
+    for i,item in enumerate(ranked,1):
+        item["rank"]=i
+    return {
+        "valid":True,
+        "contract":"sbt-built-in-decision-rank-v1",
+        "count":len(ranked),
+        "results":ranked,
+        "live":False,
+        "note":"Ranking orientativo; no autoriza trading live."
+    }
