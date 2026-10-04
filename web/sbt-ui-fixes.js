@@ -852,7 +852,7 @@
         const checkedAt=data.checked_at||new Date().toISOString();
         const fresh=read().map(v=>{
           const hit=(data.results||[]).find(x=>x.bot_type===v.bot_type&&Number(x.version||1)===Number(v.version||1));
-          return hit?{...v,decision_snapshot:{decision:hit.decision,eligible:hit.eligible,score:hit.score,rank:hit.rank??null,checked_at:checkedAt,contract:data.contract}}:v;
+          return hit?{...v,decision_snapshot:{decision:hit.decision,eligible:hit.eligible,score:hit.score,rank:hit.rank??null,bot_type_rank:hit.bot_type_rank??null,bot_type_count:hit.bot_type_count??null,checked_at:checkedAt,contract:data.contract}}:v;
         });
         localStorage.setItem(KEY,JSON.stringify(fresh));
         if(selected)selected=fresh.find(x=>String(x.id)===String(selected.id))||selected;
