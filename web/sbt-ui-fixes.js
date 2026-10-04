@@ -624,21 +624,21 @@
       const name=selected.name||names[selected.bot_type]||selected.bot_type;
       p.querySelector('#sbtBotDetailTitle').textContent=name+' · v'+Number(selected.version||1);
       p.querySelector('#sbtBotDetailSub').textContent=(selected.bot_type||'').toUpperCase()+' · '+(selected.symbol||selected.assets||'market')+' · PUBLISHED · NO LIVE';
-      const metrics=[['Return',Number(selected.return_pct||0).toFixed(2)+'%'],['Drawdown',Number(selected.drawdown_pct||0).toFixed(2)+'%'],['Strategy Score',selected.strategy_score??'—'],['Robustness',selected.robustness_score??'—'],['Risk Gate',selected.risk_position_pct!=null?'PASS':'—'],['Published',selected.published_at?new Date(selected.published_at).toLocaleString():'—']];
+      const metrics=[['Return',Number(selected.return_pct||0).toFixed(2)+'%'],['Drawdown',Number(selected.drawdown_pct||0).toFixed(2)+'%'],['Strategy Score',selected.strategy_score??'—'],['Robustness',selected.robustness_score??'—'],['Risk Gate',selected.risk_gate_passed===true?'PASS':'—'],['Status',selected.recommended?'CURRENT / RECOMMENDED':'PUBLISHED'],['Published',selected.published_at?new Date(selected.published_at).toLocaleString():'—']];
       p.querySelector('#sbtBotDetailMetrics').innerHTML=metrics.map(x=>'<div class="card" style="padding:12px"><div class="small">'+esc(x[0])+'</div><strong>'+esc(x[1])+'</strong></div>').join('');
       const cfg={...(selected.config||{})};delete cfg.bot_id;p.querySelector('#sbtBotDetailConfig').textContent=JSON.stringify(cfg,null,2);
       p.querySelector('#sbtBotDetailHistory').innerHTML=versions.map(v=>'<button type="button" class="btn '+(String(v.id)===String(selected.id)?'primary':'')+' sbt-version-select" data-id="'+esc(v.id)+'" style="width:100%;text-align:left;margin-bottom:6px">v'+Number(v.version||1)+' · Return '+Number(v.return_pct||0).toFixed(2)+'% · DD '+Number(v.drawdown_pct||0).toFixed(2)+'% · Score '+esc(v.strategy_score??'—')+'</button>').join('')||'<div class="small">Sin historial.</div>';
-      p.querySelector('#sbtBotDetailResult').textContent=(selected.risk_position_pct!=null?'Risk Gate · posición '+Number(selected.risk_position_pct).toFixed(2)+'% · pérdida/trade '+Number(selected.risk_trade_pct||0).toFixed(2)+'% · pérdida diaria '+Number(selected.risk_daily_pct||0).toFixed(2)+'%':'Risk Gate registrado durante validación')+' · DEMO/PAPER · LIVE LOCKED.';
+      p.querySelector('#sbtBotDetailResult').textContent=(selected.risk_gate_passed===true?'Risk Gate · posición '+Number(selected.risk_position_pct||0).toFixed(2)+'% · pérdida/trade '+Number(selected.risk_trade_pct||0).toFixed(2)+'% · pérdida diaria '+Number(selected.risk_daily_pct||0).toFixed(2)+'%':'Risk Gate no registrado como PASS')+' · '+(selected.recommended?'CURRENT / RECOMMENDED · ':'')+'DEMO/PAPER · LIVE LOCKED.';
     }
     function useSelected(){if(!selected)return;window.__sbtSelectedBotConfig={...(selected.config||{}),bot_type:selected.bot_type,bot_id:selected.bot_id||selected.id};window.dispatchEvent(new CustomEvent('sbt:bot-config',{detail:window.__sbtSelectedBotConfig}));p.querySelector('#sbtBotDetailResult').textContent='Versión v'+Number(selected.version||1)+' cargada. Preparada para backtest; no ejecuta órdenes live.';}
     function cloneSelected(){
       if(!selected)return;const cfg={...(selected.config||{})};delete cfg.bot_id;const clone={id:selected.bot_type+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),bot_type:selected.bot_type,name:(selected.name||names[selected.bot_type]||selected.bot_type)+' Clone v'+Number(selected.version||1),config:cfg,stage:'DRAFT',strategy_score:null,robustness_score:null,created_at:new Date().toISOString(),updated_at:new Date().toISOString(),cloned_from:selected.id};
       const my=read(MY);my.unshift(clone);write(MY,my);window.__sbtSelectedBotConfig={...cfg,bot_type:selected.bot_type,bot_id:clone.id};window.dispatchEvent(new CustomEvent('sbt:bot-saved',{detail:clone}));window.dispatchEvent(new CustomEvent('sbt:bot-config',{detail:window.__sbtSelectedBotConfig}));p.querySelector('#sbtBotDetailResult').textContent='CLONADO · '+clone.name+' · DRAFT. Debe volver a pasar Backtest → Robustness → Risk Gate → Demo → Paper.';
     }
-    p.addEventListener('click',e=>{const v=e.target.closest('.sbt-version-select');if(v){selected=read(KEY).find(x=>String(x.id)===String(v.dataset.id))||null;render();}});
+    p.addEventListener('click',e=>{const v=e.target.closest('.sbt-version-select');if(v){selected=read(KEY).find(x=>String(x.id)===String(v.dataset.id))||null;render();return;}const mark=e.target.closest('.sbt-mark-current');if(mark){const all=read(KEY),target=all.find(x=>String(x.id)===String(mark.dataset.id));if(!target)return;all.forEach(x=>{if(x.bot_type===target.bot_type)x.recommended=String(x.id)===String(target.id);});const now=new Date().toISOString();const i=all.findIndex(x=>String(x.id)===String(target.id));if(i>=0)all[i].recommended_at=now;write(KEY,all);selected=all[i];window.dispatchEvent(new CustomEvent('sbt:recommended',{detail:{id:target.id,bot_type:target.bot_type}}));render();}});
     p.querySelector('#sbtBotDetailUse').onclick=useSelected;p.querySelector('#sbtBotDetailClone').onclick=cloneSelected;
     window.addEventListener('sbt:market-detail',e=>{selected=read(KEY).find(x=>String(x.id)===String(e.detail?.id))||null;render();});
-    window.addEventListener('sbt:published',e=>{const risk=window.__sbtLastRisk;if(e.detail?.id&&risk){const pub=read(KEY),i=pub.findIndex(x=>String(x.id)===String(e.detail.id));if(i>=0){pub[i].risk_position_pct=Number(risk.max_position_pct??0);pub[i].risk_trade_pct=Number(risk.max_loss_per_trade_pct??0);pub[i].risk_daily_pct=Number(risk.max_daily_loss_pct??0);write(KEY,pub);selected=pub[i];}}render();});
+    window.addEventListener('sbt:published',e=>{const risk=window.__sbtLastRisk;if(e.detail?.id){const pub=read(KEY),i=pub.findIndex(x=>String(x.id)===String(e.detail.id));if(i>=0){pub[i].risk_gate_passed=!!risk;pub[i].risk_position_pct=risk?Number(risk.max_position_pct??0):null;pub[i].risk_trade_pct=risk?Number(risk.max_loss_per_trade_pct??0):null;pub[i].risk_daily_pct=risk?Number(risk.max_daily_loss_pct??0):null;write(KEY,pub);selected=pub[i];}}render();});
     render();
   }
   function wireMarketplace(){const page=document.getElementById('bot-lab-page'),grid=page?.querySelector('#sbtMarketGrid');if(!grid)return false;if(!grid.dataset.detailWired){grid.dataset.detailWired='1';grid.addEventListener('click',e=>{const btn=e.target.closest('.sbt-market-use');if(btn?.dataset.kind==='published')window.dispatchEvent(new CustomEvent('sbt:market-detail',{detail:{id:btn.dataset.id}}));});}return true;}
@@ -659,7 +659,8 @@
     const host=document.createElement('div');host.style.cssText='margin-top:12px';
     host.innerHTML='<button class="btn" id="sbtCompareVersions">Comparar versiones</button><div id="sbtVersionCompare" class="result" style="display:none;margin-top:10px"></div>';
     detail.appendChild(host);
-    let selectedIds=[];
+    let selectedIds=[], selectedBotType=null;
+    window.addEventListener('sbt:market-detail',e=>{selectedBotType=read().find(x=>String(x.id)===String(e.detail?.id))?.bot_type||null;});
     function render(){
       const out=host.querySelector('#sbtVersionCompare'), all=read();
       if(selectedIds.length!==2){out.style.display='none';return;}
@@ -674,7 +675,7 @@
     }
     host.querySelector('#sbtCompareVersions').onclick=()=>{
       const all=read();
-      const botType=window.__sbtSelectedBotConfig?.bot_type;
+      const botType=selectedBotType;
       const versions=all.filter(x=>x.bot_type===botType).sort((a,b)=>Number(b.version||0)-Number(a.version||0));
       if(versions.length<2){host.querySelector('#sbtVersionCompare').style.display='block';host.querySelector('#sbtVersionCompare').textContent='Se necesitan al menos dos versiones publicadas del mismo bot para comparar.';return;}
       selectedIds=[versions[0].id,versions[1].id];render();
