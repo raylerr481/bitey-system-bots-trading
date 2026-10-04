@@ -385,3 +385,54 @@ def built_in_paper_simulate(request: BuiltInBotRequest):
             "win_rate_pct": result["win_rate_pct"], "max_drawdown_pct": result["max_drawdown_pct"],
             "equity_curve": equity,
             "note": "Paper trading broker-free. No orders are sent to any broker or exchange."}
+
+
+
+class BuiltInDecisionRequest(BaseModel):
+    bot_type: str = Field(min_length=2, max_length=32)
+    version: int = Field(default=1, ge=1)
+    return_pct: float | None = None
+    drawdown_pct: float | None = None
+    strategy_score: float | None = None
+    robustness_score: float | None = None
+    validation: dict = Field(default_factory=dict)
+    risk_gate_passed: bool = False
+
+
+@router.post("/decision")
+def built_in_decision(request: BuiltInDecisionRequest):
+    """Reproducible SBT eligibility screening. Never authorizes live orders."""
+    v=request.validation or {}
+    gates={
+        "validated": v.get("validated") is True,
+        "demo": v.get("demo") is True,
+        "paper": v.get("paper") is True,
+        "performance": v.get("performance") is True,
+        "robustness": v.get("robustness_status") == "PASS",
+        "risk_gate": v.get("risk_gate") is True and request.risk_gate_passed is True,
+    }
+    labels={
+        "validated":"VALIDATED pendiente","demo":"DEMO pendiente",
+        "paper":"PAPER pendiente","performance":"PERFORMANCE pendiente",
+        "robustness":"Robustness no PASS","risk_gate":"Risk Gate no PASS",
+    }
+    reasons=[labels[k] for k,ok in gates.items() if not ok]
+    for name,value in (("Return",request.return_pct),("Drawdown",request.drawdown_pct),
+                       ("Strategy Score",request.strategy_score),("Robustness Score",request.robustness_score)):
+        if value is None: reasons.append(name+" ausente")
+    ret=max(0.0,min(100.0,50.0+float(request.return_pct or 0.0)*5.0))
+    dd=max(0.0,min(100.0,100.0-abs(float(request.drawdown_pct or 0.0))*5.0))
+    rb=max(0.0,min(100.0,float(request.robustness_score or 0.0)))
+    ss=max(0.0,min(100.0,float(request.strategy_score or 0.0)))
+    risk=100.0 if request.risk_gate_passed else 0.0
+    score=ret*.30+dd*.25+rb*.20+ss*.15+risk*.10
+    eligible=all(gates.values()) and not any("ausente" in x for x in reasons)
+    return {
+        "valid":True,"contract":"sbt-built-in-decision-v1",
+        "bot_type":request.bot_type.lower(),"version":request.version,
+        "decision":"ELIGIBLE" if eligible else "NOT_ELIGIBLE","eligible":eligible,
+        "score":round(score,2),
+        "weights":{"return":.30,"drawdown":.25,"robustness":.20,"strategy_score":.15,"risk_gate":.10},
+        "gates":gates,"reasons":reasons,"mode":"DEMO/PAPER","live":False,
+        "note":"Screening reproducible; no garantiza rendimiento y no autoriza trading live."
+    }
