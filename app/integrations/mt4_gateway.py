@@ -14,7 +14,7 @@ class MT4GatewayClient:
     """
 
     def __init__(self, base_url: str | None = None, timeout: float = 10.0) -> None:
-        self.base_url = (base_url or os.getenv("MT4_GATEWAY_URL", "http://127.0.0.1:22346")).rstrip("/")
+        self.base_url = (base_url or os.getenv("MT4_GATEWAY_URL", "http://127.0.0.1:22347")).rstrip("/")
         self.timeout = timeout
 
     async def _get(self, path: str) -> dict[str, Any]:
