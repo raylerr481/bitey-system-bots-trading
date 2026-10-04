@@ -651,36 +651,78 @@
   const KEY='sbt.publishedBots.v1';
   const esc=v=>String(v??'').replace(/[&<>"]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x]));
   const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(_e){return[]}};
+  const cleanConfig=(b)=>{
+    const c={...(b?.config||{})};
+    delete c.bot_id;
+    return c;
+  };
+  const fmt=(v)=>{
+    if(v===undefined)return '—';
+    if(v===null)return 'null';
+    if(typeof v==='object')return JSON.stringify(v);
+    return String(v);
+  };
   function mount(){
     const page=document.getElementById('bot-lab-page'), grid=page?.querySelector('#sbtMarketGrid');
     const detail=page?.querySelector('#sbtBotDetailHistory')?.closest('section');
-    if(!page||!grid||!detail||page.dataset.botVersionCompareV1)return;
-    page.dataset.botVersionCompareV1='1';
+    if(!page||!grid||!detail||page.dataset.botVersionCompareV2)return;
+    page.dataset.botVersionCompareV2='1';
     const host=document.createElement('div');host.style.cssText='margin-top:12px';
     host.innerHTML='<button class="btn" id="sbtCompareVersions">Comparar versiones</button><div id="sbtVersionCompare" class="result" style="display:none;margin-top:10px"></div>';
     detail.appendChild(host);
     let selectedIds=[], selectedBotType=null;
-    window.addEventListener('sbt:market-detail',e=>{selectedBotType=read().find(x=>String(x.id)===String(e.detail?.id))?.bot_type||null;});
+    window.addEventListener('sbt:market-detail',e=>{
+      selectedBotType=read().find(x=>String(x.id)===String(e.detail?.id))?.bot_type||null;
+      selectedIds=[];
+      render();
+    });
+    function getVersions(){
+      return read().filter(x=>x.bot_type===selectedBotType).sort((a,b)=>Number(b.version||0)-Number(a.version||0));
+    }
+    function configDiff(a,b){
+      const ca=cleanConfig(a), cb=cleanConfig(b), keys=[...new Set([...Object.keys(ca),...Object.keys(cb)])].sort();
+      return keys.map(k=>{
+        const av=ca[k], bv=cb[k];
+        const same=JSON.stringify(av)===JSON.stringify(bv);
+        if(same)return {key:k,type:'same',from:av,to:bv};
+        if(av===undefined)return {key:k,type:'added',from:undefined,to:bv};
+        if(bv===undefined)return {key:k,type:'removed',from:av,to:undefined};
+        return {key:k,type:'changed',from:av,to:bv};
+      });
+    }
     function render(){
       const out=host.querySelector('#sbtVersionCompare'), all=read();
       if(selectedIds.length!==2){out.style.display='none';return;}
       const a=all.find(x=>String(x.id)===String(selectedIds[0])),b=all.find(x=>String(x.id)===String(selectedIds[1]));
-      if(!a||!b){out.style.display='none';return;}
+      if(!a||!b||a.bot_type!==b.bot_type){out.style.display='none';return;}
       const delta=(x,y)=>Number(x||0)-Number(y||0);
+      const rows=configDiff(a,b);
+      const changed=rows.filter(x=>x.type!=='same');
       out.style.display='block';
-      out.innerHTML='<strong>v'+Number(a.version||1)+' vs v'+Number(b.version||1)+'</strong>'+
-        '<div class="small" style="margin-top:8px">Return Δ '+delta(a.return_pct,b.return_pct).toFixed(2)+' pp · DD Δ '+delta(a.drawdown_pct,b.drawdown_pct).toFixed(2)+' pp · Strategy Score Δ '+delta(a.strategy_score,b.strategy_score).toFixed(2)+' · Robustness Δ '+delta(a.robustness_score,b.robustness_score).toFixed(2)+'</div>'+
-        '<div class="small" style="margin-top:6px">Risk posición '+Number(a.risk_position_pct||0).toFixed(2)+'% vs '+Number(b.risk_position_pct||0).toFixed(2)+'% · trade '+Number(a.risk_trade_pct||0).toFixed(2)+'% vs '+Number(b.risk_trade_pct||0).toFixed(2)+'% · diario '+Number(a.risk_daily_pct||0).toFixed(2)+'% vs '+Number(b.risk_daily_pct||0).toFixed(2)+'%</div>'+
-        '<div class="small" style="margin-top:6px">Comparación informativa; no autoriza ejecución live.</div>';
+      out.innerHTML='<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><strong>Comparador de versiones</strong><span class="badge">LIVE LOCKED</span></div>'+
+        '<div class="toolbar" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">'+
+        '<label class="small">Versión A <select id="sbtCompareA">'+getVersions().map(v=>'<option value="'+esc(v.id)+'" '+(String(v.id)===String(a.id)?'selected':'')+'>v'+Number(v.version||1)+(v.recommended?' · CURRENT':'')+'</option>').join('')+'</select></label>'+
+        '<label class="small">Versión B <select id="sbtCompareB">'+getVersions().map(v=>'<option value="'+esc(v.id)+'" '+(String(v.id)===String(b.id)?'selected':'')+'>v'+Number(v.version||1)+(v.recommended?' · CURRENT':'')+'</option>').join('')+'</select></label></div>'+
+        '<div class="small" style="margin-top:10px">v'+Number(a.version||1)+' → v'+Number(b.version||1)+' · Return Δ '+delta(b.return_pct,a.return_pct).toFixed(2)+' pp · DD Δ '+delta(b.drawdown_pct,a.drawdown_pct).toFixed(2)+' pp · Strategy Score Δ '+delta(b.strategy_score,a.strategy_score).toFixed(2)+' · Robustness Δ '+delta(b.robustness_score,a.robustness_score).toFixed(2)+'</div>'+
+        '<div class="small" style="margin-top:6px">Risk posición '+Number(a.risk_position_pct||0).toFixed(2)+'% → '+Number(b.risk_position_pct||0).toFixed(2)+'% · trade '+Number(a.risk_trade_pct||0).toFixed(2)+'% → '+Number(b.risk_trade_pct||0).toFixed(2)+'% · diario '+Number(a.risk_daily_pct||0).toFixed(2)+'% → '+Number(b.risk_daily_pct||0).toFixed(2)+'%</div>'+
+        '<div style="margin-top:12px"><strong>Diff de configuración · '+changed.length+' cambio(s)</strong></div>'+
+        (changed.length?'<div style="margin-top:8px">'+changed.map(x=>'<div style="padding:7px 0;border-top:1px solid rgba(127,127,127,.18)"><strong>'+esc(x.key)+'</strong> <span class="small">['+esc(x.type)+']</span><br><span class="small">'+esc(fmt(x.from))+' → '+esc(fmt(x.to))+'</span></div>').join('')+'</div>':'<div class="small" style="margin-top:8px">Las configuraciones son idénticas.</div>')+
+        '<div class="small" style="margin-top:10px">Comparación informativa; no modifica versiones ni autoriza ejecución live.</div>';
+      const onChange=()=>{
+        const av=host.querySelector('#sbtCompareA')?.value,bv=host.querySelector('#sbtCompareB')?.value;
+        if(av&&bv&&av!==bv){selectedIds=[av,bv];render();}
+      };
+      host.querySelector('#sbtCompareA').onchange=onChange;
+      host.querySelector('#sbtCompareB').onchange=onChange;
     }
     host.querySelector('#sbtCompareVersions').onclick=()=>{
-      const all=read();
-      const botType=selectedBotType;
-      const versions=all.filter(x=>x.bot_type===botType).sort((a,b)=>Number(b.version||0)-Number(a.version||0));
-      if(versions.length<2){host.querySelector('#sbtVersionCompare').style.display='block';host.querySelector('#sbtVersionCompare').textContent='Se necesitan al menos dos versiones publicadas del mismo bot para comparar.';return;}
+      const versions=getVersions();
+      if(versions.length<2){
+        const out=host.querySelector('#sbtVersionCompare');out.style.display='block';out.textContent='Se necesitan al menos dos versiones publicadas del mismo bot para comparar.';return;
+      }
       selectedIds=[versions[0].id,versions[1].id];render();
     };
   }
-  function boot(){mount();if(!document.querySelector('#bot-lab-page[data-bot-version-compare-v1]'))setTimeout(boot,250)}
+  function boot(){mount();if(!document.querySelector('#bot-lab-page[data-bot-version-compare-v2]'))setTimeout(boot,250)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
-})();
+})();\n
