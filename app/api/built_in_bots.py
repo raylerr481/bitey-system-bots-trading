@@ -398,9 +398,17 @@ def built_in_decision_refresh(request: BuiltInDecisionBatchRequest):
     results=[built_in_decision(v) for v in request.versions]
     eligible=[x for x in results if x.get("eligible") is True]
     best=max(eligible,key=lambda x: float(x.get("score",0)),default=None)
+    groups={}
+    for item in results:
+        groups.setdefault(str(item.get("bot_type") or ""),[]).append(item)
+    for _,items in groups.items():
+        ordered=sorted(items,key=lambda x:(bool(x.get("eligible")),float(x.get("score",0))),reverse=True)
+        for i,item in enumerate(ordered,1):
+            item["bot_type_rank"]=i
+            item["bot_type_count"]=len(ordered)
     return {
         "valid":True,
-        "contract":"sbt-built-in-decision-refresh-v1",
+        "contract":"sbt-built-in-decision-refresh-v2",
         "count":len(results),
         "eligible_count":len(eligible),
         "top":best,
