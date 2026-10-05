@@ -94,7 +94,9 @@ bool BiteySendTurtleSnapshot(
    double bid,double ask,double atr,double rsi,double adx,double balance,
    double equity,int openTrades,int campaignId,int campaignSystem,
    int campaignDirection,int campaignUnits,double campaignLastEntry,
-   double campaignN,bool campaignActive,bool s1SkipNext,bool s1SkipLatched)
+   double campaignN,bool campaignActive,bool s1SkipNext,bool s1SkipLatched,
+   string entryReason,string entrySystem,int breakoutPeriod,double breakoutLevel,
+   double entryPrice,string entryTime,double nAtEntry,double initialStop)
 {
    if(!BiteySnapshotEnabled || StringLen(BiteySnapshotURL)==0) return false;
 
@@ -126,7 +128,15 @@ bool BiteySendTurtleSnapshot(
            ",\"campaign_n\":" + BiteySnapshotNum(campaignN,Digits) +
            ",\"campaign_active\":" + (campaignActive?"true":"false") +
            ",\"s1_skip_next\":" + (s1SkipNext?"true":"false") +
-           ",\"s1_skip_latched\":" + (s1SkipLatched?"true":"false") + "}";
+           ",\"s1_skip_latched\":" + (s1SkipLatched?"true":"false") +
+           ",\"entry_reason\":\"" + BiteySnapshotEscape(entryReason) + "\"" +
+           ",\"entry_system\":\"" + BiteySnapshotEscape(entrySystem) + "\"" +
+           ",\"breakout_period\":" + IntegerToString(breakoutPeriod) +
+           ",\"breakout_level\":" + BiteySnapshotNum(breakoutLevel,Digits) +
+           ",\"entry_price\":" + BiteySnapshotNum(entryPrice,Digits) +
+           ",\"entry_time\":\"" + BiteySnapshotEscape(entryTime) + "\"" +
+           ",\"n_at_entry\":" + BiteySnapshotNum(nAtEntry,Digits) +
+           ",\"initial_stop\":" + BiteySnapshotNum(initialStop,Digits) + "}";
    body += "}";
 
    char post[]; char result[];
