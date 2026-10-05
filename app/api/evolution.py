@@ -484,6 +484,172 @@ def evaluate_evidence(payload: dict[str, Any]):
         "authority": "MT4 controls DEMO/REAL; evaluation cannot change mode, risk, or execution.",
     }
 
+
+_INTRADAY_STRATEGIES = {
+    "ORB": {"strategy_id": "SBT-INTRADAY-ORB-001", "label": "Opening Range Breakout"},
+    "TREND_PULLBACK": {"strategy_id": "SBT-INTRADAY-TREND-PULLBACK-001", "label": "EMA ADX Trend Pullback"},
+    "MEAN_REVERSION": {"strategy_id": "SBT-INTRADAY-MEAN-REVERSION-001", "label": "Bollinger RSI Mean Reversion"},
+    "ENSEMBLE": {"strategy_id": "SBT-INTRADAY-ENSEMBLE-001", "label": "Regime Ensemble"},
+}
+_INTRADAY_TIMEFRAMES = ("M15", "M30", "H1")
+
+
+def _intraday_family(strategy: Any) -> str | None:
+    s = str(strategy or "").upper()
+    if "ENSEMBLE" in s:
+        return "ENSEMBLE"
+    if "MEAN_REVERSION" in s or "MEAN-REVERSION" in s or "MEAN REVERSION" in s:
+        return "MEAN_REVERSION"
+    if "TREND_PULLBACK" in s or "TREND-PULLBACK" in s or "TREND PULLBACK" in s:
+        return "TREND_PULLBACK"
+    if "ORB" in s or "OPENING RANGE" in s:
+        return "ORB"
+    return None
+
+
+def _intraday_candidates() -> list[dict[str, Any]]:
+    """Normalize persisted MT4 evidence into the four Intraday Lab families."""
+    candidates = []
+    for row in _persistent_backtests():
+        bot = row.get("bot") or {}
+        family = _intraday_family(
+            bot.get("strategy") or row.get("strategy_id") or row.get("strategy")
+        )
+        tf = str(row.get("timeframe") or bot.get("timeframe") or "").upper()
+        if family not in _INTRADAY_STRATEGIES or tf not in _INTRADAY_TIMEFRAMES:
+            continue
+
+        metrics = _flatten(row)
+        if metrics["monthly_net_return"] is None and metrics["expected_return"] is None:
+            continue
+
+        meta = _INTRADAY_STRATEGIES[family]
+        candidates.append({
+            "strategy_id": meta["strategy_id"],
+            "strategy": family,
+            "label": meta["label"],
+            "symbol": row.get("symbol") or "EURUSD",
+            "timeframe": tf,
+            "version": bot.get("version") or row.get("version"),
+            "metrics": metrics,
+            "score": score_priority({k: v for k, v in metrics.items() if v is not None}),
+            "validation": row.get("validation") or {},
+            "costs": row.get("costs") or {},
+            "source": row.get("source") or "MT4_STRATEGY_TESTER",
+            "timestamp": row.get("timestamp"),
+        })
+    return candidates
+
+
+def _intraday_gate(candidate: dict[str, Any]) -> dict[str, Any]:
+    m = candidate["metrics"]
+    v = candidate.get("validation") or {}
+    trades_ok = isinstance(m.get("trades"), (int, float)) and m["trades"] >= 30
+    months_ok = isinstance(m.get("months"), (int, float)) and m["months"] >= 6
+    wfo_ok = bool(v.get("wfo")) or m.get("oos_quality") is not None
+    oos_ok = bool(v.get("oos")) or m.get("oos_quality") is not None
+    robust_ok = bool(v.get("robustness")) or m.get("robustness") is not None
+    return {
+        "trades>=30": trades_ok,
+        "months>=6": months_ok,
+        "wfo": wfo_ok,
+        "oos": oos_ok,
+        "robustness": robust_ok,
+        "eligible": trades_ok and months_ok and wfo_ok and oos_ok and robust_ok,
+    }
+
+
+@router.get("/intraday-compare")
+def intraday_compare(symbol: str = "EURUSD"):
+    """Compare ORB, trend pullback, mean reversion and ensemble automatically.
+
+    The endpoint only ranks persisted MT4 evidence. It does not invent missing
+    metrics, start MT4, place orders, change risk, or switch DEMO/REAL.
+    """
+    symbol = symbol.upper()
+    candidates = [
+        x for x in _intraday_candidates()
+        if str(x.get("symbol") or "").upper() == symbol
+    ]
+
+    grouped = {}
+    for family, meta in _INTRADAY_STRATEGIES.items():
+        for tf in _INTRADAY_TIMEFRAMES:
+            matches = [
+                x for x in candidates
+                if x["strategy"] == family and x["timeframe"] == tf
+            ]
+            best = max(matches, key=lambda x: x["score"]) if matches else None
+            grouped[f"{family}:{tf}"] = {
+                "strategy_id": meta["strategy_id"],
+                "strategy": family,
+                "label": meta["label"],
+                "symbol": symbol,
+                "timeframe": tf,
+                "status": "EVIDENCE_AVAILABLE" if best else "UNTESTED",
+                "best_candidate": best,
+                "gate": _intraday_gate(best) if best else {
+                    "eligible": False,
+                    "reason": "No persisted MT4 evidence yet."
+                },
+                "evidence_count": len(matches),
+            }
+
+    eligible = [
+        x for x in grouped.values()
+        if x["best_candidate"] is not None and x["gate"]["eligible"]
+    ]
+    eligible.sort(
+        key=lambda x: x["best_candidate"]["score"],
+        reverse=True,
+    )
+
+    family_best = {}
+    for family, meta in _INTRADAY_STRATEGIES.items():
+        family_rows = [
+            x for x in eligible
+            if x["strategy"] == family
+        ]
+        family_best[family] = max(
+            family_rows,
+            key=lambda x: x["best_candidate"]["score"]
+        ) if family_rows else None
+
+    return {
+        "contract": "sbt-intraday-comparator-v1",
+        "objective": "maximize_monthly_profit_subject_to_risk_and_robustness",
+        "symbol": symbol,
+        "strategies": list(_INTRADAY_STRATEGIES.keys()),
+        "timeframes": list(_INTRADAY_TIMEFRAMES),
+        "total_combinations": 12,
+        "evidence_combinations": sum(
+            1 for x in grouped.values() if x["status"] == "EVIDENCE_AVAILABLE"
+        ),
+        "eligible_combinations": len(eligible),
+        "winner": eligible[0] if eligible else None,
+        "best_by_strategy": family_best,
+        "matrix": list(grouped.values()),
+        "next_action": (
+            "VALIDATE_WINNER_WITH_WFO_OOS_ROBUSTNESS"
+            if eligible else
+            "RUN_MT4_BACKTESTS_FOR_UNTESTED_OR_UNVALIDATED_COMBINATIONS"
+        ),
+        "automatic_execution": False,
+        "authority": "MT4 controls DEMO/REAL; Evolution Engine only compares research evidence.",
+    }
+
+
+@router.get("/intraday-best")
+def intraday_best(symbol: str = "EURUSD"):
+    result = intraday_compare(symbol=symbol)
+    return {
+        "contract": "sbt-intraday-best-v1",
+        "symbol": result["symbol"],
+        "winner": result["winner"],
+        "status": "VALIDATED_CANDIDATE" if result["winner"] else "INSUFFICIENT_EVIDENCE",
+        "automatic_execution": False,
+    }
+
 @router.get("/compare")
 def compare():
     candidates=_backtest_candidates()
