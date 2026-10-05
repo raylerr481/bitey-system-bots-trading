@@ -70,7 +70,7 @@ def _analysis(snapshot: dict[str, Any] | None) -> dict[str, Any]:
     ]
     if turtle:
         messages.append("Telemetría Turtle disponible para análisis especializado.")
-    messages.append("La optimización no modifica automáticamente el EA activo.")
+    messages.append("Bitey IA puede decidir mejoras; SBT debe validar cada cambio antes de aplicar una modificación permitida.")
     return {"state": "ANALYZING", "summary": "Bitey está analizando el bot que realmente está conectado a MT4.", "evidence": "MT4_LIVE_SNAPSHOT", "messages": messages, "turtle_parameters": turtle}
 
 @router.get('/context')
@@ -133,7 +133,7 @@ def context():
 
     decision = {
         "phase": phase,
-        "objective": "maximizar beneficio sostenible del bot seleccionado, sujeto a riesgo y robustez; no prometer beneficios",
+        "objective": "maximizar beneficio neto mensual del bot seleccionado, sujeto a control estricto de riesgo, costes y robustez; no prometer beneficios",
         "evidence_count": evidence_count,
         "next_action": next_action,
         "environment": environment,
@@ -141,7 +141,7 @@ def context():
         "transition_authority": "TRADER_IN_MT4",
         "automatic_mode_switch": False,
         "production_status": production_status,
-        "parameter_changes": "PROPOSAL_ONLY",
+        "parameter_changes": "VALIDATION_GATED",
         "target": {
             "minimum_reference_return": 0.10,
             "label": "+10% del capital de referencia",
