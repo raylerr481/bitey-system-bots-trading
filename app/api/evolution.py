@@ -72,6 +72,7 @@ def status():
         "backtests":len(_backtests),
         "best_observed_candidate":best_candidate(),
         "next_experiments":next_experiments(),
+        "turtle_matrix": turtle_matrix(),
     }
 
 @router.get("/experiments")
@@ -88,6 +89,43 @@ def next_experiments():
                 "reason":"Comparar beneficio neto mensual bajo las mismas condiciones."
             })
     return {"contract":"sbt-evolution-experiment-queue-v1","objective":"monthly_net_return","items":items}
+
+def _turtle_matrix_rows() -> list[dict[str, Any]]:
+    rows = []
+    for spec in _EXPERIMENTS:
+        for tf in spec["timeframes"]:
+            matches = [x for x in _backtest_candidates()
+                       if x["strategy_id"] == spec["strategy_id"] and x["timeframe"] == tf]
+            best = max(matches, key=lambda x: x["score"]) if matches else None
+            rows.append({
+                "strategy_id": spec["strategy_id"],
+                "label": spec["label"],
+                "symbol": best.get("symbol") if best else ((_latest or {}).get("symbol") or "EURUSD"),
+                "timeframe": tf,
+                "status": "EVIDENCE_AVAILABLE" if best else "UNTESTED",
+                "best_candidate": best,
+                "evidence_count": len(matches),
+            })
+    return rows
+
+@router.get("/turtle-matrix")
+def turtle_matrix():
+    rows = _turtle_matrix_rows()
+    tested = [r for r in rows if r["best_candidate"]]
+    ranked = sorted(tested, key=lambda r: r["best_candidate"]["score"], reverse=True)
+    return {
+        "contract": "sbt-turtle-timeframe-matrix-v1",
+        "objective": "maximize_monthly_profit_subject_to_risk_and_robustness",
+        "symbol": ((_latest or {}).get("symbol") or "EURUSD"),
+        "systems": ["SBT-TURTLE-S1-001", "SBT-TURTLE-S2-001"],
+        "timeframes": ["M5","M15","M30","H1","H4","D1"],
+        "tested_count": len(tested),
+        "total_combinations": len(rows),
+        "winner": ranked[0] if ranked else None,
+        "ranking": ranked,
+        "matrix": rows,
+        "note": "UNTESTED means SBT has no comparable MT4 backtest evidence for that exact Turtle/timeframe combination. No winner is inferred from external evidence."
+    }
 
 @router.get("/compare")
 def compare():
@@ -143,7 +181,7 @@ def report():
         "environment":((_latest or {}).get("account") or {}).get("mode") or "UNKNOWN",
         "best_validated_candidate":best,
         "evolution_records":list(reversed(_records[-20:])),
-        "next_action": "RUN_TURTLE_BACKTEST_MATRIX" if best is None else "VALIDATE_TOP_CANDIDATE_WITH_WFO_OOS_ROBUSTNESS",
+        "next_action": "RUN_TURTLE_BACKTEST_MATRIX" if not turtle_matrix()["winner"] else "VALIDATE_TOP_TURTLE_WITH_WFO_OOS_ROBUSTNESS",
         "email_ready":True,
         "email_recipient":"raylerr481@gmail.com",
         "note":"Este informe no envía correo todavía; requiere un conector de email autorizado."
