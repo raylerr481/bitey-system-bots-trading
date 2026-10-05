@@ -29,6 +29,7 @@ from app.api.regime_lab import router as regime_lab_router
 from app.api.strategy import router as strategy_router
 from app.api.strategies import router as strategies_router
 from app.api.trading import router as trading_router
+from app.api.turtle import router as turtle_router
 from app.api.validation import router as validation_router
 from app.intelligence.provider_guard import AIProvider, BillingOwner, ConnectionMode, ProviderPolicy, evaluate_provider_call
 from app.mcp.server import build_mcp_app, mcp
@@ -40,7 +41,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Bitey System Bots Trading", version="0.9.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["https://bitey-system-bots-trading.raylerr481.workers.dev", "http://localhost:8080", "http://127.0.0.1:8080"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
-app.include_router(auth_router); app.include_router(trading_router); app.include_router(alpaca_router); app.include_router(mt5_router); app.include_router(mt4_router); app.include_router(brokers_router); app.include_router(market_router); app.include_router(market_state_router); app.include_router(market_intelligence_router); app.include_router(strategy_router); app.include_router(strategies_router); app.include_router(quant_router); app.include_router(regimes_router); app.include_router(regime_lab_router); app.include_router(backtest_router); app.include_router(bot_builder_router); app.include_router(hypothesis_router); app.include_router(news_router); app.include_router(demo_router); app.include_router(bot_profiles_router); app.include_router(built_in_bots_router); app.include_router(bot_exchange_router); app.include_router(integrations_router); app.include_router(validation_router); app.include_router(capabilities_router)
+app.include_router(auth_router); app.include_router(turtle_router); app.include_router(trading_router); app.include_router(alpaca_router); app.include_router(mt5_router); app.include_router(mt4_router); app.include_router(brokers_router); app.include_router(market_router); app.include_router(market_state_router); app.include_router(market_intelligence_router); app.include_router(strategy_router); app.include_router(strategies_router); app.include_router(quant_router); app.include_router(regimes_router); app.include_router(regime_lab_router); app.include_router(backtest_router); app.include_router(bot_builder_router); app.include_router(hypothesis_router); app.include_router(news_router); app.include_router(demo_router); app.include_router(bot_profiles_router); app.include_router(built_in_bots_router); app.include_router(bot_exchange_router); app.include_router(integrations_router); app.include_router(validation_router); app.include_router(capabilities_router)
 app.mount("/mcp", build_mcp_app())
 
 Mode = Literal["demo", "paper", "live"]
