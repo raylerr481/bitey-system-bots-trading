@@ -326,15 +326,65 @@ def pipeline():
             "validation_required": ai.get("validation_required", True),
         },
         "turtle_analysis": {
+            "strategy": "S1" if "S1" in next_test else ("S2" if "S2" in next_test else turtle.get("strategy") or "TURTLE"),
             "regime": regime,
-            "signal": turtle.get("signal"),
-            "status": turtle.get("status"),
-            "learning_status": turtle.get("learning_status"),
+            "signal": turtle.get("signal") or "NONE",
+            "status": turtle.get("status") or "UNKNOWN",
+            "learning_status": turtle.get("learning_status") or "OBSERVING",
         },
         "next_backtest": selected,
+        "evolution": {
+            "status": "READY_FOR_MT4_TEST" if selected else "WAITING_FOR_EVIDENCE",
+            "strategy_id": selected.get("strategy_id") if selected else strategy_id,
+            "timeframe": selected.get("timeframe") if selected else timeframe,
+            "objective": "maximum_monthly_net_profit",
+            "mt4_action": "RUN_STRATEGY_TESTER" if selected else None,
+        },
+        "validation_pipeline": [
+            "COST_AWARE_BACKTEST",
+            "WFO",
+            "OOS",
+            "ROBUSTNESS",
+            "MONTHLY_PROFITABILITY_ANALYSIS",
+            "PERSIST_AS_EVIDENCE",
+        ],
+        "evidence_policy": {
+            "class": "BACKTEST",
+            "promotion_requires": ["trades>=30", "months>=6", "oos_quality", "robustness"],
+            "source_of_truth": "Supabase backtest_evidence when configured",
+        },
         "authority": "MT4 controls DEMO/REAL; Evolution Engine only selects research jobs.",
         "objective": "maximize_monthly_profit_subject_to_risk_and_robustness",
         "automatic_execution": False,
+    }
+
+@router.post("/evidence")
+def register_evidence(payload: dict[str, Any]):
+    """Register a completed MT4 research result as persistent BACKTEST evidence.
+
+    This endpoint does not promote a strategy or enable trading. Validation
+    fields remain explicit so incomplete results cannot be mistaken for proof.
+    """
+    data=dict(payload)
+    data["evidence_class"]="BACKTEST"
+    data["source"]=data.get("source","MT4_STRATEGY_TESTER")
+    validation=dict(data.get("validation") or {})
+    validation.setdefault("wfo", None)
+    validation.setdefault("oos", None)
+    validation.setdefault("robustness", None)
+    validation.setdefault("status", "UNVALIDATED")
+    data["validation"]=validation
+    try:
+        persisted=backtest_evidence.save(data)
+    except Exception as exc:
+        persisted={"persisted":False,"reason":"SUPABASE_WRITE_FAILED","error":type(exc).__name__}
+    return {
+        "accepted": True,
+        "evidence_class": "BACKTEST",
+        "persisted": bool(persisted.get("persisted")),
+        "persistence": persisted,
+        "promotion_status": "UNVALIDATED",
+        "next_validation": ["WFO","OOS","ROBUSTNESS"],
     }
 
 @router.get("/compare")
