@@ -6,15 +6,19 @@ switching.
 """
 
 TRADING_OBJECTIVE = {
-    "name": "sustainable_return_under_risk_control",
-    "primary_goal": "maximize_expected_sustainable_return_subject_to_risk_and_robustness",
+    "name": "maximum_monthly_profit_under_risk_control",
+    "primary_goal": "maximize_monthly_profit_subject_to_strict_risk_and_robustness_constraints",
+    "optimization_horizon": "monthly",
     "minimum_reference_return": 0.10,
+    "target_metric": "monthly_net_return",
+    "monthly_profit_is_primary": True,
     "minimum_reference_label": "+10%",
     "reference_is_guarantee": False,
     "timeframe_selection": "evidence_driven",
 }
 
 MAXIMIZE_METRICS = (
+    "monthly_net_return",
     "expected_return",
     "profit_factor",
     "expectancy",
@@ -79,6 +83,7 @@ def score_priority(metrics: dict) -> float:
     subtract from the return-oriented score. It is a ranking aid, not a
     production risk engine.
     """
+    monthly_net_return = float(metrics.get("monthly_net_return", metrics.get("expected_return", 0.0)))
     expected_return = float(metrics.get("expected_return", 0.0))
     profit_factor = float(metrics.get("profit_factor", 0.0))
     expectancy = float(metrics.get("expectancy", 0.0))
@@ -89,7 +94,8 @@ def score_priority(metrics: dict) -> float:
     cost_drag = float(metrics.get("cost_drag", 0.0))
 
     return (
-        4.0 * expected_return
+        8.0 * monthly_net_return
+        + 2.0 * expected_return
         + 0.8 * max(profit_factor - 1.0, 0.0)
         + 1.0 * expectancy
         + 1.5 * positive_month_probability
