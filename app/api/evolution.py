@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 
 from app.api.mt4 import _latest, _history, _backtests
 from app.strategies.objectives import TRADING_OBJECTIVE, score_priority
+from app.storage import backtest_evidence
 
 router = APIRouter(prefix="/api/v1/evolution", tags=["evolution"])
 _records: list[dict[str, Any]] = []
@@ -66,9 +67,36 @@ def _flatten(row: dict[str, Any]) -> dict[str, Any]:
         "cost_drag": _number(m.get("cost_drag")),\n        "trades": _number(m.get("trades", m.get("trade_count"))),\n        "months": _number(m.get("months", m.get("months_tested"))),
     }
 
+def _persistent_backtests() -> list[dict[str, Any]]:
+    try:
+        rows = backtest_evidence.list_recent(500)
+    except Exception:
+        rows = []
+    if rows:
+        normalized = []
+        for row in rows:
+            bot = {
+                "strategy": row.get("strategy_id"),
+                "version": row.get("strategy_version"),
+                "id": row.get("bot_id"),
+                "parameters": row.get("parameters") or {},
+            }
+            normalized.append({
+                "symbol": row.get("symbol"),
+                "timeframe": row.get("timeframe"),
+                "bot": bot,
+                "metrics": row.get("metrics") or {},
+                "costs": row.get("costs") or {},
+                "validation": row.get("validation") or {},
+                "source": row.get("source"),
+                "timestamp": row.get("created_at"),
+            })
+        return normalized
+    return list(_backtests)
+
 def _backtest_candidates() -> list[dict[str, Any]]:
     candidates=[]
-    for row in _backtests:
+    for row in _persistent_backtests():
         data=_flatten(row)
         if data["monthly_net_return"] is None and data["expected_return"] is None:
             continue
@@ -92,7 +120,7 @@ def status():
         "environment":((_latest or {}).get("account") or {}).get("mode") or "UNKNOWN",
         "records":len(_records),
         "telemetry_snapshots":len(_history),
-        "backtests":len(_backtests),
+        "backtests":len(_persistent_backtests()),
         "best_observed_candidate":best_candidate(),
         "next_experiments":next_experiments(),
         "turtle_matrix": turtle_matrix(),
