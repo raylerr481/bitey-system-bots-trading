@@ -173,7 +173,17 @@ def selected_bot_performance():
         "reference_capital": capital,
         "current_equity": current,
         "net_return": observed_return,
-        "target": {"return": 0.10, "amount": capital * 1.10 if capital else None, "progress_pct": target_progress, "guaranteed": False},
+        "target": {"return": 0.10, "amount": capital * 1.10 if capital else None, "progress_pct": target_progress, "guaranteed": False, "role": "reference_only"},
+        "optimization_objective": {
+            "primary": "monthly_net_return",
+            "goal": "maximize_monthly_profit_subject_to_risk_and_robustness",
+            "best_month": max(returns) if returns else None,
+            "mean_month": mean(returns) if returns else None,
+            "median_month": median(returns) if returns else None,
+            "probability_positive_month": probability_positive,
+            "probability_ge_5pct_month": probability_ge5,
+            "probability_ge_10pct_month": probability_ge10,
+        },
         "trade_metrics": {
             "trades": fallback.get("trades"),
             "wins": fallback.get("wins"),
@@ -201,7 +211,7 @@ def selected_bot_performance():
             "backtests": len(_backtests),
             "sufficient_for_probability": sufficient_months,
             "status": status,
-            "note": "Las probabilidades mensuales solo se calculan cuando existen meses observables; no se rellenan con estimaciones inventadas.",
+            "note": "Monthly probabilities use observed monthly snapshots only; no invented estimates. Closed-trade data should replace snapshots when available.",
         },
     }
 
