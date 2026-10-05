@@ -12,13 +12,47 @@
 <body>
 <div class="app">
 <aside class="side" id="side"><div class="brand"><div class="logo">B</div><div>Bitey SBT<small>TRADING INTELLIGENCE OS</small></div></div>
-<nav class="nav"><small>Workspace</small><button class="active" data-page="dashboard">◈ Dashboard</button><button data-page="matrix">▦ SBT Market Matrix</button><button data-page="market">⌁ Market Intelligence</button><button data-page="research">⌁ Research Lab</button><button data-page="bots">◉ Bot Lab</button><button data-page="validation">✓ Virtual Validation</button><small>Build</small><button data-page="setup">⚙ My Environment</button><button data-page="models">✦ AI Providers</button><button data-page="registry">▣ Strategy Registry</button><small>Control</small><button data-page="risk">◇ Risk Gate</button><button data-page="connections">↔ Connections</button><button data-page="account">◎ My Account</button></nav></aside>
+<nav class="nav"><small>Workspace</small><button class="active" data-page="dashboard">◈ Dashboard</button><button data-page="turtle">🐢 Turtle / MT4</button><button data-page="matrix">▦ SBT Market Matrix</button><button data-page="market">⌁ Market Intelligence</button><button data-page="research">⌁ Research Lab</button><button data-page="bots">◉ Bot Lab</button><button data-page="validation">✓ Virtual Validation</button><small>Build</small><button data-page="setup">⚙ My Environment</button><button data-page="models">✦ AI Providers</button><button data-page="registry">▣ Strategy Registry</button><small>Control</small><button data-page="risk">◇ Risk Gate</button><button data-page="connections">↔ Connections</button><button data-page="account">◎ My Account</button></nav></aside>
 <main class="main">
 <div class="top"><div><button class="btn hamb" id="hamb">☰</button> <span class="eyebrow">Bitey Trading Intelligence</span><h1 id="title">Trading Laboratory</h1></div><div class="status"><span class="dot"></span><span id="apiStatus">Demo environment ready</span></div></div>
 <section class="page active" id="dashboard">
 <div class="hero"><span class="eyebrow">AI → Intelligence → Risk Gate → Execution</span><h2>Un laboratorio de trading donde la IA propone y Bitey controla.</h2><p>Elige la IA que prefieras, conecta tu plataforma, investiga mercados, construye estrategias y somételas a simulación. Demo y Paper están separados del dinero real y cada ejecución autorizada pasa por el Risk Gate.</p><div class="toolbar"><button class="btn primary" data-page="market">Abrir Market Intelligence</button><button class="btn blue" data-page="validation">Prueba conclusiva virtual</button><button class="btn" data-page="setup">Configurar entorno</button></div></div>
 <div class="grid"><div class="card metric"><span class="label">Capital virtual</span><div class="value">R$10.000</div><span class="muted">100% ficticio</span></div><div class="card metric"><span class="label">Instrumento</span><div class="value">EURUSD</div><span class="muted">H1 · Demo</span></div><div class="card metric"><span class="label">Risk Gate</span><div class="value positive">ACTIVE</div><span class="muted">2% posición · 1% pérdida diaria</span></div><div class="card metric"><span class="label">Dinero real</span><div class="value negative">LOCKED</div><span class="muted">No hay órdenes live</span></div></div>
 <div class="layout"><div class="card"><h3>Centro de control</h3><div class="steps"><span class="step done">✓ IA</span><span class="step done">✓ Plataforma</span><span class="step done">✓ Permisos</span><span class="step active">4 Risk Gate</span><span class="step">5 Demo</span><span class="step">6 Paper</span></div><p class="sub">Arquitectura: la IA puede analizar y proponer; las herramientas autorizadas ejecutan; el Risk Gate conserva la autoridad.</p><button class="btn primary" data-page="validation">Ejecutar protocolo virtual</button></div><div class="card"><h3>Estado de seguridad</h3><div class="risk"><span>Market data</span><b style="color:var(--danger)">OFFLINE</b></div><div class="risk"><span>AI tools</span><b>PERMISSIONED</b></div><div class="risk"><span>Demo execution</span><b>READY</b></div><div class="risk"><span>Broker live orders</span><b style="color:var(--danger)">BLOCKED</b></div><div class="risk"><span>Emergency stop</span><b>READY</b></div></div></div>
+</section>
+<section class="page" id="turtle">
+<div class="hero"><span class="eyebrow">MT4 → SBT → MCP</span><h2>Turtle / MT4 Control Center</h2>
+<p>Telemetría de solo lectura del Turtle EA. Esta pantalla no puede enviar órdenes al broker. El estado se actualiza desde el último snapshot recibido por SBT.</p>
+<div class="toolbar"><button class="btn primary" id="turtleRefresh">Actualizar ahora</button><span class="badge danger" id="turtleExec">READ ONLY · EXECUTION LOCKED</span></div></div>
+<div class="grid">
+<div class="card metric"><span class="label">MT4 Connection</span><div class="value" id="turtleConnection">OFFLINE</div><span class="muted" id="turtleHeartbeat">Sin heartbeat</span></div>
+<div class="card metric"><span class="label">Symbol / TF</span><div class="value" id="turtleSymbol">—</div><span class="muted" id="turtleMode">—</span></div>
+<div class="card metric"><span class="label">Campaign</span><div class="value" id="turtleCampaign">FLAT</div><span class="muted" id="turtleCampaignMeta">Sin campaña activa</span></div>
+<div class="card metric"><span class="label">Units</span><div class="value" id="turtleUnits">0</div><span class="muted" id="turtleDirection">FLAT</span></div>
+</div>
+<div class="layout">
+<div class="card"><h3>Market / Turtle State</h3>
+<div class="risk"><span>Bid</span><b id="turtleBid">—</b></div>
+<div class="risk"><span>Ask</span><b id="turtleAsk">—</b></div>
+<div class="risk"><span>ATR / N</span><b id="turtleAtr">—</b></div>
+<div class="risk"><span>RSI <small>(telemetry)</small></span><b id="turtleRsi">—</b></div>
+<div class="risk"><span>ADX <small>(telemetry)</small></span><b id="turtleAdx">—</b></div>
+<div class="risk"><span>Open trades</span><b id="turtleOpenTrades">0</b></div>
+</div>
+<div class="card"><h3>Campaign Control</h3>
+<div class="risk"><span>System</span><b id="turtleSystem">—</b></div>
+<div class="risk"><span>Direction</span><b id="turtleDir">—</b></div>
+<div class="risk"><span>Last entry</span><b id="turtleLastEntry">—</b></div>
+<div class="risk"><span>Campaign N</span><b id="turtleCampaignN">—</b></div>
+<div class="risk"><span>S1 Skip next</span><b id="turtleSkipNext">—</b></div>
+<div class="risk"><span>S1 Skip latched</span><b id="turtleSkipLatched">—</b></div>
+<div class="notice">Turtle rules stay in MT4. SBT observes; it does not modify the strategy.</div>
+</div></div>
+<div class="card"><h3>Account Snapshot</h3><div class="test-grid">
+<div class="kpi"><span class="muted">Balance</span><div class="v" id="turtleBalance">—</div></div>
+<div class="kpi"><span class="muted">Equity</span><div class="v" id="turtleEquity">—</div></div>
+<div class="kpi"><span class="muted">Regime</span><div class="v" id="turtleRegime">—</div></div>
+</div><div class="notice" id="turtleStatus">Esperando el primer snapshot de MT4…</div></div>
 </section>
 <section class="page" id="matrix">
 <div class="hero"><span class="eyebrow">SBT Market Intelligence</span><h2>Market Matrix</h2><p>Un radar cuantitativo propio de Bitey SBT: escanea un universo de activos con el mismo motor determinista de Market Intelligence y ordena las oportunidades por <strong>SBT Score</strong>. Los resultados son investigación, no órdenes.</p>
@@ -55,7 +89,7 @@
 <div class="modal" id="modal"><div class="modalbox"><button class="close" id="closeModal">×</button><h2>Crear cuenta</h2><p class="sub">Prototipo de identidad para preparar el workspace. No solicita credenciales de broker.</p><div class="form"><label>Nombre<input id="regName" placeholder="Tu nombre"></label><label>Email<input id="regEmail" type="email" placeholder="tu@email.com"></label></div><br><button class="btn primary" id="saveAccount">Guardar workspace</button><div class="result" id="accountResult"></div></div></div>
 <script>
 const state={ai:localStorage.getItem('sbt_ai')||'bitey',platform:localStorage.getItem('sbt_platform')||'mt5',permissions:new Set(JSON.parse(localStorage.getItem('sbt_permissions')||'["read_market","research"]')),automation:localStorage.getItem('sbt_automation')==='true'};
-const titles={dashboard:'Trading Laboratory',matrix:'SBT Market Matrix',market:'Market Intelligence',research:'Research Lab',bots:'Bot Lab',validation:'Virtual Validation',setup:'My Environment',models:'AI Providers',registry:'Strategy Registry',risk:'Risk Gate',connections:'Connections',account:'My Account'};
+const titles={dashboard:'Trading Laboratory',turtle:'Turtle / MT4 Control',matrix:'SBT Market Matrix',market:'Market Intelligence',research:'Research Lab',bots:'Bot Lab',validation:'Virtual Validation',setup:'My Environment',models:'AI Providers',registry:'Strategy Registry',risk:'Risk Gate',connections:'Connections',account:'My Account'};
 function page(id){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));const el=document.getElementById(id);if(el)el.classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===id));document.getElementById('title').textContent=titles[id]||'Trading Laboratory';document.getElementById('side').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'});if(id==='bots')window.BiteySBT?.openBotLab?.();}
 document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>page(b.dataset.page)));
 document.getElementById('hamb').onclick=()=>document.getElementById('side').classList.toggle('open');
@@ -72,6 +106,56 @@ async function api(path,options={}){const r=await fetch(window.SBT_API_URL+path,
 document.getElementById('loadPortfolio')?.addEventListener('click',async()=>{try{const p=await api('/api/v1/trading/portfolio');document.getElementById('testPnl').textContent='R$ '+Number(p.realized_pnl||0).toFixed(2);document.getElementById('testResult').innerHTML='<strong>Portfolio Demo conectado.</strong><br>Cash virtual: R$ '+Number(p.cash||0).toFixed(2)+' · Broker orders: 0 · Real money: false';}catch(e){document.getElementById('testResult').textContent='API Demo no disponible desde este navegador. No se inventan resultados.';}});
 document.getElementById('runVirtual').onclick=async()=>{document.getElementById('testResult').style.display='block';document.getElementById('testResult').textContent='Preparando validación…';try{const p=await api('/api/v1/trading/portfolio');document.getElementById('testPnl').textContent='R$ '+Number(p.realized_pnl||0).toFixed(2);document.getElementById('testTrades').textContent='Portfolio conectado';document.getElementById('testRejected').textContent='Pendiente';document.getElementById('testDd').textContent='Pendiente';document.getElementById('testResult').innerHTML='<strong>Conexión Demo confirmada.</strong><br>Esto no sustituye la ejecución histórica completa. El sistema mantiene la validación honesta: métricas de backtest solo se muestran después de una ejecución real del dataset.';}catch(e){document.getElementById('testResult').textContent='No fue posible ejecutar la prueba desde este navegador. La validación histórica permanece pendiente y no se fabrican métricas.';}};
 
+// --- Turtle / MT4 read-only dashboard ---
+let turtleTimer=null;
+function turtleSet(id,value){const el=document.getElementById(id);if(el)el.textContent=value??'—';}
+function turtleNum(v,d=5){return v===null||v===undefined||v===''?'—':Number(v).toFixed(d);}
+function turtleFresh(ts){
+  if(!ts)return false;
+  const age=(Date.now()-Date.parse(ts))/1000;
+  return Number.isFinite(age)&&age<=30;
+}
+async function loadTurtleSnapshot(){
+  try{
+    const res=await api('/api/v1/mt4/bitey-latest');
+    const s=res?.report;
+    if(!res?.available||!s){
+      turtleSet('turtleConnection','OFFLINE'); turtleSet('turtleHeartbeat','Sin snapshot recibido');
+      turtleSet('turtleStatus','Esperando el primer snapshot de MT4…'); return;
+    }
+    const m=s.market||{}, a=s.account||{}, t=s.turtle||{}, metrics=s.metrics||{};
+    const fresh=turtleFresh(s.timestamp);
+    turtleSet('turtleConnection',fresh?'ONLINE':'STALE');
+    turtleSet('turtleHeartbeat',s.timestamp?new Date(s.timestamp).toLocaleString():'—');
+    turtleSet('turtleSymbol',(s.symbol||'—')+' · '+(s.timeframe||'—'));
+    turtleSet('turtleMode',s.mode||'—');
+    turtleSet('turtleCampaign',s.regime||'FLAT');
+    turtleSet('turtleCampaignMeta',t.campaign_active?'Campaign #'+(t.campaign_id??'—'):'Sin campaña activa');
+    turtleSet('turtleUnits',t.campaign_units??0);
+    turtleSet('turtleDirection',metrics.htf_direction||'FLAT');
+    turtleSet('turtleBid',turtleNum(m.bid,s.symbol?.includes('JPY')?3:5));
+    turtleSet('turtleAsk',turtleNum(m.ask,s.symbol?.includes('JPY')?3:5));
+    turtleSet('turtleAtr',turtleNum(m.atr,5));
+    turtleSet('turtleRsi',turtleNum(m.rsi,2));
+    turtleSet('turtleAdx',turtleNum(m.adx,2));
+    turtleSet('turtleOpenTrades',a.open_trades??0);
+    turtleSet('turtleSystem',t.campaign_system===1?'S1':t.campaign_system===2?'S2':'—');
+    turtleSet('turtleDir',t.campaign_direction>0?'BUY':t.campaign_direction<0?'SELL':'FLAT');
+    turtleSet('turtleLastEntry',turtleNum(t.campaign_last_entry,5));
+    turtleSet('turtleCampaignN',turtleNum(t.campaign_n,5));
+    turtleSet('turtleSkipNext',t.s1_skip_next?'YES':'NO');
+    turtleSet('turtleSkipLatched',t.s1_skip_latched?'YES':'NO');
+    turtleSet('turtleBalance',a.balance!==undefined?'R$ '+Number(a.balance).toFixed(2):'—');
+    turtleSet('turtleEquity',a.equity!==undefined?'R$ '+Number(a.equity).toFixed(2):'—');
+    turtleSet('turtleRegime',s.regime||'—');
+    turtleSet('turtleStatus',fresh?'MT4 heartbeat received. Read-only telemetry active.':'Snapshot exists but heartbeat is stale.');
+    document.getElementById('apiStatus').textContent=fresh?'MT4 Turtle connected':'MT4 Turtle snapshot stale';
+  }catch(e){
+    turtleSet('turtleConnection','ERROR'); turtleSet('turtleStatus','SBT MT4 endpoint unavailable. No data was invented.');
+  }
+}
+function startTurtlePolling(){clearInterval(turtleTimer);loadTurtleSnapshot();turtleTimer=setInterval(loadTurtleSnapshot,5000);}
+document.getElementById('turtleRefresh')?.addEventListener('click',loadTurtleSnapshot);
 // --- SBT Market Matrix ---
 const MATRIX_SYMBOLS=['EURUSD','GBPUSD','USDJPY','AUDUSD','USDCAD','BTCUSD','ETHUSD','SOLUSD','XAUUSD','XAGUSD','SPX500','NAS100','US30','AAPL','MSFT','NVDA','TSLA','VALE3','PETR4','SPY','QQQ'];
 function matrixBadge(value,kind=''){const safe=String(value??'—');return '<span class="badge '+(kind==='warn'?'warn':'')+'">'+safe+'</span>';}
