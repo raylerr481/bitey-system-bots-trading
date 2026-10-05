@@ -16,14 +16,32 @@ def _log(message: str, level: str = "INFO", kind: str = "analysis") -> dict[str,
         del _activity[:-200]
     return item
 
+def _snapshot_fresh(snapshot: dict[str, Any] | None, max_age_seconds: int = 180) -> bool:
+    if not snapshot:
+        return False
+    raw = snapshot.get("timestamp")
+    if not raw:
+        return False
+    try:
+        timestamp = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+        if timestamp.tzinfo is None:
+            timestamp = timestamp.replace(tzinfo=timezone.utc)
+        age = (datetime.now(timezone.utc) - timestamp).total_seconds()
+        return 0 <= age <= max_age_seconds
+    except (TypeError, ValueError):
+        return False
+
+
 def _bot(snapshot: dict[str, Any] | None) -> dict[str, Any]:
     if not snapshot:
-        return {"connected": False, "name": None, "symbol": None, "timeframe": None, "mode": None, "regime": None}
+        return {"connected": False, "name": None, "symbol": None, "timeframe": None, "mode": None, "regime": None, "fresh": False}
     account = snapshot.get("account") or {}
     bot = snapshot.get("bot") or {}
     turtle = snapshot.get("turtle") or {}
+    fresh = _snapshot_fresh(snapshot)
     return {
-        "connected": True,
+        "connected": fresh,
+        "fresh": fresh,
         "name": bot.get("name") or snapshot.get("source", "MT4 EA"),
         "strategy": bot.get("strategy") or turtle.get("system"),
         "version": bot.get("version"),
@@ -41,6 +59,8 @@ def _bot(snapshot: dict[str, Any] | None) -> dict[str, Any]:
 def _analysis(snapshot: dict[str, Any] | None) -> dict[str, Any]:
     if not snapshot:
         return {"state": "WAITING_FOR_MT4", "summary": "Esperando el bot conectado a MT4. No se inventan datos.", "evidence": "NO_EVIDENCE"}
+    if not _snapshot_fresh(snapshot):
+        return {"state": "STALE_MT4_SNAPSHOT", "summary": "Existe un snapshot anterior de MT4, pero no hay telemetría reciente. No se considera el bot conectado.", "evidence": "STALE_EVIDENCE", "last_seen": snapshot.get("timestamp")}
     turtle = snapshot.get("turtle") or {}
     messages = [
         "Snapshot de MT4 recibido y validado.",
@@ -59,7 +79,7 @@ def context():
     bot = _bot(_latest)
     analysis = _analysis(_latest)
     optimization = {
-        "state": "READY_TO_ANALYZE" if _latest else "WAITING_FOR_MT4",
+        "state": "READY_TO_ANALYZE" if _snapshot_fresh(_latest) else "WAITING_FOR_MT4",
         "automatic": True,
         "automatic_parameter_application": False,
         "evidence_required": ["MT4 telemetry", "trade outcomes", "backtest", "walk-forward", "robustness"],
@@ -68,8 +88,10 @@ def context():
         "contract": "bitey-sbt-ai-context-v1",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "mt4": {
-            "connected": bool(_latest),
+            "connected": _snapshot_fresh(_latest),
+            "fresh": _snapshot_fresh(_latest),
             "last_seen": (_latest or {}).get("timestamp"),
+            "max_age_seconds": 180,
         },
         "bot": bot,
         "analysis": analysis,
@@ -97,8 +119,8 @@ def analyze():
 
 @router.post('/optimize')
 def optimize():
-    if not _latest:
-        return {"state": "WAITING_FOR_MT4", "optimized": False, "reason": "No existe snapshot de MT4.", "activity": _log("Optimización pendiente: MT4 no está conectado.", "WARN", "optimization")}
+    if not _snapshot_fresh(_latest):
+        return {"state": "WAITING_FOR_MT4", "optimized": False, "reason": "No existe un snapshot reciente de MT4.", "activity": _log("Optimización pendiente: MT4 no está conectado.", "WARN", "optimization")}
     _log("Optimización iniciada; separando observación de cambios de parámetros.", kind="optimization")
     evidence = len(_history) >= 30 or len(_backtests) > 0
     state = "READY_FOR_VALIDATION" if evidence else "INSUFFICIENT_EVIDENCE"
