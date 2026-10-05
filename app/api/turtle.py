@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.turtle.controller import get_turtle_controller
@@ -32,6 +32,33 @@ class TurtleTrade(BaseModel):
 
 class TurtleEvaluation(BaseModel):
     metrics: dict[str, Any] = Field(default_factory=dict)
+
+
+class TurtleExecutionMode(BaseModel):
+    mode: str = Field(pattern=r"^(DEMO|PAPER|LIVE)$")
+
+
+@router.get("/execution-mode")
+def turtle_execution_mode():
+    state = _controller.status()
+    return {
+        "mode": state["mode"],
+        "demo_execution_enabled": state["mode"] == "DEMO",
+        "paper_execution_enabled": state["mode"] == "PAPER",
+        "live_execution_enabled": False,
+        "live_locked": True,
+        "account_guard_required": True,
+        "message": "DEMO/PAPER may be prepared; LIVE remains permanently locked in this controller."
+    }
+
+
+@router.post("/execution-mode")
+def set_turtle_execution_mode(request: TurtleExecutionMode):
+    mode = request.mode.upper()
+    if mode == "LIVE":
+        raise HTTPException(status_code=403, detail="LIVE execution is locked. Real-money execution requires a separate explicit production authorization layer.")
+    _controller.state.mode = mode
+    return turtle_execution_mode()
 
 
 @router.get("/status")
@@ -118,5 +145,7 @@ def turtle_capabilities():
         "automatic_live_parameter_change": False,
         "requires_backtest_before_change": True,
         "risk_gate_authoritative": True,
-        "execution_modes": ["DEMO", "PAPER"],
+        "execution_modes": ["DEMO", "PAPER", "LIVE_LOCKED"],
+        "demo_execution_gate": True,
+        "live_execution_gate": False,
     }
