@@ -17,11 +17,6 @@ from app.storage import backtest_evidence
 
 router = APIRouter(prefix="/api/v1/evolution", tags=["evolution"])
 _records: list[dict[str, Any]] = []
-_TIMEFRAMES = ["M5","M15","M30","H1","H4","D1"]
-_EXPERIMENTS = [
-    {"strategy_id": x["strategy_id"], "label": x["label"], "priority": x["priority"], "timeframes": _TIMEFRAMES}
-    for x in _RESEARCH_PRIORITY
-]
 # Research-priority candidates are hypotheses, not claims of guaranteed profitability.
 # Priority is based on published evidence for trend/momentum persistence and practical
 # compatibility with MT4; all remain UNVALIDATED until SBT backtest/WFO/OOS passes.
@@ -46,6 +41,12 @@ _RESEARCH_PRIORITY = [
      "reason":"Range-expansion alternative to Donchian entries."},
 ]
 
+_TIMEFRAMES = ["M5","M15","M30","H1","H4","D1"]
+_EXPERIMENTS = [
+    {"strategy_id": x["strategy_id"], "label": x["label"], "priority": x["priority"], "timeframes": _TIMEFRAMES}
+    for x in _RESEARCH_PRIORITY
+]
+
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -65,7 +66,9 @@ def _flatten(row: dict[str, Any]) -> dict[str, Any]:
         "negative_month_probability": _number(m.get("negative_month_probability")),
         "robustness": _number(m.get("robustness")),
         "oos_quality": _number(m.get("oos_quality")),
-        "cost_drag": _number(m.get("cost_drag")),\n        "trades": _number(m.get("trades", m.get("trade_count"))),\n        "months": _number(m.get("months", m.get("months_tested"))),
+        "cost_drag": _number(m.get("cost_drag")),
+        "trades": _number(m.get("trades", m.get("trade_count"))),
+        "months": _number(m.get("months", m.get("months_tested"))),
     }
 
 def _persistent_backtests() -> list[dict[str, Any]]:
@@ -194,7 +197,8 @@ def turtle_matrix():
         "symbol": ((_latest or {}).get("symbol") or "EURUSD"),
         "systems": ["SBT-TURTLE-S1-001", "SBT-TURTLE-S2-001"],
         "timeframes": ["M5","M15","M30","H1","H4","D1"],
-        "tested_count": len(tested),\n        "eligible_count": len(eligible),
+        "tested_count": len(tested),
+        "eligible_count": len(eligible),
         "total_combinations": len(rows),
         "winner": ranked[0] if ranked else None,
         "ranking": ranked,
