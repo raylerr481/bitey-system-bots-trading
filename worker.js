@@ -46,15 +46,16 @@ async function yahooChart(symbol, timeframe, limit = 200) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const BUILD = '20261005-navfix1';
+    const BUILD = '20261005-sbt-evolution-ux2';
 
     if (url.pathname === '/health') return json({ service: 'bitey-system-bots-trading', status: 'ok', mode: 'research-demo', live: false, real_money: false, broker_orders: 0, web_build: BUILD });
 
     if (url.pathname === '/api/v1/system') return json({ ok: true, service: 'bitey-system-bots-trading', live_trading_enabled: false, real_money_enabled: false, broker_orders: 0, market_data: 'public-readonly', provider: 'Yahoo Finance public chart endpoint' });
 
-    if (url.pathname === '/api/v1/market/quote') {
+    if (url.pathname === '/api/v1/market/quote' || url.pathname.startsWith('/api/v1/market/quote/')) {
       try {
-        const symbol = url.searchParams.get('symbol') || 'EURUSD';
+        const pathSymbol = url.pathname.startsWith('/api/v1/market/quote/') ? decodeURIComponent(url.pathname.split('/').pop()) : '';
+        const symbol = pathSymbol || url.searchParams.get('symbol') || 'EURUSD';
         const tf = url.searchParams.get('timeframe') || 'M5';
         const m = await yahooChart(symbol, tf, 50);
         const spread = Math.max(0, m.ask - m.bid);
