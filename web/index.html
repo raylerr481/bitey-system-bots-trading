@@ -34,7 +34,7 @@
 <div class="steps" id="eccPipeline">
 <span class="step active">1 MT4</span><span class="step">2 Analyze</span><span class="step">3 Backtest</span><span class="step">4 WFO/OOS</span><span class="step">5 Compare</span><span class="step">6 Risk Gate</span>
 </div>
-<div class="risk"><span>Instrumento / TF</span><b id="eccMarket">EURUSD · H1</b></div>
+<div class="risk"><span>Instrumento / estrategia TF</span><b id="eccMarket">EURUSD · H1</b></div><div class="risk"><span>Gráfico MT4</span><b id="eccChartTf">H1</b></div>
 <div class="risk"><span>Entorno MT4</span><b id="eccMode">DEMO</b></div>
 <div class="risk"><span>Bot principal</span><b id="eccBot">—</b></div>
 <div class="risk"><span>Señal / régimen</span><b id="eccSignal">—</b></div>
@@ -459,7 +459,7 @@ async function refreshECC(){
   const ts=Date.parse(t?.timestamp||''); const fresh=Number.isFinite(ts)&&(Date.now()-ts<30000);
   set('eccMt4',fresh?'ONLINE':'STALE');set('eccMt4Meta',fresh?((t.symbol||'EURUSD')+' · '+(t.timeframe||'H1')):'Sin heartbeat reciente');
   set('eccBots',fresh?'1':'0');set('eccBotsMeta',fresh?(b.name||t.source||'MT4 bot'):'Esperando MT4');
-  set('eccMarket',(t.symbol||'EURUSD')+' · '+(t.timeframe||'H1'));set('eccMode',t.mode||'DEMO');
+  set('eccMarket',(t.symbol||'EURUSD')+' · estrategia '+(t.strategy_timeframe||t.timeframe||'H1'));set('eccChartTf',t.chart_timeframe||t.timeframe||'H1');set('eccMode',t.mode||'DEMO');
   set('eccBot',b.name||t.source||'—');set('eccSignal',((t.signal||met.signal||'NONE')+' · '+(t.regime||'UNKNOWN')));
   const w=e?.winner;set('eccEvidence',(e?.evidence_combinations??0)+'/12');set('eccEvidenceMeta',(e?.eligible_combinations??0)+' elegibles');
   set('eccWinner',w?.strategy||'—');set('eccWinnerTf',w?.timeframe||'—');set('eccWinnerScore',w?Number(w.best_candidate.score).toFixed(3):'—');
