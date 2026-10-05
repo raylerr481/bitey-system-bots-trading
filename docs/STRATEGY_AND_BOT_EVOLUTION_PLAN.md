@@ -9,10 +9,13 @@ Bitey IA is expected to observe, analyze, decide, propose and, when a validated
 allowlisted change path exists, apply improvements. Bitey SBT is the
 deterministic research, validation, risk-control and audit layer.
 
-The objective is not the highest historical backtest return. The objective is:
+The primary objective is:
 
-**maximize sustainable expected return subject to strict risk, cost and
-robustness constraints.**
+**maximize net profit per month, subject to strict risk, cost and robustness constraints.**
+
+Monthly profit is the optimization target. Risk controls are hard constraints,
+not a reason to abandon the monthly-profit objective. The system should search
+for the highest monthly result that remains statistically credible and robust.
 
 The +10% monthly reference is a validation target/benchmark, never a promise
 or a required monthly outcome.
@@ -34,6 +37,17 @@ Candidate timeframes:
 The system should compare strategy + symbol + timeframe combinations using the
 same assumptions for spread, commission, slippage and sample periods.
 
+## Monthly-profit optimization
+
+Bitey should optimize the expected **net monthly return** first. It should
+compare strategies, symbols and timeframes specifically for their monthly
+profit potential, while rejecting candidates that achieve it through
+unacceptable drawdown, excessive risk, unrealistic costs or overfitting.
+
+The system should report best month, median month, mean month, probability of
+a positive month, probability of reaching +5% and +10%, worst month and
+maximum drawdown.
+
 ## Ranking priorities
 
 Bitey should prefer candidates that combine:
@@ -49,11 +63,9 @@ Bitey should prefer candidates that combine:
 9. lower cost drag;
 10. lower sensitivity to small parameter changes.
 
-Maximum profit alone is not the winner.
-
-A strategy with +16% expected return and 12% drawdown may be rejected in
-favor of a +9% candidate with 4% drawdown and substantially stronger OOS
-robustness.
+Maximum monthly profit is the primary objective, but it is constrained by
+the safety gates. A +20% historical month does not justify a strategy if the
+result depends on excessive drawdown or overfitting.
 
 ## Required validation pipeline
 
