@@ -54,6 +54,7 @@
 <div class="kpi"><span class="muted">Regime</span><div class="v" id="turtleRegime">—</div></div>
 </div><div class="notice" id="turtleStatus">Esperando el primer snapshot de MT4…</div><div class="notice" id="turtleModePanel">Modo actual: <strong>DEMO</strong> · Ejecución demo preparada · Dinero real bloqueado.</div></div>
 </div>
+<div class="card"><h3>Performance & Readiness</h3><div class="test-grid"><div class="kpi"><span class="muted">Probabilidad de desempeño positivo</span><div class="v" id="turtleProbability">—</div></div><div class="kpi"><span class="muted">Performance Flag</span><div class="v" id="turtlePerformanceFlag">—</div></div><div class="kpi"><span class="muted">LIVE Ready</span><div class="v" id="turtleLiveReady">LOCKED</div></div></div><div class="notice" id="turtleReadiness">Ejecuta la evaluación inicial. El porcentaje es un score de evidencia, no una garantía de ganancias.</div><div class="toolbar"><button class="btn primary" id="turtleEvaluate">EVALUAR TURTLE AHORA</button></div></div>
 <div class="card"><h3>Snapshot History <span class="small">· últimos 20</span></h3>
 <div style="overflow:auto"><table class="table"><thead><tr><th>Time</th><th>Symbol</th><th>Regime</th><th>Direction</th><th>Units</th><th>Bid</th><th>Ask</th><th>N / ATR</th><th>Equity</th><th>Trades</th></tr></thead><tbody id="turtleHistoryBody"><tr><td colspan="10" class="muted">Esperando snapshots…</td></tr></tbody></table></div>
 <div class="notice" id="turtleHistoryStatus">El historial se conserva en SBT para observar la evolución del Turtle. Solo lectura.</div>
@@ -196,7 +197,7 @@ async function loadTurtleHistory(){
 }
 function startTurtlePolling(){
   clearInterval(turtleTimer);clearInterval(turtleHistoryTimer);
-  loadTurtleSnapshot();loadTurtleHistory();loadTurtleExecutionMode();
+  loadTurtleSnapshot();loadTurtleHistory();loadTurtleExecutionMode();evaluateTurtleReadiness();
   turtleTimer=setInterval(loadTurtleSnapshot,5000);
   turtleHistoryTimer=setInterval(loadTurtleHistory,15000);
 }
@@ -227,7 +228,19 @@ document.getElementById('turtleDemoMode')?.addEventListener('click',()=>setTurtl
 document.getElementById('turtleLiveMode')?.addEventListener('click',()=>setTurtleExecutionMode('LIVE'));
 
 
-// --- Financial Hub: non-custodial readiness layer ---
+
+async function evaluateTurtleReadiness(){
+  try{
+    const r=await api('/api/v1/turtle/readiness');
+    turtleSet('turtleProbability', (r.performance_probability_pct??0)+'%');
+    turtleSet('turtlePerformanceFlag', r.performance_flag||'—');
+    turtleSet('turtleLiveReady', r.live_ready?'READY FOR REVIEW':'LOCKED');
+    const g=r.gates_passed??0, total=r.gates_total??0;
+    turtleSet('turtleReadiness',(r.recommendation||'')+' Gates: '+g+'/'+total+'.');
+  }catch(e){turtleSet('turtleReadiness','No fue posible evaluar. No se inventan porcentajes.');}
+}
+document.getElementById('turtleEvaluate')?.addEventListener('click',evaluateTurtleReadiness);
+\n// --- Financial Hub: non-custodial readiness layer ---
 async function loadFinancialStatus(){
   try{
     const s=await api('/api/v1/financial/status');
