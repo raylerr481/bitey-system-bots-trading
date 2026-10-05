@@ -23,7 +23,7 @@
 <section class="page" id="turtle">
 <div class="hero"><span class="eyebrow">MT4 → SBT → MCP</span><h2>Turtle / MT4 Control Center</h2>
 <p>Telemetría de solo lectura del Turtle EA. Esta pantalla no puede enviar órdenes al broker. El estado se actualiza desde el último snapshot recibido por SBT.</p>
-<div class="toolbar"><button class="btn primary" id="turtleRefresh">Actualizar ahora</button><span class="badge danger" id="turtleExec">READ ONLY · EXECUTION LOCKED</span></div></div>
+<div class="toolbar"><button class="btn primary" id="turtleRefresh">Actualizar ahora</button><button class="btn blue" id="turtleDemoMode">ACTIVAR MODO DEMO</button><button class="btn danger" id="turtleLiveMode">DINERO REAL · BLOQUEADO</button><span class="badge danger" id="turtleExec">DEMO INACTIVO · LIVE BLOQUEADO</span></div></div>
 <div class="grid">
 <div class="card metric"><span class="label">MT4 Connection</span><div class="value" id="turtleConnection">OFFLINE</div><span class="muted" id="turtleHeartbeat">Sin heartbeat</span></div>
 <div class="card metric"><span class="label">Symbol / TF</span><div class="value" id="turtleSymbol">—</div><span class="muted" id="turtleMode">—</span></div>
@@ -52,7 +52,7 @@
 <div class="kpi"><span class="muted">Balance</span><div class="v" id="turtleBalance">—</div></div>
 <div class="kpi"><span class="muted">Equity</span><div class="v" id="turtleEquity">—</div></div>
 <div class="kpi"><span class="muted">Regime</span><div class="v" id="turtleRegime">—</div></div>
-</div><div class="notice" id="turtleStatus">Esperando el primer snapshot de MT4…</div></div>
+</div><div class="notice" id="turtleStatus">Esperando el primer snapshot de MT4…</div><div class="notice" id="turtleModePanel">Modo actual: <strong>DEMO</strong> · Ejecución demo preparada · Dinero real bloqueado.</div></div>
 </div>
 <div class="card"><h3>Snapshot History <span class="small">· últimos 20</span></h3>
 <div style="overflow:auto"><table class="table"><thead><tr><th>Time</th><th>Symbol</th><th>Regime</th><th>Direction</th><th>Units</th><th>Bid</th><th>Ask</th><th>N / ATR</th><th>Equity</th><th>Trades</th></tr></thead><tbody id="turtleHistoryBody"><tr><td colspan="10" class="muted">Esperando snapshots…</td></tr></tbody></table></div>
@@ -195,11 +195,36 @@ async function loadTurtleHistory(){
 }
 function startTurtlePolling(){
   clearInterval(turtleTimer);clearInterval(turtleHistoryTimer);
-  loadTurtleSnapshot();loadTurtleHistory();
+  loadTurtleSnapshot();loadTurtleHistory();loadTurtleExecutionMode();
   turtleTimer=setInterval(loadTurtleSnapshot,5000);
   turtleHistoryTimer=setInterval(loadTurtleHistory,15000);
 }
 document.getElementById('turtleRefresh')?.addEventListener('click',()=>{loadTurtleSnapshot();loadTurtleHistory();});
+async function loadTurtleExecutionMode(){
+  try{
+    const m=await api('/api/v1/turtle/execution-mode');
+    const mode=m?.mode||'DEMO';
+    const liveLocked=m?.live_locked!==false;
+    turtleSet('turtleExec',mode==='DEMO'?'DEMO ACTIVO · LIVE BLOQUEADO':mode==='PAPER'?'PAPER ACTIVO · LIVE BLOQUEADO':'LIVE BLOQUEADO');
+    const panel=document.getElementById('turtleModePanel');
+    if(panel)panel.innerHTML='<strong>Modo actual: '+mode+'</strong> · '+(mode==='DEMO'?'Ejecución demo permitida por el gate.':mode==='PAPER'?'Paper/simulación activa.':'Dinero real bloqueado.')+' · LIVE '+(liveLocked?'BLOQUEADO':'NO BLOQUEADO');
+  }catch(e){
+    turtleSet('turtleExec','MODO NO VERIFICADO · LIVE BLOQUEADO');
+  }
+}
+async function setTurtleExecutionMode(mode){
+  try{
+    await api('/api/v1/turtle/execution-mode',{method:'POST',body:JSON.stringify({mode})});
+    await loadTurtleExecutionMode();
+    await loadTurtleSnapshot();
+  }catch(e){
+    const panel=document.getElementById('turtleModePanel');
+    if(panel)panel.textContent=mode==='LIVE'?'LIVE está bloqueado. No se habilita dinero real desde este panel.':'No fue posible activar el modo solicitado.';
+  }
+}
+document.getElementById('turtleDemoMode')?.addEventListener('click',()=>setTurtleExecutionMode('DEMO'));
+document.getElementById('turtleLiveMode')?.addEventListener('click',()=>setTurtleExecutionMode('LIVE'));
+
 // --- SBT Market Matrix ---
 const MATRIX_SYMBOLS=['EURUSD','GBPUSD','USDJPY','AUDUSD','USDCAD','BTCUSD','ETHUSD','SOLUSD','XAUUSD','XAGUSD','SPX500','NAS100','US30','AAPL','MSFT','NVDA','TSLA','VALE3','PETR4','SPY','QQQ'];
 function matrixBadge(value,kind=''){const safe=String(value??'—');return '<span class="badge '+(kind==='warn'?'warn':'')+'">'+safe+'</span>';}
