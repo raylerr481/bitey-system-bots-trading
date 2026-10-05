@@ -9,6 +9,7 @@ from mcp.server.transport_security import TransportSecuritySettings
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.api.integrations import PERMISSIONS, PLATFORMS
+from app.api.mt4 import _history, _latest
 
 MCP_TOKEN = os.getenv("SBT_MCP_TOKEN", "").strip()
 MT5_BRIDGE_URL = os.getenv("MT5_BRIDGE_URL", "").rstrip("/")
@@ -152,6 +153,29 @@ async def mt5_quote(symbol: str) -> dict[str, Any]:
             return {"allowed": True, "symbol": symbol.upper(), "quote": response.json(), "execution": "read_only"}
     except httpx.HTTPError as exc:
         return {"allowed": False, "symbol": symbol.upper(), "reason": f"MT5 bridge unavailable: {exc}"}
+
+
+@mcp.tool()
+def mt4_latest_snapshot() -> dict[str, Any]:
+    """Return the latest read-only MT4 snapshot received by SBT."""
+    return {
+        "available": _latest is not None,
+        "execution": "read_only",
+        "live_trading_enabled": False,
+        "snapshot": _latest,
+    }
+
+
+@mcp.tool()
+def mt4_recent_snapshots(limit: int = 10) -> dict[str, Any]:
+    """Return recent read-only MT4 snapshots received by SBT."""
+    safe_limit = max(1, min(int(limit), 50))
+    return {
+        "count": min(len(_history), safe_limit),
+        "execution": "read_only",
+        "live_trading_enabled": False,
+        "snapshots": list(_history)[-safe_limit:],
+    }
 
 
 def build_mcp_app() -> ASGIApp:

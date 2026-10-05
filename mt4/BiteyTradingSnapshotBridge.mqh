@@ -1,0 +1,88 @@
+//+------------------------------------------------------------------+
+//| Bitey MT4 Trading Snapshot Bridge                                |
+//| Contract: bitey-mt4-trading-snapshot-v1                          |
+//| Read/analysis bridge. Does NOT place broker orders.               |
+//+------------------------------------------------------------------+
+#property strict
+
+input string BiteySnapshotURL = "https://bitey-system-bots-trading-api.onrender.com/api/v1/mt4/bitey-report";
+input string BiteyMT4Token = "";
+input bool   BiteySnapshotEnabled = true;
+input int    BiteyWebRequestTimeoutMs = 5000;
+
+string BiteySnapshotEscape(string value)
+{
+   StringReplace(value, "\\", "\\\\");
+   StringReplace(value, "\"", "\\\"");
+   StringReplace(value, "\r", "\\r");
+   StringReplace(value, "\n", "\\n");
+   return value;
+}
+
+string BiteySnapshotNum(double value, int digits=8)
+{
+   if(value == EMPTY_VALUE) return "null";
+   return DoubleToString(value, digits);
+}
+
+// Call this from OnTick() or on a new-bar event.
+// The values are intentionally supplied by the EA so this bridge remains generic.
+bool BiteySendTradingSnapshot(
+   string symbol,
+   string timeframe,
+   string mode,
+   string regime,
+   double hurst,
+   string bestStrategy,
+   double bestScore,
+   double scoreGap,
+   string htfDirection,
+   double bid,
+   double ask,
+   double atr,
+   double rsi,
+   double adx,
+   double balance,
+   double equity,
+   int openTrades
+)
+{
+   if(!BiteySnapshotEnabled || StringLen(BiteySnapshotURL) == 0)
+      return false;
+
+   string body = "{";
+   body += "\"source\":\"Bitey_MT4_Snapshot_Bridge\",";
+   body += "\"symbol\":\"" + BiteySnapshotEscape(symbol) + "\",";
+   body += "\"timeframe\":\"" + BiteySnapshotEscape(timeframe) + "\",";
+   body += "\"mode\":\"" + BiteySnapshotEscape(mode) + "\",";
+   body += "\"execution_enabled\":false,";
+   body += "\"regime\":\"" + BiteySnapshotEscape(regime) + "\",";
+   body += "\"hurst\":" + BiteySnapshotNum(hurst,4) + ",";
+   body += "\"best_strategy\":\"" + BiteySnapshotEscape(bestStrategy) + "\",";
+   body += "\"best_score\":" + BiteySnapshotNum(bestScore,4) + ",";
+   body += "\"metrics\":{\"score_gap\":" + BiteySnapshotNum(scoreGap,4) + ",\"htf_direction\":\"" + BiteySnapshotEscape(htfDirection) + "\"},";
+   body += "\"market\":{\"bid\":" + BiteySnapshotNum(bid,Digits) + ",\"ask\":" + BiteySnapshotNum(ask,Digits) + ",\"atr\":" + BiteySnapshotNum(atr,Digits) + ",\"rsi\":" + BiteySnapshotNum(rsi,4) + ",\"adx\":" + BiteySnapshotNum(adx,4) + "},";
+   body += "\"account\":{\"balance\":" + BiteySnapshotNum(balance,2) + ",\"equity\":" + BiteySnapshotNum(equity,2) + ",\"open_trades\":" + IntegerToString(openTrades) + "}";
+   body += "}";
+
+   char post[];
+   char result[];
+   string headers = "Content-Type: application/json\r\n";
+   if(StringLen(BiteyMT4Token) > 0)
+      headers += "X-MT4-Token: " + BiteyMT4Token + "\r\n";
+
+   StringToCharArray(body, post, 0, StringLen(body), CP_UTF8);
+   ResetLastError();
+
+   string responseHeaders;
+   int status = WebRequest("POST", BiteySnapshotURL, headers,
+                           BiteyWebRequestTimeoutMs, post, result, responseHeaders);
+
+   if(status >= 200 && status < 300)
+      return true;
+
+   Print("Bitey snapshot WebRequest failed. HTTP=", status,
+         " error=", GetLastError(),
+         " response=", CharArrayToString(result));
+   return false;
+}
