@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 
 from app.api.turtle import update_from_mt4
 from app.storage import backtest_evidence
+from app.storage import live_trades
 
 router = APIRouter(prefix="/api/v1/mt4", tags=["mt4-bitey"])
 
@@ -144,6 +145,66 @@ async def ingest_report(
         "turtle_controller": turtle_state,
     }
 
+
+class MT4ClosedTrade(BaseModel):
+    source: str = "MT4_DESKTOP"
+    account_mode: str = "UNKNOWN"
+    ticket: int
+    magic: int | None = None
+    bot_id: str | None = None
+    strategy: str | None = None
+    version: str | None = None
+    symbol: str = Field(min_length=1, max_length=32)
+    timeframe: str = Field(min_length=2, max_length=12)
+    side: str = Field(pattern=r"^(BUY|SELL)$")
+    lots: float = 0.0
+    open_time: str
+    close_time: str
+    open_price: float
+    close_price: float
+    stop_loss: float | None = None
+    take_profit: float | None = None
+    pnl: float = 0.0
+    commission: float = 0.0
+    swap: float = 0.0
+    cost: float = 0.0
+    exit_reason: str | None = None
+    r_multiple: float | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+@router.post("/trade-closed")
+def ingest_closed_trade(
+    trade: MT4ClosedTrade,
+    x_mt4_token: str | None = Header(default=None),
+):
+    """Register one closed MT4 trade for DEMO/live performance measurement."""
+    _check_token(x_mt4_token)
+    payload = trade.model_dump()
+    payload["source_module"] = "Bitey System Bots Trading"
+    persistence = {"persisted": False, "reason": "SUPABASE_NOT_CONFIGURED"}
+    try:
+        persistence = live_trades.save(payload)
+    except Exception as exc:
+        persistence = {"persisted": False, "reason": "SUPABASE_WRITE_FAILED", "error": type(exc).__name__}
+    return {
+        "accepted": True,
+        "stored": True,
+        "trade_key": live_trades.trade_key(payload),
+        "account_mode": trade.account_mode,
+        "execution": "mt4_local",
+        "persistence": persistence,
+    }
+
+
+@router.get("/trades")
+def closed_trade_history(limit: int = 100):
+    limit = max(1, min(limit, 5000))
+    try:
+        items = live_trades.list_recent(limit)
+    except Exception:
+        items = []
+    return {"items": items, "count": len(items), "persistent_store": bool(items), "source": "MT4_DESKTOP"}
 
 @router.get("/active-bot")
 def active_bot():
