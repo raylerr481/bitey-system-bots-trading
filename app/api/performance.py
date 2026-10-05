@@ -8,6 +8,7 @@ from typing import Any
 from fastapi import APIRouter
 
 from app.api.mt4 import _latest, _history, _backtests
+from app.storage import live_trades
 
 router = APIRouter(prefix="/api/v1/performance", tags=["performance"])
 
@@ -215,6 +216,55 @@ def selected_bot_performance():
         },
     }
 
+
+def _trade_monthly(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    buckets: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in rows:
+        raw = row.get("close_time")
+        if not raw:
+            continue
+        try:
+            dt = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+        except (TypeError, ValueError):
+            continue
+        buckets[dt.strftime("%Y-%m")].append(row)
+    result = []
+    for month in sorted(buckets):
+        items = buckets[month]
+        pnl = sum(_number(x.get("pnl")) or 0.0 for x in items)
+        costs = sum((_number(x.get("commission")) or 0.0) + (_number(x.get("swap")) or 0.0) + (_number(x.get("cost")) or 0.0) for x in items)
+        wins = sum(1 for x in items if (_number(x.get("pnl")) or 0.0) > 0)
+        losses = sum(1 for x in items if (_number(x.get("pnl")) or 0.0) < 0)
+        result.append({"month": month, "trades": len(items), "wins": wins, "losses": losses,
+                       "net_pnl": pnl, "costs": costs, "gross_pnl": pnl + costs,
+                       "win_rate": wins / len(items) if items else None})
+    return result
+
+
+@router.get("/real-trading")
+def real_trading_performance():
+    """Closed-trade performance ledger. MT4 remains the execution authority."""
+    try:
+        rows = live_trades.list_recent(5000)
+    except Exception:
+        rows = []
+    monthly = _trade_monthly(rows)
+    pnls = [_number(r.get("pnl")) or 0.0 for r in rows]
+    wins = sum(1 for p in pnls if p > 0)
+    losses = sum(1 for p in pnls if p < 0)
+    return {
+        "contract": "bitey-sbt-closed-trade-performance-v1",
+        "execution_authority": "MT4",
+        "account_modes_observed": sorted({str(r.get("account_mode", "UNKNOWN")) for r in rows}),
+        "trades": len(rows),
+        "wins": wins,
+        "losses": losses,
+        "net_pnl": sum(pnls),
+        "win_rate": wins / len(rows) if rows else None,
+        "monthly": monthly[-24:],
+        "status": "INSUFFICIENT_EVIDENCE" if len(monthly) < 1 else ("PRELIMINARY_MONTHLY_EVIDENCE" if len(monthly) < 6 else "MONTHLY_EVIDENCE"),
+        "note": "Uses closed MT4 trades; no return probability is inferred until enough monthly observations exist.",
+    }
 
 @router.get("/monthly-probability")
 def monthly_probability():
