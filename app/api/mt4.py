@@ -73,6 +73,7 @@ class MT4TradingReport(BaseModel):
     ai: dict[str, Any] = Field(default_factory=dict)
     risk_gate: dict[str, Any] = Field(default_factory=dict)
     account: dict[str, Any] = Field(default_factory=dict)
+    turtle: dict[str, Any] = Field(default_factory=dict)
     report_type: str = "live_snapshot"
 
 
