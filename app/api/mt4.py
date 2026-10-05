@@ -75,6 +75,7 @@ class MT4TradingReport(BaseModel):
     account: dict[str, Any] = Field(default_factory=dict)
     turtle: dict[str, Any] = Field(default_factory=dict)
     report_type: str = "live_snapshot"
+    bot: dict[str, Any] = Field(default_factory=dict)
 
 
 def _check_token(token: str | None) -> None:
@@ -130,6 +131,41 @@ async def ingest_report(
         "bitey_ai": ai,
         "execution": "local_mt4_risk_gate",
         "turtle_controller": turtle_state,
+    }
+
+
+@router.get("/active-bot")
+def active_bot():
+    """Authoritative read-only view of the bot most recently reporting from MT4 Desktop."""
+    if not _latest:
+        return {
+            "connected": False,
+            "source": "MT4_DESKTOP",
+            "bot": None,
+            "account": None,
+            "market": None,
+            "last_seen": None,
+        }
+    return {
+        "connected": True,
+        "source": "MT4_DESKTOP",
+        "bot": _latest.get("bot") or {
+            "name": _latest.get("source"),
+            "magic": (_latest.get("turtle") or {}).get("magic"),
+            "strategy": (_latest.get("turtle") or {}).get("system"),
+            "version": None,
+        },
+        "account": _latest.get("account", {}),
+        "market": {
+            "symbol": _latest.get("symbol"),
+            "timeframe": _latest.get("timeframe"),
+            "regime": _latest.get("regime"),
+        },
+        "execution": {
+            "enabled": bool(_latest.get("execution_enabled", False)),
+            "mode": _latest.get("mode", "UNKNOWN"),
+        },
+        "last_seen": _latest.get("timestamp"),
     }
 
 
