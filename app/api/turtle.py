@@ -71,6 +71,38 @@ def turtle_context():
     }
 
 
+
+def update_from_mt4(payload: dict[str, Any]) -> dict[str, Any]:
+    """Synchronize a validated MT4 live snapshot into the shared Turtle Controller.
+
+    Only explicit MT4 fields are consumed; missing values use safe controller
+    defaults and are never inferred from unrelated strategy scores.
+    """
+    metrics = payload.get("metrics") or {}
+    account = payload.get("account") or {}
+
+    signal = payload.get("signal") or metrics.get("signal") or "NONE"
+    position_count = account.get("position_count", payload.get("position_count", 0))
+    risk_pct = account.get("risk_pct", payload.get("risk_pct", 0.25))
+    drawdown_pct = account.get("drawdown_pct", payload.get("drawdown_pct", 0.0))
+    last_trade_pnl = account.get("last_trade_pnl", payload.get("last_trade_pnl"))
+
+    snapshot = {
+        "status": payload.get("status") or "RUNNING",
+        "mode": payload.get("mode") or "DEMO",
+        "symbol": payload.get("symbol") or "",
+        "timeframe": payload.get("timeframe") or "",
+        "regime": payload.get("regime") or "UNKNOWN",
+        "signal": signal,
+        "position_count": position_count,
+        "risk_pct": risk_pct,
+        "drawdown_pct": drawdown_pct,
+        "last_trade_pnl": last_trade_pnl,
+        "market": payload.get("market") or {},
+    }
+    return _controller.observe(snapshot)
+
+
 def turtle_capabilities():
     return {
         "controller": "Turtle Controller",
