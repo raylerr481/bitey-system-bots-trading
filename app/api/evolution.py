@@ -449,6 +449,41 @@ def register_evidence(payload: dict[str, Any]):
         "next_validation": ["WFO","OOS","ROBUSTNESS"],
     }
 
+@router.post("/evidence/evaluate")
+def evaluate_evidence(payload: dict[str, Any]):
+    """Classify MT4 research evidence without promoting or enabling trading."""
+    data = dict(payload)
+    metrics = dict(data.get("metrics") or {})
+    validation = dict(data.get("validation") or {})
+    trades = metrics.get("trades")
+    months = metrics.get("months")
+    checks = {
+        "trades>=30": isinstance(trades, (int, float)) and trades >= 30,
+        "months>=6": isinstance(months, (int, float)) and months >= 6,
+        "wfo": bool(validation.get("wfo")),
+        "oos": bool(validation.get("oos")),
+        "robustness": bool(validation.get("robustness")),
+    }
+    if not checks["trades>=30"] or not checks["months>=6"]:
+        status, next_action = "INSUFFICIENT_OBSERVATIONS", "EXTEND_BACKTEST_SAMPLE"
+    elif not (checks["wfo"] and checks["oos"] and checks["robustness"]):
+        status, next_action = "READY_FOR_VALIDATION", "RUN_WFO_OOS_ROBUSTNESS"
+    else:
+        status, next_action = "VALIDATED_EVIDENCE", "COMPARE_CANDIDATES"
+    return {
+        "contract": "sbt-evidence-evaluation-v1",
+        "evidence_class": "BACKTEST",
+        "status": status,
+        "checks": checks,
+        "metrics": metrics,
+        "validation": validation,
+        "next_action": next_action,
+        "promotion_allowed": False,
+        "trading_activation_allowed": False,
+        "objective": "maximum_monthly_net_profit",
+        "authority": "MT4 controls DEMO/REAL; evaluation cannot change mode, risk, or execution.",
+    }
+
 @router.get("/compare")
 def compare():
     candidates=_backtest_candidates()
