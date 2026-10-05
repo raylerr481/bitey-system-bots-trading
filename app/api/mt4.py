@@ -9,6 +9,7 @@ from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, Field
 
 from app.api.turtle import update_from_mt4
+from app.storage import backtest_evidence
 
 router = APIRouter(prefix="/api/v1/mt4", tags=["mt4-bitey"])
 
@@ -203,6 +204,13 @@ async def ingest_backtest(
     if len(_backtests) > 100:
         del _backtests[:-100]
 
+    persistence = {"persisted": False, "reason": "SUPABASE_NOT_CONFIGURED"}
+    try:
+        persistence = backtest_evidence.save(payload)
+    except Exception as exc:
+        # Persistence failure must never turn a valid MT4 backtest into a live-trading failure.
+        persistence = {"persisted": False, "reason": "SUPABASE_WRITE_FAILED", "error": type(exc).__name__}
+
     return {
         "accepted": True,
         "stored": True,
@@ -210,6 +218,7 @@ async def ingest_backtest(
         "source": report.source,
         "timestamp": payload["timestamp"],
         "live_execution": False,
+        "persistence": persistence,
     }
 
 
@@ -295,4 +304,10 @@ def entry_diagnostics_help():
 @router.get("/bitey-backtests")
 def backtest_history(limit: int = 20):
     limit = max(1, min(limit, 100))
-    return {"items": list(reversed(_backtests[-limit:])), "count": len(_backtests), "evidence_class": "BACKTEST"}
+    persistent = []
+    try:
+        persistent = backtest_evidence.list_recent(limit)
+    except Exception:
+        persistent = []
+    items = persistent if persistent else list(reversed(_backtests[-limit:]))
+    return {"items": items, "count": len(items), "evidence_class": "BACKTEST", "persistent_store": bool(persistent)}
