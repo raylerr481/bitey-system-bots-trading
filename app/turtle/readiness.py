@@ -30,6 +30,13 @@ class TurtleReadinessEngine:
         robustness = float(metrics.get("robustness_score", metrics.get("robustness", 0)) or 0)
         oos = float(metrics.get("out_of_sample_score", metrics.get("oos_score", 0)) or 0)
         stability = float(metrics.get("stability_score", metrics.get("stability", 0)) or 0)
+        win_rate = float(metrics.get("win_rate_pct", metrics.get("win_rate", 0)) or 0)
+        avg_win = float(metrics.get("avg_win", 0) or 0)
+        avg_loss = abs(float(metrics.get("avg_loss", 0) or 0))
+        return_pct = float(metrics.get("return_pct", metrics.get("net_return_pct", 0)) or 0)
+        monthly_return = float(metrics.get("monthly_return_pct", 0) or 0)
+        sharpe = float(metrics.get("sharpe_ratio", metrics.get("sharpe", 0)) or 0)
+        calmar = float(metrics.get("calmar_ratio", metrics.get("calmar", 0)) or 0)
 
         sample_score = min(1.0, trades / self.preferred_trades)
         pf_score = min(1.0, max(0.0, (pf - 1.0) / 0.75))
@@ -51,6 +58,9 @@ class TurtleReadinessEngine:
             0.10 * stability_score
         ), 1)
 
+        payoff_ratio = (avg_win / avg_loss) if avg_loss > 0 else 0.0
+        breakeven_win_rate = (1.0 / (1.0 + payoff_ratio) * 100.0) if payoff_ratio > 0 else 100.0
+        expectancy_per_trade = ((win_rate / 100.0) * avg_win - (1.0 - win_rate / 100.0) * avg_loss) if (avg_win > 0 or avg_loss > 0) else expectancy
         hard_gates = {
             "minimum_sample": trades >= self.min_trades,
             "positive_expectancy": expectancy > self.target_expectancy,
@@ -88,6 +98,18 @@ class TurtleReadinessEngine:
             "gates_passed": passed,
             "gates_total": len(hard_gates),
             "failed_gates": failed,
+            "probability_analysis": {
+                "estimated_positive_performance_score_pct": probability,
+                "win_rate_pct": win_rate,
+                "payoff_ratio": round(payoff_ratio, 3),
+                "breakeven_win_rate_pct": round(breakeven_win_rate, 1),
+                "expectancy_per_trade": round(expectancy_per_trade, 6),
+                "return_pct": return_pct,
+                "monthly_return_pct": monthly_return,
+                "sharpe_ratio": sharpe,
+                "calmar_ratio": calmar,
+                "note": "This is a risk-adjusted evidence score, not a guaranteed probability of profit."
+            },
             "metrics": {
                 "trades": trades,
                 "profit_factor": pf,
@@ -98,6 +120,9 @@ class TurtleReadinessEngine:
                 "robustness_score": robustness,
                 "out_of_sample_score": oos,
                 "stability_score": stability,
+                "win_rate_pct": win_rate,
+                "avg_win": avg_win,
+                "avg_loss": avg_loss,
             },
             "recommendation": (
                 "Turtle passed the DEMO optimization/readiness gates. "
