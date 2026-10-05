@@ -84,8 +84,26 @@ def context():
         "automatic_parameter_application": False,
         "evidence_required": ["MT4 telemetry", "trade outcomes", "backtest", "walk-forward", "robustness"],
     }
+    fresh = _snapshot_fresh(_latest)
+    evidence_count = len(_history) + len(_backtests)
+    phase = "OBSERVATION" if not fresh else ("VALIDATION" if evidence_count >= 30 or len(_backtests) > 0 else "LEARNING")
+    next_action = (
+        "Esperar telemetría MT4"
+        if not fresh
+        else "Recolectar más operaciones y resultados verificables"
+        if phase == "LEARNING"
+        else "Ejecutar backtest + walk-forward + robustness antes de considerar producción"
+    )
+    decision = {
+        "phase": phase,
+        "objective": "mejorar robustez y evidencia del bot seleccionado, no prometer beneficios",
+        "evidence_count": evidence_count,
+        "next_action": next_action,
+        "production_status": "LOCKED_UNTIL_VALIDATED",
+        "parameter_changes": "PROPOSAL_ONLY",
+    }
     return {
-        "contract": "bitey-sbt-ai-context-v1",
+        "contract": "bitey-sbt-ai-context-v2",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "mt4": {
             "connected": _snapshot_fresh(_latest),
@@ -96,6 +114,7 @@ def context():
         "bot": bot,
         "analysis": analysis,
         "optimization": optimization,
+        "decision": decision,
         "activity": list(reversed(_activity[-20:])),
     }
 
