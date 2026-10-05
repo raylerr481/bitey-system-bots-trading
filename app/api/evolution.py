@@ -262,6 +262,81 @@ def mt4_selection(limit: int = 6):
         "note": "Selection does not execute trades or change MT4 environment."
     }
 
+@router.get("/pipeline")
+def pipeline():
+    """End-to-end Turtle research pipeline: MT4 -> Bitey IA -> Evolution Engine.
+
+    This endpoint selects research only. It never changes MT4 mode and never
+    starts a Strategy Tester run automatically.
+    """
+    snapshot = _latest or {}
+    ai = snapshot.get("ai") or {}
+    turtle = snapshot.get("turtle_controller") or snapshot.get("turtle") or {}
+    bot = snapshot.get("bot") or {}
+    action = str(ai.get("action") or "HOLD").upper()
+    regime = str(ai.get("regime") or turtle.get("regime") or snapshot.get("regime") or "UNKNOWN").upper()
+    next_test = str(ai.get("next_test") or "").upper()
+
+    strategy_id = None
+    timeframe = None
+    if next_test:
+        if "S1" in next_test:
+            strategy_id = "SBT-TURTLE-S1-001"
+        elif "S2" in next_test:
+            strategy_id = "SBT-TURTLE-S2-001"
+        for tf in _TIMEFRAMES:
+            if next_test.endswith("_" + tf):
+                timeframe = tf
+                break
+
+    selection = mt4_selection(limit=36)
+    selected = None
+    if strategy_id and timeframe:
+        selected = next(
+            (x for x in selection["selection"]
+             if x["strategy_id"] == strategy_id and x["timeframe"] == timeframe),
+            None,
+        )
+
+    if selected is None:
+        selected = selection["selection"][0] if selection["selection"] else None
+
+    return {
+        "contract": "bitey-turtle-evolution-pipeline-v1",
+        "status": "READY_FOR_RESEARCH" if selected else "WAITING_FOR_EVIDENCE",
+        "phase": {
+            "mt4": "TELEMETRY_RECEIVED" if snapshot else "WAITING_FOR_MT4",
+            "bitey_ia": "DECISION_RECEIVED" if ai else "WAITING_FOR_BITEY_IA",
+            "turtle": "ANALYZED" if turtle else "WAITING_FOR_TURTLE",
+            "evolution": "SELECTION_READY" if selected else "NO_SELECTION",
+        },
+        "bot": bot,
+        "symbol": snapshot.get("symbol"),
+        "timeframe": snapshot.get("timeframe"),
+        "mode": snapshot.get("mode") or (snapshot.get("account") or {}).get("mode"),
+        "execution_enabled": bool(snapshot.get("execution_enabled", False)),
+        "bitey_decision": {
+            "action": action,
+            "confidence": ai.get("confidence"),
+            "risk_allowed": bool(ai.get("risk_allowed", False)),
+            "strategy": ai.get("strategy"),
+            "reason": ai.get("reason"),
+            "source": ai.get("source"),
+            "next_test": next_test or None,
+            "validation_required": ai.get("validation_required", True),
+        },
+        "turtle_analysis": {
+            "regime": regime,
+            "signal": turtle.get("signal"),
+            "status": turtle.get("status"),
+            "learning_status": turtle.get("learning_status"),
+        },
+        "next_backtest": selected,
+        "authority": "MT4 controls DEMO/REAL; Evolution Engine only selects research jobs.",
+        "objective": "maximize_monthly_profit_subject_to_risk_and_robustness",
+        "automatic_execution": False,
+    }
+
 @router.get("/compare")
 def compare():
     candidates=_backtest_candidates()
