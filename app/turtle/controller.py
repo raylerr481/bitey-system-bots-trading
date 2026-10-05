@@ -130,3 +130,11 @@ class TurtleController:
             "risk_gate_authoritative": True,
             "version": s.version,
         }
+
+
+_controller = TurtleController()
+
+
+def get_turtle_controller() -> TurtleController:
+    """Return the process-wide Turtle Controller used by every API surface."""
+    return _controller
