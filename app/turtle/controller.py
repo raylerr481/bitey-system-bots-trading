@@ -37,6 +37,9 @@ class TurtleController:
     state: TurtleState = field(default_factory=TurtleState)
     _trade_count: int = 0
     _learning_events: list[dict[str, Any]] = field(default_factory=list)
+    demo_multiplier: float = 1.0
+    demo_multiplier_profile: str = "CONSERVATIVE"
+    demo_multiplier_score: float = 0.0
 
     def observe(self, snapshot: dict[str, Any]) -> dict[str, Any]:
         """Consume an MT4/Gateway snapshot without changing execution settings."""
@@ -79,6 +82,53 @@ class TurtleController:
             if self._trade_count >= self.min_trades_for_learning
             else "OBSERVING"
         )
+
+    def select_demo_multiplier(self, metrics: dict[str, Any]) -> dict[str, Any]:
+        """Select a virtual demo capital-growth multiplier from risk-adjusted evidence.
+
+        This never changes MT4 lot size, leverage, broker orders, or live risk.
+        It only controls the virtual DEMO simulation multiplier.
+        """
+        if self.state.mode != "DEMO":
+            return {"status": "DEMO_ONLY", "selected_multiplier": self.demo_multiplier}
+        if self._trade_count < self.min_trades_for_learning:
+            return {"status": "INSUFFICIENT_DATA", "required_trades": self.min_trades_for_learning,
+                    "selected_multiplier": self.demo_multiplier}
+        expectancy = float(metrics.get("expectancy", 0) or 0)
+        dd = max(0.0, float(metrics.get("drawdown_pct", self.state.drawdown_pct) or 0))
+        pf = float(metrics.get("profit_factor", 0) or 0)
+        candidates = (1.0, 1.5, 2.0, 3.0)
+        best = (1.0, float("-inf"))
+        for multiplier in candidates:
+            projected_dd = dd * multiplier
+            if projected_dd > 8.0:
+                continue
+            score = (expectancy * multiplier) + (max(0.0, pf - 1.0) * multiplier * 0.25) - (projected_dd ** 1.25 * 0.08)
+            if score > best[1]:
+                best = (multiplier, score)
+        self.demo_multiplier = best[0]
+        self.demo_multiplier_score = best[1]
+        self.demo_multiplier_profile = {1.0: "CONSERVATIVE", 1.5: "BALANCED", 2.0: "GROWTH", 3.0: "AGGRESSIVE"}[best[0]]
+        return self.demo_multiplier_status()
+
+    def demo_multiplier_status(self) -> dict[str, Any]:
+        return {
+            "mode": self.state.mode,
+            "selected_multiplier": self.demo_multiplier,
+            "profile": self.demo_multiplier_profile,
+            "score": self.demo_multiplier_score,
+            "automatic": True,
+            "virtual_only": True,
+            "changes_mt4_lot_size": False,
+            "changes_live_risk": False,
+            "allowed_profiles": [
+                {"multiplier": 1.0, "profile": "CONSERVATIVE"},
+                {"multiplier": 1.5, "profile": "BALANCED"},
+                {"multiplier": 2.0, "profile": "GROWTH"},
+                {"multiplier": 3.0, "profile": "AGGRESSIVE"},
+            ],
+            "max_projected_drawdown_pct": 8.0,
+        }
 
     def evaluate_learning(self, metrics: dict[str, Any]) -> dict[str, Any]:
         """Create a bounded proposal; never auto-applies parameter changes."""
@@ -129,6 +179,10 @@ class TurtleController:
             "live_parameter_change": False,
             "risk_gate_authoritative": True,
             "version": s.version,
+            "demo_multiplier": self.demo_multiplier,
+            "demo_multiplier_profile": self.demo_multiplier_profile,
+            "demo_multiplier_automatic": True,
+            "demo_multiplier_virtual_only": True,
         }
 
 
