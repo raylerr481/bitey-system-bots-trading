@@ -177,7 +177,19 @@
 <div class="experiment-context" data-context="research">
 <div class="ec"><span class="ec-label">Context</span><span class="ec-value accent">⌁ RESEARCH LAB</span></div><div class="ec"><span class="ec-label">Market</span><span class="ec-value ">EURUSD · M15</span></div><div class="ec"><span class="ec-label">Experiment</span><span class="ec-value ">NEW EXPERIMENT</span></div><div class="ec"><span class="ec-label">Environment</span><span class="ec-value ">DEMO</span></div><div class="ec"><span class="ec-label">Mode</span><span class="ec-value ">RESEARCH ONLY</span></div><div class="ec"><span class="ec-label">Execution</span><span class="ec-value ">NO EXECUTION</span></div>
 </div>
-<div class="shared-status"><span class="label">Experiment context</span><strong id="researchContextStatus">Ready to define hypothesis</strong></div><div class="hero"><span class="eyebrow">Research Lab</span><h2>Convertir una hipótesis en experimento.</h2><p>Diseña una prueba reproducible y separa evidencia de narrativa.</p></div><div class="card"><h3>01 · Definir hipótesis</h3><div class="form"><label>Instrumento<select><option>EURUSD</option><option>BTCUSD</option><option>SPX500</option><option>XAUUSD</option></select></label><label>Timeframe<select><option>M15</option><option>M30</option><option>H1</option><option>H4</option><option>D1</option></select></label></div><br><button class="btn primary" id="createExperiment">Preparar experimento</button><div class="result" id="researchResult"></div></div></section>
+<div class="shared-status"><span class="label">Experiment context</span><strong id="researchContextStatus">Ready to define hypothesis</strong></div><div class="hero"><span class="eyebrow">Research Lab</span><h2>Convertir una hipótesis en experimento.</h2><p>Diseña una prueba reproducible y separa evidencia de narrativa.</p></div><div class="card">
+<h3>02 · Nonlinear Pattern Mining</h3>
+<p class="sub">Busca interacciones no lineales entre momentum, volatilidad, posición del precio y formas históricas. No genera órdenes.</p>
+<div class="toolbar"><button class="btn primary" id="mineNonlinearM15">MINAR ENSEMBLE M15</button><span class="badge">RESEARCH ONLY</span></div>
+<div class="test-grid">
+<div class="kpi"><span class="muted">Observations</span><div class="v" id="nlObservations">—</div></div>
+<div class="kpi"><span class="muted">Base return</span><div class="v" id="nlBase">—</div></div>
+<div class="kpi"><span class="muted">Motif hit rate</span><div class="v" id="nlHit">—</div></div>
+<div class="kpi"><span class="muted">Experiment</span><div class="v" id="nlExperiment">ENSEMBLE-M15</div></div>
+</div>
+<div class="notice" id="nlStatus">Listo para buscar patrones sobre las últimas velas M15 disponibles.</div>
+<div style="overflow:auto"><table class="table"><thead><tr><th>Pattern</th><th>Support</th><th>Forward</th><th>Hit rate</th><th>Lift</th></tr></thead><tbody id="nlPatterns"><tr><td colspan="5" class="muted">Sin minería ejecutada.</td></tr></tbody></table></div>
+</div><div class="card"><h3>01 · Definir hipótesis</h3><div class="form"><label>Instrumento<select><option>EURUSD</option><option>BTCUSD</option><option>SPX500</option><option>XAUUSD</option></select></label><label>Timeframe<select><option>M15</option><option>M30</option><option>H1</option><option>H4</option><option>D1</option></select></label></div><br><button class="btn primary" id="createExperiment">Preparar experimento</button><div class="result" id="researchResult"></div></div></section>
 <section class="page" id="bots"><div id="bot-lab-page"></div></section>
 <section class="page" id="evolution">
 <div class="experiment-context" data-context="evolution">
@@ -516,5 +528,22 @@ refreshECC();setInterval(refreshECC,10000);
 (()=>{
  const labels={turtle:'Turtle / MT4', 'bot-observer':'Bot Observer', evolution:'Evolution Engine', research:'Research Lab', validation:'Virtual Validation'};
  document.querySelectorAll('.nav button[data-page]').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.page; if(labels[id]){const e=document.getElementById('terminalModule');if(e)e.textContent=labels[id];}}));
+})();
+</script><script>
+(()=>{
+ const btn=document.getElementById('mineNonlinearM15'); if(!btn)return;
+ btn.addEventListener('click',async()=>{
+  const s=document.getElementById('nlStatus'); s.textContent='Consultando velas M15 y minando patrones…';
+  try{
+   const r=await fetch('/api/v1/research/nonlinear-patterns/EURUSD?timeframe=M15&limit=500',{cache:'no-store'});
+   if(!r.ok)throw Error(r.status);
+   const d=await r.json(); document.getElementById('nlObservations').textContent=d.observations??'—';
+   document.getElementById('nlBase').textContent=((d.base_forward_return||0)*100).toFixed(3)+'%';
+   document.getElementById('nlHit').textContent=(((d.latest_shape_motif?.hit_rate)||0)*100).toFixed(1)+'%';
+   document.getElementById('nlExperiment').textContent=d.experiment_id||'ENSEMBLE-M15';
+   const rows=d.top_positive_patterns||[]; document.getElementById('nlPatterns').innerHTML=rows.length?rows.map(x=>'<tr><td>'+x.pattern+'</td><td>'+x.support+'</td><td>'+((x.mean_forward_return||0)*100).toFixed(3)+'%</td><td>'+((x.hit_rate||0)*100).toFixed(1)+'%</td><td>'+((x.lift_vs_base||0)*100).toFixed(3)+'%</td></tr>').join(''):'<tr><td colspan="5" class="muted">Sin patrones con soporte suficiente.</td></tr>';
+   s.textContent='Minería completada. Los patrones son candidatos de investigación; no son señales de ejecución.';
+  }catch(e){s.textContent='No se pudo completar la minería; no se inventan datos.';}
+ });
 })();
 </script>
