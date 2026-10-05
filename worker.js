@@ -46,7 +46,7 @@ async function yahooChart(symbol, timeframe, limit = 200) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const BUILD = 'f9-runtime-bootstrap';
+    const BUILD = '20261005-navfix1';
 
     if (url.pathname === '/health') return json({ service: 'bitey-system-bots-trading', status: 'ok', mode: 'research-demo', live: false, real_money: false, broker_orders: 0, web_build: BUILD });
 
