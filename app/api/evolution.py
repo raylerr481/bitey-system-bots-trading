@@ -17,9 +17,10 @@ from app.storage import backtest_evidence
 
 router = APIRouter(prefix="/api/v1/evolution", tags=["evolution"])
 _records: list[dict[str, Any]] = []
+_TIMEFRAMES = ["M5","M15","M30","H1","H4","D1"]
 _EXPERIMENTS = [
-    {"strategy_id": "SBT-TURTLE-S1-001", "label": "Turtle S1", "timeframes": ["M5","M15","M30","H1","H4","D1"]},
-    {"strategy_id": "SBT-TURTLE-S2-001", "label": "Turtle S2", "timeframes": ["M5","M15","M30","H1","H4","D1"]},
+    {"strategy_id": x["strategy_id"], "label": x["label"], "priority": x["priority"], "timeframes": _TIMEFRAMES}
+    for x in _RESEARCH_PRIORITY
 ]
 # Research-priority candidates are hypotheses, not claims of guaranteed profitability.
 # Priority is based on published evidence for trend/momentum persistence and practical
@@ -199,6 +200,62 @@ def turtle_matrix():
         "ranking": ranked,
         "matrix": rows,
         "note": "UNTESTED means no comparable MT4 evidence. A candidate is only eligible for winner ranking when observation and WFO/OOS/robustness evidence are present; otherwise it remains a research candidate."
+    }
+
+@router.get("/mt4-selection")
+def mt4_selection(limit: int = 6):
+    """Select the next research candidates for the local MT4 Strategy Tester.
+
+    This endpoint never starts MT4 and never changes DEMO/REAL. It only produces
+    deterministic test jobs from the 36 strategy/timeframe matrix using persisted
+    evidence and the monthly-profit objective.
+    """
+    limit = max(1, min(limit, 36))
+    candidates = []
+    evidence = _backtest_candidates()
+    by_key = {}
+    for row in evidence:
+        key = (row["strategy_id"], row["timeframe"])
+        by_key[key] = row if key not in by_key or row["score"] > by_key[key]["score"] else by_key[key]
+    priority = {x["strategy_id"]: x["priority"] for x in _RESEARCH_PRIORITY}
+    labels = {x["strategy_id"]: x["label"] for x in _RESEARCH_PRIORITY}
+    for spec in _EXPERIMENTS:
+        for tf in spec["timeframes"]:
+            key = (spec["strategy_id"], tf)
+            row = by_key.get(key)
+            if row is None:
+                state, reason = "READY_FOR_MT4_TEST", "Sin evidencia comparable; prioridad de investigación."
+                score = 100.0 - priority[spec["strategy_id"]]
+            else:
+                m = row["metrics"]
+                validated = m.get("oos_quality") is not None and m.get("robustness") is not None
+                enough = (m.get("trades") is None or m["trades"] >= 30) and (m.get("months") is None or m["months"] >= 6)
+                if validated and enough:
+                    state, reason = "VALIDATED_EVIDENCE", "Ya supera el umbral de evidencia; no repetir salvo nueva hipótesis."
+                    score = row["score"] - 1000.0
+                else:
+                    state, reason = "RETEST_WITH_VALIDATION", "Existe backtest, pero falta evidencia WFO/OOS/robustez suficiente."
+                    score = row["score"] + (10.0 - priority[spec["strategy_id"]])
+            candidates.append({
+                "strategy_id": spec["strategy_id"],
+                "label": labels[spec["strategy_id"]],
+                "symbol": ((_latest or {}).get("symbol") or "EURUSD"),
+                "timeframe": tf,
+                "selection_score": round(score, 6),
+                "state": state,
+                "reason": reason,
+                "objective": "monthly_net_return",
+                "mt4_action": "RUN_STRATEGY_TESTER",
+                "risk_mode": "DEMO_ONLY",
+            })
+    candidates.sort(key=lambda x: x["selection_score"], reverse=True)
+    return {
+        "contract": "sbt-mt4-selection-v1",
+        "total_combinations": 36,
+        "returned": min(limit, len(candidates)),
+        "selection": candidates[:limit],
+        "authority": "MT4 controls DEMO/REAL; SBT only selects research jobs.",
+        "note": "Selection does not execute trades or change MT4 environment."
     }
 
 @router.get("/compare")
