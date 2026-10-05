@@ -127,7 +127,7 @@ def status():
         "backtests":len(_persistent_backtests()),
         "best_observed_candidate":best_candidate(),
         "next_experiments":next_experiments(),
-        "turtle_matrix": turtle_matrix(),
+        "research_matrix": research_matrix(),
     }
 
 @router.get("/experiments")
@@ -174,8 +174,8 @@ def research_priority():
         "warning":"Published evidence supports strategy families, not guaranteed profitability for EURUSD/MT4. Every candidate must pass cost-aware backtest, WFO, OOS and robustness validation."
     }
 
-@router.get("/turtle-matrix")
-def turtle_matrix():
+@router.get("/research-matrix")
+def research_matrix():
     rows = _turtle_matrix_rows()
     tested = [r for r in rows if r["best_candidate"]]
     eligible = []
@@ -192,10 +192,10 @@ def turtle_matrix():
         eligible.append(r)
     ranked = sorted(eligible, key=lambda r: r["best_candidate"]["score"], reverse=True)
     return {
-        "contract": "sbt-turtle-timeframe-matrix-v1",
+        "contract": "sbt-research-timeframe-matrix-v1",
         "objective": "maximize_monthly_profit_subject_to_risk_and_robustness",
         "symbol": ((_latest or {}).get("symbol") or "EURUSD"),
-        "systems": ["SBT-TURTLE-S1-001", "SBT-TURTLE-S2-001"],
+        "systems": [x["strategy_id"] for x in _RESEARCH_PRIORITY],
         "timeframes": ["M5","M15","M30","H1","H4","D1"],
         "tested_count": len(tested),
         "eligible_count": len(eligible),
@@ -316,7 +316,7 @@ def report():
         "environment":((_latest or {}).get("account") or {}).get("mode") or "UNKNOWN",
         "best_validated_candidate":best,
         "evolution_records":list(reversed(_records[-20:])),
-        "next_action": "RUN_RESEARCH_PRIORITY_MATRIX" if not turtle_matrix()["winner"] else "VALIDATE_TOP_TURTLE_WITH_WFO_OOS_ROBUSTNESS",
+        "next_action": "RUN_RESEARCH_PRIORITY_MATRIX" if not research_matrix()["winner"] else "VALIDATE_TOP_TURTLE_WITH_WFO_OOS_ROBUSTNESS",
         "email_ready":True,
         "email_recipient":"raylerr481@gmail.com",
         "note":"Este informe no envía correo todavía; requiere un conector de email autorizado."
