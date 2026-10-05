@@ -150,10 +150,19 @@ setInterval(()=>{if(document.getElementById('ai-bot-lab')?.classList.contains('a
 let turtleTimer=null;
 function turtleSet(id,value){const el=document.getElementById(id);if(el)el.textContent=value??'—';}
 function turtleNum(v,d=5){return v===null||v===undefined||v===''?'—':Number(v).toFixed(d);}
+function turtleTimestamp(ts){
+  if(!ts)return null;
+  const native=Date.parse(ts);
+  if(Number.isFinite(native))return native;
+  const m=String(ts).match(/^(\\d{4})[.\\-](\\d{2})[.\\-](\\d{2})[ T](\\d{2}):(\\d{2}):(\\d{2})$/);
+  if(!m)return null;
+  return Date.UTC(Number(m[1]),Number(m[2])-1,Number(m[3]),Number(m[4]),Number(m[5]),Number(m[6]));
+}
 function turtleFresh(ts){
-  if(!ts)return false;
-  const age=(Date.now()-Date.parse(ts))/1000;
-  return Number.isFinite(age)&&age<=30;
+  const parsed=turtleTimestamp(ts);
+  if(parsed===null)return false;
+  const age=(Date.now()-parsed)/1000;
+  return Number.isFinite(age)&&age>=-5&&age<=30;
 }
 async function loadTurtleSnapshot(){
   try{
@@ -182,7 +191,8 @@ async function loadTurtleSnapshot(){
       'N '+turtleNum(t.n,5)+' · Stop '+(t.stop_n??2)+'N · Pyramid '+(t.pyramid_n??0.5)+'N');
     const fresh=turtleFresh(s.timestamp);
     turtleSet('turtleConnection',fresh?'ONLINE':'STALE');
-    turtleSet('turtleHeartbeat',s.timestamp?new Date(s.timestamp).toLocaleString():'—');
+    const parsedTs=turtleTimestamp(s.timestamp);
+    turtleSet('turtleHeartbeat',parsedTs!==null?new Date(parsedTs).toLocaleString():(s.timestamp||'—'));
     turtleSet('turtleSymbol',(s.symbol||'—')+' · '+(s.timeframe||'—'));
     turtleSet('turtleMode',s.mode||'—');
     turtleSet('turtleCampaign',s.regime||'FLAT');
@@ -194,7 +204,7 @@ async function loadTurtleSnapshot(){
     turtleSet('turtleAtr',turtleNum(m.atr,5));
     turtleSet('turtleRsi',turtleNum(m.rsi,2));
     turtleSet('turtleAdx',turtleNum(m.adx,2));
-    turtleSet('turtleOpenTrades',a.open_trades??0);
+    turtleSet('turtleOpenTrades',metrics.positions_open??a.open_trades??0);
     turtleSet('turtleSystem',t.campaign_system===1?'S1':t.campaign_system===2?'S2':'—');
     turtleSet('turtleDir',t.campaign_direction>0?'BUY':t.campaign_direction<0?'SELL':'FLAT');
     turtleSet('turtleLastEntry',turtleNum(t.campaign_last_entry,5));
