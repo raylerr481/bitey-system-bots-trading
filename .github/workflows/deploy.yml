@@ -38,7 +38,7 @@ jobs:
               if old in s:
                   s = s.replace(old, loader, 1)
                   break
-          if '/runtime.js?v=20260915' not in s:
+          if '/runtime.js?v=20261005-navfix1' not in s:
               s = s.replace('</body>', loader + '</body>', 1)
           p.write_text(s, encoding='utf-8')
           PY
