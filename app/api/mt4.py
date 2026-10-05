@@ -62,6 +62,8 @@ class MT4TradingReport(BaseModel):
     source: str = "AI_Trading_Bot_v1.34_Bitey"
     symbol: str = Field(min_length=1, max_length=32)
     timeframe: str = Field(min_length=2, max_length=12)
+    chart_timeframe: str | None = None
+    experiment_id: str | None = None
     timestamp: str | None = None
     mode: str = "AI_ASSIST"
     execution_enabled: bool = False
@@ -93,6 +95,9 @@ async def ingest_report(
     _check_token(x_mt4_token)
     global _latest
     payload = report.model_dump()
+    payload["strategy_timeframe"] = report.timeframe
+    payload["chart_timeframe"] = report.chart_timeframe or report.timeframe
+    payload["experiment_id"] = report.experiment_id
     payload["timestamp"] = payload["timestamp"] or datetime.now(timezone.utc).isoformat()
     payload["source_module"] = "Bitey System Bots Trading"
     turtle_state = None
