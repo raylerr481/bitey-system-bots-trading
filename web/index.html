@@ -48,6 +48,20 @@
 <div class="risk"><span>S1 Skip latched</span><b id="turtleSkipLatched">—</b></div>
 <div class="notice">Turtle rules stay in MT4. SBT observes; it does not modify the strategy.</div>
 </div></div>
+<div class="card"><h3>🐢 Turtle Diagnostics · v1.26</h3><div class="test-grid">
+<div class="kpi"><span class="muted">S1 signals</span><div class="v" id="turtleS1Signals">—</div></div>
+<div class="kpi"><span class="muted">S2 signals</span><div class="v" id="turtleS2Signals">—</div></div>
+<div class="kpi"><span class="muted">Executed S1</span><div class="v" id="turtleS1Executed">—</div></div>
+<div class="kpi"><span class="muted">Executed S2</span><div class="v" id="turtleS2Executed">—</div></div>
+</div><div class="test-grid" style="margin-top:10px">
+<div class="kpi"><span class="muted">S1 skipped</span><div class="v" id="turtleS1Skipped">—</div></div>
+<div class="kpi"><span class="muted">Campaign blocked</span><div class="v" id="turtleCampaignBlocked">—</div></div>
+<div class="kpi"><span class="muted">History blocked</span><div class="v" id="turtleHistoryBlocked">—</div></div>
+<div class="kpi"><span class="muted">Order errors</span><div class="v" id="turtleOrderErrors">—</div></div>
+</div><div class="risk"><span>Classic parameters</span><b id="turtleClassicParams">—</b></div>
+<div class="risk"><span>N / Stop / Pyramid</span><b id="turtleRiskParams">—</b></div>
+<div class="notice">Datos provenientes directamente del Turtle EA por MT4 → SBT. Solo lectura; SBT no modifica estos parámetros.</div>
+</div>
 <div class="card"><h3>Account Snapshot</h3><div class="test-grid">
 <div class="kpi"><span class="muted">Balance</span><div class="v" id="turtleBalance">—</div></div>
 <div class="kpi"><span class="muted">Equity</span><div class="v" id="turtleEquity">—</div></div>
@@ -150,6 +164,22 @@ async function loadTurtleSnapshot(){
       turtleSet('turtleStatus','Esperando el primer snapshot de MT4…'); return;
     }
     const m=s.market||{}, a=s.account||{}, t=s.turtle||{}, metrics=s.metrics||{};
+    const s1Signals=(Number(metrics.s1_buy_signals||0)+Number(metrics.s1_sell_signals||0));
+    const s2Signals=(Number(metrics.s2_buy_signals||0)+Number(metrics.s2_sell_signals||0));
+    const s1Executed=(Number(metrics.s1_buy_executed||0)+Number(metrics.s1_sell_executed||0));
+    const s2Executed=(Number(metrics.s2_buy_executed||0)+Number(metrics.s2_sell_executed||0));
+    turtleSet('turtleS1Signals',s1Signals+' (B '+Number(metrics.s1_buy_signals||0)+' / S '+Number(metrics.s1_sell_signals||0)+')');
+    turtleSet('turtleS2Signals',s2Signals+' (B '+Number(metrics.s2_buy_signals||0)+' / S '+Number(metrics.s2_sell_signals||0)+')');
+    turtleSet('turtleS1Executed',s1Executed+' (B '+Number(metrics.s1_buy_executed||0)+' / S '+Number(metrics.s1_sell_executed||0)+')');
+    turtleSet('turtleS2Executed',s2Executed+' (B '+Number(metrics.s2_buy_executed||0)+' / S '+Number(metrics.s2_sell_executed||0)+')');
+    turtleSet('turtleS1Skipped',metrics.s1_skipped??0);
+    turtleSet('turtleCampaignBlocked',metrics.campaign_blocked??0);
+    turtleSet('turtleHistoryBlocked',metrics.history_blocked??0);
+    turtleSet('turtleOrderErrors',metrics.order_errors??0);
+    turtleSet('turtleClassicParams',
+      'S1 '+(t.s1_entry_days??20)+'/'+(t.s1_exit_days??10)+' · S2 '+(t.s2_entry_days??55)+'/'+(t.s2_exit_days??20)+' · Max '+(t.max_units??4));
+    turtleSet('turtleRiskParams',
+      'N '+turtleNum(t.n,5)+' · Stop '+(t.stop_n??2)+'N · Pyramid '+(t.pyramid_n??0.5)+'N');
     const fresh=turtleFresh(s.timestamp);
     turtleSet('turtleConnection',fresh?'ONLINE':'STALE');
     turtleSet('turtleHeartbeat',s.timestamp?new Date(s.timestamp).toLocaleString():'—');
