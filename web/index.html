@@ -16,14 +16,14 @@
 <main class="main">
 <div class="top"><div><button class="btn hamb" id="hamb">☰</button> <span class="eyebrow">Bitey Trading Intelligence</span><h1 id="title">Trading Laboratory</h1></div><div class="status"><span class="dot"></span><span id="apiStatus">Demo environment ready</span></div></div>
 <section class="page active" id="dashboard">
-<div class="hero"><span class="eyebrow">AI → Intelligence → Risk Gate → Execution</span><h2>Un laboratorio de trading donde la IA propone y Bitey controla.</h2><p>Elige la IA que prefieras, conecta tu plataforma, investiga mercados, construye estrategias y somételas a simulación. Demo y Paper están separados del dinero real y cada ejecución autorizada pasa por el Risk Gate.</p><div class="toolbar"><button class="btn primary" data-page="market">Abrir Market Intelligence</button><button class="btn blue" data-page="validation">Prueba conclusiva virtual</button><button class="btn" data-page="setup">Configurar entorno</button></div></div>
+<div class="hero"><span class="eyebrow">AI → Intelligence → Risk Gate → Execution</span><h2>Un laboratorio de trading donde la IA propone y Bitey controla.</h2><p>Elige la IA que prefieras, conecta tu plataforma, investiga mercados, construye estrategias y somételas a simulación. MT4 es la autoridad de entorno: el trader selecciona DEMO/PAPER/REAL manualmente. Bitey observa, analiza y propone; nunca cambia el modo ni ejecuta operaciones.</p><div class="toolbar"><button class="btn primary" data-page="market">Abrir Market Intelligence</button><button class="btn blue" data-page="validation">Prueba conclusiva virtual</button><button class="btn" data-page="setup">Configurar entorno</button></div></div>
 <div class="grid"><div class="card metric"><span class="label">Capital virtual</span><div class="value">R$10.000</div><span class="muted">100% ficticio</span></div><div class="card metric"><span class="label">Instrumento</span><div class="value">EURUSD</div><span class="muted">H1 · Demo</span></div><div class="card metric"><span class="label">Risk Gate</span><div class="value positive">ACTIVE</div><span class="muted">2% posición · 1% pérdida diaria</span></div><div class="card metric"><span class="label">Dinero real</span><div class="value negative">LOCKED</div><span class="muted">No hay órdenes live</span></div></div>
 <div class="layout"><div class="card"><h3>Centro de control</h3><div class="steps"><span class="step done">✓ IA</span><span class="step done">✓ Plataforma</span><span class="step done">✓ Permisos</span><span class="step active">4 Risk Gate</span><span class="step">5 Demo</span><span class="step">6 Paper</span></div><p class="sub">Arquitectura: la IA puede analizar y proponer; las herramientas autorizadas ejecutan; el Risk Gate conserva la autoridad.</p><button class="btn primary" data-page="validation">Ejecutar protocolo virtual</button></div><div class="card"><h3>Estado de seguridad</h3><div class="risk"><span>Market data</span><b style="color:var(--danger)">OFFLINE</b></div><div class="risk"><span>AI tools</span><b>PERMISSIONED</b></div><div class="risk"><span>Demo execution</span><b>READY</b></div><div class="risk"><span>Broker live orders</span><b style="color:var(--danger)">BLOCKED</b></div><div class="risk"><span>Emergency stop</span><b>READY</b></div></div></div>
 </section>
 <section class="page" id="turtle">
 <div class="hero"><span class="eyebrow">MT4 → SBT → MCP</span><h2>Turtle / MT4 Control Center</h2>
 <p>Telemetría de solo lectura del Turtle EA. Esta pantalla no puede enviar órdenes al broker. El estado se actualiza desde el último snapshot recibido por SBT.</p>
-<div class="toolbar"><button class="btn primary" id="turtleRefresh">Actualizar ahora</button><button class="btn blue" id="turtleDemoMode">ACTIVAR MODO DEMO</button><button class="btn danger" id="turtleLiveMode">DINERO REAL · BLOQUEADO</button><span class="badge danger" id="turtleExec">DEMO INACTIVO · LIVE BLOQUEADO</span></div></div>
+<div class="toolbar"><button class="btn primary" id="turtleRefresh">Actualizar ahora</button><span class="badge" id="turtleExec">ESPERANDO TELEMETRÍA MT4</span></div></div>
 <div class="grid">
 <div class="card metric"><span class="label">MT4 Connection</span><div class="value" id="turtleConnection">OFFLINE</div><span class="muted" id="turtleHeartbeat">Sin heartbeat</span></div>
 <div class="card metric"><span class="label">Symbol / TF</span><div class="value" id="turtleSymbol">—</div><span class="muted" id="turtleMode">—</span></div>
@@ -68,7 +68,7 @@
 <div class="kpi"><span class="muted">Regime</span><div class="v" id="turtleRegime">—</div></div>
 </div><div class="notice" id="turtleStatus">Esperando el primer snapshot de MT4…</div><div class="notice" id="turtleModePanel">Modo actual: <strong>DEMO</strong> · Ejecución demo preparada · Dinero real bloqueado.</div></div>
 </div>
-<div class="card"><h3>Performance & Readiness</h3><div class="test-grid"><div class="kpi"><span class="muted">Probabilidad de desempeño positivo</span><div class="v" id="turtleProbability">—</div></div><div class="kpi"><span class="muted">Performance Flag</span><div class="v" id="turtlePerformanceFlag">—</div></div><div class="kpi"><span class="muted">LIVE Ready</span><div class="v" id="turtleLiveReady">LOCKED</div></div></div><div class="notice" id="turtleReadiness">Ejecuta la evaluación inicial. El porcentaje es un score de evidencia, no una garantía de ganancias.</div><div class="toolbar"><button class="btn primary" id="turtleEvaluate">EVALUAR TURTLE AHORA</button></div></div>
+<div class="card"><h3>Performance & Readiness</h3><div class="test-grid"><div class="kpi"><span class="muted">Probabilidad de desempeño positivo</span><div class="v" id="turtleProbability">—</div></div><div class="kpi"><span class="muted">Performance Flag</span><div class="v" id="turtlePerformanceFlag">—</div></div><div class="kpi"><span class="muted">LIVE Ready</span><div class="v" id="turtleLiveReady">LOCKED</div></div></div><div class="notice" id="turtleReadiness">Ejecuta la evaluación inicial. El porcentaje es un score de evidencia, no una garantía de ganancias.</div><div class="toolbar"><button class="btn primary" id="turtleEvaluate">EVALUAR EVIDENCIA TURTLE</button></div></div>
 <div class="card"><h3>Snapshot History <span class="small">· últimos 20</span></h3>
 <div style="overflow:auto"><table class="table"><thead><tr><th>Time</th><th>Symbol</th><th>Regime</th><th>Direction</th><th>Units</th><th>Bid</th><th>Ask</th><th>N / ATR</th><th>Equity</th><th>Trades</th></tr></thead><tbody id="turtleHistoryBody"><tr><td colspan="10" class="muted">Esperando snapshots…</td></tr></tbody></table></div>
 <div class="notice" id="turtleHistoryStatus">El historial se conserva en SBT para observar la evolución del Turtle. Solo lectura.</div>
@@ -114,7 +114,7 @@
 <section class="page" id="connections"><div class="hero"><span class="eyebrow">Connections</span><h2>Conexiones.</h2><p>Las conexiones de mercado se mantienen separadas de las órdenes reales.</p></div></section>
 <section class="page" id="financial"><div class="hero"><span class="eyebrow">Financial Hub · Non-Custodial</span><h2>Dinero, depósitos y retiros bajo control.</h2><p>Esta primera fase prepara Pix, Pix Cobrança, Open Finance y retiros sin custodiar credenciales ni mover dinero real. Todo pasa por autorización y Financial Risk Gate.</p><div class="toolbar"><button class="btn primary" id="financialRefresh">Actualizar estado</button><button class="btn blue" id="preparePix">Preparar depósito Pix</button><button class="btn" id="prepareOpenFinance">Preparar Open Finance</button></div></div><div class="grid"><div class="card metric"><span class="label">Saldo disponible</span><div class="value" id="finBalance">R$ 0,00</div><span class="muted">Lectura del hub</span></div><div class="card metric"><span class="label">Depósitos pendientes</span><div class="value" id="finPendingIn">R$ 0,00</div><span class="muted">No liquidados</span></div><div class="card metric"><span class="label">Retiros pendientes</span><div class="value" id="finPendingOut">R$ 0,00</div><span class="muted">No liquidados</span></div><div class="card metric"><span class="label">Dinero real</span><div class="value" id="finReal">BLOQUEADO</div><span class="muted">Proveedor no conectado</span></div></div><div class="layout"><div class="card"><h3>Métodos financieros</h3><div class="risk"><span>Pix</span><b id="finPix">PREPARAR</b></div><div class="risk"><span>Pix Cobrança</span><b id="finPixCharge">PREPARAR</b></div><div class="risk"><span>Open Finance</span><b id="finOpen">AUTORIZACIÓN</b></div><div class="risk"><span>Retiros</span><b id="finWithdraw">REVISIÓN</b></div><div class="notice" id="financialNotice">Modo READINESS_ONLY: ninguna acción mueve dinero real.</div></div><div class="card"><h3>Seguridad</h3><div class="risk"><span>Credenciales bancarias almacenadas</span><b>NO</b></div><div class="risk"><span>Contraseña del broker almacenada</span><b>NO</b></div><div class="risk"><span>Confirmación manual</span><b>OBLIGATORIA</b></div><div class="risk"><span>Financial Risk Gate</span><b>ACTIVO</b></div><h3 style="margin-top:20px">Preparar depósito</h3><div class="form"><label>Valor<input id="finAmount" type="number" min="1" step="0.01" placeholder="500"></label><label>Método<select id="finMethod"><option value="PIX">Pix</option><option value="PIX_CHARGE">Pix Cobrança</option><option value="OPEN_FINANCE">Open Finance</option></select></label></div><br><button class="btn primary" id="finDeposit">Preparar solicitud</button><div class="result" id="finResult"></div></div></div></section>
 <section class="page" id="account"><div class="hero"><span class="eyebrow">My Account</span><h2>Workspace</h2><p>Usuario: <span class="account" id="userState">Invitado</span></p><button class="btn" id="openRegister">Crear cuenta</button><button class="btn danger" id="clearLocal">Limpiar workspace local</button></div></section>
-<div class="footer">Bitey SBT · Demo/Paper first · Risk Gate mandatory · Live trading disabled · 2026-09-02</div>
+<div class="footer">Bitey SBT · MT4 selected bot · DEMO/PAPER first · REAL by manual trader decision · Bitey read-only/advisory</div>
 </main></div>
 <div class="modal" id="modal"><div class="modalbox"><button class="close" id="closeModal">×</button><h2>Crear cuenta</h2><p class="sub">Prototipo de identidad para preparar el workspace. No solicita credenciales de broker.</p><div class="form"><label>Nombre<input id="regName" placeholder="Tu nombre"></label><label>Email<input id="regEmail" type="email" placeholder="tu@email.com"></label></div><br><button class="btn primary" id="saveAccount">Guardar workspace</button><div class="result" id="accountResult"></div></div></div>
 <script>
@@ -208,6 +208,8 @@ async function loadTurtleSnapshot(){
     turtleSet('turtleHeartbeat',parsedTs!==null?new Date(parsedTs).toLocaleString():(s.timestamp||'—'));
     turtleSet('turtleSymbol',(s.symbol||'—')+' · '+(s.timeframe||'—'));
     turtleSet('turtleMode',s.mode||'—');
+    window.__turtleSnapshot=s;
+    loadTurtleExecutionMode();
     turtleSet('turtleCampaign',s.regime||'FLAT');
     turtleSet('turtleCampaignMeta',t.campaign_active?'Campaign #'+(t.campaign_id??'—'):'Sin campaña activa');
     turtleSet('turtleUnits',t.campaign_units??0);
@@ -269,35 +271,20 @@ async function loadTurtleHistory(){
 }
 function startTurtlePolling(){
   clearInterval(turtleTimer);clearInterval(turtleHistoryTimer);
-  loadTurtleSnapshot();loadTurtleHistory();loadTurtleExecutionMode();evaluateTurtleReadiness();
+  window.__turtleSnapshot=null;
+  loadTurtleSnapshot();loadTurtleHistory();evaluateTurtleReadiness();
   turtleTimer=setInterval(loadTurtleSnapshot,5000);
   turtleHistoryTimer=setInterval(loadTurtleHistory,15000);
 }
 document.getElementById('turtleRefresh')?.addEventListener('click',()=>{loadTurtleSnapshot();loadTurtleHistory();});
-async function loadTurtleExecutionMode(){
-  try{
-    const m=await api('/api/v1/turtle/execution-mode');
-    const mode=m?.mode||'DEMO';
-    const liveLocked=m?.live_locked!==false;
-    turtleSet('turtleExec',mode==='DEMO'?'DEMO ACTIVO · LIVE BLOQUEADO':mode==='PAPER'?'PAPER ACTIVO · LIVE BLOQUEADO':'LIVE BLOQUEADO');
-    const panel=document.getElementById('turtleModePanel');
-    if(panel)panel.innerHTML='<strong>Modo actual: '+mode+'</strong> · '+(mode==='DEMO'?'Ejecución demo permitida por el gate.':mode==='PAPER'?'Paper/simulación activa.':'Dinero real bloqueado.')+' · LIVE '+(liveLocked?'BLOQUEADO':'NO BLOQUEADO');
-  }catch(e){
-    turtleSet('turtleExec','MODO NO VERIFICADO · LIVE BLOQUEADO');
-  }
+function loadTurtleExecutionMode(){
+  const s=window.__turtleSnapshot||null;
+  const mode=String(s?.mode||s?.account?.mode||'UNKNOWN').toUpperCase();
+  const label=mode==='REAL'?'REAL — MONITOREO ACTIVO':mode==='DEMO'?'DEMO — MONITOREO ACTIVO':mode==='PAPER'?'PAPER — MONITOREO ACTIVO':'ESPERANDO MT4';
+  turtleSet('turtleExec',label);
+  const panel=document.getElementById('turtleModePanel');
+  if(panel)panel.innerHTML='<strong>Entorno MT4: '+mode+'</strong> · El trader selecciona manualmente DEMO/PAPER/REAL en MT4. Bitey no cambia el modo ni ejecuta operaciones.';
 }
-async function setTurtleExecutionMode(mode){
-  try{
-    await api('/api/v1/turtle/execution-mode',{method:'POST',body:JSON.stringify({mode})});
-    await loadTurtleExecutionMode();
-    await loadTurtleSnapshot();
-  }catch(e){
-    const panel=document.getElementById('turtleModePanel');
-    if(panel)panel.textContent=mode==='LIVE'?'LIVE está bloqueado. No se habilita dinero real desde este panel.':'No fue posible activar el modo solicitado.';
-  }
-}
-document.getElementById('turtleDemoMode')?.addEventListener('click',()=>setTurtleExecutionMode('DEMO'));
-document.getElementById('turtleLiveMode')?.addEventListener('click',()=>setTurtleExecutionMode('LIVE'));
 
 
 
