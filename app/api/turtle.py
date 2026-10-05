@@ -60,14 +60,19 @@ def turtle_evaluate(evaluation: TurtleEvaluation):
 def turtle_context():
     """Stable, compact read model for external cognitive clients such as Bitey IA."""
     state = _controller.status()
+    # Import locally to avoid a module-level circular dependency: app.api.mt4
+    # synchronizes snapshots into this controller.
+    from app.api.mt4 import _latest
     return {
         "source": "Bitey System Bots Trading",
         "controller": state["controller"],
         "observed": bool(state["symbol"]),
         "state": state,
-        "evidence_class": "MT4_LIVE_SNAPSHOT" if state["symbol"] else "NO_EVIDENCE",
+        "mt4_snapshot": _latest,
+        "evidence_class": "MT4_LIVE_SNAPSHOT" if _latest else "NO_EVIDENCE",
         "execution_authority": "SBT_RISK_GATE",
         "live_parameter_change": False,
+        "execution_enabled": False,
     }
 
 
