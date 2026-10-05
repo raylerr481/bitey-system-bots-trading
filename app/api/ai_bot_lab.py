@@ -94,13 +94,62 @@ def context():
         if phase == "LEARNING"
         else "Ejecutar backtest + walk-forward + robustness antes de considerar producción"
     )
+    account = (_latest or {}).get("account") or {}
+    raw_mode = str(account.get("mode") or (_latest or {}).get("mode") or "UNKNOWN").upper()
+    if any(token in raw_mode for token in ("REAL", "LIVE")):
+        environment = "REAL"
+    elif "PAPER" in raw_mode:
+        environment = "PAPER"
+    elif "DEMO" in raw_mode or "TEST" in raw_mode:
+        environment = "DEMO"
+    else:
+        environment = "UNKNOWN"
+
+    # Performance target is a measurable objective, not a promise of return.
+    initial_capital = account.get("initial_balance", account.get("initial_capital"))
+    current_equity = account.get("equity", account.get("balance"))
+    try:
+        initial_capital = float(initial_capital) if initial_capital is not None else None
+        current_equity = float(current_equity) if current_equity is not None else None
+    except (TypeError, ValueError):
+        initial_capital = None
+        current_equity = None
+    target_return = 0.10
+    observed_return = None
+    target_amount = None
+    if initial_capital and initial_capital > 0:
+        target_amount = initial_capital * (1.0 + target_return)
+        if current_equity is not None:
+            observed_return = (current_equity - initial_capital) / initial_capital
+
+    if environment == "REAL":
+        production_status = "REAL_MONITORING"
+    elif phase == "VALIDATION" and evidence_count >= 30:
+        production_status = "WAITING_FOR_MANUAL_MT4_SWITCH"
+    elif environment in {"DEMO", "PAPER"}:
+        production_status = "BUILDING_EVIDENCE"
+    else:
+        production_status = "WAITING_FOR_MT4"
+
     decision = {
         "phase": phase,
-        "objective": "mejorar robustez y evidencia del bot seleccionado, no prometer beneficios",
+        "objective": "maximizar beneficio sostenible del bot seleccionado, sujeto a riesgo y robustez; no prometer beneficios",
         "evidence_count": evidence_count,
         "next_action": next_action,
-        "production_status": "LOCKED_UNTIL_VALIDATED",
+        "environment": environment,
+        "manual_transition_required": environment != "REAL",
+        "transition_authority": "TRADER_IN_MT4",
+        "automatic_mode_switch": False,
+        "production_status": production_status,
         "parameter_changes": "PROPOSAL_ONLY",
+        "target": {
+            "minimum_reference_return": 0.10,
+            "label": "+10% del capital de referencia",
+            "initial_capital": initial_capital,
+            "target_amount": target_amount,
+            "observed_return": observed_return,
+            "note": "Meta de validación; no garantiza rentabilidad mensual ni futura.",
+        },
     }
     return {
         "contract": "bitey-sbt-ai-context-v2",
