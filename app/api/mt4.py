@@ -110,10 +110,20 @@ async def ingest_report(
                 **report.market,
                 "symbol": report.symbol,
                 "timeframe": report.timeframe,
+                "mode": report.mode,
+                "execution_enabled": report.execution_enabled,
                 "regime": report.regime,
                 "entry_score": report.metrics.get("entry_score", 0),
                 "score_gap": report.metrics.get("score_gap", 0),
                 "htf_direction": report.metrics.get("htf_direction", "NEUTRAL"),
+                "metadata": {
+                    **(report.market.get("metadata") or {}),
+                    "mt4_reported_mode": report.mode,
+                    "mt4_account_mode": (report.account or {}).get("mode"),
+                    "turtle_controller": turtle_state or {},
+                    "risk_gate": report.risk_gate,
+                    "bot": report.bot,
+                },
             }
             async with httpx.AsyncClient(timeout=8) as client:
                 response = await client.post(BITEY_TRADING_URL, json=snapshot)
