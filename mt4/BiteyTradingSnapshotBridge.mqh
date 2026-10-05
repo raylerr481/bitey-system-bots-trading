@@ -87,6 +87,22 @@ bool BiteySendTradingSnapshot(
    return false;
 }
 
+// Backward-compatible overload. Existing Turtle EA builds continue to compile.
+bool BiteySendTurtleSnapshot(
+   string symbol,string timeframe,string mode,string regime,double hurst,
+   string bestStrategy,double bestScore,double scoreGap,string htfDirection,
+   double bid,double ask,double atr,double rsi,double adx,double balance,
+   double equity,int openTrades,int campaignId,int campaignSystem,
+   int campaignDirection,int campaignUnits,double campaignLastEntry,
+   double campaignN,bool campaignActive,bool s1SkipNext,bool s1SkipLatched)
+{
+   return BiteySendTurtleSnapshot(symbol,timeframe,mode,regime,hurst,bestStrategy,
+      bestScore,scoreGap,htfDirection,bid,ask,atr,rsi,adx,balance,equity,
+      openTrades,campaignId,campaignSystem,campaignDirection,campaignUnits,
+      campaignLastEntry,campaignN,campaignActive,s1SkipNext,s1SkipLatched,
+      "UNKNOWN","UNKNOWN",0,EMPTY_VALUE,campaignLastEntry,"",EMPTY_VALUE,EMPTY_VALUE);
+}
+
 // Extended Turtle snapshot with campaign state. Read-only telemetry only.
 bool BiteySendTurtleSnapshot(
    string symbol,string timeframe,string mode,string regime,double hurst,
