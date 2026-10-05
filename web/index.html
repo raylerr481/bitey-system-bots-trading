@@ -53,6 +53,11 @@
 <div class="kpi"><span class="muted">Equity</span><div class="v" id="turtleEquity">—</div></div>
 <div class="kpi"><span class="muted">Regime</span><div class="v" id="turtleRegime">—</div></div>
 </div><div class="notice" id="turtleStatus">Esperando el primer snapshot de MT4…</div></div>
+</div>
+<div class="card"><h3>Snapshot History <span class="small">· últimos 20</span></h3>
+<div style="overflow:auto"><table class="table"><thead><tr><th>Time</th><th>Symbol</th><th>Regime</th><th>Direction</th><th>Units</th><th>Bid</th><th>Ask</th><th>N / ATR</th><th>Equity</th><th>Trades</th></tr></thead><tbody id="turtleHistoryBody"><tr><td colspan="10" class="muted">Esperando snapshots…</td></tr></tbody></table></div>
+<div class="notice" id="turtleHistoryStatus">El historial se conserva en SBT para observar la evolución del Turtle. Solo lectura.</div>
+</div>
 </section>
 <section class="page" id="matrix">
 <div class="hero"><span class="eyebrow">SBT Market Intelligence</span><h2>Market Matrix</h2><p>Un radar cuantitativo propio de Bitey SBT: escanea un universo de activos con el mismo motor determinista de Market Intelligence y ordena las oportunidades por <strong>SBT Score</strong>. Los resultados son investigación, no órdenes.</p>
@@ -154,8 +159,47 @@ async function loadTurtleSnapshot(){
     turtleSet('turtleConnection','ERROR'); turtleSet('turtleStatus','SBT MT4 endpoint unavailable. No data was invented.');
   }
 }
-function startTurtlePolling(){clearInterval(turtleTimer);loadTurtleSnapshot();turtleTimer=setInterval(loadTurtleSnapshot,5000);}
-document.getElementById('turtleRefresh')?.addEventListener('click',loadTurtleSnapshot);
+let turtleHistoryTimer=null;
+function turtleHistoryValue(v,d=5){return v===null||v===undefined||v===''?'—':Number(v).toFixed(d);}
+function turtleHistoryTime(ts){if(!ts)return '—';const d=new Date(ts);return Number.isNaN(d.getTime())?'—':d.toLocaleTimeString();}
+function renderTurtleHistory(items){
+  const body=document.getElementById('turtleHistoryBody'); if(!body)return;
+  if(!items.length){body.innerHTML='<tr><td colspan="10" class="muted">Aún no hay historial recibido.</td></tr>';return;}
+  body.innerHTML=items.map(s=>{
+    const m=s.market||{},a=s.account||{},t=s.turtle||{},metrics=s.metrics||{};
+    const symbol=s.symbol||'—';
+    const digits=String(symbol).includes('JPY')?3:5;
+    const direction=metrics.htf_direction||'FLAT';
+    return '<tr>'+
+      '<td>'+turtleHistoryTime(s.timestamp)+'</td>'+
+      '<td><strong>'+symbol+'</strong><br><span class="small">'+(s.timeframe||'—')+'</span></td>'+
+      '<td>'+String(s.regime||'FLAT')+'</td>'+
+      '<td>'+direction+'</td>'+
+      '<td>'+String(t.campaign_units??0)+'</td>'+
+      '<td>'+turtleHistoryValue(m.bid,digits)+'</td>'+
+      '<td>'+turtleHistoryValue(m.ask,digits)+'</td>'+
+      '<td>'+turtleHistoryValue(m.atr,5)+'</td>'+
+      '<td>'+(a.equity===undefined?'—':Number(a.equity).toFixed(2))+'</td>'+
+      '<td>'+String(a.open_trades??0)+'</td>'+
+    '</tr>';
+  }).join('');
+}
+async function loadTurtleHistory(){
+  try{
+    const res=await api('/api/v1/mt4/bitey-history?limit=20');
+    renderTurtleHistory(res?.items||[]);
+    turtleSet('turtleHistoryStatus',(res?.count??0)+' snapshots disponibles · solo lectura.');
+  }catch(e){
+    turtleSet('turtleHistoryStatus','No fue posible cargar el historial. No se inventan datos.');
+  }
+}
+function startTurtlePolling(){
+  clearInterval(turtleTimer);clearInterval(turtleHistoryTimer);
+  loadTurtleSnapshot();loadTurtleHistory();
+  turtleTimer=setInterval(loadTurtleSnapshot,5000);
+  turtleHistoryTimer=setInterval(loadTurtleHistory,15000);
+}
+document.getElementById('turtleRefresh')?.addEventListener('click',()=>{loadTurtleSnapshot();loadTurtleHistory();});
 // --- SBT Market Matrix ---
 const MATRIX_SYMBOLS=['EURUSD','GBPUSD','USDJPY','AUDUSD','USDCAD','BTCUSD','ETHUSD','SOLUSD','XAUUSD','XAGUSD','SPX500','NAS100','US30','AAPL','MSFT','NVDA','TSLA','VALE3','PETR4','SPY','QQQ'];
 function matrixBadge(value,kind=''){const safe=String(value??'—');return '<span class="badge '+(kind==='warn'?'warn':'')+'">'+safe+'</span>';}
