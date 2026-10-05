@@ -12,7 +12,7 @@
 <body>
 <div class="app">
 <aside class="side" id="side"><div class="brand"><div class="logo">B</div><div>Bitey SBT<small>TRADING INTELLIGENCE OS</small></div></div>
-<nav class="nav"><small>Workspace</small><button class="active" data-page="dashboard">◈ Dashboard</button><button data-page="turtle">🐢 Turtle / MT4</button><button data-page="matrix">▦ SBT Market Matrix</button><button data-page="market">⌁ Market Intelligence</button><button data-page="research">⌁ Research Lab</button><button data-page="bots">◉ Bot Lab</button><button data-page="validation">✓ Virtual Validation</button><small>Build</small><button data-page="setup">⚙ My Environment</button><button data-page="models">✦ AI Providers</button><button data-page="registry">▣ Strategy Registry</button><small>Control</small><button data-page="risk">◇ Risk Gate</button><button data-page="connections">↔ Connections</button><button data-page="account">◎ My Account</button></nav></aside>
+<nav class="nav"><small>Workspace</small><button class="active" data-page="dashboard">◈ Dashboard</button><button data-page="turtle">🐢 Turtle / MT4</button><button data-page="matrix">▦ SBT Market Matrix</button><button data-page="market">⌁ Market Intelligence</button><button data-page="research">⌁ Research Lab</button><button data-page="bots">◉ Bot Lab</button><button data-page="validation">✓ Virtual Validation</button><small>Build</small><button data-page="setup">⚙ My Environment</button><button data-page="models">✦ AI Providers</button><button data-page="registry">▣ Strategy Registry</button><small>Control</small><button data-page="risk">◇ Risk Gate</button><button data-page="connections">↔ Connections</button><button data-page="financial">💰 Financial Hub</button><button data-page="account">◎ My Account</button></nav></aside>
 <main class="main">
 <div class="top"><div><button class="btn hamb" id="hamb">☰</button> <span class="eyebrow">Bitey Trading Intelligence</span><h1 id="title">Trading Laboratory</h1></div><div class="status"><span class="dot"></span><span id="apiStatus">Demo environment ready</span></div></div>
 <section class="page active" id="dashboard">
@@ -88,13 +88,14 @@
 <section class="page" id="registry"><div class="hero"><span class="eyebrow">Strategy Registry</span><h2>Registro de estrategias.</h2></div></section>
 <section class="page" id="risk"><div class="hero"><span class="eyebrow">Risk Gate</span><h2>Control de riesgo.</h2><p>Esta capa conserva autoridad sobre cualquier ejecución.</p></div></section>
 <section class="page" id="connections"><div class="hero"><span class="eyebrow">Connections</span><h2>Conexiones.</h2><p>Las conexiones de mercado se mantienen separadas de las órdenes reales.</p></div></section>
+<section class="page" id="financial"><div class="hero"><span class="eyebrow">Financial Hub · Non-Custodial</span><h2>Dinero, depósitos y retiros bajo control.</h2><p>Esta primera fase prepara Pix, Pix Cobrança, Open Finance y retiros sin custodiar credenciales ni mover dinero real. Todo pasa por autorización y Financial Risk Gate.</p><div class="toolbar"><button class="btn primary" id="financialRefresh">Actualizar estado</button><button class="btn blue" id="preparePix">Preparar depósito Pix</button><button class="btn" id="prepareOpenFinance">Preparar Open Finance</button></div></div><div class="grid"><div class="card metric"><span class="label">Saldo disponible</span><div class="value" id="finBalance">R$ 0,00</div><span class="muted">Lectura del hub</span></div><div class="card metric"><span class="label">Depósitos pendientes</span><div class="value" id="finPendingIn">R$ 0,00</div><span class="muted">No liquidados</span></div><div class="card metric"><span class="label">Retiros pendientes</span><div class="value" id="finPendingOut">R$ 0,00</div><span class="muted">No liquidados</span></div><div class="card metric"><span class="label">Dinero real</span><div class="value" id="finReal">BLOQUEADO</div><span class="muted">Proveedor no conectado</span></div></div><div class="layout"><div class="card"><h3>Métodos financieros</h3><div class="risk"><span>Pix</span><b id="finPix">PREPARAR</b></div><div class="risk"><span>Pix Cobrança</span><b id="finPixCharge">PREPARAR</b></div><div class="risk"><span>Open Finance</span><b id="finOpen">AUTORIZACIÓN</b></div><div class="risk"><span>Retiros</span><b id="finWithdraw">REVISIÓN</b></div><div class="notice" id="financialNotice">Modo READINESS_ONLY: ninguna acción mueve dinero real.</div></div><div class="card"><h3>Seguridad</h3><div class="risk"><span>Credenciales bancarias almacenadas</span><b>NO</b></div><div class="risk"><span>Contraseña del broker almacenada</span><b>NO</b></div><div class="risk"><span>Confirmación manual</span><b>OBLIGATORIA</b></div><div class="risk"><span>Financial Risk Gate</span><b>ACTIVO</b></div><h3 style="margin-top:20px">Preparar depósito</h3><div class="form"><label>Valor<input id="finAmount" type="number" min="1" step="0.01" placeholder="500"></label><label>Método<select id="finMethod"><option value="PIX">Pix</option><option value="PIX_CHARGE">Pix Cobrança</option><option value="OPEN_FINANCE">Open Finance</option></select></label></div><br><button class="btn primary" id="finDeposit">Preparar solicitud</button><div class="result" id="finResult"></div></div></div></section>
 <section class="page" id="account"><div class="hero"><span class="eyebrow">My Account</span><h2>Workspace</h2><p>Usuario: <span class="account" id="userState">Invitado</span></p><button class="btn" id="openRegister">Crear cuenta</button><button class="btn danger" id="clearLocal">Limpiar workspace local</button></div></section>
 <div class="footer">Bitey SBT · Demo/Paper first · Risk Gate mandatory · Live trading disabled · 2026-09-02</div>
 </main></div>
 <div class="modal" id="modal"><div class="modalbox"><button class="close" id="closeModal">×</button><h2>Crear cuenta</h2><p class="sub">Prototipo de identidad para preparar el workspace. No solicita credenciales de broker.</p><div class="form"><label>Nombre<input id="regName" placeholder="Tu nombre"></label><label>Email<input id="regEmail" type="email" placeholder="tu@email.com"></label></div><br><button class="btn primary" id="saveAccount">Guardar workspace</button><div class="result" id="accountResult"></div></div></div>
 <script>
 const state={ai:localStorage.getItem('sbt_ai')||'bitey',platform:localStorage.getItem('sbt_platform')||'mt5',permissions:new Set(JSON.parse(localStorage.getItem('sbt_permissions')||'["read_market","research"]')),automation:localStorage.getItem('sbt_automation')==='true'};
-const titles={dashboard:'Trading Laboratory',turtle:'Turtle / MT4 Control',matrix:'SBT Market Matrix',market:'Market Intelligence',research:'Research Lab',bots:'Bot Lab',validation:'Virtual Validation',setup:'My Environment',models:'AI Providers',registry:'Strategy Registry',risk:'Risk Gate',connections:'Connections',account:'My Account'};
+const titles={dashboard:'Trading Laboratory',turtle:'Turtle / MT4 Control',matrix:'SBT Market Matrix',market:'Market Intelligence',research:'Research Lab',bots:'Bot Lab',validation:'Virtual Validation',setup:'My Environment',models:'AI Providers',registry:'Strategy Registry',risk:'Risk Gate',connections:'Connections',financial:'Financial Hub',account:'My Account'};
 function page(id){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));const el=document.getElementById(id);if(el)el.classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===id));document.getElementById('title').textContent=titles[id]||'Trading Laboratory';document.getElementById('side').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'});if(id==='bots')window.BiteySBT?.openBotLab?.();if(id==='turtle')startTurtlePolling();else{clearInterval(turtleTimer);clearInterval(turtleHistoryTimer);}}
 document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>page(b.dataset.page)));
 document.getElementById('hamb').onclick=()=>document.getElementById('side').classList.toggle('open');
@@ -225,7 +226,33 @@ async function setTurtleExecutionMode(mode){
 document.getElementById('turtleDemoMode')?.addEventListener('click',()=>setTurtleExecutionMode('DEMO'));
 document.getElementById('turtleLiveMode')?.addEventListener('click',()=>setTurtleExecutionMode('LIVE'));
 
-// --- SBT Market Matrix ---
+
+// --- Financial Hub: non-custodial readiness layer ---
+async function loadFinancialStatus(){
+  try{
+    const s=await api('/api/v1/financial/status');
+    const b=s.balance||{};
+    const money=v=>'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    turtleSet('finBalance',money(b.available));turtleSet('finPendingIn',money(b.pending_deposits));turtleSet('finPendingOut',money(b.pending_withdrawals));
+    turtleSet('finPix',s.pix?.connected?'CONECTADO':'PREPARAR');turtleSet('finPixCharge',s.pix_charge?.connected?'CONECTADO':'PREPARAR');turtleSet('finOpen',s.open_finance?.connected?'CONECTADO':'AUTORIZAÇÃO');
+    turtleSet('finWithdraw',s.withdrawals?.connected?'CONECTADO':'REVISIÓN');turtleSet('finReal',s.real_money_enabled?'ATIVO':'BLOQUEADO');
+  }catch(e){turtleSet('finReal','NO VERIFICADO');}
+}
+document.getElementById('financialRefresh')?.addEventListener('click',loadFinancialStatus);
+document.getElementById('preparePix')?.addEventListener('click',()=>{page('financial');document.getElementById('finMethod').value='PIX';document.getElementById('finAmount').focus();});
+document.getElementById('prepareOpenFinance')?.addEventListener('click',()=>{page('financial');document.getElementById('finMethod').value='OPEN_FINANCE';document.getElementById('finAmount').focus();});
+document.getElementById('finDeposit')?.addEventListener('click',async()=>{
+ const amount=Number(document.getElementById('finAmount').value||0),method=document.getElementById('finMethod').value;
+ if(!(amount>0)){result('finResult','<strong>Indica un valor válido.</strong>');return;}
+ try{
+  const r=await api('/api/v1/financial/deposits',{method:'POST',body:JSON.stringify({amount,method})});
+  result('finResult','<strong>Solicitud preparada.</strong><br>'+r.message+'<br>Estado: '+r.transaction.status+' · ID: '+r.transaction.id);
+  await loadFinancialStatus();
+ }catch(e){result('finResult','<strong>No se pudo preparar la solicitud.</strong><br>No se inventa ningún movimiento financiero.');}
+});
+const oldPage=page;
+page=function(id){oldPage(id);if(id==='financial')loadFinancialStatus();};
+\n// --- SBT Market Matrix ---
 const MATRIX_SYMBOLS=['EURUSD','GBPUSD','USDJPY','AUDUSD','USDCAD','BTCUSD','ETHUSD','SOLUSD','XAUUSD','XAGUSD','SPX500','NAS100','US30','AAPL','MSFT','NVDA','TSLA','VALE3','PETR4','SPY','QQQ'];
 function matrixBadge(value,kind=''){const safe=String(value??'—');return '<span class="badge '+(kind==='warn'?'warn':'')+'">'+safe+'</span>';}
 function renderMatrix(rows){
