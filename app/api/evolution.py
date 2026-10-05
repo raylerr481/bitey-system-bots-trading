@@ -358,6 +358,68 @@ def pipeline():
         "automatic_execution": False,
     }
 
+class ResearchOrder(BaseModel):
+    strategy_id: str
+    strategy: str
+    symbol: str
+    timeframe: str
+    action: str = "RUN_STRATEGY_TESTER"
+    mode: str = "DEMO_ONLY"
+    objective: str = "maximum_monthly_net_profit"
+    validation_pipeline: list[str] = Field(default_factory=lambda: [
+        "COST_AWARE_BACKTEST", "WFO", "OOS", "ROBUSTNESS",
+        "MONTHLY_PROFITABILITY_ANALYSIS", "PERSIST_AS_EVIDENCE"
+    ])
+    source: str = "BITEY_IA_EVOLUTION"
+    status: str = "READY_FOR_MT4_TEST"
+
+
+@router.get("/research-order")
+def research_order():
+    """Return the single next MT4 research order selected by Bitey + Evolution.
+
+    This is a research command, not a broker/trading command. It never changes
+    MT4 DEMO/REAL and never starts MT4 automatically.
+    """
+    p = pipeline()
+    selected = p.get("next_backtest") or {}
+    if not selected:
+        return {
+            "contract": "sbt-mt4-research-order-v1",
+            "status": "NO_ORDER",
+            "order": None,
+            "authority": "MT4 controls DEMO/REAL; user must start Strategy Tester.",
+        }
+
+    strategy_id = selected.get("strategy_id") or p.get("evolution", {}).get("strategy_id")
+    label = selected.get("label") or strategy_id
+    timeframe = selected.get("timeframe") or p.get("evolution", {}).get("timeframe")
+    symbol = selected.get("symbol") or p.get("symbol") or "EURUSD"
+    order = ResearchOrder(
+        strategy_id=strategy_id,
+        strategy=label,
+        symbol=symbol,
+        timeframe=timeframe,
+        mode="DEMO_ONLY",
+    ).model_dump()
+    order["order_id"] = f"MT4-{strategy_id}-{symbol}-{timeframe}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+    order["instructions"] = [
+        "Configure MT4 Strategy Tester with this symbol/timeframe.",
+        "Run the selected Turtle strategy without changing DEMO/REAL automatically.",
+        "Return the completed tester metrics to POST /api/v1/evolution/evidence.",
+    ]
+    order["bitey_decision"] = p.get("bitey_decision")
+    order["turtle_analysis"] = p.get("turtle_analysis")
+    order["evidence_policy"] = p.get("evidence_policy")
+    return {
+        "contract": "sbt-mt4-research-order-v1",
+        "status": "READY_FOR_MT4_TEST",
+        "order": order,
+        "automatic_execution": False,
+        "authority": "MT4 controls DEMO/REAL; this order only authorizes research/testing.",
+    }
+
+
 @router.post("/evidence")
 def register_evidence(payload: dict[str, Any]):
     """Register a completed MT4 research result as persistent BACKTEST evidence.
