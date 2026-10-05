@@ -53,6 +53,30 @@ def _analysis(snapshot: dict[str, Any] | None) -> dict[str, Any]:
     messages.append("La optimización no modifica automáticamente el EA activo.")
     return {"state": "ANALYZING", "summary": "Bitey está analizando el bot que realmente está conectado a MT4.", "evidence": "MT4_LIVE_SNAPSHOT", "messages": messages, "turtle_parameters": turtle}
 
+@router.get('/context')
+def context():
+    """Stable read-only context contract for Bitey IA and other SBT clients."""
+    bot = _bot(_latest)
+    analysis = _analysis(_latest)
+    optimization = {
+        "state": "READY_TO_ANALYZE" if _latest else "WAITING_FOR_MT4",
+        "automatic": True,
+        "automatic_parameter_application": False,
+        "evidence_required": ["MT4 telemetry", "trade outcomes", "backtest", "walk-forward", "robustness"],
+    }
+    return {
+        "contract": "bitey-sbt-ai-context-v1",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "mt4": {
+            "connected": bool(_latest),
+            "last_seen": (_latest or {}).get("timestamp"),
+        },
+        "bot": bot,
+        "analysis": analysis,
+        "optimization": optimization,
+        "activity": list(reversed(_activity[-20:])),
+    }
+
 @router.get('/status')
 def status():
     return {
