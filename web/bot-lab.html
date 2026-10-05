@@ -47,7 +47,19 @@
     </main>
 
     <aside class="mt-right">
-      <div class="mt-right-head"><b>Análise de mercado</b><span style="color:var(--mt-muted)">⋮</span></div>
+      <div class="mt-right-section" style="background:#0b1118;border-bottom:1px solid var(--mt-line)">
+        <div class="mt-right-title">Orden Demo / Paper</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+          <label style="font-size:9px;color:var(--mt-muted)">CAPITAL<input id="demoAmount" type="number" min="1" step="1" value="100" style="display:block;width:100%;margin-top:5px;box-sizing:border-box;background:#171b21;border:1px solid var(--mt-line);color:#fff;border-radius:6px;padding:7px"></label>
+          <label style="font-size:9px;color:var(--mt-muted)">RIESGO %<input id="demoRisk" type="number" min="0.1" max="2" step="0.1" value="0.5" style="display:block;width:100%;margin-top:5px;box-sizing:border-box;background:#171b21;border:1px solid var(--mt-line);color:#fff;border-radius:6px;padding:7px"></label>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px">
+          <button id="demoBuy" style="border:1px solid #246a4b;background:#0d291d;color:#70e0aa;border-radius:7px;padding:10px;font-weight:800;cursor:pointer">▲ COMPRAR</button>
+          <button id="demoSell" style="border:1px solid #6d3038;background:#2a1216;color:#ff8f9b;border-radius:7px;padding:10px;font-weight:800;cursor:pointer">▼ VENDER</button>
+        </div>
+        <div id="demoTicketStatus" style="margin-top:8px;color:var(--mt-muted);font-size:9px;line-height:1.4">SIMULACIÓN LOCAL · no broker order · DEMO/PAPER only</div>
+      </div>
+      <div class="mt-right-head"><b>Análisis de mercado</b><span style="color:var(--mt-muted)">⋮</span></div>
       <div class="mt-right-section"><div class="mt-right-title">Preço de mercado</div><div class="quote-grid"><div class="quote-box"><small>VENDER / BID</small><strong id="mtBid">—</strong></div><div class="quote-box"><small>COMPRAR / ASK</small><strong id="mtAsk">—</strong></div></div></div>
       <div class="mt-right-section"><div class="mt-right-title">Indicadores</div><div class="metric"><span>EMA 9</span><b id="mtEma9">—</b></div><div class="metric"><span>EMA 21</span><b id="mtEma21">—</b></div><div class="metric"><span>RSI 14</span><b id="mtRsi">—</b></div><div class="metric"><span>ATR 14</span><b id="mtAtr">—</b></div><div class="metric"><span>Tendência</span><b id="mtTrend">—</b></div></div>
       <div class="mt-right-section"><div class="mt-right-title">Pressão de mercado</div><div class="metric"><span>Compradores</span><b id="mtBuyPct">—</b></div><div class="bar"><i id="mtBuyBar"></i></div><div class="analysis-note" style="margin-top:11px">Indicadores são analíticos. Não representam recomendação financeira nem autorizam execução.</div></div>
@@ -106,6 +118,11 @@
 <script>
 (function(){
   const api=()=>((window.SBT_API_URL||localStorage.getItem('sbt_api_base')||'').replace(/\/$/,''));
+  function wireDemoTicket(){
+    const buy=document.getElementById('demoBuy'),sell=document.getElementById('demoSell'),status=document.getElementById('demoTicketStatus');
+    const place=side=>{const amount=Number(document.getElementById('demoAmount')?.value||100),risk=Number(document.getElementById('demoRisk')?.value||0.5),px=Number(document.getElementById('mtPrice')?.textContent)||null;if(!status)return;status.textContent=px?('SIMULATED '+side+' · '+symbol+' · price '+px+' · capital '+amount.toFixed(2)+' · risk '+risk.toFixed(1)+'% · no broker order'):('SIMULATED '+side+' prepared · market price unavailable · no broker order');};
+    buy?.addEventListener('click',()=>place('BUY'));sell?.addEventListener('click',()=>place('SELL'));
+  }
   let symbol='EURUSD',timeframe='H1',candles=[],spec=null,lastBacktest=null,riskDecision=null,botType='trend';
   const $=id=>document.getElementById(id);
   const get=async(path)=>{const r=await fetch(api()+path,{headers:{accept:'application/json'}});if(!r.ok)throw new Error(path+' HTTP '+r.status);return r.json()};
