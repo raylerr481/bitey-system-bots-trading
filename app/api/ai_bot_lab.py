@@ -20,7 +20,23 @@ def _bot(snapshot: dict[str, Any] | None) -> dict[str, Any]:
     if not snapshot:
         return {"connected": False, "name": None, "symbol": None, "timeframe": None, "mode": None, "regime": None}
     account = snapshot.get("account") or {}
-    return {"connected": True, "name": snapshot.get("source", "MT4 EA"), "symbol": snapshot.get("symbol"), "timeframe": snapshot.get("timeframe"), "mode": account.get("mode", snapshot.get("mode")), "regime": snapshot.get("regime"), "execution_enabled": bool(snapshot.get("execution_enabled", False))}
+    bot = snapshot.get("bot") or {}
+    turtle = snapshot.get("turtle") or {}
+    return {
+        "connected": True,
+        "name": bot.get("name") or snapshot.get("source", "MT4 EA"),
+        "strategy": bot.get("strategy") or turtle.get("system"),
+        "version": bot.get("version"),
+        "magic": bot.get("magic") or turtle.get("magic"),
+        "symbol": snapshot.get("symbol"),
+        "timeframe": snapshot.get("timeframe"),
+        "mode": account.get("mode", snapshot.get("mode")),
+        "broker": account.get("broker"),
+        "server": account.get("server"),
+        "regime": snapshot.get("regime"),
+        "execution_enabled": bool(snapshot.get("execution_enabled", False)),
+        "last_seen": snapshot.get("timestamp"),
+    }
 
 def _analysis(snapshot: dict[str, Any] | None) -> dict[str, Any]:
     if not snapshot:
