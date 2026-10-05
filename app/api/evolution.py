@@ -20,6 +20,29 @@ _EXPERIMENTS = [
     {"strategy_id": "SBT-TURTLE-S1-001", "label": "Turtle S1", "timeframes": ["M5","M15","M30","H1","H4","D1"]},
     {"strategy_id": "SBT-TURTLE-S2-001", "label": "Turtle S2", "timeframes": ["M5","M15","M30","H1","H4","D1"]},
 ]
+# Research-priority candidates are hypotheses, not claims of guaranteed profitability.
+# Priority is based on published evidence for trend/momentum persistence and practical
+# compatibility with MT4; all remain UNVALIDATED until SBT backtest/WFO/OOS passes.
+_RESEARCH_PRIORITY = [
+    {"strategy_id":"SBT-TSMOM-001","label":"Time-Series Momentum","priority":1,
+     "evidence":"Moskowitz, Ooi & Pedersen (2012); AQR trend-following research",
+     "reason":"Strong published evidence across currencies and other liquid futures/forwards."},
+    {"strategy_id":"SBT-TURTLE-S1-001","label":"Turtle S1","priority":2,
+     "evidence":"Classic Turtle rules; trend-following literature",
+     "reason":"Transparent Donchian trend-following baseline."},
+    {"strategy_id":"SBT-TURTLE-S2-001","label":"Turtle S2","priority":3,
+     "evidence":"Classic Turtle rules; trend-following literature",
+     "reason":"Slower breakout baseline for longer trends."},
+    {"strategy_id":"SBT-DONCHIAN-001","label":"Donchian Breakout","priority":4,
+     "evidence":"Donchian/Turtle breakout family",
+     "reason":"Simple breakout baseline for controlled comparison."},
+    {"strategy_id":"SBT-ADX-TREND-001","label":"ADX Trend Filter","priority":5,
+     "evidence":"Classical trend-strength methodology",
+     "reason":"Tests whether a trend-strength filter improves breakout/trend entries."},
+    {"strategy_id":"SBT-DUAL-THRUST-001","label":"Dual Thrust Breakout","priority":6,
+     "evidence":"Published breakout family",
+     "reason":"Range-expansion alternative to Donchian entries."},
+]
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -109,6 +132,16 @@ def _turtle_matrix_rows() -> list[dict[str, Any]]:
             })
     return rows
 
+@router.get("/research-priority")
+def research_priority():
+    return {
+        "contract":"sbt-research-priority-v1",
+        "objective":"maximize_monthly_profit_subject_to_risk_and_robustness",
+        "status":"RESEARCH_ONLY",
+        "candidates":_RESEARCH_PRIORITY,
+        "warning":"Published evidence supports strategy families, not guaranteed profitability for EURUSD/MT4. Every candidate must pass cost-aware backtest, WFO, OOS and robustness validation."
+    }
+
 @router.get("/turtle-matrix")
 def turtle_matrix():
     rows = _turtle_matrix_rows()
@@ -194,7 +227,7 @@ def report():
         "environment":((_latest or {}).get("account") or {}).get("mode") or "UNKNOWN",
         "best_validated_candidate":best,
         "evolution_records":list(reversed(_records[-20:])),
-        "next_action": "RUN_TURTLE_BACKTEST_MATRIX" if not turtle_matrix()["winner"] else "VALIDATE_TOP_TURTLE_WITH_WFO_OOS_ROBUSTNESS",
+        "next_action": "RUN_RESEARCH_PRIORITY_MATRIX" if not turtle_matrix()["winner"] else "VALIDATE_TOP_TURTLE_WITH_WFO_OOS_ROBUSTNESS",
         "email_ready":True,
         "email_recipient":"raylerr481@gmail.com",
         "note":"Este informe no envía correo todavía; requiere un conector de email autorizado."
