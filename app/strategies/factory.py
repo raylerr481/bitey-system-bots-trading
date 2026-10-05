@@ -19,7 +19,7 @@ def build_strategy_bot(strategy_id: str, symbol: str = "EURUSD", timeframe: str 
         return BotSpecification(**base, indicators=[IndicatorSpec(name="ema", period=9), IndicatorSpec(name="ema", period=21), IndicatorSpec(name="rsi", period=14), IndicatorSpec(name="atr", period=14)], entry_rules=[RuleSpec(indicator="ema_9", operator="cross_above", value="ema_21"), RuleSpec(indicator="rsi_14", operator=">", value=50)], exit_rules=[RuleSpec(indicator="ema_9", operator="cross_below", value="ema_21")])
     if strategy_id == "SBT-RCI-MR-001":
         return BotSpecification(**base, indicators=[IndicatorSpec(name="rci", period=14), IndicatorSpec(name="atr", period=14)], entry_rules=[RuleSpec(indicator="rci_14", operator="<", value=-70)], exit_rules=[RuleSpec(indicator="rci_14", operator=">", value=70)])
-    if strategy_id == "SBT-SMA-CROSS-001":
+    if strategy_id in {"SBT-SMA-CROSS-001","SBT-MA-CROSS-001"}:
         return BotSpecification(**base, indicators=[IndicatorSpec(name="sma", period=10), IndicatorSpec(name="sma", period=20)], entry_rules=[RuleSpec(indicator="sma_10", operator="cross_above", value="sma_20")], exit_rules=[RuleSpec(indicator="sma_10", operator="cross_below", value="sma_20")])
     if strategy_id == "SBT-BB-MR-001":
         return BotSpecification(**base, indicators=[IndicatorSpec(name="bollinger", period=20), IndicatorSpec(name="atr", period=14)], entry_rules=[RuleSpec(indicator="bollinger_20_lower", operator="<", value="close")], exit_rules=[RuleSpec(indicator="bollinger_20_middle", operator="cross_above", value="close")])
