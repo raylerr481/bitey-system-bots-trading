@@ -388,6 +388,17 @@ def built_in_paper_simulate(request: BuiltInBotRequest):
 
 
 
+
+class BuiltInDecisionRequest(BaseModel):
+    bot_type: str = Field(min_length=2, max_length=32)
+    version: int = Field(default=1, ge=1)
+    return_pct: float | None = None
+    drawdown_pct: float | None = None
+    strategy_score: float | None = None
+    robustness_score: float | None = None
+    validation: dict = Field(default_factory=dict)
+    risk_gate_passed: bool = False
+
 class BuiltInDecisionBatchRequest(BaseModel):
     versions: list[BuiltInDecisionRequest] = Field(min_length=1, max_length=200)
 
@@ -417,17 +428,6 @@ def built_in_decision_refresh(request: BuiltInDecisionBatchRequest):
         "checked_at":__import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(),
         "note":"Snapshot de screening; no autoriza trading live."
     }
-
-
-class BuiltInDecisionRequest(BaseModel):
-    bot_type: str = Field(min_length=2, max_length=32)
-    version: int = Field(default=1, ge=1)
-    return_pct: float | None = None
-    drawdown_pct: float | None = None
-    strategy_score: float | None = None
-    robustness_score: float | None = None
-    validation: dict = Field(default_factory=dict)
-    risk_gate_passed: bool = False
 
 
 @router.post("/decision")
