@@ -5,10 +5,10 @@ from typing import Any
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
-from app.turtle.controller import TurtleController
+from app.turtle.controller import get_turtle_controller
 
 router = APIRouter(prefix="/api/v1/turtle", tags=["turtle-controller"])
-_controller = TurtleController()
+_controller = get_turtle_controller()
 
 
 class TurtleSnapshot(BaseModel):
@@ -56,6 +56,21 @@ def turtle_evaluate(evaluation: TurtleEvaluation):
 
 
 @router.get("/capabilities")
+@router.get("/context")
+def turtle_context():
+    """Stable, compact read model for external cognitive clients such as Bitey IA."""
+    state = _controller.status()
+    return {
+        "source": "Bitey System Bots Trading",
+        "controller": state["controller"],
+        "observed": bool(state["symbol"]),
+        "state": state,
+        "evidence_class": "MT4_LIVE_SNAPSHOT" if state["symbol"] else "NO_EVIDENCE",
+        "execution_authority": "SBT_RISK_GATE",
+        "live_parameter_change": False,
+    }
+
+
 def turtle_capabilities():
     return {
         "controller": "Turtle Controller",
