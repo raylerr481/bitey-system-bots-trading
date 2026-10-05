@@ -13,7 +13,7 @@ input int    BiteyWebRequestTimeoutMs = 5000;
 string BiteySnapshotEscape(string value)
 {
    StringReplace(value, "\\", "\\\\");
-   StringReplace(value, "\"", "\\"");
+   StringReplace(value, "\"", "\\\"");
    StringReplace(value, "\r", "\\r");
    StringReplace(value, "\n", "\\n");
    return value;
