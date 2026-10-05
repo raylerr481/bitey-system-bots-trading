@@ -1,0 +1,73 @@
+TURTLE EA v1.26 — SBT / CHATGPT READ-ONLY INTEGRATION
+==============================================================
+
+Purpose:
+- Keep the Classic Turtle trading logic unchanged.
+- Publish read-only telemetry from MT4 to Bitey SBT.
+- Do NOT add AI filters to Turtle entries.
+- Do NOT allow ChatGPT/Bitey IA to execute broker orders.
+
+1) Add these includes AFTER the global CampaignState/counter declarations
+   and BEFORE the first utility function (TfName):
+
+#include "BiteyTradingSnapshotBridge.mqh"
+#include "TurtleSbtIntegration.mqh"
+
+2) In OnTimer(), keep WriteMcpState() and add the SBT snapshot call:
+
+void OnTimer()
+{
+   WriteMcpState();
+   SendTurtleSbtSnapshot();
+}
+
+3) Optional immediate snapshot at startup is NOT required. The timer sends
+   snapshots every InpMcpExportSeconds seconds (minimum 2 seconds).
+
+4) MT4 terminal configuration:
+   Tools -> Options -> Expert Advisors ->
+   Allow WebRequest for listed URL
+
+   Add:
+   https://bitey-system-bots-trading-api.onrender.com
+
+5) EA inputs:
+   The existing bridge inputs become available:
+   BiteySnapshotURL
+   BiteyMT4Token
+   BiteySnapshotEnabled
+   BiteyWebRequestTimeoutMs
+
+   Recommended initial test:
+   BiteySnapshotEnabled = true
+   BiteyMT4Token = empty only if SBT MT4_INGEST_TOKEN is empty.
+   Do not use real-money execution.
+
+6) Telemetry sent:
+   symbol/timeframe
+   bid/ask
+   ATR/RSI/ADX as informational context only
+   account balance/equity/open trades
+   Turtle campaign id/system/direction/units
+   campaign last entry/N/active
+   S1 skip state
+   current Turtle regime
+   execution_enabled=false
+
+7) Turtle logic remains:
+   S1 20/10
+   S2 55/20
+   N 20
+   Stop 2N
+   Pyramid 0.5N
+   Max 4 units
+   No RSI/EMA/ADX entry filters
+   Existing Risk/Spread/Skip/Exit behavior unchanged
+
+8) Verification:
+   Compile the EA in MetaEditor.
+   Attach it to the intended MT4 chart.
+   Confirm Experts/Journal shows:
+   "Bitey SBT Turtle snapshot sent..."
+   Then query SBT MCP:
+   mt4_latest_snapshot()
