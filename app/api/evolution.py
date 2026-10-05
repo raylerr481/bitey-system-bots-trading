@@ -40,7 +40,7 @@ def _flatten(row: dict[str, Any]) -> dict[str, Any]:
         "negative_month_probability": _number(m.get("negative_month_probability")),
         "robustness": _number(m.get("robustness")),
         "oos_quality": _number(m.get("oos_quality")),
-        "cost_drag": _number(m.get("cost_drag")),
+        "cost_drag": _number(m.get("cost_drag")),\n        "trades": _number(m.get("trades", m.get("trade_count"))),\n        "months": _number(m.get("months", m.get("months_tested"))),
     }
 
 def _backtest_candidates() -> list[dict[str, Any]]:
@@ -78,6 +78,7 @@ def status():
 @router.get("/experiments")
 def next_experiments():
     existing={(r.get("strategy_id"),r.get("timeframe")) for r in _records}
+    tested={(x["strategy_id"],x["timeframe"]) for x in _backtest_candidates()}
     current=(_latest or {}).get("symbol") or "EURUSD"
     items=[]
     for spec in _EXPERIMENTS:
@@ -85,8 +86,8 @@ def next_experiments():
             if (spec["strategy_id"],tf) in existing: continue
             items.append({
                 "strategy_id":spec["strategy_id"], "label":spec["label"],
-                "symbol":current, "timeframe":tf, "status":"READY_FOR_BACKTEST",
-                "reason":"Comparar beneficio neto mensual bajo las mismas condiciones."
+                "symbol":current, "timeframe":tf, "status":"EVIDENCE_AVAILABLE" if (spec["strategy_id"],tf) in tested else "READY_FOR_BACKTEST",
+                "reason":"Comparar beneficio neto mensual bajo las mismas condiciones." if (spec["strategy_id"],tf) not in tested else "Ya existe evidencia de backtest; falta validación WFO/OOS/robustez para promoción."
             })
     return {"contract":"sbt-evolution-experiment-queue-v1","objective":"monthly_net_return","items":items}
 
@@ -112,19 +113,31 @@ def _turtle_matrix_rows() -> list[dict[str, Any]]:
 def turtle_matrix():
     rows = _turtle_matrix_rows()
     tested = [r for r in rows if r["best_candidate"]]
-    ranked = sorted(tested, key=lambda r: r["best_candidate"]["score"], reverse=True)
+    eligible = []
+    for r in tested:
+        m = r["best_candidate"]["metrics"]
+        # A candidate is not a winner merely because it has a backtest.
+        # Require enough observations and validation evidence before promotion.
+        if (m.get("trades") is not None and m["trades"] < 30):
+            continue
+        if (m.get("months") is not None and m["months"] < 6):
+            continue
+        if m.get("oos_quality") is None or m.get("robustness") is None:
+            continue
+        eligible.append(r)
+    ranked = sorted(eligible, key=lambda r: r["best_candidate"]["score"], reverse=True)
     return {
         "contract": "sbt-turtle-timeframe-matrix-v1",
         "objective": "maximize_monthly_profit_subject_to_risk_and_robustness",
         "symbol": ((_latest or {}).get("symbol") or "EURUSD"),
         "systems": ["SBT-TURTLE-S1-001", "SBT-TURTLE-S2-001"],
         "timeframes": ["M5","M15","M30","H1","H4","D1"],
-        "tested_count": len(tested),
+        "tested_count": len(tested),\n        "eligible_count": len(eligible),
         "total_combinations": len(rows),
         "winner": ranked[0] if ranked else None,
         "ranking": ranked,
         "matrix": rows,
-        "note": "UNTESTED means SBT has no comparable MT4 backtest evidence for that exact Turtle/timeframe combination. No winner is inferred from external evidence."
+        "note": "UNTESTED means no comparable MT4 evidence. A candidate is only eligible for winner ranking when observation and WFO/OOS/robustness evidence are present; otherwise it remains a research candidate."
     }
 
 @router.get("/compare")
