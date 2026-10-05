@@ -6,9 +6,11 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.turtle.controller import get_turtle_controller
+from app.turtle.readiness import TurtleReadinessEngine
 
 router = APIRouter(prefix="/api/v1/turtle", tags=["turtle-controller"])
 _controller = get_turtle_controller()
+_readiness = TurtleReadinessEngine()
 
 
 class TurtleSnapshot(BaseModel):
@@ -80,6 +82,16 @@ def turtle_trade(trade: TurtleTrade):
 @router.post("/evaluate")
 def turtle_evaluate(evaluation: TurtleEvaluation):
     return _controller.evaluate_learning(evaluation.metrics)
+
+
+@router.post("/readiness/evaluate")
+def turtle_readiness_evaluate(evaluation: TurtleEvaluation):
+    return _readiness.evaluate(evaluation.metrics, mode=_controller.state.mode)
+
+
+@router.get("/readiness")
+def turtle_readiness_status():
+    return _readiness.evaluate({}, mode=_controller.state.mode)
 
 
 @router.get("/demo-multiplier")
