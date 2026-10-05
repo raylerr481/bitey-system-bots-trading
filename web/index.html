@@ -17,7 +17,50 @@
 <div class="top"><div><button class="btn hamb" id="hamb">☰</button> <span class="eyebrow">Bitey Trading Intelligence Terminal</span><h1 id="title">Trading Laboratory</h1></div><div class="status"><span class="dot"></span><span id="apiStatus">RESEARCH · DEMO · LIVE LOCKED</span></div></div><div class="terminal-strip" id="terminalStrip"><div class="terminal-cell"><span class="t-label">Instrument</span><span class="t-value" id="terminalSymbol">EURUSD</span></div><div class="terminal-cell"><span class="t-label">Timeframe</span><span class="t-value" id="terminalTimeframe">H1</span></div><div class="terminal-cell"><span class="t-label">Environment</span><span class="t-value accent" id="terminalEnvironment">DEMO / PAPER</span></div><div class="terminal-cell"><span class="t-label">Module</span><span class="t-value" id="terminalModule">Dashboard</span></div><div class="terminal-cell"><span class="t-label">Execution</span><span class="t-value" id="terminalExecution">BROKER LOCKED</span></div></div>
 <section class="page active" id="dashboard">
 <div class="hero"><span class="eyebrow">AI → Intelligence → Risk Gate → Execution</span><h2>Un laboratorio donde Bitey IA analiza, decide mejoras y evoluciona bots bajo validación y Risk Gate.</h2><p>Elige la IA que prefieras, conecta tu plataforma, investiga mercados, construye estrategias y somételas a simulación. MT4 es la autoridad de entorno: el trader selecciona DEMO/PAPER/REAL manualmente. Bitey IA puede decidir mejoras; SBT valida y controla su aplicación. El usuario conserva el control DEMO/REAL en MT4.</p><div class="toolbar"><button class="btn primary" data-page="market">Abrir Market Intelligence</button><button class="btn blue" data-page="validation">Prueba conclusiva virtual</button><button class="btn" data-page="setup">Configurar entorno</button></div></div>
-<div class="grid"><div class="card metric"><span class="label">Capital virtual</span><div class="value">R$10.000</div><span class="muted">100% ficticio</span></div><div class="card metric"><span class="label">Instrumento</span><div class="value">EURUSD</div><span class="muted">H1 · Demo</span></div><div class="card metric"><span class="label">Risk Gate</span><div class="value positive">ACTIVE</div><span class="muted">2% posición · 1% pérdida diaria</span></div><div class="card metric"><span class="label">Dinero real</span><div class="value negative">LOCKED</div><span class="muted">No hay órdenes live</span></div></div>
+<section id="evolutionControlCenter" class="module-shell">
+<div class="card">
+<h3>Evolution Control Center</h3>
+<p class="sub">MT4 → SBT → Bots → Evidence → Evolution Engine → Risk Gate. Lectura y análisis; sin ejecución REAL automática.</p>
+<div class="grid" style="margin-bottom:0">
+<div class="card metric"><span class="label">MT4</span><div class="value" id="eccMt4">WAITING</div><span class="muted" id="eccMt4Meta">Sin heartbeat</span></div>
+<div class="card metric"><span class="label">Bot fleet</span><div class="value" id="eccBots">0</div><span class="muted" id="eccBotsMeta">Sin telemetría</span></div>
+<div class="card metric"><span class="label">Evidence</span><div class="value" id="eccEvidence">0/12</div><span class="muted" id="eccEvidenceMeta">Intraday M15/M30/H1</span></div>
+<div class="card metric"><span class="label">Risk Gate</span><div class="value positive" id="eccRisk">ACTIVE</div><span class="muted" id="eccRiskMeta">Live locked</span></div>
+</div>
+</div>
+<div class="layout">
+<div class="card">
+<h3>Qué está haciendo SBT</h3>
+<div class="steps" id="eccPipeline">
+<span class="step active">1 MT4</span><span class="step">2 Analyze</span><span class="step">3 Backtest</span><span class="step">4 WFO/OOS</span><span class="step">5 Compare</span><span class="step">6 Risk Gate</span>
+</div>
+<div class="risk"><span>Instrumento / TF</span><b id="eccMarket">EURUSD · H1</b></div>
+<div class="risk"><span>Entorno MT4</span><b id="eccMode">DEMO</b></div>
+<div class="risk"><span>Bot principal</span><b id="eccBot">—</b></div>
+<div class="risk"><span>Señal / régimen</span><b id="eccSignal">—</b></div>
+<div class="risk"><span>Próxima acción</span><b id="eccNext">Esperando evidencia MT4</b></div>
+<div class="notice" id="eccNotice">SBT no inventa resultados. Sin suficientes observaciones, el siguiente paso es investigar/backtestear.</div>
+</div>
+<div class="card">
+<h3>Estado de seguridad</h3>
+<div class="risk"><span>Broker orders</span><b class="negative">BLOCKED</b></div>
+<div class="risk"><span>Auto DEMO → REAL</span><b class="negative">BLOCKED</b></div>
+<div class="risk"><span>Risk increase</span><b class="negative">BLOCKED</b></div>
+<div class="risk"><span>Stops bypass</span><b class="negative">BLOCKED</b></div>
+<div class="risk"><span>MT4 authority</span><b>TRADER</b></div>
+<div class="risk"><span>Research execution</span><b>MANUAL</b></div>
+</div>
+</div>
+<div class="card">
+<h3>Mejor candidato intradía</h3>
+<div class="test-grid">
+<div class="kpi"><span class="muted">Strategy</span><div class="v" id="eccWinner">—</div></div>
+<div class="kpi"><span class="muted">Timeframe</span><div class="v" id="eccWinnerTf">—</div></div>
+<div class="kpi"><span class="muted">Score</span><div class="v" id="eccWinnerScore">—</div></div>
+<div class="kpi"><span class="muted">Validation</span><div class="v" id="eccWinnerValidation">NOT READY</div></div>
+</div>
+</div>
+</section><div class="grid"><div class="card metric"><span class="label">Capital virtual</span><div class="value">R$10.000</div><span class="muted">100% ficticio</span></div><div class="card metric"><span class="label">Instrumento</span><div class="value">EURUSD</div><span class="muted">H1 · Demo</span></div><div class="card metric"><span class="label">Risk Gate</span><div class="value positive">ACTIVE</div><span class="muted">2% posición · 1% pérdida diaria</span></div><div class="card metric"><span class="label">Dinero real</span><div class="value negative">LOCKED</div><span class="muted">No hay órdenes live</span></div></div>
 <div class="layout"><div class="card"><h3>Centro de control</h3><div class="steps"><span class="step done">✓ IA</span><span class="step done">✓ Plataforma</span><span class="step done">✓ Permisos</span><span class="step active">4 Risk Gate</span><span class="step">5 Demo</span><span class="step">6 Paper</span></div><p class="sub">Arquitectura: la IA puede analizar y proponer; las herramientas autorizadas ejecutan; el Risk Gate conserva la autoridad.</p><button class="btn primary" data-page="validation">Ejecutar protocolo virtual</button></div><div class="card"><h3>Estado de seguridad</h3><div class="risk"><span>Market data</span><b style="color:var(--danger)">OFFLINE</b></div><div class="risk"><span>AI tools</span><b>PERMISSIONED</b></div><div class="risk"><span>Demo execution</span><b>READY</b></div><div class="risk"><span>Broker live orders</span><b style="color:var(--danger)">BLOCKED</b></div><div class="risk"><span>Emergency stop</span><b>READY</b></div></div></div>
 </section>
 <section class="page" id="turtle">
@@ -405,4 +448,27 @@ document.querySelectorAll('[data-page="evolution"]').forEach(x=>x.addEventListen
 </script></body></html>
 <script>
 (async()=>{const btn=document.getElementById('evoIntradayCompare');if(!btn)return;btn.addEventListener('click',async()=>{const symbol=document.getElementById('evoSymbol')?.value||'EURUSD';const status=document.getElementById('evoIntradayStatus');const winner=document.getElementById('evoIntradayWinner');status.textContent='Comparando evidencia persistida de '+symbol+'…';try{const r=await api('/api/v1/evolution/intraday-compare?symbol='+encodeURIComponent(symbol));const rows=(r.matrix||[]).map(x=>{const b=x.best_candidate;const m=b?.metrics||{};return '<tr><td>'+x.strategy+'</td><td>'+x.timeframe+'</td><td>'+x.status+'</td><td>'+(b?Number(b.score).toFixed(3):'—')+'</td><td>'+((m.trades??'—'))+'</td><td>'+((m.months??'—'))+'</td></tr>'}).join('');const body=document.getElementById('evoExperiments');if(body)body.innerHTML=rows||'<tr><td colspan="6" class="muted">Sin evidencia.</td></tr>';const w=r.winner;if(winner)winner.innerHTML=w?'<strong>'+w.strategy+' · '+w.timeframe+'</strong><br>Score '+Number(w.best_candidate.score).toFixed(3)+' · '+(w.best_candidate.metrics.trades??'—')+' trades · '+(w.best_candidate.metrics.months??'—')+' meses<br><span class="small">Elegible solo tras WFO/OOS/robustez.</span>':'Sin combinación elegible todavía.';status.textContent=(r.evidence_combinations||0)+' de '+r.total_combinations+' combinaciones con evidencia · '+(r.eligible_combinations||0)+' elegibles.';}catch(e){status.textContent='Evolution API no disponible: no se inventan resultados.';}});})();
+</script><script>
+(()=>{
+const j=async p=>{const r=await fetch(p,{cache:'no-store'});if(!r.ok)throw Error(r.status);return r.json()};
+const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v??'—'};
+async function refreshECC(){
+ try{
+  const [t,e]=await Promise.all([j('/api/v1/mt4/bitey-latest'),j('/api/v1/evolution/intraday-compare?symbol=EURUSD')]);
+  const m=t?.market||{},a=t?.account||{},b=t?.bot||{},met=t?.metrics||{},tu=t?.turtle||{};
+  const ts=Date.parse(t?.timestamp||''); const fresh=Number.isFinite(ts)&&(Date.now()-ts<30000);
+  set('eccMt4',fresh?'ONLINE':'STALE');set('eccMt4Meta',fresh?((t.symbol||'EURUSD')+' · '+(t.timeframe||'H1')):'Sin heartbeat reciente');
+  set('eccBots',fresh?'1':'0');set('eccBotsMeta',fresh?(b.name||t.source||'MT4 bot'):'Esperando MT4');
+  set('eccMarket',(t.symbol||'EURUSD')+' · '+(t.timeframe||'H1'));set('eccMode',t.mode||'DEMO');
+  set('eccBot',b.name||t.source||'—');set('eccSignal',((t.signal||met.signal||'NONE')+' · '+(t.regime||'UNKNOWN')));
+  const w=e?.winner;set('eccEvidence',(e?.evidence_combinations??0)+'/12');set('eccEvidenceMeta',(e?.eligible_combinations??0)+' elegibles');
+  set('eccWinner',w?.strategy||'—');set('eccWinnerTf',w?.timeframe||'—');set('eccWinnerScore',w?Number(w.best_candidate.score).toFixed(3):'—');
+  set('eccWinnerValidation',w?'WFO/OOS + robustez':'NOT READY');
+  set('eccNext',e?.next_action||'RUN_MT4_BACKTESTS');
+  set('eccNotice',w?'Candidato encontrado, pero la promoción requiere validación completa.':'Todavía no existe evidencia suficiente para seleccionar un ganador.');
+  document.getElementById('eccMt4').style.color=fresh?'var(--accent)':'var(--warn)';
+ }catch(err){set('eccMt4','API ERROR');set('eccNext','Esperando APIs SBT');set('eccNotice','No se pudo actualizar el centro. No se inventan datos.')}
+}
+refreshECC();setInterval(refreshECC,10000);
+})();
 </script>
