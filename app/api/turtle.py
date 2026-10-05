@@ -82,6 +82,16 @@ def turtle_evaluate(evaluation: TurtleEvaluation):
     return _controller.evaluate_learning(evaluation.metrics)
 
 
+@router.get("/demo-multiplier")
+def demo_multiplier_status():
+    return _controller.demo_multiplier_status()
+
+
+@router.post("/demo-multiplier/select")
+def select_demo_multiplier(evaluation: TurtleEvaluation):
+    return _controller.select_demo_multiplier(evaluation.metrics)
+
+
 @router.get("/capabilities")
 @router.get("/context")
 def turtle_context():
