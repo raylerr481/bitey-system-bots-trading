@@ -89,84 +89,56 @@ bool BiteySendTradingSnapshot(
 
 // Extended Turtle snapshot with campaign state. Read-only telemetry only.
 bool BiteySendTurtleSnapshot(
-   string symbol,
-   string timeframe,
-   string mode,
-   string regime,
-   double hurst,
-   string bestStrategy,
-   double bestScore,
-   double scoreGap,
-   string htfDirection,
-   double bid,
-   double ask,
-   double atr,
-   double rsi,
-   double adx,
-   double balance,
-   double equity,
-   int openTrades,
-   int campaignId,
-   int campaignSystem,
-   int campaignDirection,
-   int campaignUnits,
-   double campaignLastEntry,
-   double campaignN,
-   bool campaignActive,
-   bool s1SkipNext,
-   bool s1SkipLatched
-)
+   string symbol,string timeframe,string mode,string regime,double hurst,
+   string bestStrategy,double bestScore,double scoreGap,string htfDirection,
+   double bid,double ask,double atr,double rsi,double adx,double balance,
+   double equity,int openTrades,int campaignId,int campaignSystem,
+   int campaignDirection,int campaignUnits,double campaignLastEntry,
+   double campaignN,bool campaignActive,bool s1SkipNext,bool s1SkipLatched)
 {
-   if(!BiteySnapshotEnabled || StringLen(BiteySnapshotURL) == 0)
-      return false;
+   if(!BiteySnapshotEnabled || StringLen(BiteySnapshotURL)==0) return false;
 
-   string body = "{";
-   body += "\\\"source\\\":\\\"Bitey_MT4_Turtle_v1_26\\\",";
-   body += "\\\"symbol\\\":\\\"" + BiteySnapshotEscape(symbol) + "\\\",";
-   body += "\\\"timeframe\\\":\\\"" + BiteySnapshotEscape(timeframe) + "\\\",";
-   body += "\\\"mode\\\":\\\"" + BiteySnapshotEscape(mode) + "\\\",";
-   body += "\\\"execution_enabled\\\":false,";
-   body += "\\\"regime\\\":\\\"" + BiteySnapshotEscape(regime) + "\\\",";
-   body += "\\\"hurst\\\":" + BiteySnapshotNum(hurst,4) + ",";
-   body += "\\\"best_strategy\\\":\\\"" + BiteySnapshotEscape(bestStrategy) + "\\\",";
-   body += "\\\"best_score\\\":" + BiteySnapshotNum(bestScore,4) + ",";
-   body += "\\\"metrics\\\":{";
-   body += "\\\"score_gap\\\":" + BiteySnapshotNum(scoreGap,4) + ",";
-   body += "\\\"htf_direction\\\":\\\"" + BiteySnapshotEscape(htfDirection) + "\\\"},";
-   body += "\\\"market\\\":{";
-   body += "\\\"bid\\\":" + BiteySnapshotNum(bid,Digits) + ",";
-   body += "\\\"ask\\\":" + BiteySnapshotNum(ask,Digits) + ",";
-   body += "\\\"atr\\\":" + BiteySnapshotNum(atr,Digits) + ",";
-   body += "\\\"rsi\\\":" + BiteySnapshotNum(rsi,4) + ",";
-   body += "\\\"adx\\\":" + BiteySnapshotNum(adx,4) + "},";
-   body += "\\\"account\\\":{";
-   body += "\\\"balance\\\":" + BiteySnapshotNum(balance,2) + ",";
-   body += "\\\"equity\\\":" + BiteySnapshotNum(equity,2) + ",";
-   body += "\\\"open_trades\\\":" + IntegerToString(openTrades) + "},";
-   body += "\\\"turtle\\\":{";
-   body += "\\\"campaign_id\\\":" + IntegerToString(campaignId) + ",";
-   body += "\\\"campaign_system\\\":" + IntegerToString(campaignSystem) + ",";
-   body += "\\\"campaign_direction\\\":" + IntegerToString(campaignDirection) + ",";
-   body += "\\\"campaign_units\\\":" + IntegerToString(campaignUnits) + ",";
-   body += "\\\"campaign_last_entry\\\":" + BiteySnapshotNum(campaignLastEntry,Digits) + ",";
-   body += "\\\"campaign_n\\\":" + BiteySnapshotNum(campaignN,Digits) + ",";
-   body += "\\\"campaign_active\\\":" + (campaignActive?"true":"false") + ",";
-   body += "\\\"s1_skip_next\\\":" + (s1SkipNext?"true":"false") + ",";
-   body += "\\\"s1_skip_latched\\\":" + (s1SkipLatched?"true":"false") + "}";
+   string body="{";
+   body += "\"source\":\"Bitey_MT4_Turtle_v1_26\",";
+   body += "\"symbol\":\"" + BiteySnapshotEscape(symbol) + "\",";
+   body += "\"timeframe\":\"" + BiteySnapshotEscape(timeframe) + "\",";
+   body += "\"mode\":\"" + BiteySnapshotEscape(mode) + "\",";
+   body += "\"execution_enabled\":false,";
+   body += "\"regime\":\"" + BiteySnapshotEscape(regime) + "\",";
+   body += "\"hurst\":" + BiteySnapshotNum(hurst,4) + ",";
+   body += "\"best_strategy\":\"" + BiteySnapshotEscape(bestStrategy) + "\",";
+   body += "\"best_score\":" + BiteySnapshotNum(bestScore,4) + ",";
+   body += "\"metrics\":{\"score_gap\":" + BiteySnapshotNum(scoreGap,4) +
+           ",\"htf_direction\":\"" + BiteySnapshotEscape(htfDirection) + "\"},";
+   body += "\"market\":{\"bid\":" + BiteySnapshotNum(bid,Digits) +
+           ",\"ask\":" + BiteySnapshotNum(ask,Digits) +
+           ",\"atr\":" + BiteySnapshotNum(atr,Digits) +
+           ",\"rsi\":" + BiteySnapshotNum(rsi,4) +
+           ",\"adx\":" + BiteySnapshotNum(adx,4) + "},";
+   body += "\"account\":{\"balance\":" + BiteySnapshotNum(balance,2) +
+           ",\"equity\":" + BiteySnapshotNum(equity,2) +
+           ",\"open_trades\":" + IntegerToString(openTrades) + "},";
+   body += "\"turtle\":{\"campaign_id\":" + IntegerToString(campaignId) +
+           ",\"campaign_system\":" + IntegerToString(campaignSystem) +
+           ",\"campaign_direction\":" + IntegerToString(campaignDirection) +
+           ",\"campaign_units\":" + IntegerToString(campaignUnits) +
+           ",\"campaign_last_entry\":" + BiteySnapshotNum(campaignLastEntry,Digits) +
+           ",\"campaign_n\":" + BiteySnapshotNum(campaignN,Digits) +
+           ",\"campaign_active\":" + (campaignActive?"true":"false") +
+           ",\"s1_skip_next\":" + (s1SkipNext?"true":"false") +
+           ",\"s1_skip_latched\":" + (s1SkipLatched?"true":"false") + "}";
    body += "}";
 
-   char post[];
-   char result[];
-   string headers = "Content-Type: application/json\\r\\n";
-   if(StringLen(BiteyMT4Token) > 0)
-      headers += "X-MT4-Token: " + BiteyMT4Token + "\\r\\n";
-   StringToCharArray(body, post, 0, StringLen(body), CP_UTF8);
+   char post[]; char result[];
+   string headers="Content-Type: application/json\r\n";
+   if(StringLen(BiteyMT4Token)>0) headers += "X-MT4-Token: " + BiteyMT4Token + "\r\n";
+   StringToCharArray(body,post,0,StringLen(body),CP_UTF8);
    ResetLastError();
    string responseHeaders;
-   int status = WebRequest("POST", BiteySnapshotURL, headers,
-                           BiteyWebRequestTimeoutMs, post, result, responseHeaders);
-   if(status >= 200 && status < 300) return true;
-   Print("Bitey Turtle snapshot WebRequest failed. HTTP=", status,
-         " error=", GetLastError(), " response=", CharArrayToString(result));
+   int status=WebRequest("POST",BiteySnapshotURL,headers,BiteyWebRequestTimeoutMs,
+                         post,result,responseHeaders);
+   if(status>=200 && status<300) return true;
+   Print("Bitey Turtle snapshot WebRequest failed. HTTP=",status,
+         " error=",GetLastError()," response=",CharArrayToString(result));
    return false;
 }
