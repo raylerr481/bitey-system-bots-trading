@@ -92,7 +92,7 @@ def _normalize_evidence_lab(payload: dict[str, Any]) -> dict[str, Any]:
     risk = payload.get("risk") or {}
     counters = payload.get("counters") or {}
     strategy = payload.get("strategy") or "UNKNOWN"
-    signal = payload.get("signal") or state.get("current") or "NONE"
+    signal = payload.get("signal") or state.get("current") or (payload.get("metrics") or {}).get("signal") or "NONE"
     previous = state.get("previous") or "NONE"
     change = state.get("change") or "NONE"
     positions = int(state.get("position_count") or 0)
