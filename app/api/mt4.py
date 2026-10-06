@@ -82,6 +82,91 @@ class MT4TradingReport(BaseModel):
     bot: dict[str, Any] = Field(default_factory=dict)
 
 
+def _normalize_evidence_lab(payload: dict[str, Any]) -> dict[str, Any]:
+    """Normalize Evidence Lab v1.02 telemetry into the common SBT MT4 contract."""
+    state = payload.get("state") or {}
+    risk = payload.get("risk") or {}
+    counters = payload.get("counters") or {}
+    strategy = payload.get("strategy") or "UNKNOWN"
+    signal = payload.get("signal") or state.get("current") or "NONE"
+    previous = state.get("previous") or "NONE"
+    change = state.get("change") or "NONE"
+    positions = int(state.get("position_count") or 0)
+    operational_cap = float(risk.get("operational_capital_usd") or 0)
+    account_mode = payload.get("account_mode") or payload.get("mode") or "UNKNOWN"
+    timeframe = payload.get("timeframe") or payload.get("strategy_timeframe") or "UNKNOWN"
+    chart_timeframe = payload.get("chart_timeframe") or timeframe
+
+    payload["signal"] = signal
+    payload["direction"] = signal if signal in {"BUY", "SELL"} else "NONE"
+    payload["previous_signal"] = previous
+    payload["signal_change"] = change
+    payload["regime"] = payload.get("regime") or "UNKNOWN"
+    payload["strategy_timeframe"] = payload.get("strategy_timeframe") or timeframe
+    payload["chart_timeframe"] = chart_timeframe
+    payload["account"] = {
+        **(payload.get("account") or {}),
+        "mode": account_mode,
+        "reported_mode": payload.get("mode") or account_mode,
+        "operating_environment": "DEMO" if payload.get("research_only") is False and account_mode == "REAL" else account_mode,
+        "operational_capital_usd": operational_cap,
+        "equity": (payload.get("account") or {}).get("equity"),
+        "balance": (payload.get("account") or {}).get("balance"),
+        "position_count": positions,
+    }
+    payload["metrics"] = {
+        **(payload.get("metrics") or {}),
+        "signal": signal,
+        "direction": payload["direction"],
+        "positions_open": positions,
+        "spread_points": state.get("spread_points"),
+        "daily_drawdown_pct": state.get("daily_drawdown_pct"),
+        "trades_today": state.get("trades_today"),
+        "signals": counters.get("signals", 0),
+        "buy_signals": counters.get("buy_signals", 0),
+        "sell_signals": counters.get("sell_signals", 0),
+        "block_session": counters.get("block_session", 0),
+        "block_spread": counters.get("block_spread", 0),
+        "block_daily_dd": counters.get("block_daily_dd", 0),
+        "block_trade_limit": counters.get("block_trade_limit", 0),
+        "operational_capital_usd": operational_cap,
+        "risk_pct": risk.get("risk_pct"),
+        "risk_budget_usd": risk.get("risk_budget_usd"),
+        "daily_loss_usd": risk.get("daily_loss_usd"),
+        "max_daily_loss_pct": risk.get("max_daily_loss_pct"),
+    }
+    payload["bot"] = {
+        **(payload.get("bot") or {}),
+        "name": (payload.get("bot") or {}).get("name") or f"Bitey Evidence Lab v{payload.get('lab_version', '1.02')}",
+        "id": (payload.get("bot") or {}).get("id") or "bitey-evidence-lab-v1.02",
+        "strategy": strategy,
+        "version": (payload.get("bot") or {}).get("version") or payload.get("lab_version", "1.02"),
+        "magic": (payload.get("bot") or {}).get("magic"),
+        "symbol": payload.get("symbol"),
+        "timeframe": timeframe,
+        "signal": signal,
+        "positions": positions,
+        "active": True,
+    }
+    payload["evidence_lab"] = {
+        "lab_version": payload.get("lab_version", "1.02"),
+        "schema": payload.get("schema"),
+        "source": payload.get("source"),
+        "execution_enabled": bool(payload.get("execution_enabled", False)),
+        "research_only": bool(payload.get("research_only", False)),
+        "operational_capital_usd": operational_cap,
+        "strategy": strategy,
+        "timeframe": timeframe,
+        "chart_timeframe": chart_timeframe,
+        "signal": signal,
+        "direction": payload["direction"],
+        "counters": counters,
+        "risk": risk,
+        "state": state,
+    }
+    return payload
+
+
 def _check_token(token: str | None) -> None:
     if MT4_INGEST_TOKEN and token != MT4_INGEST_TOKEN:
         raise HTTPException(status_code=401, detail="Invalid MT4 ingestion token")
@@ -100,6 +185,7 @@ async def ingest_report(
     payload["experiment_id"] = report.experiment_id
     payload["timestamp"] = payload["timestamp"] or datetime.now(timezone.utc).isoformat()
     payload["source_module"] = "Bitey System Bots Trading"
+    payload = _normalize_evidence_lab(payload)
     turtle_state = None
     if report.report_type == "live_snapshot":
         turtle_state = update_from_mt4(payload)
