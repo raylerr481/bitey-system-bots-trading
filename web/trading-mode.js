@@ -1,11 +1,11 @@
 (() => {
   const STORAGE_KEY = 'bitey-sbt-trading-mode-v1';
-  const state = { mode: 'DEMO', realIntent: false, confirmed: false };
+  const state = { mode: 'MT4_DEMO', realIntent: false, confirmed: false };
 
   function load() {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-      if (['DEMO', 'PAPER', 'REAL'].includes(saved.mode)) state.mode = saved.mode;
+      if (['MT4_DEMO', 'REAL'].includes(saved.mode)) state.mode = saved.mode;
       state.realIntent = saved.realIntent === true;
       state.confirmed = saved.confirmed === true;
     } catch (_) {}
@@ -48,11 +48,11 @@
     const realReady = false;
     host.innerHTML = `
       <div class="card">
-        <h3>Trading Mode · control de capital</h3>
-        <p style="color:#718093;font-size:11px;margin:6px 0 0">El modo real existe como una ruta explícita, pero la ejecución permanece bloqueada hasta que todas las capas de seguridad estén habilitadas.</p>
+        <h3>Trading Mode · MT4 / Trader Will</h3>
+        <p style="color:#718093;font-size:11px;margin:6px 0 0">MT4 es la autoridad de cuenta y ejecución. La cuenta actual se trata como <b>MT4 DEMO / Trader Will</b>; REAL nunca se activa automáticamente.</p>
         <div class="tm-grid">
-          <button class="tm-mode ${state.mode === 'DEMO' ? 'active' : ''}" data-mode="DEMO"><strong>DEMO</strong><small>Dinero virtual · MT5 Demo · sin órdenes reales</small></button>
-          <button class="tm-mode ${state.mode === 'PAPER' ? 'active' : ''}" data-mode="PAPER"><strong>PAPER</strong><small>Mercado real · órdenes simuladas · sin broker execution</small></button>
+          <button class="tm-mode ${state.mode === 'MT4_DEMO' ? 'active' : ''}" data-mode="MT4_DEMO"><strong>MT4 DEMO / TRADER WILL</strong><small>Cuenta demo de MT4 · Trader Will · ejecución controlada por el EA</small></button>
+          
           <button class="tm-mode ${state.mode === 'REAL' ? 'active' : ''}" data-mode="REAL"><strong>REAL</strong><small>Capital real · requiere activación explícita y Risk Gate</small></button>
         </div>
         <div class="tm-real">
@@ -93,7 +93,7 @@
     });
 
     host.querySelector('#sbtRealDisable')?.addEventListener('click', () => {
-      state.mode = 'DEMO';
+      state.mode = 'MT4_DEMO';
       state.realIntent = false;
       state.confirmed = false;
       save();
@@ -101,7 +101,7 @@
     });
 
     const status = host.querySelector('#sbtTradingModeStatus');
-    if (status) status.textContent = `MODE=${state.mode} · REAL_INTENT=${state.realIntent} · EXECUTION_LOCKED=true`;
+    if (status) status.textContent = `MODE=${state.mode} · AUTHORITY=MT4_TRADER · REAL_INTENT=${state.realIntent} · EXECUTION_LOCKED=true`;
   }
 
   function init() {
