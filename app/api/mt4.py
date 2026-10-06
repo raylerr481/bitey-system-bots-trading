@@ -200,6 +200,44 @@ async def ingest_report(
         del _history[:-100]
 
     ai = None
+    q_recommendation = None
+    if BITEY_Q_LEARNING_URL and report.report_type == "live_snapshot":
+        try:
+            latest_signal = str(payload.get("signal") or "NONE")
+            strategy = str(payload.get("strategy") or "ENSEMBLE")
+            allowed_actions = [strategy, "BUY", "SELL", "HOLD"]
+            q_context = {
+                "current_intent_domain": "trading",
+                "conversation_continuity": False,
+                "selected_tools": ["sbt_market", "mt4"],
+                "evidence_required": True,
+                "freshness_required": True,
+                "sbt": {
+                    "symbol": report.symbol,
+                    "timeframe": report.timeframe,
+                    "strategy": strategy,
+                    "regime": report.regime,
+                    "signal": latest_signal,
+                    "risk_gate": "authoritative",
+                    "operational_capital_usd": 500.0,
+                },
+            }
+            async with httpx.AsyncClient(timeout=8) as client:
+                response = await client.post(BITEY_Q_LEARNING_URL.replace("/sbt-experience", "/recommendation"), json={
+                    "state_context": q_context,
+                    "allowed_actions": allowed_actions,
+                    "source": "bitey_sbt_mt4",
+                    "symbol": report.symbol,
+                    "timeframe": report.timeframe,
+                    "risk_gate_allowed": True,
+                    "operational_capital_usd": 500.0,
+                })
+                if response.status_code < 400:
+                    body = response.json()
+                    q_recommendation = body.get("recommendation") if isinstance(body, dict) else None
+        except Exception:
+            q_recommendation = None
+
     if BITEY_TRADING_URL and report.report_type == "live_snapshot":
         try:
             snapshot = {
@@ -238,6 +276,7 @@ async def ingest_report(
         "bitey_ai": ai,
         "execution": "local_mt4_risk_gate",
         "turtle_controller": turtle_state,
+        "q_learning": q_recommendation,
     }
 
 
