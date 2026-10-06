@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bitey SBT — Q-Learning Validation Center</title>
+<style>
+:root{--bg:#05070a;--panel:#0b1118;--line:#233140;--text:#edf3f8;--muted:#8795a5;--ok:#52e6a2;--warn:#f2c76d;--bad:#ff7272;--blue:#78a7ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#12382b 0,transparent 30%),var(--bg);color:var(--text);font:14px Inter,system-ui,sans-serif}
+main{max-width:1180px;margin:auto;padding:28px}.top{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}.ey{color:var(--ok);font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}.top h1{margin:6px 0;font-size:28px}.top p{color:var(--muted);max-width:800px;line-height:1.55}
+.badge{padding:8px 11px;border:1px solid #31513f;background:#0b1913;border-radius:10px;color:var(--ok);white-space:nowrap;font-weight:800}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card{background:linear-gradient(180deg,#101821,#090e14);border:1px solid var(--line);border-radius:13px;padding:16px}.card h2{font-size:15px;margin:0 0 9px}.state{font-size:20px;font-weight:900;margin:8px 0}.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}.muted{color:var(--muted);font-size:11px;line-height:1.5}
+.wide{margin-top:12px}.facts{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}.fact{padding:12px;border:1px solid var(--line);border-radius:10px;background:#080d13}.fact b{display:block;font-size:17px;margin-top:5px}.label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}.btn{border:1px solid var(--line);background:#090f16;color:#dbe4ec;border-radius:9px;padding:9px 13px;cursor:pointer}.btn:hover{border-color:#42604f}.btn.selected{border-color:var(--ok);box-shadow:0 0 0 1px var(--ok);background:#0d1d16}.result{margin-top:12px;padding:12px;border-radius:9px;background:#08130f;border:1px solid #24533e;color:#bcebd3;display:none}
+.timeline{display:grid;gap:7px;margin-top:10px}.row{display:grid;grid-template-columns:180px 1fr auto;gap:10px;padding:10px;border-bottom:1px solid #18232e}.row:last-child{border:0}.pill{padding:3px 7px;border-radius:99px;font-size:10px;font-weight:800}.pill.ok{background:#0d241b}.pill.warn{background:#282114}.footer{margin-top:18px;color:#647284;font-size:10px;text-align:center}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.facts{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:1fr}}
+@media(max-width:560px){main{padding:18px}.grid{grid-template-columns:1fr}.facts{grid-template-columns:1fr}.top{display:block}.badge{display:inline-block;margin-top:8px}}
+</style>
+</head>
+<body>
+<main>
+<section class="top">
+<div><div class="ey">Bitey SBT · Validation Center</div>
+<h1>Q-learning + Persistencia + Risk Gate + BUY/SELL/HOLD</h1>
+<p>Centro de validación previo al despliegue. La pantalla separa evidencia de código/CI, evidencia E2E ya obtenida y pruebas que todavía requieren una ejecución de runtime. No abre operaciones y no modifica la cuenta MT4.</p></div>
+<div class="badge">DEMO · CAP $500 · LIVE OFF</div>
+</section>
+
+<section class="grid">
+<article class="card"><h2>Q-learning</h2><div class="state ok">PASS</div><div class="muted">Core global, estados por dominio, reward normalizado y límites de seguridad. CI confirmado en commit 18bf387.</div></article>
+<article class="card"><h2>Persistencia</h2><div class="state warn">CODE PASS</div><div class="muted">Persistencia observable y tests pasan. Runtime real en Supabase sigue pendiente hasta ejecutar el código desplegado; no se inventa una fila.</div></article>
+<article class="card"><h2>Risk Gate</h2><div class="state ok">BOUNDARY PASS</div><div class="muted">Q-learning no puede cambiar riesgo, superar $500 ni ejecutar órdenes directamente. SBT/Risk Gate conserva autoridad.</div></article>
+<article class="card"><h2>BUY / SELL / HOLD</h2><div class="state ok">PATH READY</div><div class="muted">La decisión está limitada a acciones autorizadas. Esta pantalla sólo simula la elección; no envía OrderSend.</div></article>
+</section>
+
+<section class="card wide">
+<h2>Capital y entorno operativo</h2>
+<div class="facts">
+<div class="fact"><span class="label">Capital operativo</span><b>$500.00</b></div>
+<div class="fact"><span class="label">Entorno objetivo</span><b>DEMO</b></div>
+<div class="fact"><span class="label">Martingale</span><b class="ok">OFF</b></div>
+<div class="fact"><span class="label">Live trading</span><b class="ok">OFF</b></div>
+<div class="fact"><span class="label">Nueva operación</span><b class="ok">0</b></div>
+</div>
+</section>
+
+<section class="card wide">
+<h2>Fixture E2E — ticket #95745109</h2>
+<div class="facts">
+<div class="fact"><span class="label">Trade</span><b>#95745109</b></div>
+<div class="fact"><span class="label">Profit</span><b>+$29.00</b></div>
+<div class="fact"><span class="label">Commission</span><b>-$2.50</b></div>
+<div class="fact"><span class="label">Net P/L</span><b class="ok">+$26.50</b></div>
+<div class="fact"><span class="label">Expected reward</span><b class="ok">+0.53</b></div>
+</div>
+<p class="muted">El replay MT4→SBT ya obtuvo HTTP 200. Para aprendizaje, el reward canónico se deriva del P/L neto después de comisión: 26.50 / 50 = +0.53. No se usa el floating P/L de otra operación y no se abre una operación nueva.</p>
+</section>
+
+<section class="card wide">
+<h2>Decision Lab — BUY / SELL / HOLD</h2>
+<p class="muted">Prueba de interfaz y contrato de decisión. La selección no ejecuta trading y no llama a MT4.</p>
+<div class="actions">
+<button class="btn" data-action="BUY">BUY</button>
+<button class="btn" data-action="SELL">SELL</button>
+<button class="btn" data-action="HOLD">HOLD</button>
+</div>
+<div id="decisionResult" class="result"></div>
+</section>
+
+<section class="card wide">
+<h2>Validation ledger</h2>
+<div class="timeline">
+<div class="row"><span>CI · backend-tests #964</span><span>Commit 18bf387 · tests completados</span><span class="pill ok">PASS</span></div>
+<div class="row"><span>CI · Cognitive Tests #809</span><span>Commit 18bf387 · tests completados</span><span class="pill ok">PASS</span></div>
+<div class="row"><span>MT4 → SBT telemetry</span><span>HTTP 200 · capital=500 · cuenta conocida TraderWill-Demo</span><span class="pill ok">PASS</span></div>
+<div class="row"><span>Closed trade replay</span><span>#95745109 · net +$26.50</span><span class="pill ok">PASS</span></div>
+<div class="row"><span>Supabase runtime persistence</span><span>Debe verificarse con el código desplegado; actualmente no hay fila q_learning_policy demostrada</span><span class="pill warn">PENDING</span></div>
+<div class="row"><span>Autonomous order E2E</span><span>BUY/SELL/HOLD → Risk Gate → MT4 OrderSend aún no se valida con una nueva operación</span><span class="pill warn">PENDING</span></div>
+</div>
+</section>
+
+<div class="footer">Pre-deploy gate · no broker order · no new trade · no automatic Demo/Real switching</div>
+</main>
+<script>
+document.querySelectorAll('[data-action]').forEach(function(btn){
+ btn.addEventListener('click',function(){
+   document.querySelectorAll('[data-action]').forEach(function(b){b.classList.remove('selected')});
+   btn.classList.add('selected');
+   var r=document.getElementById('decisionResult');
+   r.style.display='block';
+   r.textContent='Decisión seleccionada: '+btn.dataset.action+' · SIMULACIÓN SOLAMENTE · Risk Gate requerido antes de cualquier ejecución · capital operativo $500 · Demo · sin OrderSend.';
+ });
+});
+</script>
+</body>
+</html>
