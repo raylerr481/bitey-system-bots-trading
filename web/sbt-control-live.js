@@ -120,7 +120,7 @@
     const create=document.getElementById('createExperiment');if(create){create.onclick=createRealExperiment;}
     const build=document.getElementById('buildPlan');if(build){build.onclick=async()=>{
       try{
-        const state={ai_provider:document.querySelector('#aiChoices .selected')?.dataset.ai||'bitey',ai_connection:'api',platform:document.querySelector('#platformChoices .selected')?.dataset.platform==='mt4'?'mt5':'bitey-sbt-native',mode:'demo',permissions:[...document.querySelectorAll('#permissionChoices button.selected')].map(x=>x.dataset.permission).filter(Boolean),automation:!!document.getElementById('automation')?.checked};
+        const state={ai_provider:document.querySelector('#aiChoices .selected')?.dataset.ai||'bitey',ai_connection:'api',platform:document.querySelector('#platformChoices .selected')?.dataset.platform==='mt4'?'mt4':'bitey-sbt-native',mode:'demo',permissions:[...document.querySelectorAll('#permissionChoices button.selected')].map(x=>x.dataset.permission==='demo_execution'?'demo_execute':x.dataset.permission).filter(Boolean),automation:!!document.getElementById('automation')?.checked};
         const d=await api('/api/v1/integrations/plan',{method:'POST',body:JSON.stringify(state)});
         const e=document.getElementById('planResult');if(e){e.style.display='block';e.innerHTML='<strong>Plan validado por SBT.</strong><br>Estado: '+esc(d.stage)+' · Permitido: '+esc(d.allowed)+'<br>Risk Gate: '+esc(d.plan?.risk_gate||'mandatory');}
       }catch(e){const x=document.getElementById('planResult');if(x){x.style.display='block';x.textContent='No fue posible validar el plan con SBT.';}}
