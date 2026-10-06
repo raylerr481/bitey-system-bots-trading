@@ -381,7 +381,7 @@ function startTurtlePolling(){
 document.getElementById('turtleRefresh')?.addEventListener('click',()=>{loadTurtleSnapshot();loadTurtleHistory();});
 function loadTurtleExecutionMode(){
   const s=window.__turtleSnapshot||null;
-  const mode=String(s?.mode||s?.account?.mode||'UNKNOWN').toUpperCase();
+  const mode=String(s?.account?.operating_environment||s?.account?.mode||s?.mode||'UNKNOWN').toUpperCase();
   const label=mode==='REAL'?'REAL — MONITOREO ACTIVO':mode==='DEMO'?'DEMO — MONITOREO ACTIVO':mode==='PAPER'?'PAPER — MONITOREO ACTIVO':'ESPERANDO MT4';
   turtleSet('turtleExec',label);
   const panel=document.getElementById('turtleModePanel');
