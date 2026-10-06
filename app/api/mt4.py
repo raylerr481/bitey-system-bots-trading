@@ -269,7 +269,7 @@ class MT4ClosedTrade(BaseModel):
 
 
 @router.post("/trade-closed")
-def ingest_closed_trade(
+async def ingest_closed_trade(
     trade: MT4ClosedTrade,
     x_mt4_token: str | None = Header(default=None),
 ):
