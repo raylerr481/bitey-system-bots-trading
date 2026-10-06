@@ -9,7 +9,7 @@ from app.risk.engine import RiskEngine
 from app.services.demo_engine import DemoEngine
 
 router = APIRouter(prefix="/api/v1/trading", tags=["trading"])
-portfolio = DemoPortfolio(initial_capital=10_000, cash=10_000)
+portfolio = DemoPortfolio(initial_capital=500.0, cash=500.0)
 risk = RiskEngine(allowed_symbols={"EURUSD"})
 engine = DemoEngine(portfolio, risk)
 
