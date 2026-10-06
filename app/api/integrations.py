@@ -12,6 +12,7 @@ Permission = Literal["read_market", "read_account", "research", "strategy_write"
 PLATFORMS = [
     {"id": "bitey-sbt-native", "name": "Bitey SBT Trading Platform", "modes": ["research", "backtest", "demo", "paper"], "transport": ["api", "mcp", "websocket"], "live_enabled": False, "bidirectional": True},
     {"id": "mt5", "name": "MetaTrader 5", "modes": ["demo"], "transport": ["bridge", "api"], "live_enabled": False, "bidirectional": True},
+    {"id": "mt4", "name": "MetaTrader 4", "modes": ["demo"], "transport": ["bridge", "api", "telemetry"], "live_enabled": False, "bidirectional": True},
     {"id": "tradingview", "name": "TradingView", "modes": ["webhook", "paper"], "transport": ["webhook"], "live_enabled": False, "bidirectional": True},
     {"id": "alpaca", "name": "Alpaca", "modes": ["paper"], "transport": ["api", "sdk"], "live_enabled": False, "bidirectional": True},
     {"id": "freqtrade", "name": "Freqtrade + FreqAI", "modes": ["research", "backtest", "demo"], "transport": ["docker", "rest"], "live_enabled": False, "bidirectional": True},
