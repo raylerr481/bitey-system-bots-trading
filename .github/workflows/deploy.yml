@@ -67,7 +67,7 @@ jobs:
           [[ "$health" == *'"live":false'* ]]
           [[ "$health" == *'"real_money":false'* ]]
           [[ "$health" == *'"broker_orders":0'* ]]
-          [[ "$health" == *'"web_build":"' * ]]
+          [[ "$health" == *'"web_build":"'* ]]
           candles=$(curl -fsSL --retry 5 --retry-delay 3 "$SBT_URL/api/v1/market/candles/EURUSD?timeframe=M5&limit=200&probe=$GITHUB_SHA")
           CANDLES="$candles" python - <<'PY'
           import json, os, sys
