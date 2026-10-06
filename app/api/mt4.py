@@ -19,6 +19,10 @@ BITEY_TRADING_URL = os.getenv(
     "BITEY_TRADING_URL",
     "https://bitey-ia-suprabrain.onrender.com/api/v2/trading/analyze",
 ).rstrip("/")
+BITEY_Q_LEARNING_URL = os.getenv(
+    "BITEY_Q_LEARNING_URL",
+    "https://bitey-ia-suprabrain.onrender.com/api/v1/q-learning/sbt-experience",
+).rstrip("/")
 _latest: dict[str, Any] | None = None
 _history: list[dict[str, Any]] = []
 _backtests: list[dict[str, Any]] = []
@@ -278,6 +282,48 @@ def ingest_closed_trade(
         persistence = live_trades.save(payload)
     except Exception as exc:
         persistence = {"persisted": False, "reason": "SUPABASE_WRITE_FAILED", "error": type(exc).__name__}
+
+    # Feed closed-trade outcomes to Bitey's shared Q-learning policy.
+    # This is learning-only: SBT Risk Gate and the $500 operational cap remain
+    # authoritative and are never modified by Q-learning.
+    q_learning = {"sent": False, "reason": "not_attempted"}
+    try:
+        pnl_scale = max(-1.0, min(1.0, float(trade.pnl) / max(1.0, abs(float(trade.pnl)) + 5.0)))
+        latest = _latest or {}
+        state_context = {
+            "current_intent_domain": "trading",
+            "conversation_continuity": False,
+            "selected_tools": ["sbt_market", "mt4"],
+            "evidence_required": True,
+            "freshness_required": True,
+            "sbt": {
+                "symbol": trade.symbol,
+                "timeframe": trade.timeframe,
+                "side": trade.side,
+                "strategy": trade.strategy,
+                "regime": (latest.get("regime") or "UNKNOWN"),
+                "signal": (latest.get("signal") or "NONE"),
+                "risk_gate": "authoritative",
+                "operational_capital_usd": 500.0,
+            },
+        }
+        async with httpx.AsyncClient(timeout=8) as client:
+            response = await client.post(BITEY_Q_LEARNING_URL, json={
+                "state_context": state_context,
+                "next_context": state_context,
+                "action": str(trade.strategy or trade.side),
+                "reward": pnl_scale,
+                "source": "bitey_sbt_mt4",
+                "outcome": "SUCCESS" if trade.pnl > 0 else "FAILURE" if trade.pnl < 0 else "UNKNOWN",
+                "symbol": trade.symbol,
+                "timeframe": trade.timeframe,
+                "risk_gate_allowed": True,
+                "operational_capital_usd": 500.0,
+            })
+            q_learning = {"sent": response.status_code < 400, "status": response.status_code}
+    except Exception as exc:
+        q_learning = {"sent": False, "reason": type(exc).__name__}
+
     return {
         "accepted": True,
         "stored": True,
@@ -285,6 +331,7 @@ def ingest_closed_trade(
         "account_mode": trade.account_mode,
         "execution": "mt4_local",
         "persistence": persistence,
+        "q_learning": q_learning,
     }
 
 
