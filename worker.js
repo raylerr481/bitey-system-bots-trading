@@ -46,7 +46,7 @@ async function yahooChart(symbol, timeframe, limit = 200) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const BUILD = '20261005-sbt-evolution-ux2';
+    const BUILD = '20261006-evidence-lab-live';
 
     if (url.pathname === '/health') return json({ service: 'bitey-system-bots-trading', status: 'ok', mode: 'research-demo', live: false, real_money: false, broker_orders: 0, web_build: BUILD });
 
