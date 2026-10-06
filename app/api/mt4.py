@@ -327,7 +327,7 @@ async def ingest_closed_trade(
     # authoritative and are never modified by Q-learning.
     q_learning = {"sent": False, "reason": "not_attempted"}
     try:
-        pnl_scale = max(-1.0, min(1.0, float(trade.pnl) / max(1.0, abs(float(trade.pnl)) + 5.0)))
+        # Send authoritative closed-trade PnL to Bitey; reward shaping is centralized there.
         latest = _latest or {}
         state_context = {
             "current_intent_domain": "trading",
@@ -351,7 +351,10 @@ async def ingest_closed_trade(
                 "state_context": state_context,
                 "next_context": state_context,
                 "action": str(trade.strategy or trade.side),
-                "reward": pnl_scale,
+                "reward": 0.0,
+                "pnl_usd": float(trade.pnl),
+                "drawdown_pct": None,
+                "risk_used_pct": None,
                 "source": "bitey_sbt_mt4",
                 "outcome": "SUCCESS" if trade.pnl > 0 else "FAILURE" if trade.pnl < 0 else "UNKNOWN",
                 "symbol": trade.symbol,
