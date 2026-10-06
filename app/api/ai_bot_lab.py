@@ -48,7 +48,7 @@ def _bot(snapshot: dict[str, Any] | None) -> dict[str, Any]:
         "magic": bot.get("magic") or turtle.get("magic"),
         "symbol": snapshot.get("symbol"),
         "timeframe": snapshot.get("timeframe"),
-        "mode": account.get("mode", snapshot.get("mode")),
+        "mode": account.get("operating_environment") or account.get("mode", snapshot.get("mode")),
         "broker": account.get("broker"),
         "server": account.get("server"),
         "regime": snapshot.get("regime"),
@@ -95,7 +95,7 @@ def context():
         else "Ejecutar backtest + walk-forward + robustness antes de considerar producción"
     )
     account = (_latest or {}).get("account") or {}
-    raw_mode = str(account.get("mode") or (_latest or {}).get("mode") or "UNKNOWN").upper()
+    raw_mode = str(account.get("operating_environment") or account.get("mode") or (_latest or {}).get("mode") or "UNKNOWN").upper()
     if any(token in raw_mode for token in ("REAL", "LIVE")):
         environment = "REAL"
     elif "PAPER" in raw_mode:
