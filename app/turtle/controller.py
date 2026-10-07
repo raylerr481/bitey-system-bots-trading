@@ -21,6 +21,11 @@ class TurtleState:
     risk_pct: float = 0.25
     drawdown_pct: float = 0.0
     last_trade_pnl: float | None = None
+    market: dict[str, Any] = field(default_factory=dict)
+    last_entry: Any = None
+    campaign_n: Any = None
+    s1_skip_next: Any = None
+    s1_skip_latched: Any = None
     next_action: str = "WAIT"
     learning_status: str = "OBSERVING"
     proposal_pending: bool = False
@@ -54,6 +59,11 @@ class TurtleController:
         s.risk_pct = min(float(snapshot.get("risk_pct", s.risk_pct) or 0), self.max_risk_pct)
         s.drawdown_pct = max(0.0, float(snapshot.get("drawdown_pct", s.drawdown_pct) or 0))
         s.last_trade_pnl = snapshot.get("last_trade_pnl", s.last_trade_pnl)
+        s.market = dict(snapshot.get("market") or s.market)
+        s.last_entry = snapshot.get("last_entry", s.last_entry)
+        s.campaign_n = snapshot.get("campaign_n", s.campaign_n)
+        s.s1_skip_next = snapshot.get("s1_skip_next", s.s1_skip_next)
+        s.s1_skip_latched = snapshot.get("s1_skip_latched", s.s1_skip_latched)
         if s.drawdown_pct >= self.max_drawdown_pct:
             s.next_action = "PAUSE_RISK"
             s.reason = "maximum_drawdown_gate"
@@ -170,6 +180,11 @@ class TurtleController:
             "risk_pct": s.risk_pct,
             "drawdown_pct": s.drawdown_pct,
             "last_trade_pnl": s.last_trade_pnl,
+            "market": s.market,
+            "last_entry": s.last_entry,
+            "campaign_n": s.campaign_n,
+            "s1_skip_next": s.s1_skip_next,
+            "s1_skip_latched": s.s1_skip_latched,
             "next_action": s.next_action,
             "reason": s.reason,
             "learning_status": s.learning_status,
