@@ -74,7 +74,7 @@ string BuildBody() {
    double r = CalcRMultiple();
    string body = "{";
    body += "\"source\":\"Turtle_MT4_MCP_Bridge_SBT\",";
-   body += "\"account_mode\":\"MT4_TERMINAL\",";
+   body += "\"account_mode\":\"" + (IsTesting() ? "DEMO_TESTER" : (IsDemo() ? "DEMO" : "REAL")) + "\",";
    body += "\"ticket\":" + IntegerToString(OrderTicket()) + ",";
    body += "\"magic\":" + IntegerToString(OrderMagicNumber()) + ",";
    body += "\"bot_id\":\"TURTLE_MT4_MCP\",";
