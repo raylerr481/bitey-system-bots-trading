@@ -26,7 +26,7 @@ jobs:
           from pathlib import Path
           p = Path('web/index.html')
           s = p.read_text(encoding='utf-8')
-          loader = '<script src="/runtime.js?v=20261005navfix1" defer></script>\n'
+          loader = '<script src="/runtime.js?v=20261007mt4telemetryfix2" defer></script>\n'
           versions = [
               '<script src="/runtime.js" defer></script>\n',
               '<script src="/runtime.js?v=20260910" defer></script>\n',
@@ -64,8 +64,8 @@ jobs:
           [[ "$thesis" == *"Random Walk Baseline"* ]]
           [[ "$thesis" == *"GARCH(1,1)"* ]]
           health=$(curl -fsSL --retry 5 --retry-delay 3 "$SBT_URL/health?probe=$GITHUB_SHA")
-          [[ "$health" == *'"live":false'* ]]
-          [[ "$health" == *'"real_money":false'* ]]
+          [[ "$health" == *'"live":true'* ]]
+          [[ "$health" == *'"virtual_money":true'* ]]
           [[ "$health" == *'"broker_orders":0'* ]]
           [[ "$health" == *'"web_build":"'* ]]
           candles=$(curl -fsSL --retry 5 --retry-delay 3 "$SBT_URL/api/v1/market/candles/EURUSD?timeframe=M5&limit=200&probe=$GITHUB_SHA")
