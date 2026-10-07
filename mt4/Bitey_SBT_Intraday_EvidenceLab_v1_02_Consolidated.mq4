@@ -62,6 +62,9 @@ long barsObserved=0,signalCount=0,buySignals=0,sellSignals=0;
 long blockSession=0,blockSpread=0,blockDailyDD=0,blockTradeLimit=0;
 int telemetryFailures=0,lastHttpStatus=0;
 string telemetryStatus="INIT";
+string accountMode="REAL_VIRTUAL";
+bool researchActive=true;
+string promotionPolicy="MANUAL_MT4_ACCOUNT_SWITCH";
 string previousSignal="NONE",lastChange="INIT";
 string proposedAction="OBSERVE",nextAction="WAIT_FOR_EVIDENCE";
 string lastStrategy="NONE",lastSignal="NONE";
@@ -424,7 +427,8 @@ void Telemetry()
 
    lastTelemetry=TimeCurrent();
 
-   string mode=IsDemo() ? "DEMO" : "REAL";
+   accountMode=IsDemo() ? "REAL_VIRTUAL" : "REAL";
+   string mode=accountMode;
    string strategy=StrategyName();
    string strategyTF=TFName(InpTF);
    string chartTF=TFName((ENUM_TIMEFRAMES)Period());
@@ -437,6 +441,9 @@ void Telemetry()
    p+="\"mode\":\"CONSOLIDATED\",";
    p+="\"execution_enabled\":true,";
    p+="\"trading_contract\":\"AUTHORIZED_MT4_EXECUTION\",";
+   p+="\"research_active\":true,";
+   p+="\"research_mode\":\"CONTINUOUS\",";
+   p+="\"promotion_policy\":\"MANUAL_MT4_ACCOUNT_SWITCH\",";
    p+="\"account_mode\":\""+mode+"\",";
    p+="\"symbol\":\""+JsonEscape(Symbol())+"\",";
    p+="\"strategy\":\""+JsonEscape(strategy)+"\",";
@@ -461,6 +468,9 @@ void Telemetry()
    p+="\"max_trades_day\":"+IntegerToString(MaxTradesDay)+",";
    p+="\"max_open_trades\":"+IntegerToString(MaxOpenTrades)+"},";
    p+="\"learning\":{";
+   p+="\"continuous_research\":true,";
+   p+="\"monthly_stability_gate\":\"REQUIRED_BEFORE_REAL\",";
+   p+="\"live_promotion\":\"MANUAL_ONLY\",
    p+="\"proposed_action\":\""+JsonEscape(proposedAction)+"\",";
    p+="\"next_action\":\""+JsonEscape(nextAction)+"\",";
    p+="\"evidence_status\":\"LIVE_EVIDENCE\",";
@@ -555,7 +565,8 @@ int OnInit()
    lastBar=iTime(Symbol(),InpTF,0);
 
    Print("Bitey SBT Evidence Lab v1.02 initialized.");
-   Print("Trading contract=AUTHORIZED_MT4_EXECUTION; account mode=",IsDemo() ? "DEMO" : "REAL");
+   Print("Trading contract=AUTHORIZED_MT4_EXECUTION; account mode=",IsDemo() ? "REAL_VIRTUAL" : "REAL");
+   Print("Continuous research=ON; live promotion=MANUAL_MT4_ACCOUNT_SWITCH; monthly stability gate=REQUIRED_BEFORE_REAL.");
    Print("Reference capital=$",DoubleToString(SBT_OPERATIONAL_CAPITAL_USD,2),
          " risk=",DoubleToString(RiskPct,3),
          "% budget=$",DoubleToString(RiskBudgetUSD(),2),
