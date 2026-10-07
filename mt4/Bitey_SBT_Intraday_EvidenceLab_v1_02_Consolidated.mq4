@@ -14,8 +14,8 @@ enum StrategyMode
 input StrategyMode InpStrategy=ENSEMBLE;
 input ENUM_TIMEFRAMES InpTF=PERIOD_M15;
 
-// Evidence Lab capital/risk contract.
-input double ReferenceCapitalUSD=500.0;
+// SBT operational capital is fixed at USD 500. The MT4 account balance may be larger.
+#define SBT_OPERATIONAL_CAPITAL_USD 500.0
 input double RiskPct=0.25;
 input double MaxDailyLossPct=2.0;
 input int    MaxTradesDay=3;
@@ -320,7 +320,7 @@ bool Signal(int &dir,double &a,string &str,string &why)
 
 double RiskBudgetUSD()
 {
-   return ReferenceCapitalUSD*RiskPct/100.0;
+   return SBT_OPERATIONAL_CAPITAL_USD*RiskPct/100.0;
 }
 
 double LotsForRisk(double stopDistance)
@@ -344,7 +344,9 @@ double LotsForRisk(double stopDistance)
    if(step<=0) step=(mn>0?mn:0.01);
 
    lot=MathFloor(lot/step)*step;
-   lot=MathMax(mn,MathMin(mx,lot));
+   // Never force the broker minimum lot when it would exceed the $500 risk budget.
+   if(lot<mn) return 0;
+   lot=MathMin(mx,lot);
 
    return NormalizeDouble(lot,2);
 }
@@ -434,7 +436,7 @@ void Telemetry()
    p+="\"lab_version\":\"1.02\",";
    p+="\"mode\":\"CONSOLIDATED\",";
    p+="\"execution_enabled\":true,";
-   p+="\"trading_contract\":\"ALWAYS_ON\",";
+   p+="\"trading_contract\":\"AUTHORIZED_MT4_EXECUTION\",";
    p+="\"account_mode\":\""+mode+"\",";
    p+="\"symbol\":\""+JsonEscape(Symbol())+"\",";
    p+="\"strategy\":\""+JsonEscape(strategy)+"\",";
@@ -442,7 +444,7 @@ void Telemetry()
    p+="\"chart_timeframe\":\""+chartTF+"\",";
    p+="\"experiment_id\":\""+JsonEscape(experiment)+"\",";
    p+="\"capital\":{";
-   p+="\"reference_usd\":"+DoubleToString(ReferenceCapitalUSD,2)+",";
+   p+="\"reference_usd\":"+DoubleToString(SBT_OPERATIONAL_CAPITAL_USD,2)+",";
    p+="\"risk_pct\":"+DoubleToString(RiskPct,3)+",";
    p+="\"risk_budget_usd\":"+DoubleToString(RiskBudgetUSD(),2)+"},";
    p+="\"state\":{";
@@ -496,7 +498,7 @@ void Enter(int dir,double atr,string str,string why)
    double lot=LotsForRisk(dist);
    if(lot<=0)
    {
-      Print("Evidence Lab: risk calculation returned zero; execution logic continues without forced disable.");
+      Print("Evidence Lab: risk calculation returned zero; trade blocked to preserve the $500 operational risk contract.");
       return;
    }
 
@@ -517,7 +519,7 @@ void Enter(int dir,double atr,string str,string why)
             " strategy=",str,
             " reason=",why,
             " lots=",DoubleToString(lot,2),
-            " reference_capital=$",DoubleToString(ReferenceCapitalUSD,2),
+            " reference_capital=$",DoubleToString(SBT_OPERATIONAL_CAPITAL_USD,2),
             " risk_budget=$",DoubleToString(RiskBudgetUSD(),2),
             " SL=",DoubleToString(sl,Digits),
             " TP=",DoubleToString(tp,Digits));
@@ -553,8 +555,8 @@ int OnInit()
    lastBar=iTime(Symbol(),InpTF,0);
 
    Print("Bitey SBT Evidence Lab v1.02 initialized.");
-   Print("Trading contract=ALWAYS_ON; account mode=",IsDemo() ? "DEMO" : "REAL");
-   Print("Reference capital=$",DoubleToString(ReferenceCapitalUSD,2),
+   Print("Trading contract=AUTHORIZED_MT4_EXECUTION; account mode=",IsDemo() ? "DEMO" : "REAL");
+   Print("Reference capital=$",DoubleToString(SBT_OPERATIONAL_CAPITAL_USD,2),
          " risk=",DoubleToString(RiskPct,3),
          "% budget=$",DoubleToString(RiskBudgetUSD(),2),
          " strategyTF=",TFName(InpTF),
