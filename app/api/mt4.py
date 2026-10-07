@@ -420,12 +420,25 @@ async def ingest_closed_trade(
                 "operational_capital_usd": 500.0,
             },
         }
+        # Convert the authoritative MT4 outcome into a bounded Q-learning reward.
+        # Prefer R-multiple when MT4 supplies it; otherwise use PnL sign. This
+        # trains the policy from actual closed-trade outcomes without granting
+        # Q-learning any execution or risk-control authority.
+        if trade.r_multiple is not None:
+            reward = max(-1.0, min(1.0, float(trade.r_multiple)))
+        elif trade.pnl > 0:
+            reward = 1.0
+        elif trade.pnl < 0:
+            reward = -1.0
+        else:
+            reward = 0.0
+
         async with httpx.AsyncClient(timeout=8) as client:
             response = await client.post(BITEY_Q_LEARNING_URL, json={
                 "state_context": state_context,
                 "next_context": state_context,
                 "action": str(trade.strategy or trade.side),
-                "reward": 0.0,
+                "reward": reward,
                 "pnl_usd": float(trade.pnl),
                 "drawdown_pct": None,
                 "risk_used_pct": None,
@@ -436,7 +449,17 @@ async def ingest_closed_trade(
                 "risk_gate_allowed": True,
                 "operational_capital_usd": 500.0,
             })
-            q_learning = {"sent": response.status_code < 400, "status": response.status_code}
+            body = None
+            try:
+                body = response.json()
+            except ValueError:
+                body = None
+            q_learning = {
+                "sent": response.status_code < 400,
+                "status": response.status_code,
+                "reward": reward,
+                "learning": body.get("learning") if isinstance(body, dict) else None,
+            }
     except Exception as exc:
         q_learning = {"sent": False, "reason": type(exc).__name__}
 
