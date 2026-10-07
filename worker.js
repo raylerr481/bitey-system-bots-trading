@@ -88,7 +88,7 @@ export default {
 
     return new HTMLRewriter().on('body', {
       element(element) {
-        element.append(`<script src="/runtime.js?v=20260917"></script>`, { html: true });
+        element.append(`<script src="/runtime.js?v=20261006mt4frontendfix1"></script>`, { html: true });
         element.append(`<script>
 (() => {
   const closeMobileMenu=()=>{const side=document.getElementById('side');if(side)side.classList.remove('open');};
