@@ -1,6 +1,6 @@
 #property strict
-#property version   "1.02"
-#property description "Bitey SBT Evidence Lab v1.02 - consolidated research telemetry with always-on execution"
+#property version   "1.07"
+#property description "Bitey SBT Evidence Lab v1.07 - USD 500 REAL_VIRTUAL/REAL continuous research"
 
 #define STRATEGY_ORB 0
 #define STRATEGY_TREND_PULLBACK 1
@@ -9,7 +9,7 @@
 #define STRATEGY_ENSEMBLE 4
 
 input int InpStrategy=STRATEGY_ENSEMBLE;
-input ENUM_TIMEFRAMES InpTF=PERIOD_M15;
+input ENUM_TIMEFRAMES InpTF=PERIOD_H1;
 
 // SBT operational capital is fixed at USD 500. The MT4 account balance may be larger.
 #define SBT_OPERATIONAL_CAPITAL_USD 500.0
@@ -144,8 +144,9 @@ int OpenCount()
 
 double DD()
 {
-   if(dayEquity<=0) return 0;
-   return MathMax(0,(dayEquity-AccountEquity())/dayEquity*100.0);
+   double referenceEquity=SBT_OPERATIONAL_CAPITAL_USD;
+   if(referenceEquity<=0) return 0;
+   return MathMax(0,(dayEquity-AccountEquity())/referenceEquity*100.0);
 }
 
 bool Session()
@@ -435,7 +436,7 @@ void Telemetry()
    string p="{";
    p+="\"schema\":\"sbt.evidence_lab.telemetry.v1\",";
    p+="\"source\":\"MT4_INTRADAY_EVIDENCE_LAB\",";
-   p+="\"lab_version\":\"1.02\",";
+   p+="\"lab_version\":\"1.07\",";
    p+="\"mode\":\"CONSOLIDATED\",";
    p+="\"execution_enabled\":true,";
    p+="\"trading_contract\":\"AUTHORIZED_MT4_EXECUTION\",";
@@ -468,7 +469,7 @@ void Telemetry()
    p+="\"learning\":{";
    p+="\"continuous_research\":true,";
    p+="\"monthly_stability_gate\":\"REQUIRED_BEFORE_REAL\",";
-   p+="\"live_promotion\":\"MANUAL_ONLY\",
+   p+="\"live_promotion\":\"MANUAL_ONLY\",";
    p+="\"proposed_action\":\""+JsonEscape(proposedAction)+"\",";
    p+="\"next_action\":\""+JsonEscape(nextAction)+"\",";
    p+="\"evidence_status\":\"LIVE_EVIDENCE\",";
@@ -489,7 +490,7 @@ void Telemetry()
    p+="\"bot\":{";
    p+="\"id\":\""+JsonEscape(experiment)+"\",";
    p+="\"strategy\":\""+JsonEscape(strategy)+"\",";
-   p+="\"version\":\"1.02\",";
+   p+="\"version\":\"1.07\",";
    p+="\"magic\":"+IntegerToString(Magic)+"}";
    p+="}";
 
@@ -562,7 +563,7 @@ int OnInit()
    ResetDay();
    lastBar=iTime(Symbol(),InpTF,0);
 
-   Print("Bitey SBT Evidence Lab v1.02 initialized.");
+   Print("Bitey SBT Evidence Lab v1.07 initialized.");
    Print("Trading contract=AUTHORIZED_MT4_EXECUTION; account mode=",IsDemo() ? "REAL_VIRTUAL" : "REAL");
    Print("Continuous research=ON; live promotion=MANUAL_MT4_ACCOUNT_SWITCH; monthly stability gate=REQUIRED_BEFORE_REAL.");
    Print("Reference capital=$",DoubleToString(SBT_OPERATIONAL_CAPITAL_USD,2),
