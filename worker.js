@@ -48,9 +48,9 @@ export default {
     const url = new URL(request.url);
     const BUILD = '20261006-evidence-lab-live';
 
-    if (url.pathname === '/health') return json({ service: 'bitey-system-bots-trading', status: 'ok', mode: 'research-demo', live: false, real_money: false, broker_orders: 0, web_build: BUILD });
+    if (url.pathname === '/health') return json({ service: 'bitey-system-bots-trading', status: 'ok', mode: 'research-demo', live: true, virtual_money: true, broker_orders: 0, web_build: BUILD });
 
-    if (url.pathname === '/api/v1/system') return json({ ok: true, service: 'bitey-system-bots-trading', live_trading_enabled: false, real_money_enabled: false, broker_orders: 0, market_data: 'public-readonly', provider: 'Yahoo Finance public chart endpoint' });
+    if (url.pathname === '/api/v1/system') return json({ ok: true, service: 'bitey-system-bots-trading', live_trading_enabled: true, virtual_money: true, broker_orders: 0, market_data: 'public-readonly', provider: 'Yahoo Finance public chart endpoint' });
 
     if (url.pathname === '/api/v1/market/quote' || url.pathname.startsWith('/api/v1/market/quote/')) {
       try {
@@ -88,7 +88,7 @@ export default {
 
     return new HTMLRewriter().on('body', {
       element(element) {
-        element.append(`<script src="/runtime.js?v=20261006mt4frontendfix1"></script>`, { html: true });
+        element.append(`<script src="/runtime.js?v=20261007mt4telemetryfix2"></script>`, { html: true });
         element.append(`<script>
 (() => {
   const closeMobileMenu=()=>{const side=document.getElementById('side');if(side)side.classList.remove('open');};
