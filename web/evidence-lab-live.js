@@ -275,3 +275,155 @@
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true});
   else boot();
 })();
++num(r.operational_capital,2));
+    text('turtleSymbol',r.symbol+' · '+(r.chart_timeframe||r.timeframe));
+    text('turtleMode','Strategy '+r.strategy+' · TF '+r.timeframe+' · Chart '+r.chart_timeframe);
+    const market=r.market||{};
+    const turtle=r.turtle||r.turtle_controller||{};
+    const tm=turtle.state||turtle;
+    text('turtleBid',num(market.bid ?? market.Bid ?? market.price_bid,5));
+    text('turtleAsk',num(market.ask ?? market.Ask ?? market.price_ask,5));
+    text('turtleAtr',num(market.atr ?? market.ATR ?? m.atr ?? m.ATR,5));
+    text('turtleRsi',num(market.rsi ?? market.RSI ?? m.rsi ?? m.RSI,2));
+    text('turtleAdx',num(market.adx ?? market.ADX ?? m.adx ?? m.ADX,2));
+    text('turtleOpenTrades',String(r.positions));
+    const campaign = tm.next_action || (r.signal && r.signal!=='NONE' ? 'SIGNAL' : 'FLAT');
+    text('turtleCampaign',campaign);
+    text('turtleCampaignMeta',tm.reason || (r.signal && r.signal!=='NONE' ? 'Señal MT4 recibida' : 'Sin señal activa'));
+    text('turtleUnits',String(r.positions));
+    text('turtleDirection',r.direction||'FLAT');
+    text('turtleSystem',r.bot?.name||'Bitey Evidence Lab v1.02');
+    text('turtleDir',r.direction||'FLAT');
+    text('turtleLastEnt',tm.last_trade_pnl!=null ? num(tm.last_trade_pnl,2) : '—');
+    text('turtleNextAction',tm.next_action||'WAIT');
+
+    text('validationEnvironment','MT4 DEMO / TRADER WILL');
+    text('validationStatus',r.signal!=='NONE'?'MT4 evidence received':'Waiting for MT4 evidence');
+
+    const riskPanel=document.getElementById('riskGateMt4Evidence');
+    if(riskPanel) riskPanel.innerHTML='<strong>MT4 Evidence Lab</strong><br>Signal '+signalBadge(r.signal)+' · '+esc(r.symbol)+' · '+esc(r.timeframe)+'<br>Capital operativo $'+num(r.operational_capital,2)+' · Risk '+num(risk.risk_pct,3)+'% · DD '+num(m.daily_drawdown_pct,3)+'% · Positions '+r.positions;
+  }
+
+  function ensureRiskPanel(){
+    if(document.getElementById('riskGateMt4Evidence')) return;
+    const risk=document.getElementById('risk');
+    if(!risk) return;
+    const p=document.createElement('div');p.id='riskGateMt4Evidence';p.className='notice';p.style.marginBottom='12px';risk.insertBefore(p,risk.firstChild);
+  }
+
+  function renderHistory(items){
+    const body=document.getElementById('turtleHistoryBody');
+    if(!body)return;
+    if(!items.length){body.innerHTML='<tr><td colspan="10" class="muted">Sin snapshots recibidos.</td></tr>';return;}
+    body.innerHTML=items.slice(0,20).map(x=>{
+      const r=normalize(x),m=r?.metrics||{};
+      return '<tr><td>'+new Date(r.timestamp).toLocaleTimeString()+'</td><td>'+esc(r.symbol)+'</td><td>'+esc(r.regime)+'</td><td>'+esc(r.direction)+'</td><td>'+esc(r.positions)+'</td><td>—</td><td>—</td><td>—</td><td>'+esc(r.account?.equity??'$'+num(r.operational_capital,2))+'</td><td>'+esc(m.trades_today??0)+'</td></tr>';
+    }).join('');
+  }
+
+  function renderTrades(items){
+    lastTrades=items||[];
+    const rows=document.querySelectorAll('#observerActivityBody');
+    rows.forEach(body=>{
+      if(!lastTrades.length){body.innerHTML='<tr><td colspan="7" class="muted">Sin operaciones cerradas recibidas desde MT4.</td></tr>';return;}
+      body.innerHTML=lastTrades.slice(0,20).map(t=>'<tr><td>'+esc(t.close_time||t.open_time||'—')+'</td><td>'+esc(t.bot_id||t.source||'MT4')+'</td><td>'+esc(t.exit_reason||'CLOSED')+'</td><td>'+esc(t.symbol)+'</td><td>'+esc(t.side)+'</td><td>1</td><td>'+num(t.pnl,2)+'</td></tr>').join('');
+    });
+  }
+
+  async function refresh(){
+    try{
+      const [latest,history,trades]=await Promise.all([
+        get('/api/v1/mt4/bitey-latest'),
+        get('/api/v1/mt4/bitey-history?limit=20'),
+        get('/api/v1/mt4/trades?limit=20')
+      ]);
+      const r=normalize(latest);
+      lastReport=r;
+      renderGlobal(r);
+      ensureRiskPanel();
+      fillPageSpecific(r);
+      renderHistory(history?.items||[]);
+      renderTrades(trades?.items||[]);
+      window.dispatchEvent(new CustomEvent('sbt:mt4-live',{detail:{report:r,history:history?.items||[],trades:trades?.items||[]}}));
+    }catch(e){
+      renderGlobal(null);
+      const st=document.getElementById('apiStatus'); if(st)st.textContent='SBT MT4 API unavailable';
+    }
+  }
+
+  function boot(){
+    ensureGlobalPanel();
+    ensureRiskPanel();
+    refresh();
+    setInterval(refresh,5000);
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true});
+  else boot();
+})();
++num(r.operational_capital,2));
+
+    text('validationEnvironment','MT4 DEMO / TRADER WILL');
+    text('validationStatus',r.signal!=='NONE'?'MT4 evidence received':'Waiting for MT4 evidence');
+
+    const riskPanel=document.getElementById('riskGateMt4Evidence');
+    if(riskPanel) riskPanel.innerHTML='<strong>MT4 Evidence Lab</strong><br>Signal '+signalBadge(r.signal)+' · '+esc(r.symbol)+' · '+esc(r.timeframe)+'<br>Capital operativo $'+num(r.operational_capital,2)+' · Risk '+num(risk.risk_pct,3)+'% · DD '+num(m.daily_drawdown_pct,3)+'% · Positions '+r.positions;
+  }
+
+  function ensureRiskPanel(){
+    if(document.getElementById('riskGateMt4Evidence')) return;
+    const risk=document.getElementById('risk');
+    if(!risk) return;
+    const p=document.createElement('div');p.id='riskGateMt4Evidence';p.className='notice';p.style.marginBottom='12px';risk.insertBefore(p,risk.firstChild);
+  }
+
+  function renderHistory(items){
+    const body=document.getElementById('turtleHistoryBody');
+    if(!body)return;
+    if(!items.length){body.innerHTML='<tr><td colspan="10" class="muted">Sin snapshots recibidos.</td></tr>';return;}
+    body.innerHTML=items.slice(0,20).map(x=>{
+      const r=normalize(x),m=r?.metrics||{};
+      return '<tr><td>'+new Date(r.timestamp).toLocaleTimeString()+'</td><td>'+esc(r.symbol)+'</td><td>'+esc(r.regime)+'</td><td>'+esc(r.direction)+'</td><td>'+esc(r.positions)+'</td><td>—</td><td>—</td><td>—</td><td>'+esc(r.account?.equity??'$'+num(r.operational_capital,2))+'</td><td>'+esc(m.trades_today??0)+'</td></tr>';
+    }).join('');
+  }
+
+  function renderTrades(items){
+    lastTrades=items||[];
+    const rows=document.querySelectorAll('#observerActivityBody');
+    rows.forEach(body=>{
+      if(!lastTrades.length){body.innerHTML='<tr><td colspan="7" class="muted">Sin operaciones cerradas recibidas desde MT4.</td></tr>';return;}
+      body.innerHTML=lastTrades.slice(0,20).map(t=>'<tr><td>'+esc(t.close_time||t.open_time||'—')+'</td><td>'+esc(t.bot_id||t.source||'MT4')+'</td><td>'+esc(t.exit_reason||'CLOSED')+'</td><td>'+esc(t.symbol)+'</td><td>'+esc(t.side)+'</td><td>1</td><td>'+num(t.pnl,2)+'</td></tr>').join('');
+    });
+  }
+
+  async function refresh(){
+    try{
+      const [latest,history,trades]=await Promise.all([
+        get('/api/v1/mt4/bitey-latest'),
+        get('/api/v1/mt4/bitey-history?limit=20'),
+        get('/api/v1/mt4/trades?limit=20')
+      ]);
+      const r=normalize(latest);
+      lastReport=r;
+      renderGlobal(r);
+      ensureRiskPanel();
+      fillPageSpecific(r);
+      renderHistory(history?.items||[]);
+      renderTrades(trades?.items||[]);
+      window.dispatchEvent(new CustomEvent('sbt:mt4-live',{detail:{report:r,history:history?.items||[],trades:trades?.items||[]}}));
+    }catch(e){
+      renderGlobal(null);
+      const st=document.getElementById('apiStatus'); if(st)st.textContent='SBT MT4 API unavailable';
+    }
+  }
+
+  function boot(){
+    ensureGlobalPanel();
+    ensureRiskPanel();
+    refresh();
+    setInterval(refresh,5000);
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true});
+  else boot();
+})();
