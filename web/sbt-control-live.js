@@ -22,7 +22,7 @@
         'Chart TF':r.chart_timeframe||'—','Signal':r.signal||m.signal||s.current||'NONE',
         'Execution':r.execution_enabled?'ENABLED':'BLOCKED','Research only':r.research_only?'YES':'NO',
         'SBT telemetry':r.sbt_enabled===false?'DISABLED':'ENABLED',
-        'Operating environment':a.operating_environment||'DEMO',
+        'Operating environment':'MT4 DEMO / TRADER WILL',
         'MT4 reported mode':r.mode||a.reported_mode||'UNKNOWN',
         'Operational capital': '$'+Number(risk.operational_capital_usd||500).toFixed(2),
         'Risk / trade': (risk.risk_pct??'—')+'%',
@@ -78,7 +78,7 @@
         const [p,t,g]=await Promise.all([api('/api/v1/guardian/policy'),api('/api/v1/turtle/status'),api('/api/v1/mt4/bitey-latest')]);
         const r=g.report||{},a=r.account||{},risk=r.risk||{};
         place(id,'riskLive','<div class="test-grid">'+[
-          ['Risk Gate','AUTHORITATIVE'],['MT4 environment',a.operating_environment||'DEMO'],
+          ['Risk Gate','AUTHORITATIVE'],['MT4 environment','MT4 DEMO / TRADER WILL'],
           ['Operational cap','$'+Number(risk.operational_capital_usd||500).toFixed(2)],
           ['Risk/trade',(risk.risk_pct??'—')+'%'],['Daily max',(risk.max_daily_loss_pct??'—')+'%'],
           ['Guardian',p.risk_increase_allowed===false?'NO RISK INCREASE':'CHECK']
