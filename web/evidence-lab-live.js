@@ -40,7 +40,7 @@
       risk,
       bot: r.bot || {},
       positions,
-      operational_capital: Number(risk.operational_capital_usd || 0),
+      operational_capital: Number(risk.operational_capital_usd || 500),
       age: ageSec(r.timestamp)
     };
   }
@@ -85,7 +85,7 @@
     text('mt4LiveMeta',
       'Strategy '+r.strategy+' · Strategy TF '+r.timeframe+' · Chart '+r.chart_timeframe+
       ' · Mode reported by MT4 '+(r.mode||'UNKNOWN')+
-      ' · Demo environment: '+(r.account?.operating_environment || (r.mode==='REAL'?'DEMO (configured)':'UNKNOWN'))+
+      ' · MT4 account: '+(r.account?.operating_environment || 'DEMO')+' · MT4 reported mode: '+(r.mode||'UNKNOWN')+
       ' · Last change: '+r.signal_change);
   }
 
@@ -94,8 +94,8 @@
     const m=r.metrics||{}, a=r.account||{}, risk=r.risk||{}, c=r.counters||m;
     text('terminalSymbol',r.symbol);
     text('terminalTimeframe',r.chart_timeframe || r.timeframe);
-    text('terminalEnvironment',r.account?.operating_environment || (r.mode==='REAL'?'DEMO':'UNKNOWN'));
-    text('terminalExecution',r.execution_enabled?'MT4 EXECUTION ENABLED':'OBSERVE / BLOCKED');
+    text('terminalEnvironment','MT4 DEMO / TRADER WILL');
+    text('terminalExecution','MT4 EXECUTION · RISK GATE CONTROLLED');
     text('apiStatus','MT4 '+(r.age<90?'CONNECTED':'STALE')+' · '+r.symbol+' · '+r.signal);
 
     text('eccMt4',r.age<90?'ONLINE':'STALE');
@@ -104,7 +104,7 @@
     text('eccBotsMeta',r.bot?.name||'Bitey Evidence Lab v1.02');
     text('eccMarket',r.symbol+' · '+r.timeframe);
     text('eccChartTf',r.chart_timeframe||'H1');
-    text('eccMode',r.account?.operating_environment || (r.mode==='REAL'?'DEMO':'UNKNOWN'));
+    text('eccMode','MT4 DEMO / TRADER WILL');
     text('eccBot',r.bot?.name||'Bitey Evidence Lab v1.02');
     text('eccSignal',(r.signal||'NONE')+' · '+(r.regime||'UNKNOWN'));
     text('eccNext',r.signal==='BUY'||r.signal==='SELL'?'Evaluar Risk Gate / ejecución MT4':'Esperando señal válida');
@@ -122,9 +122,9 @@
     text('aiBotName',r.bot?.name||'Bitey Evidence Lab v1.02');
     text('aiBotConnection',r.age<90?'MT4 conectado':'MT4 stale');
     text('aiBotMarket',r.symbol+' · '+r.timeframe);
-    text('aiBotMode',r.account?.operating_environment || (r.mode==='REAL'?'DEMO':'UNKNOWN'));
-    text('aiEnvironment',r.account?.operating_environment || (r.mode==='REAL'?'DEMO':'UNKNOWN'));
-    text('aiProductionStatus',r.execution_enabled?'DEMO / MT4 ENABLED':'OBSERVATION');
+    text('aiBotMode','MT4 DEMO / TRADER WILL · reported mode '+(r.mode||'UNKNOWN'));
+    text('aiEnvironment','MT4 DEMO / TRADER WILL');
+    text('aiProductionStatus','DEMO · MT4 EXECUTION UNDER RISK GATE');
     text('aiBotParams',
       'Strategy='+r.strategy+' · TF='+r.timeframe+' · Chart='+r.chart_timeframe+
       ' · Capital=$'+num(r.operational_capital,2)+' · Risk='+num(risk.risk_pct,3)+'%'+
@@ -135,7 +135,7 @@
 
     text('turtleConnection',r.age<90?'ONLINE':'STALE');
     text('turtleHeartbeat',new Date(r.timestamp).toLocaleTimeString());
-    text('turtleExec',r.execution_enabled?'MT4 EXECUTION ENABLED':'EVIDENCE LAB · READ ONLY');
+    text('turtleExec','MT4 EXECUTION · RISK GATE CONTROLLED');
     text('turtleStatus','Evidence Lab v1.02 conectado. Esta pantalla muestra el snapshot MT4 aunque el bot no sea Turtle.');
     text('turtleS1Signals',(Number(c.buy_signals||0)+Number(c.sell_signals||0))+' (B '+Number(c.buy_signals||0)+' / S '+Number(c.sell_signals||0)+')');
     text('turtleS2Signals','—');
@@ -143,9 +143,75 @@
     text('turtleBalance',a.balance!=null?num(a.balance,2):'$'+num(r.operational_capital,2));
     text('turtleEquity',a.equity!=null?num(a.equity,2):'$'+num(r.operational_capital,2));
     text('turtleRegime',r.regime);
-    text('turtleModePanel','Entorno operativo: DEMO · MT4 reporta '+(r.mode||'UNKNOWN')+' · capital operativo $'+num(r.operational_capital,2));
+    text('turtleModePanel','Entorno: MT4 DEMO / TRADER WILL · MT4 reporta '+(r.mode||'UNKNOWN')+' · capital operativo 
 
-    text('validationEnvironment',r.account?.operating_environment || 'DEMO');
+    text('validationEnvironment','MT4 DEMO / TRADER WILL');
+    text('validationStatus',r.signal!=='NONE'?'MT4 evidence received':'Waiting for MT4 evidence');
+
+    const riskPanel=document.getElementById('riskGateMt4Evidence');
+    if(riskPanel) riskPanel.innerHTML='<strong>MT4 Evidence Lab</strong><br>Signal '+signalBadge(r.signal)+' · '+esc(r.symbol)+' · '+esc(r.timeframe)+'<br>Capital operativo $'+num(r.operational_capital,2)+' · Risk '+num(risk.risk_pct,3)+'% · DD '+num(m.daily_drawdown_pct,3)+'% · Positions '+r.positions;
+  }
+
+  function ensureRiskPanel(){
+    if(document.getElementById('riskGateMt4Evidence')) return;
+    const risk=document.getElementById('risk');
+    if(!risk) return;
+    const p=document.createElement('div');p.id='riskGateMt4Evidence';p.className='notice';p.style.marginBottom='12px';risk.insertBefore(p,risk.firstChild);
+  }
+
+  function renderHistory(items){
+    const body=document.getElementById('turtleHistoryBody');
+    if(!body)return;
+    if(!items.length){body.innerHTML='<tr><td colspan="10" class="muted">Sin snapshots recibidos.</td></tr>';return;}
+    body.innerHTML=items.slice(0,20).map(x=>{
+      const r=normalize(x),m=r?.metrics||{};
+      return '<tr><td>'+new Date(r.timestamp).toLocaleTimeString()+'</td><td>'+esc(r.symbol)+'</td><td>'+esc(r.regime)+'</td><td>'+esc(r.direction)+'</td><td>'+esc(r.positions)+'</td><td>—</td><td>—</td><td>—</td><td>'+esc(r.account?.equity??'$'+num(r.operational_capital,2))+'</td><td>'+esc(m.trades_today??0)+'</td></tr>';
+    }).join('');
+  }
+
+  function renderTrades(items){
+    lastTrades=items||[];
+    const rows=document.querySelectorAll('#observerActivityBody');
+    rows.forEach(body=>{
+      if(!lastTrades.length){body.innerHTML='<tr><td colspan="7" class="muted">Sin operaciones cerradas recibidas desde MT4.</td></tr>';return;}
+      body.innerHTML=lastTrades.slice(0,20).map(t=>'<tr><td>'+esc(t.close_time||t.open_time||'—')+'</td><td>'+esc(t.bot_id||t.source||'MT4')+'</td><td>'+esc(t.exit_reason||'CLOSED')+'</td><td>'+esc(t.symbol)+'</td><td>'+esc(t.side)+'</td><td>1</td><td>'+num(t.pnl,2)+'</td></tr>').join('');
+    });
+  }
+
+  async function refresh(){
+    try{
+      const [latest,history,trades]=await Promise.all([
+        get('/api/v1/mt4/bitey-latest'),
+        get('/api/v1/mt4/bitey-history?limit=20'),
+        get('/api/v1/mt4/trades?limit=20')
+      ]);
+      const r=normalize(latest);
+      lastReport=r;
+      renderGlobal(r);
+      ensureRiskPanel();
+      fillPageSpecific(r);
+      renderHistory(history?.items||[]);
+      renderTrades(trades?.items||[]);
+      window.dispatchEvent(new CustomEvent('sbt:mt4-live',{detail:{report:r,history:history?.items||[],trades:trades?.items||[]}}));
+    }catch(e){
+      renderGlobal(null);
+      const st=document.getElementById('apiStatus'); if(st)st.textContent='SBT MT4 API unavailable';
+    }
+  }
+
+  function boot(){
+    ensureGlobalPanel();
+    ensureRiskPanel();
+    refresh();
+    setInterval(refresh,5000);
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true});
+  else boot();
+})();
++num(r.operational_capital,2));
+
+    text('validationEnvironment','MT4 DEMO / TRADER WILL');
     text('validationStatus',r.signal!=='NONE'?'MT4 evidence received':'Waiting for MT4 evidence');
 
     const riskPanel=document.getElementById('riskGateMt4Evidence');
