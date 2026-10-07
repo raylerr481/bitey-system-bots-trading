@@ -95,9 +95,10 @@ def _normalize_evidence_lab(payload: dict[str, Any]) -> dict[str, Any]:
     signal = payload.get("signal") or state.get("current") or (payload.get("metrics") or {}).get("signal") or "NONE"
     previous = state.get("previous") or "NONE"
     change = state.get("change") or "NONE"
-    positions = int(state.get("position_count") or 0)
-    operational_cap = float(risk.get("operational_capital_usd") or 0)
-    account_mode = payload.get("account_mode") or payload.get("mode") or "UNKNOWN"
+    account_in = payload.get("account") or {}
+    positions = int(account_in.get("position_count") or state.get("position_count") or payload.get("position_count") or 0)
+    operational_cap = float(risk.get("operational_capital_usd") or 500.0)
+    account_mode = payload.get("account_mode") or account_in.get("mode") or payload.get("mode") or "UNKNOWN"
     timeframe = payload.get("timeframe") or payload.get("strategy_timeframe") or "UNKNOWN"
     chart_timeframe = payload.get("chart_timeframe") or timeframe
 
@@ -118,6 +119,47 @@ def _normalize_evidence_lab(payload: dict[str, Any]) -> dict[str, Any]:
         "balance": (payload.get("account") or {}).get("balance"),
         "position_count": positions,
     }
+    account_balance = account_in.get("balance")
+    account_equity = account_in.get("equity")
+    mt4_balance = float(account_balance) if account_balance is not None else None
+    mt4_equity = float(account_equity) if account_equity is not None else None
+    floating_pnl = (mt4_equity - mt4_balance) if mt4_balance is not None and mt4_equity is not None else None
+    mt4_to_sbt_ratio = (operational_cap / mt4_balance) if mt4_balance and mt4_balance > 0 else None
+    mt4_to_sbt_multiple = (mt4_balance / operational_cap) if mt4_balance and operational_cap > 0 else None
+    mt4_dd_abs = account_in.get("drawdown_abs")
+    if mt4_dd_abs is None:
+        mt4_dd_abs = account_in.get("absolute_drawdown")
+    mt4_dd_abs = float(mt4_dd_abs) if mt4_dd_abs is not None else None
+    mt4_dd_pct = account_in.get("drawdown_pct")
+    if mt4_dd_pct is None:
+        mt4_dd_pct = account_in.get("relative_drawdown_pct")
+    mt4_dd_pct = float(mt4_dd_pct) if mt4_dd_pct is not None else None
+    sbt_dd_pct = (mt4_dd_abs / operational_cap * 100.0) if mt4_dd_abs is not None and operational_cap > 0 else None
+    payload["capital_correspondence"] = {
+        "sbt_operational_capital_usd": operational_cap,
+        "mt4_balance_usd": mt4_balance,
+        "mt4_equity_usd": mt4_equity,
+        "mt4_floating_pnl_usd": floating_pnl,
+        "sbt_capital_as_pct_of_mt4_balance": mt4_to_sbt_ratio * 100.0 if mt4_to_sbt_ratio is not None else None,
+        "mt4_balance_multiple_of_sbt_capital": mt4_to_sbt_multiple,
+        "mt4_drawdown_abs_usd": mt4_dd_abs,
+        "mt4_drawdown_pct": mt4_dd_pct,
+        "sbt_operational_drawdown_pct": sbt_dd_pct,
+        "risk_basis": "SBT_OPERATIONAL_CAPITAL",
+        "risk_cap_usd": operational_cap,
+        "mt4_account_is_execution_telemetry_only": True,
+    }
+
+    payload["account"] = {
+        **(payload.get("account") or {}),
+        "balance": mt4_balance,
+        "equity": mt4_equity,
+        "floating_pnl": floating_pnl,
+        "position_count": positions,
+        "operational_capital_usd": operational_cap,
+        "capital_correspondence": payload["capital_correspondence"],
+    }
+
     payload["metrics"] = {
         **(payload.get("metrics") or {}),
         "signal": signal,
@@ -135,6 +177,12 @@ def _normalize_evidence_lab(payload: dict[str, Any]) -> dict[str, Any]:
         "block_trade_limit": counters.get("block_trade_limit", 0),
         "operational_capital_usd": operational_cap,
         "risk_pct": risk.get("risk_pct"),
+        "mt4_balance_usd": mt4_balance,
+        "mt4_equity_usd": mt4_equity,
+        "mt4_floating_pnl_usd": floating_pnl,
+        "sbt_operational_drawdown_pct": sbt_dd_pct,
+        "mt4_drawdown_abs_usd": mt4_dd_abs,
+        "mt4_drawdown_pct": mt4_dd_pct,
         "risk_budget_usd": risk.get("risk_budget_usd"),
         "daily_loss_usd": risk.get("daily_loss_usd"),
         "max_daily_loss_pct": risk.get("max_daily_loss_pct"),
