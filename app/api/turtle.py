@@ -140,6 +140,8 @@ def update_from_mt4(payload: dict[str, Any]) -> dict[str, Any]:
     risk_pct = account.get("risk_pct", payload.get("risk_pct", 0.25))
     drawdown_pct = account.get("drawdown_pct", payload.get("drawdown_pct", 0.0))
     last_trade_pnl = account.get("last_trade_pnl", payload.get("last_trade_pnl"))
+    turtle = payload.get("turtle") or payload.get("turtle_controller") or {}
+    market = payload.get("market") or {}
 
     snapshot = {
         "status": payload.get("status") or "RUNNING",
@@ -152,7 +154,11 @@ def update_from_mt4(payload: dict[str, Any]) -> dict[str, Any]:
         "risk_pct": risk_pct,
         "drawdown_pct": drawdown_pct,
         "last_trade_pnl": last_trade_pnl,
-        "market": payload.get("market") or {},
+        "market": market,
+        "last_entry": turtle.get("last_entry"),
+        "campaign_n": turtle.get("campaign_n"),
+        "s1_skip_next": turtle.get("s1_skip_next"),
+        "s1_skip_latched": turtle.get("s1_skip_latched"),
     }
     return _controller.observe(snapshot)
 
