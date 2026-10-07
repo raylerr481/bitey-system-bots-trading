@@ -287,15 +287,13 @@
     text('turtleRsi',num(market.rsi ?? market.RSI ?? m.rsi ?? m.RSI,2));
     text('turtleAdx',num(market.adx ?? market.ADX ?? m.adx ?? m.ADX,2));
     text('turtleOpenTrades',String(r.positions));
-    const campaign = tm.next_action || (r.signal && r.signal!=='NONE' ? 'SIGNAL' : 'FLAT');
+    const campaign = r.positions>0 ? (tm.next_action || 'MANAGE_POSITION') : 'FLAT';
     text('turtleCampaign',campaign);
     text('turtleCampaignMeta',tm.reason || (r.signal && r.signal!=='NONE' ? 'Señal MT4 recibida' : 'Sin señal activa'));
     text('turtleUnits',String(r.positions));
     text('turtleDirection',r.direction||'FLAT');
     text('turtleSystem',r.bot?.name||'Bitey Evidence Lab v1.02');
     text('turtleDir',r.direction||'FLAT');
-    text('turtleLastEnt',tm.last_trade_pnl!=null ? num(tm.last_trade_pnl,2) : '—');
-    text('turtleNextAction',tm.next_action||'WAIT');
 
     text('validationEnvironment','MT4 DEMO / TRADER WILL');
     text('validationStatus',r.signal!=='NONE'?'MT4 evidence received':'Waiting for MT4 evidence');
