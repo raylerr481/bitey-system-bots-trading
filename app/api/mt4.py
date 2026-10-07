@@ -97,7 +97,7 @@ def _normalize_evidence_lab(payload: dict[str, Any]) -> dict[str, Any]:
     change = state.get("change") or "NONE"
     account_in = payload.get("account") or {}
     positions = int(account_in.get("position_count") or state.get("position_count") or payload.get("position_count") or 0)
-    operational_cap = float(risk.get("operational_capital_usd") or 500.0)
+    operational_cap = min(float(risk.get("operational_capital_usd") or 500.0), 500.0)
     account_mode = payload.get("account_mode") or account_in.get("mode") or payload.get("mode") or "UNKNOWN"
     timeframe = payload.get("timeframe") or payload.get("strategy_timeframe") or "UNKNOWN"
     chart_timeframe = payload.get("chart_timeframe") or timeframe
@@ -160,8 +160,21 @@ def _normalize_evidence_lab(payload: dict[str, Any]) -> dict[str, Any]:
         "capital_correspondence": payload["capital_correspondence"],
     }
 
+    # Promote indicator/account telemetry into stable fields consumed by Turtle/Dashboard.
+    market_in = payload.get("market") or {}
+    metrics_in = payload.get("metrics") or {}
+    market_out = {
+        **market_in,
+        "bid": market_in.get("bid", market_in.get("Bid", metrics_in.get("bid", metrics_in.get("Bid")))),
+        "ask": market_in.get("ask", market_in.get("Ask", metrics_in.get("ask", metrics_in.get("Ask")))),
+        "atr": market_in.get("atr", market_in.get("ATR", metrics_in.get("atr", metrics_in.get("ATR")))),
+        "rsi": market_in.get("rsi", market_in.get("RSI", metrics_in.get("rsi", metrics_in.get("RSI")))),
+        "adx": market_in.get("adx", market_in.get("ADX", metrics_in.get("adx", metrics_in.get("ADX")))),
+    }
+    payload["market"] = market_out
+
     payload["metrics"] = {
-        **(payload.get("metrics") or {}),
+        **metrics_in,
         "signal": signal,
         "direction": payload["direction"],
         "positions_open": positions,
@@ -187,6 +200,19 @@ def _normalize_evidence_lab(payload: dict[str, Any]) -> dict[str, Any]:
         "daily_loss_usd": risk.get("daily_loss_usd"),
         "max_daily_loss_pct": risk.get("max_daily_loss_pct"),
     }
+    # Keep Turtle synchronized with authoritative MT4 telemetry, including the
+    # stable market/account contract. Campaign-specific fields remain MT4-owned.
+    turtle_in = payload.get("turtle") or payload.get("turtle_controller") or {}
+    payload["turtle"] = {
+        **turtle_in,
+        "position_count": positions,
+        "market": payload["market"],
+        "last_entry": turtle_in.get("last_entry"),
+        "campaign_n": turtle_in.get("campaign_n"),
+        "s1_skip_next": turtle_in.get("s1_skip_next"),
+        "s1_skip_latched": turtle_in.get("s1_skip_latched"),
+    }
+
     payload["bot"] = {
         **(payload.get("bot") or {}),
         "name": (payload.get("bot") or {}).get("name") or f"Bitey Evidence Lab v{payload.get('lab_version', '1.02')}",
