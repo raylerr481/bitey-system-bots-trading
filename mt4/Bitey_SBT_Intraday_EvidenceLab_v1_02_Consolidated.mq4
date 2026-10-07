@@ -2,16 +2,13 @@
 #property version   "1.02"
 #property description "Bitey SBT Evidence Lab v1.02 - consolidated research telemetry with always-on execution"
 
-enum StrategyMode
-{
-   ORB=0,
-   TREND_PULLBACK=1,
-   MEAN_REVERSION=2,
-   TURTLE_INTRADAY=3,
-   ENSEMBLE=4
-};
+#define STRATEGY_ORB 0
+#define STRATEGY_TREND_PULLBACK 1
+#define STRATEGY_MEAN_REVERSION 2
+#define STRATEGY_TURTLE_INTRADAY 3
+#define STRATEGY_ENSEMBLE 4
 
-input StrategyMode InpStrategy=ENSEMBLE;
+input int InpStrategy=STRATEGY_ENSEMBLE;
 input ENUM_TIMEFRAMES InpTF=PERIOD_M15;
 
 // SBT operational capital is fixed at USD 500. The MT4 account balance may be larger.
@@ -58,8 +55,8 @@ int tradesToday=0;
 datetime day0=0,lastBar=0,lastTelemetry=0,nextTelemetryAllowed=0;
 double dayEquity=0;
 
-long barsObserved=0,signalCount=0,buySignals=0,sellSignals=0;
-long blockSession=0,blockSpread=0,blockDailyDD=0,blockTradeLimit=0;
+int barsObserved=0,signalCount=0,buySignals=0,sellSignals=0;
+int blockSession=0,blockSpread=0,blockDailyDD=0,blockTradeLimit=0;
 int telemetryFailures=0,lastHttpStatus=0;
 string telemetryStatus="INIT";
 string accountMode="REAL_VIRTUAL";
@@ -85,10 +82,10 @@ string TFName(ENUM_TIMEFRAMES tf)
 
 string StrategyName()
 {
-   if(InpStrategy==ORB) return "ORB";
-   if(InpStrategy==TREND_PULLBACK) return "TREND_PULLBACK";
-   if(InpStrategy==MEAN_REVERSION) return "MEAN_REVERSION";
-   if(InpStrategy==TURTLE_INTRADAY) return "TURTLE_INTRADAY";
+   if(InpStrategy==STRATEGY_ORB) return "ORB";
+   if(InpStrategy==STRATEGY_TREND_PULLBACK) return "TREND_PULLBACK";
+   if(InpStrategy==STRATEGY_MEAN_REVERSION) return "MEAN_REVERSION";
+   if(InpStrategy==STRATEGY_TURTLE_INTRADAY) return "TURTLE_INTRADAY";
    return "ENSEMBLE";
 }
 
@@ -374,8 +371,9 @@ int BackoffSeconds(int status)
 bool TelemetryCanSend()
 {
    if(!SBTEnabled) return false;
-   if(nextTelemetryAllowed==0) return true;
-   return TimeCurrent()>=nextTelemetryAllowed;
+   if(nextTelemetryAllowed>0 && TimeCurrent()<nextTelemetryAllowed) return false;
+   if(lastTelemetry>0 && (TimeCurrent()-lastTelemetry)<TelemetryIntervalSec) return false;
+   return true;
 }
 
 bool SendTelemetry(string payload)
@@ -480,14 +478,14 @@ void Telemetry()
    p+="\"status\":\""+JsonEscape(telemetryStatus)+"\",";
    p+="\"failures\":"+IntegerToString(telemetryFailures)+"},";
    p+="\"counters\":{";
-   p+="\"bars_observed\":"+IntegerToString((int)barsObserved)+",";
-   p+="\"signals\":"+IntegerToString((int)signalCount)+",";
-   p+="\"buy_signals\":"+IntegerToString((int)buySignals)+",";
-   p+="\"sell_signals\":"+IntegerToString((int)sellSignals)+",";
-   p+="\"block_session\":"+IntegerToString((int)blockSession)+",";
-   p+="\"block_spread\":"+IntegerToString((int)blockSpread)+",";
-   p+="\"block_daily_dd\":"+IntegerToString((int)blockDailyDD)+",";
-   p+="\"block_trade_limit\":"+IntegerToString((int)blockTradeLimit)+"},";
+   p+="\"bars_observed\":"+IntegerToString(barsObserved)+",";
+   p+="\"signals\":"+IntegerToString(signalCount)+",";
+   p+="\"buy_signals\":"+IntegerToString(buySignals)+",";
+   p+="\"sell_signals\":"+IntegerToString(sellSignals)+",";
+   p+="\"block_session\":"+IntegerToString(blockSession)+",";
+   p+="\"block_spread\":"+IntegerToString(blockSpread)+",";
+   p+="\"block_daily_dd\":"+IntegerToString(blockDailyDD)+",";
+   p+="\"block_trade_limit\":"+IntegerToString(blockTradeLimit)+"},";
    p+="\"bot\":{";
    p+="\"id\":\""+JsonEscape(experiment)+"\",";
    p+="\"strategy\":\""+JsonEscape(strategy)+"\",";
