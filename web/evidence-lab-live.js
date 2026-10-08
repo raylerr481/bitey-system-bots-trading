@@ -59,7 +59,8 @@
       magic: Number(r.bot?.magic),
       slippage_points: Number(r.slippage_points ?? risk.slippage_points),
       stop_atr: Number(r.stop_atr ?? r.strategy_params?.stop_atr),
-      target_r: Number(r.target_r ?? r.strategy_params?.target_r)
+      target_r: Number(r.target_r ?? r.strategy_params?.target_r),
+      hard_risk_usd: Number(risk.hard_risk_usd)
     };
 
     return {
@@ -89,6 +90,10 @@
       capital_ratio_pct: Number(cap.sbt_capital_as_pct_of_mt4_balance),
       capital_multiple: Number(cap.mt4_balance_multiple_of_sbt_capital),
       mt4_params: mt4Params,
+      htf_direction: r.htf_direction || r.htf || '—',
+      buy_ev: Number(r.buy_ev), sell_ev: Number(r.sell_ev),
+      buy_pf: Number(r.buy_pf), sell_pf: Number(r.sell_pf),
+      wfo_positive: r.wfo_positive || '—',
       age: ageSec(r.timestamp)
     };
   }
@@ -129,7 +134,7 @@
       return;
     }
 
-    text('mt4LiveTitle', (r.bot?.name || 'Bitey Evidence Lab v1.02') + ' · ' + r.symbol + ' · ' + r.timeframe);
+    text('mt4LiveTitle', (r.bot?.name || 'Bitey SBT Evidence Lab v1.15') + ' · ' + r.symbol + ' · ' + r.timeframe);
     const hb = document.getElementById('mt4LiveHeartbeat');
     if (hb) {
       const fresh = r.age < 90;
@@ -140,7 +145,7 @@
     const vals = [
       ['SIGNAL', r.signal], ['DIRECTION', r.direction], ['REGIME', r.regime], ['POSITIONS', r.positions],
       ['SBT CAPITAL', '$' + n(r.operational_capital)], ['RISK', n(r.risk.risk_pct,3) + '%'],
-      ['MT4 DD', n(r.mt4_dd_pct,3) + '%'], ['TRADES', r.metrics.trades_today ?? '—']
+      ['MT4 DD', n(r.mt4_dd_pct,3) + '%'], ['TRADES', r.metrics.trades_today ?? '—'], ['HTF', r.htf_direction]
     ];
     const grid = document.getElementById('mt4LiveGrid');
     if (grid) grid.innerHTML = vals.map(([k,v]) =>
@@ -168,7 +173,7 @@
       ['MAX SPREAD', n(p.max_spread_points,1)],
       ['MAX TRADES/DAY', Number.isFinite(p.max_trades_day) ? p.max_trades_day : '—'],
       ['MAX OPEN', Number.isFinite(p.max_open_trades) ? p.max_open_trades : '—'],
-      ['MAGIC', Number.isFinite(p.magic) ? p.magic : '—']
+      ['MAGIC', Number.isFinite(p.magic) ? p.magic : '—'], ['HARD RISK', '
     ];
     const pg = document.getElementById('mt4ParamsGrid');
     if (pg) pg.innerHTML = paramVals.map(([k,v]) =>
@@ -196,17 +201,17 @@
     text('eccMt4', r.age < 90 ? 'ONLINE' : 'STALE');
     text('eccMt4Meta', r.symbol + ' · ' + r.timeframe + ' · heartbeat ' + n(r.age,0) + 's');
     text('eccBots', '1');
-    text('eccBotsMeta', r.bot?.name || 'Bitey Evidence Lab v1.02');
+    text('eccBotsMeta', r.bot?.name || 'Bitey SBT Evidence Lab v1.15');
     text('eccMarket', r.symbol + ' · ' + r.timeframe);
     text('eccChartTf', r.chart_timeframe || 'H1');
     text('eccMode', 'MT4 DEMO / TRADER WILL');
-    text('eccBot', r.bot?.name || 'Bitey Evidence Lab v1.02');
+    text('eccBot', r.bot?.name || 'Bitey SBT Evidence Lab v1.15');
     text('eccSignal', (r.signal || 'NONE') + ' · ' + (r.regime || 'UNKNOWN'));
     text('eccNext', r.signal === 'BUY' || r.signal === 'SELL' ? 'Evaluar Risk Gate / ejecución MT4' : 'Esperando señal válida');
     text('eccNotice', 'MT4 snapshot recibido. MT4 conserva la autoridad de ejecución; SBT Risk Gate conserva el límite operativo.');
     text('dashboardEvidence', r.signal && r.signal !== 'NONE' ? 'LIVE SNAPSHOT' : 'WAITING MT4');
 
-    text('observerSelectedBot', r.bot?.name || 'Bitey Evidence Lab v1.02');
+    text('observerSelectedBot', r.bot?.name || 'Bitey SBT Evidence Lab v1.15');
     text('observerSignal', r.signal);
     text('observerRegime', r.regime);
     text('observerDirection', r.direction);
@@ -214,7 +219,7 @@
     text('observerRiskDD', n(r.sbt_dd_pct ?? m.daily_drawdown_pct,3) + '%');
     text('observerExplanation', 'Snapshot MT4 recibido. SBT usa $500 como capital operativo; el balance del broker solo se observa.');
 
-    text('aiBotName', r.bot?.name || 'Bitey Evidence Lab v1.02');
+    text('aiBotName', r.bot?.name || 'Bitey SBT Evidence Lab v1.15');
     text('aiBotConnection', r.age < 90 ? 'MT4 conectado' : 'MT4 stale');
     text('aiBotMarket', r.symbol + ' · ' + r.timeframe);
     text('aiBotMode', 'MT4 DEMO / TRADER WILL · reported mode ' + (r.mode || 'UNKNOWN'));
@@ -260,7 +265,7 @@
     text('turtleCampaignMeta', tm.reason || (r.signal !== 'NONE' ? 'Señal MT4 recibida' : 'Sin señal activa'));
     text('turtleUnits', String(r.positions));
     text('turtleDirection', r.direction || 'FLAT');
-    text('turtleSystem', r.bot?.name || 'Bitey Evidence Lab v1.02');
+    text('turtleSystem', r.bot?.name || 'Bitey SBT Evidence Lab v1.15');
     text('turtleDir', r.direction || 'FLAT');
     text('turtleLastEntry', tm.last_entry ?? turtle.last_entry ?? '—');
     text('turtleCampaignN', tm.campaign_n ?? turtle.campaign_n ?? '—');
@@ -369,14 +374,20 @@
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, {once:true});
   else boot();
-})(); + n(p.reference_capital_usd)],
-      ['RISK %', n(p.risk_pct,3) + '%'],
-      ['RISK BUDGET', '
-      'Risk basis: SBT operational capital $' + n(r.operational_capital) +
-      ' · MT4 account is execution telemetry only · MT4 mode reported: ' + (r.mode || 'UNKNOWN') +
-      ' · MT4 environment: DEMO / TRADER WILL · Last change: ' + r.signal_change);
-  }
+})(); + n(p.hard_risk_usd)]
+    ];
+    const pg = document.getElementById('mt4ParamsGrid');
+    if (pg) pg.innerHTML = paramVals.map(([k,v]) =>
+      '<div style="padding:7px 8px;background:#0b151d;border:1px solid #1b2a36;border-radius:7px"><span style="display:block;color:#6f8090;font-size:8px">' +
+      k + '</span><b style="display:block;margin-top:3px">' + esc(v) + '</b></div>').join('');
 
+    const accountMode = String(r.mode || r.account_mode || r.account?.mode || 'UNKNOWN').toUpperCase();
+    const virtualMoney = accountMode !== 'REAL';
+    text('mt4LiveMeta',
+      'MT4 source · mode: ' + accountMode +
+      ' · VIRTUAL_MONEY=' + (virtualMoney ? 'true' : 'false') +
+      ' · LIVE=true · Last change: ' + r.signal_change);
+  }
   function fillPageSpecific(r) {
     if (!r) return;
     const m = r.metrics || {}, a = r.account || {}, risk = r.risk || {}, c = r.counters || m;
@@ -391,17 +402,17 @@
     text('eccMt4', r.age < 90 ? 'ONLINE' : 'STALE');
     text('eccMt4Meta', r.symbol + ' · ' + r.timeframe + ' · heartbeat ' + n(r.age,0) + 's');
     text('eccBots', '1');
-    text('eccBotsMeta', r.bot?.name || 'Bitey Evidence Lab v1.02');
+    text('eccBotsMeta', r.bot?.name || 'Bitey SBT Evidence Lab v1.15');
     text('eccMarket', r.symbol + ' · ' + r.timeframe);
     text('eccChartTf', r.chart_timeframe || 'H1');
     text('eccMode', 'MT4 DEMO / TRADER WILL');
-    text('eccBot', r.bot?.name || 'Bitey Evidence Lab v1.02');
+    text('eccBot', r.bot?.name || 'Bitey SBT Evidence Lab v1.15');
     text('eccSignal', (r.signal || 'NONE') + ' · ' + (r.regime || 'UNKNOWN'));
     text('eccNext', r.signal === 'BUY' || r.signal === 'SELL' ? 'Evaluar Risk Gate / ejecución MT4' : 'Esperando señal válida');
     text('eccNotice', 'MT4 snapshot recibido. MT4 conserva la autoridad de ejecución; SBT Risk Gate conserva el límite operativo.');
     text('dashboardEvidence', r.signal && r.signal !== 'NONE' ? 'LIVE SNAPSHOT' : 'WAITING MT4');
 
-    text('observerSelectedBot', r.bot?.name || 'Bitey Evidence Lab v1.02');
+    text('observerSelectedBot', r.bot?.name || 'Bitey SBT Evidence Lab v1.15');
     text('observerSignal', r.signal);
     text('observerRegime', r.regime);
     text('observerDirection', r.direction);
@@ -409,7 +420,7 @@
     text('observerRiskDD', n(r.sbt_dd_pct ?? m.daily_drawdown_pct,3) + '%');
     text('observerExplanation', 'Snapshot MT4 recibido. SBT usa $500 como capital operativo; el balance del broker solo se observa.');
 
-    text('aiBotName', r.bot?.name || 'Bitey Evidence Lab v1.02');
+    text('aiBotName', r.bot?.name || 'Bitey SBT Evidence Lab v1.15');
     text('aiBotConnection', r.age < 90 ? 'MT4 conectado' : 'MT4 stale');
     text('aiBotMarket', r.symbol + ' · ' + r.timeframe);
     text('aiBotMode', 'MT4 DEMO / TRADER WILL · reported mode ' + (r.mode || 'UNKNOWN'));
@@ -417,8 +428,7 @@
     text('aiProductionStatus', 'DEMO · MT4 EXECUTION UNDER RISK GATE');
     text('aiBotParams',
       'Strategy=' + r.strategy + ' · TF=' + r.timeframe + ' · Chart=' + r.chart_timeframe +
-      ' · SBT Capital=$' + n(r.operational_capital) + ' · Risk=' + n(risk.risk_pct,3) + '%' +
-      ' · MT4 Balance=$' + n(r.mt4_balance));
+      ' · Reference=
     const msg = document.getElementById('aiBotMessages');
     if (msg) msg.innerHTML =
       '• Señal: ' + signalBadge(r.signal) + '<br>• Dirección: ' + esc(r.direction) +
@@ -456,7 +466,7 @@
     text('turtleCampaignMeta', tm.reason || (r.signal !== 'NONE' ? 'Señal MT4 recibida' : 'Sin señal activa'));
     text('turtleUnits', String(r.positions));
     text('turtleDirection', r.direction || 'FLAT');
-    text('turtleSystem', r.bot?.name || 'Bitey Evidence Lab v1.02');
+    text('turtleSystem', r.bot?.name || 'Bitey SBT Evidence Lab v1.15');
     text('turtleDir', r.direction || 'FLAT');
     text('turtleLastEntry', tm.last_entry ?? turtle.last_entry ?? '—');
     text('turtleCampaignN', tm.campaign_n ?? turtle.campaign_n ?? '—');
@@ -533,3 +543,36 @@
     });
   }
 
+  async function refresh() {
+    try {
+      const [latest, history, trades] = await Promise.all([
+        get('/api/v1/mt4/bitey-latest'),
+        get('/api/v1/mt4/bitey-history?limit=20'),
+        get('/api/v1/mt4/trades?limit=20')
+      ]);
+      const r = normalize(latest);
+      renderGlobal(r);
+      ensureRiskPanel();
+      fillPageSpecific(r);
+      renderHistory(history?.items || []);
+      renderTrades(trades?.items || []);
+      window.dispatchEvent(new CustomEvent('sbt:mt4-live', {
+        detail: { report:r, history:history?.items || [], trades:trades?.items || [] }
+      }));
+    } catch (e) {
+      renderGlobal(null);
+      const st = document.getElementById('apiStatus');
+      if (st) st.textContent = 'SBT MT4 API unavailable';
+    }
+  }
+
+  function boot() {
+    ensureGlobalPanel();
+    ensureRiskPanel();
+    refresh();
+    setInterval(refresh, 5000);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, {once:true});
+  else boot();
+})();
