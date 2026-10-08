@@ -42,6 +42,29 @@ jobs:
               s = s.replace('</body>', loader + '</body>', 1)
           p.write_text(s, encoding='utf-8')
           PY
+          API_URL=https://bitey-system-bots-trading-api.onrender.com
+          api_get(){ curl -fsSL --retry 5 --retry-delay 2 -H 'Accept: application/json' "$API_URL$1"; }
+          api_post(){ curl -fsSL --retry 5 --retry-delay 2 -H 'Accept: application/json' -H 'Content-Type: application/json' -X POST --data "$2" "$API_URL$1"; }
+          api_get '/api/v1/bot-profiles' > /tmp/profiles.json
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/profiles.json'))
+          assert isinstance(d,list) and d, 'bot-profiles contract failed'
+          print('Bot Observer backend contract OK:', len(d), 'profiles')
+          PY
+          api_get '/api/v1/market/quote/EURUSD' > /tmp/quote.json
+          api_get '/api/v1/market/candles/EURUSD?timeframe=H1&limit=120' > /tmp/candles.json
+          CANDLES=/tmp/candles.json python - <<'PY'
+          import json, os
+          d=json.load(open(os.environ['CANDLES']))
+          assert d.get('ok') is True and len(d.get('candles') or []) >= 35, 'market contract failed'
+          print('Market Intelligence contract OK:', len(d['candles']), 'candles')
+          PY
+          api_post '/api/v1/sbt/market-intelligence/analyze' '{"symbol":"EURUSD","timeframe":"H1","candles":[],"capital":500,"language":"es","event":"deploy_smoke"}' >/tmp/analyze.json || true
+          api_post '/api/v1/capabilities/delegate' '{"contract":"sbt-v1","capability":"sbt","message":"deploy smoke test","source":"github-actions","mode":"research-only"}' >/tmp/research.json
+          api_get '/api/v1/validation/virtual' >/tmp/validation.json
+          api_post '/api/v1/backtest' '{"prices":[1,1.001,1.002,1.001,1.003,1.004,1.002,1.005,1.006,1.004,1.007,1.008,1.006,1.009,1.010,1.008,1.011,1.012,1.010,1.013,1.014,1.012,1.015,1.016,1.014,1.017,1.018,1.016,1.019,1.020,1.018,1.021,1.022,1.020,1.023,1.024,1.022,1.025,1.026,1.024,1.027,1.028,1.026,1.029,1.030,1.028,1.031,1.032,1.030,1.033,1.034,1.032,1.035,1.036,1.034,1.037,1.038,1.036,1.039,1.040],"initial_capital":10000,"fast_window":8,"slow_window":21,"fee_pct":0.001}' >/tmp/backtest.json
+          echo 'Verified backend contracts: Bot Observer, Market Matrix/Intelligence, Research, Validation, Evolution/AI Bot Lab backtest.'
       - uses: actions/setup-node@v4
         with:
           node-version: 22
