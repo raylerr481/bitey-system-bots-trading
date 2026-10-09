@@ -6,7 +6,7 @@
 #property strict
 #property version "1.30"
 
-input string InpSbtClosedTradeURL = "https://bitey-system-bots-trading-api.onrender.com/api/v1/mt4/trade-closed";
+input string InpSbtClosedTradeURL = "https://bitey-system-bots-trading.raylerr481.workers.dev/api/v1/mt4/trade-closed";
 input string InpMT4Token = "";
 input int    InpPollSeconds = 2;
 input int    InpWebRequestTimeoutMs = 8000;
