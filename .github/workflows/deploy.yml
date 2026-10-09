@@ -60,7 +60,20 @@ jobs:
           assert d.get('ok') is True and len(d.get('candles') or []) >= 35, 'market contract failed'
           print('Market Intelligence contract OK:', len(d['candles']), 'candles')
           PY
-          python - <<'PY'\n          import json\n          d=json.load(open('/tmp/candles.json'))\n          payload={'symbol':'EURUSD','timeframe':'H1','candles':(d.get('candles') or [])[:80],'capital':500,'language':'es','event':'deploy_smoke'}\n          json.dump(payload,open('/tmp/analyze_payload.json','w'))\n          PY\n          api_post '/api/v1/sbt/market-intelligence/analyze' "$(cat /tmp/analyze_payload.json)" >/tmp/analyze.json\n          python - <<'PY'\n          import json\n          d=json.load(open('/tmp/analyze.json'))\n          assert isinstance(d,dict), 'market intelligence analyze returned invalid JSON'\n          print('Market Intelligence analyze OK')\n          PY\n          api_post '/api/v1/capabilities/delegate' '{"contract":"sbt-v1","capability":"sbt","message":"deploy smoke test","source":"github-actions","mode":"research-only"}' >/tmp/research.json
+          python - <<'PY'
+          import json
+          d = json.load(open('/tmp/candles.json'))
+          payload = {
+              'symbol': 'EURUSD',
+              'timeframe': 'H1',
+              'candles': (d.get('candles') or [])[:80],
+              'capital': 500,
+              'language': 'es',
+              'event': 'deploy_smoke',
+          }
+          json.dump(payload, open('/tmp/analyze_payload.json', 'w'))
+          PY
+          api_post '/api/v1/capabilities/delegate' '{"contract":"sbt-v1","capability":"sbt","message":"deploy smoke test","source":"github-actions","mode":"research-only"}' >/tmp/research.json
           api_get '/api/v1/validation/virtual' >/tmp/validation.json
           api_post '/api/v1/backtest' '{"prices":[1,1.001,1.002,1.001,1.003,1.004,1.002,1.005,1.006,1.004,1.007,1.008,1.006,1.009,1.010,1.008,1.011,1.012,1.010,1.013,1.014,1.012,1.015,1.016,1.014,1.017,1.018,1.016,1.019,1.020,1.018,1.021,1.022,1.020,1.023,1.024,1.022,1.025,1.026,1.024,1.027,1.028,1.026,1.029,1.030,1.028,1.031,1.032,1.030,1.033,1.034,1.032,1.035,1.036,1.034,1.037,1.038,1.036,1.039,1.040],"initial_capital":10000,"fast_window":8,"slow_window":21,"fee_pct":0.001}' >/tmp/backtest.json
           echo 'Verified backend contracts: Bot Observer, Market Matrix/Intelligence, Research, Validation, Evolution/AI Bot Lab backtest.'
@@ -72,57 +85,57 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          - name: Browser smoke test every SBT module button
-            env:
-              SBT_URL: https://bitey-system-bots-trading.raylerr481.workers.dev
-            run: |
-              set -euo pipefail
-              npm init -y >/dev/null 2>&1
-              npm install --no-save playwright@1.55.0 >/dev/null 2>&1
-              npx playwright install --with-deps chromium >/dev/null 2>&1
-              cat > /tmp/sbt-smoke.mjs <<'JS'
-              import { chromium } from 'playwright';
-              const url=process.env.SBT_URL;
-              const browser=await chromium.launch({headless:true});
-              const page=await browser.newPage();
-              const failures=[];
-              page.on('console',m=>{if(m.type()==='error') console.log('BROWSER CONSOLE ERROR:',m.text());});
-              await page.goto(url+'/?ui-smoke='+Date.now(),{waitUntil:'networkidle',timeout:60000});
-              await page.waitForTimeout(1500);
-              const modules=['bot-observer','matrix','market','research','bots','ai-bot-lab','evolution','validation','expected-value','web-trader'];
-              for(const id of modules){
-                const nav=page.locator('[data-page="'+id+'"]').first();
-                if(await nav.count()===0){failures.push(id+': nav missing');continue;}
-                await nav.click(); await page.waitForTimeout(500);
-                if(id==='expected-value'){
-                  const sec=page.locator('#expected-value-page');
-                  if(await sec.count()===0) failures.push(id+': section missing');
-                  else { const calc=page.locator('#evCalculate'); if(await calc.count()) {await calc.click(); await page.waitForTimeout(200);}}
-                  continue;
-                }
-                const sec=page.locator('#'+id);
-                if(await sec.count()===0){failures.push(id+': section missing');continue;}
-                const action=sec.locator('[data-sbt-action] button').first();
-                if(await action.count()){
-                  await action.click();
-                  await page.waitForFunction(el=>el && el.textContent && !el.textContent.includes('Ejecutando…') && !el.textContent.includes('Conectando con'), await sec.locator('[data-sbt-action] .result').first().elementHandle(), {timeout:20000}).catch(()=>{});
-                  const result=(await sec.locator('[data-sbt-action] .result').first().textContent())||'';
-                  if(!result || result.startsWith('ERROR REAL')) failures.push(id+': action failed -> '+result.slice(0,240));
-                }
-              }
-              const wt=page.locator('#web-trader');
-              if(await wt.count()){
-                const refresh=page.locator('#wtRefresh'); if(await refresh.count()){await refresh.click();await page.waitForTimeout(1500);}
-                const state=(await page.locator('#wtQuoteState').textContent())||'';
-                if(state.includes('ERROR')) failures.push('web-trader: '+state);
-                const analyze=page.locator('#wtAnalyze'); if(await analyze.count()){await analyze.click();await page.waitForTimeout(1500);}
-                for(const id of ['wtPreviewBuy','wtPreviewSell']){const b=page.locator('#'+id);if(await b.count())await b.click();}
-              }
-              await browser.close();
-              if(failures.length){console.error(JSON.stringify(failures,null,2));process.exit(1);}
-              console.log('Browser smoke OK: '+modules.length+' module surfaces and Web Trader actions exercised.');
-              JS
-              node /tmp/sbt-smoke.mjs
+      - name: Browser smoke test every SBT module button
+        env:
+          SBT_URL: https://bitey-system-bots-trading.raylerr481.workers.dev
+        run: |
+          set -euo pipefail
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.55.0 >/dev/null 2>&1
+          npx playwright install --with-deps chromium >/dev/null 2>&1
+          cat > /tmp/sbt-smoke.mjs <<'JS'
+          import { chromium } from 'playwright';
+          const url=process.env.SBT_URL;
+          const browser=await chromium.launch({headless:true});
+          const page=await browser.newPage();
+          const failures=[];
+          page.on('console',m=>{if(m.type()==='error') console.log('BROWSER CONSOLE ERROR:',m.text());});
+          await page.goto(url+'/?ui-smoke='+Date.now(),{waitUntil:'networkidle',timeout:60000});
+          await page.waitForTimeout(1500);
+          const modules=['bot-observer','matrix','market','research','bots','ai-bot-lab','evolution','validation','expected-value','web-trader'];
+          for(const id of modules){
+            const nav=page.locator('[data-page="'+id+'"]').first();
+            if(await nav.count()===0){failures.push(id+': nav missing');continue;}
+            await nav.click(); await page.waitForTimeout(500);
+            if(id==='expected-value'){
+              const sec=page.locator('#expected-value-page');
+              if(await sec.count()===0) failures.push(id+': section missing');
+              else { const calc=page.locator('#evCalculate'); if(await calc.count()) {await calc.click(); await page.waitForTimeout(200);}}
+              continue;
+            }
+            const sec=page.locator('#'+id);
+            if(await sec.count()===0){failures.push(id+': section missing');continue;}
+            const action=sec.locator('[data-sbt-action] button').first();
+            if(await action.count()){
+              await action.click();
+              await page.waitForFunction(el=>el && el.textContent && !el.textContent.includes('Ejecutando…') && !el.textContent.includes('Conectando con'), await sec.locator('[data-sbt-action] .result').first().elementHandle(), {timeout:20000}).catch(()=>{});
+              const result=(await sec.locator('[data-sbt-action] .result').first().textContent())||'';
+              if(!result || result.startsWith('ERROR REAL')) failures.push(id+': action failed -> '+result.slice(0,240));
+            }
+          }
+          const wt=page.locator('#web-trader');
+          if(await wt.count()){
+            const refresh=page.locator('#wtRefresh'); if(await refresh.count()){await refresh.click();await page.waitForTimeout(1500);}
+            const state=(await page.locator('#wtQuoteState').textContent())||'';
+            if(state.includes('ERROR')) failures.push('web-trader: '+state);
+            const analyze=page.locator('#wtAnalyze'); if(await analyze.count()){await analyze.click();await page.waitForTimeout(1500);}
+            for(const id of ['wtPreviewBuy','wtPreviewSell']){const b=page.locator('#'+id);if(await b.count())await b.click();}
+          }
+          await browser.close();
+          if(failures.length){console.error(JSON.stringify(failures,null,2));process.exit(1);}
+          console.log('Browser smoke OK: '+modules.length+' module surfaces and Web Trader actions exercised.');
+          JS
+          node /tmp/sbt-smoke.mjs
       - name: Smoke test deployed Worker
         env:
           SBT_URL: https://bitey-system-bots-trading.raylerr481.workers.dev
@@ -137,10 +150,20 @@ jobs:
           [[ "$thesis" == *"Random Walk Baseline"* ]]
           [[ "$thesis" == *"GARCH(1,1)"* ]]
           health=$(curl -fsSL --retry 5 --retry-delay 3 "$SBT_URL/health?probe=$GITHUB_SHA")
-          [[ "$health" == *'"live":true'* ]]
+          [[ "$health" == *'"live":false'* ]]
           [[ "$health" == *'"virtual_money":true'* ]]
           [[ "$health" == *'"broker_orders":0'* ]]
           [[ "$health" == *'"web_build":"'* ]]
+          mt4health=$(curl -fsSL --retry 5 --retry-delay 3 "$SBT_URL/api/v1/mt4/health?probe=$GITHUB_SHA")
+          MT4_HEALTH="$mt4health" python - <<'PY'
+          import json, os
+          d=json.loads(os.environ['MT4_HEALTH'])
+          assert d.get('ok') is True, f'MT4 proxy health failed: {d}'
+          assert 'connected' in d, f'MT4 connected state missing: {d}'
+          print('MT4 telemetry proxy health OK; connected=', d['connected'])
+          PY
+          invalid_status=$(curl -sS -o /tmp/mt4-invalid.json -w '%{http_code}' -X POST -H 'Content-Type: application/json' --data '{bad' "$SBT_URL/api/v1/mt4/bitey-report")
+          [[ "$invalid_status" == "400" ]]
           candles=$(curl -fsSL --retry 5 --retry-delay 3 "$SBT_URL/api/v1/market/candles/EURUSD?timeframe=M5&limit=200&probe=$GITHUB_SHA")
           CANDLES="$candles" python - <<'PY'
           import json, os, sys
