@@ -5,7 +5,7 @@
 //+------------------------------------------------------------------+
 #property strict
 
-input string BiteySnapshotURL = "https://bitey-system-bots-trading-api.onrender.com/api/v1/mt4/bitey-report";
+input string BiteySnapshotURL = "https://bitey-system-bots-trading.raylerr481.workers.dev/api/v1/mt4/bitey-report";
 input string BiteyMT4Token = "";
 input bool   BiteySnapshotEnabled = true;
 input int    BiteyWebRequestTimeoutMs = 5000;
