@@ -7,12 +7,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_frontend_html_has_one_balanced_document_shell():
     html = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
-    assert len(re.findall(r"<body\\b", html, re.I)) == 1
-    assert len(re.findall(r"</body\\s*>", html, re.I)) == 1
-    assert len(re.findall(r"<html\\b", html, re.I)) == 1
-    assert len(re.findall(r"</html\\s*>", html, re.I)) == 1
-    assert len(re.findall(r"<script\\b", html, re.I)) == len(
-        re.findall(r"</script\\s*>", html, re.I)
+    assert len(re.findall(r"<body\b", html, re.I)) == 1
+    assert len(re.findall(r"</body\s*>", html, re.I)) == 1
+    assert len(re.findall(r"<html\b", html, re.I)) == 1
+    assert len(re.findall(r"</html\s*>", html, re.I)) == 1
+    assert len(re.findall(r"<script\b", html, re.I)) == len(
+        re.findall(r"</script\s*>", html, re.I)
     )
     assert html.rstrip().lower().endswith("</body>\n</html>")
 
