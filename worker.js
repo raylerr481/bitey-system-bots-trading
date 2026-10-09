@@ -56,7 +56,7 @@ export default {
 
     if (url.pathname === '/health') return json({ service: 'bitey-system-bots-trading', status: 'ok', mode: 'research-demo', live: false, virtual_money: true, broker_orders: 0, mt4_telemetry_proxy: true, web_build: BUILD });
 
-    if (url.pathname === '/api/v1/system') return json({ ok: true, service: 'bitey-system-bots-trading', live_trading_enabled: true, virtual_money: true, broker_orders: 0, market_data: 'public-readonly', provider: 'Yahoo Finance public chart endpoint' });
+    if (url.pathname === '/api/v1/system') return json({ ok: true, service: 'bitey-system-bots-trading', live_trading_enabled: false, execution_enabled: false, real_money_enabled: false, virtual_money: true, broker_orders: 0, market_data: 'public-readonly', provider: 'Yahoo Finance public chart endpoint', mt4_telemetry_proxy: true });
 
     if (url.pathname === '/api/v1/market/quote' || url.pathname.startsWith('/api/v1/market/quote/')) {
       try {
