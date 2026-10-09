@@ -30,6 +30,8 @@ def test_market_analysis_uses_operating_capital_not_a_hardcoded_10000():
     assert "function operatingCapitalUsd()" in trader
     assert "capital:10000" not in trader
     assert "sbt_operating_capital_usd" in trader
+    assert "data-sbt-operating-capital" in trader
+    assert "Capital de análisis (USD; no es el saldo de MT4)" in trader
 
 
 def test_terminal_dom_sync_is_not_polled_every_1_5_seconds():
