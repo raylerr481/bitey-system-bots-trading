@@ -97,6 +97,41 @@ export default {
         element.append(`<script src="/runtime.js?v=20261007mt4telemetryfix2"></script>`, { html: true });
         element.append(`<script>
 (() => {
+  async function syncMt4Bridge() {
+    const label = document.getElementById('apiStatus');
+    const dot = document.querySelector('.top .status .dot');
+    if (!label) return;
+    try {
+      const response = await fetch('/api/v1/mt4/health', { cache: 'no-store' });
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.error || 'backend_unavailable');
+      if (data.connected) {
+        const mode = String(data.account?.mode || 'UNKNOWN').toUpperCase();
+        label.textContent = 'MT4 CONNECTED · ' + mode;
+        if (dot) dot.style.background = 'var(--accent)';
+        const env = document.getElementById('terminalEnvironment');
+        if (env) env.textContent = 'MT4 TELEMETRY · ' + mode;
+        label.title = data.last_seen ? 'Last report: ' + data.last_seen : 'MT4 telemetry connected';
+      } else {
+        label.textContent = 'MT4 AWAITING TELEMETRY';
+        if (dot) dot.style.background = 'var(--warn)';
+        const env = document.getElementById('terminalEnvironment');
+        if (env) env.textContent = 'AWAITING MT4 REPORT';
+        label.title = 'The backend is reachable, but no MT4 snapshot is currently registered.';
+      }
+    } catch (_) {
+      label.textContent = 'SBT API UNAVAILABLE';
+      if (dot) dot.style.background = 'var(--danger)';
+      label.title = 'Could not verify the MT4 telemetry connection.';
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', syncMt4Bridge, { once: true });
+  else syncMt4Bridge();
+  setInterval(syncMt4Bridge, 30000);
+})();
+</script>`, { html: true });
+        element.append(`<script>
+(() => {
   const closeMobileMenu=()=>{const side=document.getElementById('side');if(side)side.classList.remove('open');};
   const getMarketRow=()=>Array.from(document.querySelectorAll('.risk')).find(item=>item.querySelector('span')?.textContent?.trim().toLowerCase()==='market data');
   const canonical=()=>window.BiteySBTMarketState?.canonical||null;
