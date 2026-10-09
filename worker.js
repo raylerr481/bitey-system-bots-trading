@@ -1,3 +1,5 @@
+import { handleMt4Proxy } from './mt4-proxy.js';
+
 const json = (data, status = 200, extra = {}) => new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store, no-cache, must-revalidate, max-age=0', 'access-control-allow-origin': '*', ...extra } });
 
 const SYMBOL_MAP = {
@@ -46,9 +48,13 @@ async function yahooChart(symbol, timeframe, limit = 200) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const BUILD = '20261008-functional-modules';
+    const BUILD = '20261009-mt4-telemetry-proxy-v1';
 
-    if (url.pathname === '/health') return json({ service: 'bitey-system-bots-trading', status: 'ok', mode: 'research-demo', live: true, virtual_money: true, broker_orders: 0, web_build: BUILD });
+    if (url.pathname.startsWith('/api/v1/mt4/')) {
+      return handleMt4Proxy(request, env, url.pathname);
+    }
+
+    if (url.pathname === '/health') return json({ service: 'bitey-system-bots-trading', status: 'ok', mode: 'research-demo', live: false, virtual_money: true, broker_orders: 0, mt4_telemetry_proxy: true, web_build: BUILD });
 
     if (url.pathname === '/api/v1/system') return json({ ok: true, service: 'bitey-system-bots-trading', live_trading_enabled: true, virtual_money: true, broker_orders: 0, market_data: 'public-readonly', provider: 'Yahoo Finance public chart endpoint' });
 
