@@ -329,3 +329,29 @@ Never import competitor code, assets, text, logos, screenshots or proprietary im
 Trading financial assets involves substantial risk, including loss of capital. Backtests, simulations, demo results and paper results do not guarantee future performance. Slippage, gaps, liquidity, execution failures and market-regime changes can materially alter results.
 
 Real-money trading remains disabled in the current implementation until the required technical, operational, security, legal and regulatory controls are validated and implemented.
+
+## MT4 EA — v1.52.0 profit-only adaptive SL/TP
+
+The MT4 Expert Advisor is a separate execution adapter. The downloadable source is a reconstructed test build, not a claim that MetaEditor compilation or broker execution has already been verified.
+
+### Position-management contract
+
+- Fixed strategy allocation: **USD 500**; the broker account balance does not redefine this cap.
+- One open position per canonical asset for this EA's magic number; no same-direction stacking.
+- Adaptive SL/TP management runs **only when floating net P/L is strictly greater than the configured threshold**, calculated as `OrderProfit + OrderSwap + OrderCommission`.
+- Default activation threshold: **net floating profit > USD 0.05**. At a net loss, zero, or profit at/below the threshold, adaptive management leaves the current SL and TP unchanged.
+- On a BUY, the SL may only rise and the TP may only extend upward. On a SELL, the SL may only fall and the TP may only extend downward. Existing protective levels are never loosened by the adaptive manager.
+- TP extension additionally requires favorable price movement and closed-bar trend confirmation.
+- Per-ticket modification cooldown and minimum ATR change reduce repeated tiny modifications.
+- Journal audit records the profit gate, requested SL/TP, MT4 modify result, error code and server readback.
+
+### MT4 test checklist
+
+1. Compile the MQ4 file in MetaEditor and resolve any compiler errors/warnings before attaching it.
+2. Test on a demo account and verify the EA's magic number and symbols.
+3. Confirm `SLTP PROFIT GATE` appears when net floating P/L is at or below the threshold and that adaptive modifications are not requested.
+4. When net floating P/L exceeds the threshold, inspect `SLTP MODIFY AUDIT` and verify `modifyOK`, `readbackOK`, `confirmedSL`, and `confirmedTP`.
+5. Confirm there is at most one position per canonical asset and that capital/risk gates remain active.
+
+The profit gate only controls **adaptive** changes. It does not remove the initial SL/TP, bypass broker protections, guarantee an exit price, or guarantee that a profitable trade cannot become a loss due to slippage, gaps or broker execution limits. The EA source must be compiled and validated in MT4 before use.
+
