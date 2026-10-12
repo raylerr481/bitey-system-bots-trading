@@ -46,7 +46,7 @@
 
   async function loadQLearning(){
     try{
-      const d=await fetch('https://bitey-ia-suprabrain.onrender.com/api/v1/q-learning/status',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error(r.status);return r.json();});
+      const d=await fetch('https://bitey-ia-suprabain.onrender.com/api/v1/q-learning/status',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error(r.status);return r.json();});
       const s=d.status||d;
       const html='<div class="test-grid">'+[
         ['Algorithm',s.algorithm||'q-routing-v1'],['Enabled',s.enabled?'YES':'NO'],['States',s.states??0],
