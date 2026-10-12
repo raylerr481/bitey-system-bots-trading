@@ -33,16 +33,29 @@ async function yahooChart(symbol, timeframe, limit = 200) {
   if (!result) throw new Error(payload?.chart?.error?.description || 'market_provider_empty');
   const q = result.indicators?.quote?.[0] || {};
   const timestamps = result.timestamp || [];
-  const candles = timestamps.map((time, i) => ({
+  let candles = timestamps.map((time, i) => ({
     time,
     open: Number(q.open?.[i]), high: Number(q.high?.[i]), low: Number(q.low?.[i]), close: Number(q.close?.[i]), volume: Number(q.volume?.[i] || 0)
-  })).filter(c => [c.open, c.high, c.low, c.close].every(Number.isFinite)).slice(-Math.max(20, Math.min(Number(limit) || 200, 500)));
+  })).filter(c => [c.open, c.high, c.low, c.close].every(Number.isFinite));
+  // Yahoo Finance has no native 4-hour interval. Aggregate hourly bars into UTC-aligned H4 candles.
+  if (String(timeframe || '').toUpperCase() === 'H4') {
+    const buckets = new Map();
+    for (const c of candles) {
+      const bucketTime = Math.floor(c.time / 14400) * 14400;
+      const bucket = buckets.get(bucketTime);
+      if (!bucket) buckets.set(bucketTime, { time: bucketTime, open: c.open, high: c.high, low: c.low, close: c.close, volume: c.volume, count: 1 });
+      else { bucket.high = Math.max(bucket.high, c.high); bucket.low = Math.min(bucket.low, c.low); bucket.close = c.close; bucket.volume += c.volume; bucket.count += 1; }
+    }
+    candles = [...buckets.values()].filter(c => c.count === 4).map(({count, ...c}) => c);
+  }
+  candles = candles.slice(-Math.max(20, Math.min(Number(limit) || 200, 500)));
   const meta = result.meta || {};
   const price = Number(meta.regularMarketPrice ?? candles.at(-1)?.close);
   const prev = Number(meta.previousClose ?? candles.at(-2)?.close);
-  const bid = Number(meta.bid ?? price);
-  const ask = Number(meta.ask ?? price);
-  return { ticker, candles, price, bid: Number.isFinite(bid) ? bid : price, ask: Number.isFinite(ask) ? ask : price, previous: prev, currency: meta.currency || 'USD', exchange: meta.exchangeName || 'Yahoo Finance' };
+  // Public chart providers often omit executable bid/ask. Keep them unknown instead of fabricating a zero spread.
+  const bid = meta.bid == null ? null : Number(meta.bid);
+  const ask = meta.ask == null ? null : Number(meta.ask);
+  return { ticker, candles, price, bid: Number.isFinite(bid) ? bid : null, ask: Number.isFinite(ask) ? ask : null, previous: prev, currency: meta.currency || 'USD', exchange: meta.exchangeName || 'Yahoo Finance' };
 }
 
 export default {
@@ -64,7 +77,7 @@ export default {
         const symbol = pathSymbol || url.searchParams.get('symbol') || 'EURUSD';
         const tf = url.searchParams.get('timeframe') || 'M5';
         const m = await yahooChart(symbol, tf, 50);
-        const spread = Math.max(0, m.ask - m.bid);
+        const spread = Number.isFinite(m.bid) && Number.isFinite(m.ask) ? Math.max(0, m.ask - m.bid) : null;
         return json({ ok: true, symbol, source: 'yahoo-public', provider: 'yahoo-public', price: m.price, last: m.price, bid: m.bid, ask: m.ask, spread, previous_close: m.previous, currency: m.currency, exchange: m.exchange });
       } catch (e) { return json({ ok: false, available: false, error: String(e?.message || e), execution_enabled: false }, 502); }
     }
@@ -75,7 +88,7 @@ export default {
         const timeframe = url.searchParams.get('timeframe') || 'M5';
         const limit = Number(url.searchParams.get('limit') || 200);
         const m = await yahooChart(symbol, timeframe, limit);
-        return json({ ok: true, symbol, timeframe, source: 'yahoo-public', provider: 'yahoo-public', candles: m.candles, quote: { last: m.price, bid: m.bid, ask: m.ask, spread: Math.max(0, m.ask - m.bid) }, execution_enabled: false });
+        return json({ ok: true, symbol, timeframe, source: 'yahoo-public', provider: 'yahoo-public', candles: m.candles, quote: { last: m.price, bid: m.bid, ask: m.ask, spread: Number.isFinite(m.bid) && Number.isFinite(m.ask) ? Math.max(0, m.ask - m.bid) : null }, execution_enabled: false });
       } catch (e) { return json({ ok: false, available: false, candles: [], error: String(e?.message || e), execution_enabled: false }, 502); }
     }
 
@@ -94,7 +107,7 @@ export default {
 
     return new HTMLRewriter().on('body', {
       element(element) {
-        element.append(`<script src="/runtime.js?v=20261007mt4telemetryfix2"></script>`, { html: true });
+        // runtime.js is loaded by web/index.html; do not inject it a second time.
         element.append(`<script>
 (() => {
   async function syncMt4Bridge() {
