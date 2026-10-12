@@ -330,7 +330,7 @@ Trading financial assets involves substantial risk, including loss of capital. B
 
 Real-money trading remains disabled in the current implementation until the required technical, operational, security, legal and regulatory controls are validated and implemented.
 
-## MT4 EA — v1.52.0 profit-only adaptive SL/TP
+## MT4 EA — v1.58.0 adaptive risk ladder and three-candle profit-only SL/TP
 
 The MT4 Expert Advisor is a separate execution adapter. The downloadable source is a reconstructed test build, not a claim that MetaEditor compilation or broker execution has already been verified.
 
@@ -359,3 +359,10 @@ The profit gate only controls **adaptive** changes. It does not remove the initi
 ## Adaptive portfolio risk specification
 
 The complete adaptive risk and position-management rules are maintained in [docs/ADAPTIVE_TRADING_RULES.md](docs/ADAPTIVE_TRADING_RULES.md). The specification defines the USD 500 fixed strategic allocation; adaptive maximum risk per operation (USD 3 → 2 → 1 in losses and USD 5 → 6 → 7 → 8+ only after sustained, confirmed net profits); aggregate-risk and daily-loss gates; one managed position per canonical asset; and profit-only adaptive SL/TP changes after three consecutive favorable closed candles, with trend confirmation, no SL loosening, and MT4 readback audit. These are intended behavioral rules and must be verified against the current MQ4 source and MetaEditor/demo tests before claiming implementation or compilation is complete.
+
+
+### v1.58.0 adaptive-risk implementation
+
+The current downloadable test source adds the portfolio-conditioned per-trade risk ladder (USD 3 → 2 → 1 under losses; USD 5 → 6 → 7 → 8+ after sustained net profits), configurable persistence thresholds, a default USD 12 per-trade ceiling and USD 14 aggregate stop-risk ceiling. Adaptive SL/TP requires net floating profit above USD 0.05 and three consecutive favorable closed candles on the configured timeframe (H1 by default). It also wires MACD_CONFIRM and BOLLINGER_EXPANSION into the chart-local engine, bringing that engine to 16 model families, while retaining the separate 16-proxy cross-asset ranking, seven-asset allowlist, one-position-per-canonical-asset gate, train/holdout evidence, candidate ranking, telemetry, and modification readback audit.
+
+The source is a reconstructed test build. Static checks passed for balanced delimiters, duplicate input names, all 16 model names and signal wiring, risk-ladder branches, three-candle gating and aggregate-risk checks. **MetaEditor compilation and demo validation have not been performed here**; do not treat this as a compiled or broker-validated release.
