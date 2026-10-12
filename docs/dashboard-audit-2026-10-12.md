@@ -20,7 +20,7 @@
 
 ## Control-by-control source audit
 
-**Important:** "Static PASS" means the source contains a click handler or navigation route. It does not mean a real browser click or a live API request succeeded. Browser automation could not run because the Opera Browser Connector was disconnected; public endpoint probes were also inaccessible from the available web tool. Do not interpret pending tests as passing.
+**Important:** "Static PASS" means the source contains a click handler or navigation route. It does not mean a real browser click or a live API request succeeded. The Cloudflare deployment bot confirmed the branch preview deployment succeeded, but browser automation could not run because the Opera Browser Connector still reports disconnected, and direct endpoint probes were inaccessible from the available web tool. Do not interpret pending tests as passing.
 
 | Module / control | Expected action / endpoint | Static result | Live result |
 |---|---|---|---|
@@ -52,12 +52,19 @@
 | Account modal — Save workspace | Saves workspace name/preferences locally | PASS: click handler found | BLOCKED |
 | AI/provider/platform/permission selectors | Updates selected UI choices used by Build Plan | PASS: selector buttons found; behavior is local UI state | BLOCKED |
 
+## Preview deployment
+
+- Cloudflare Workers deployment bot reported **successful deployment** for commit `81bbe72a8714ef26262e2f11f7c319a9f5e4c271`.
+- Branch preview: `https://fix-q-learning-market-data-audit-bitey-system-bots-trading.raylerr481.workers.dev`.
+- Production `main` was not changed by this pull request; do not treat the preview deploy as a production deployment.
+- The browser/web test environment could not retrieve the preview URLs, so deployment success does not establish that each UI control or API endpoint works at runtime.
+
 ## Automated test result
 
 - GitHub Actions workflow: `SBT tests`, run #659 (run ID `38302147693`).
 - Job `tests`: **SUCCESS**.
 - Steps `Install dependencies` and `Run unit tests`: **SUCCESS**.
-- Commit tested: `64d43ddd1cd6902370d1df833a5d0d708d744706` (the audit-log-only follow-up commit was added afterward; changed application code is unchanged).
+- GitHub Actions workflow `SBT tests`, run #660 (run ID `38302238754`), also completed successfully for commit `81bbe72a8714ef26262e2f11f7c319a9f5e4c271`.
 - This is backend/unit-test evidence, not a browser end-to-end test and not a live endpoint check.
 
 ## Explicitly not verified
@@ -66,11 +73,11 @@
 - HTTP status and payload of live API calls.
 - Live MT4 heartbeat and freshness of the latest snapshot.
 - H4 candle count and OHLCV correctness against a live provider response.
-- Deployment of this branch to the Cloudflare Worker.
+- Live browser clicks, HTTP statuses and response payloads for the deployed branch preview remain unverified, even though Cloudflare reported the preview deployment successful.
 
 ## Next acceptance gate
 
-1. Enable Opera Browser Connector ("Allow AI connection") and open the deployed dashboard.
+1. Establish a working browser connection (Opera connector currently returns `Browser not connected`; Edge automation is not available in this session) and open the branch preview `https://fix-q-learning-market-data-audit-bitey-system-bots-trading.raylerr481.workers.dev`.
 2. Exercise each listed control once; record exact URL, HTTP status, payload/result, visible UI outcome, and console error (if any).
 3. Verify H4 candle grouping with a known hourly sample and ensure missing bid/ask renders "unknown", not a zero spread.
 4. Verify `/api/v1/system` still reports live trading disabled, real money disabled, and zero broker orders.
