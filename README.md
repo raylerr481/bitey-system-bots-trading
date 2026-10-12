@@ -355,3 +355,7 @@ The MT4 Expert Advisor is a separate execution adapter. The downloadable source 
 
 The profit gate only controls **adaptive** changes. It does not remove the initial SL/TP, bypass broker protections, guarantee an exit price, or guarantee that a profitable trade cannot become a loss due to slippage, gaps or broker execution limits. The EA source must be compiled and validated in MT4 before use.
 
+
+## Adaptive portfolio risk specification
+
+The complete adaptive risk and position-management rules are maintained in [docs/ADAPTIVE_TRADING_RULES.md](docs/ADAPTIVE_TRADING_RULES.md). The specification defines the USD 500 fixed strategic allocation; adaptive maximum risk per operation (USD 3 → 2 → 1 in losses and USD 5 → 6 → 7 → 8+ only after sustained, confirmed net profits); aggregate-risk and daily-loss gates; one managed position per canonical asset; and profit-only adaptive SL/TP changes after three consecutive favorable closed candles, with trend confirmation, no SL loosening, and MT4 readback audit. These are intended behavioral rules and must be verified against the current MQ4 source and MetaEditor/demo tests before claiming implementation or compilation is complete.
