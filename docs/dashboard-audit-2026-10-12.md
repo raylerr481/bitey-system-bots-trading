@@ -52,6 +52,14 @@
 | Account modal — Save workspace | Saves workspace name/preferences locally | PASS: click handler found | BLOCKED |
 | AI/provider/platform/permission selectors | Updates selected UI choices used by Build Plan | PASS: selector buttons found; behavior is local UI state | BLOCKED |
 
+## Automated test result
+
+- GitHub Actions workflow: `SBT tests`, run #659 (run ID `38302147693`).
+- Job `tests`: **SUCCESS**.
+- Steps `Install dependencies` and `Run unit tests`: **SUCCESS**.
+- Commit tested: `64d43ddd1cd6902370d1df833a5d0d708d744706` (the audit-log-only follow-up commit was added afterward; changed application code is unchanged).
+- This is backend/unit-test evidence, not a browser end-to-end test and not a live endpoint check.
+
 ## Explicitly not verified
 
 - Actual browser clicks, responsive/mobile navigation, console errors, and network panel outcomes.
