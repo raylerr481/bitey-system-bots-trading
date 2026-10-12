@@ -33,7 +33,7 @@
 | SBT Market Matrix — Clear | Clears displayed scan rows and summary | PASS: click handler found | BLOCKED |
 | Market Intelligence — Refresh | Reads market quote/candles and updates analysis | PASS: click handler found | BLOCKED |
 | Market Intelligence — Back to Matrix | Navigation only | PASS: click handler found | BLOCKED |
-| Research — Mine Ensemble M15 | `POST /api/v1/research/nonlinear-patterns` (verify actual route on backend before live test) | PASS: click handler found | BLOCKED |
+| Research — Mine Ensemble M15 | `GET /api/v1/research/nonlinear-patterns/EURUSD?timeframe=M15&limit=500` (symbol is currently hard-coded to EURUSD in the button handler) | PASS: click handler found | BLOCKED |
 | Research — Prepare experiment | `POST /api/v1/experiments` | PASS: handler in `web/sbt-control-live.js` | BLOCKED |
 | Evolution — Refresh | Loads evolution status/experiments | PASS: click handler found | BLOCKED |
 | Evolution — Compare Intraday | Runs intraday comparison for selected symbol | PASS: click handler found | BLOCKED |
