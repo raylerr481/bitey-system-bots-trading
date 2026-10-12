@@ -14,7 +14,7 @@ const SYMBOL_MAP = {
   SPY: 'SPY', QQQ: 'QQQ', IWM: 'IWM', DIA: 'DIA', EWZ: 'EWZ'
 };
 
-const intervalFor = (tf) => ({ M1: '1m', M5: '5m', M15: '15m', M30: '30m', H1: '60m', H4: '1h', D1: '1d', W1: '1wk', MN1: '1mo' }[String(tf || 'M5').toUpperCase()] || '5m');
+const intervalFor = (tf) => ({ M1: '1m', M5: '5m', M15: '15m', M30: '30m', H1: '60m', H4: '60m', D1: '1d', W1: '1wk', MN1: '1mo' }[String(tf || 'M5').toUpperCase()] || '5m');
 const rangeFor = (tf) => ({ M1: '1d', M5: '5d', M15: '1mo', M30: '1mo', H1: '3mo', H4: '6mo', D1: '1y', W1: '5y', MN1: '10y' }[String(tf || 'M5').toUpperCase()] || '5d');
 const yahooSymbol = (symbol) => SYMBOL_MAP[String(symbol || '').toUpperCase()] || String(symbol || '').toUpperCase();
 
