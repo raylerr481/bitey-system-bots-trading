@@ -125,3 +125,20 @@ Do not declare the implementation complete until the MQ4 source is inspected and
 ## 9. Risk disclosure
 
 These rules can constrain risk but cannot guarantee that losses will not occur or that a stop executes at its exact price. Gaps, slippage, liquidity, spread changes, terminal disconnection, broker restrictions and rejected modifications can change realized outcomes. The EA must be compiled and validated in MetaEditor and tested on demo before use.
+
+
+## v1.58.0 implementation defaults
+
+The reconstructed MT4 source `Bitey_SBT_MultiAsset_v1_58_0_AdaptiveRiskLadder_ThreeCandleSLTP_16Model_USD500.mq4` encodes the following defaults:
+
+- Fixed strategic allocation: USD 500.
+- Seven configured canonical assets; maximum seven open positions; one managed position per canonical asset; seven new entries/day maximum.
+- Daily loss gate: USD 10; daily net-profit target: USD 10 stops new entries but does not force-close existing positions.
+- Aggregate open stop-risk ceiling: USD 14.
+- Per-operation risk ladder: USD 3 baseline/confirmed-loss state, USD 2 after 15 minutes of persistent negative campaign P/L, and USD 1 if campaign net P/L reaches -USD 5 or loss persists 60 minutes. A negative result that persists at least 5 minutes is explicitly logged as confirmed.
+- Profit expansion: campaign net P/L must remain above USD 0.50 for 60 minutes before the budget rises to USD 5. After confirmation, each additional USD 5 of campaign net P/L increases the budget by USD 1, up to the default USD 12 per-operation ceiling. The per-operation percentage ceiling is 2.4% of effective capital; all entries remain subject to the USD 14 aggregate-risk ceiling and other gates.
+- Adaptive SL/TP: default timeframe H1; net floating P/L must exceed USD 0.05; three consecutive closed candles must each be in the position direction and close progressively favorably. BUY may raise SL/extend TP upward; SELL may lower SL/extend TP downward. No adaptive SL/TP change is allowed while that ticket's net floating P/L is at or below the threshold. SL must never loosen.
+- Sixteen chart-local model families: the previous 14 plus MACD_CONFIRM and BOLLINGER_EXPANSION. Cross-asset ranking retains its separate 16-proxy ensemble.
+- Retained diagnostics and performance safeguards include train/holdout historical evidence gates, ranked cross-asset candidate selection, normalized tick-size/cost handling, duplicate-asset prevention, portfolio-risk checks, per-ticket modification cooldown, readback-confirmed SL/TP audit, SBT telemetry, closed-trade reporting and closed-trade learning-experience telemetry.
+
+These are code defaults, not a promise of profitability. The source was reconstructed from the latest available base and diagnostics; MetaEditor compilation and MT4 demo execution remain required before use.
