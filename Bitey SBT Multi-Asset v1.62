@@ -3548,7 +3548,8 @@ bool TryReplacePositionIfBetter(int candidateDirection,double candidateScore,dou
    }
    if(TodayNetProfit()<=-EffectiveDailyLossLimitUSD())
    {
-      Print("POSITION DECISION | action=KEEP_CURRENT | reason=DAILY_LOSS_LIMIT_PREVENTS_REPLACEMENT | dailyNetUSD=",DoubleToString(TodayNetProfit(),2),\n            " dailyLossLimitUSD=",DoubleToString(EffectiveDailyLossLimitUSD(),2));
+      Print("POSITION DECISION | action=KEEP_CURRENT | reason=DAILY_LOSS_LIMIT_PREVENTS_REPLACEMENT | dailyNetUSD=",DoubleToString(TodayNetProfit(),2),
+            " dailyLossLimitUSD=",DoubleToString(EffectiveDailyLossLimitUSD(),2));
       return false;
    }
    double atr=GetATR(1);
