@@ -940,7 +940,7 @@ void ScanMarketWatchAssets(bool forceLog)
       string sym=SymbolName(i,true);
       if(sym=="") continue;
       bool configured=SymbolIsInConfiguredAllowlist(sym);
-      if(!configured) continue; // "*” scans all visible instruments; an explicit list remains restrictive.
+      if(!configured) continue; // "*" scans all visible instruments; an explicit list remains restrictive.
       string key=CanonicalAssetKey(sym);
       if(key=="" || sym!=PreferredSymbolForAsset(key,Period(),requiredBars)) continue; // collapse USD/USDT and broker-suffix aliases
       bool crypto=LooksLikeCryptoSymbol(sym);
@@ -2082,7 +2082,7 @@ void OnTimer()
    if(g_lastCrossAssetExecutionTime==0 || (crossNow-g_lastCrossAssetExecutionTime)>=crossInterval)
    {
       g_lastCrossAssetExecutionTime=crossNow;
-      ManageCrossAssetPositionsAgainstRankings();
+      // SL/TP-only policy: asset rotation by closing/reopening is disabled.
       ExecuteCrossAssetRankedCandidates();
    }
    // A timer never authorizes trading from stale quotes. Position supervision is
@@ -3548,9 +3548,7 @@ bool TryReplacePositionIfBetter(int candidateDirection,double candidateScore,dou
    }
    if(TodayNetProfit()<=-EffectiveDailyLossLimitUSD())
    {
-      Print("POSITION DECISION | action=KEEP_CURRENT | reason=daily quota/loss/profit-target gate prevents replacement | tradesToday=",
-            CountTodayTrades()," maxTrades=",InpMaxTradesPerDay," dailyNetUSD=",DoubleToString(TodayNetProfit(),2),
-            " dailyLossLimitUSD=",DoubleToString(EffectiveDailyLossLimitUSD(),2)," dailyProfitTargetUSD=",DoubleToString(InpDailyProfitTargetUSD,2));
+      Print("POSITION DECISION | action=KEEP_CURRENT | reason=DAILY_LOSS_LIMIT_PREVENTS_REPLACEMENT | dailyNetUSD=",DoubleToString(TodayNetProfit(),2),\n            " dailyLossLimitUSD=",DoubleToString(EffectiveDailyLossLimitUSD(),2));
       return false;
    }
    double atr=GetATR(1);
@@ -4483,7 +4481,7 @@ void EvaluateEngine()
    if(sameSymbolOpenNow==1 && anyOppositeDirection)
    {
       double incumbentDirectionScore=(decision>0?bestSellScore:bestBuyScore);
-      replacedPosition=TryReplacePositionIfBetter(decision,bestScore,incumbentDirectionScore,bestStrategy);
+      replacedPosition=false; // SL/TP-only policy: never close/reopen an incumbent position.
       if(replacedPosition)
          Print("POSITION REPLACEMENT FLOW | old position closed; new order will be attempted only after all standard gates are rechecked.");
    }
