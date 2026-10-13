@@ -2320,6 +2320,7 @@ void EnforceOnePositionPerCanonicalAsset()
 
 void OnTimer()
 {
+   EnforceOpenPositionRiskCapUSD125();
    ManageAdaptiveSLTP();
    static datetime lastManagedAudit=0;
    if(lastManagedAudit==0 || TimeCurrent()-lastManagedAudit>=30)
