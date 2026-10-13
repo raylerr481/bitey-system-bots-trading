@@ -1293,6 +1293,7 @@ double CrossAssetLotsForRisk(string sym,double riskUSD,double stopDistance)
 bool CrossAssetSendRankedOrder(string sym, string dir, double score)
 {
    string reason="";
+   double auditLots=-1.0, auditRisk=-1.0, auditSL=0.0, auditTP=0.0;
    // Decision layers are intentionally logged separately: technical candidate, historical evidence,
    // and final execution authorization. Cross-asset model scores are proxies, not actual trade results.
    Print("ENTRY AUTHORIZATION AUDIT | stage=REQUEST source=CROSS_ASSET_16_MODEL_ENSEMBLE symbol=",sym,
@@ -1315,11 +1316,23 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
    if(reason!="")
    {
       Print("CROSS-ASSET EXECUTION BLOCK | symbol=",sym," direction=",dir," score=",DoubleToString(score,2)," reason=",reason," | no order sent.");
+      Print("ENTRY AUTHORIZATION AUDIT | stage=FINAL decision=REJECTED source=CROSS_ASSET_16_MODEL_ENSEMBLE symbol=",sym,
+            " direction=",dir," model=CROSS_ASSET_16_MODEL_ENSEMBLE lots=",(auditLots>=0.0?DoubleToString(auditLots,4):"NOT_CALCULATED"),
+            " riskUSD=",(auditRisk>=0.0?DoubleToString(auditRisk,2):"NOT_CALCULATED"),
+            " SL=",(auditSL>0.0?DoubleToString(auditSL,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " TP=",(auditTP>0.0?DoubleToString(auditTP,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " reason=REJECTED_BY_GATE_DETAILS_IN_ADJACENT_EXECUTION_BLOCK");
       return false;
    }
    if(!SymbolSelect(sym,true))
    {
       Print("CROSS-ASSET EXECUTION BLOCK | symbol=",sym," reason=SYMBOL_SELECT_FAILED | no order sent.");
+      Print("ENTRY AUTHORIZATION AUDIT | stage=FINAL decision=REJECTED source=CROSS_ASSET_16_MODEL_ENSEMBLE symbol=",sym,
+            " direction=",dir," model=CROSS_ASSET_16_MODEL_ENSEMBLE lots=",(auditLots>=0.0?DoubleToString(auditLots,4):"NOT_CALCULATED"),
+            " riskUSD=",(auditRisk>=0.0?DoubleToString(auditRisk,2):"NOT_CALCULATED"),
+            " SL=",(auditSL>0.0?DoubleToString(auditSL,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " TP=",(auditTP>0.0?DoubleToString(auditTP,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " reason=REJECTED_BY_GATE_DETAILS_IN_ADJACENT_EXECUTION_BLOCK");
       return false;
    }
    double bid=MarketInfo(sym,MODE_BID), ask=MarketInfo(sym,MODE_ASK), point=MarketInfo(sym,MODE_POINT);
@@ -1330,6 +1343,12 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
    if(bid<=0.0 || ask<bid || point<=0.0 || quoteAge<0 || quoteAge>InpCrossAssetMaxQuoteAgeSeconds || atr<=0.0 || digits<0 || digits>10)
    {
       Print("CROSS-ASSET EXECUTION BLOCK | symbol=",sym," reason=INVALID_OR_STALE_MARKET_DATA quoteAge=",quoteAge," ATR=",DoubleToString(atr,8)," | no order sent.");
+      Print("ENTRY AUTHORIZATION AUDIT | stage=FINAL decision=REJECTED source=CROSS_ASSET_16_MODEL_ENSEMBLE symbol=",sym,
+            " direction=",dir," model=CROSS_ASSET_16_MODEL_ENSEMBLE lots=",(auditLots>=0.0?DoubleToString(auditLots,4):"NOT_CALCULATED"),
+            " riskUSD=",(auditRisk>=0.0?DoubleToString(auditRisk,2):"NOT_CALCULATED"),
+            " SL=",(auditSL>0.0?DoubleToString(auditSL,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " TP=",(auditTP>0.0?DoubleToString(auditTP,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " reason=REJECTED_BY_GATE_DETAILS_IN_ADJACENT_EXECUTION_BLOCK");
       return false;
    }
    int n=0,hn=0; double wr=0.0,avgR=-999.0,hwr=0.0,havgR=-999.0; string histReason="";
@@ -1341,12 +1360,24 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
             " trainN=",n," winRate=",DoubleToString(wr,3)," avgRProxy=",DoubleToString(avgR,3),
             " holdoutN=",hn," holdoutWinRate=",DoubleToString(hwr,3)," holdoutAvgRProxy=",DoubleToString(havgR,3),
             " detail=",histReason," | no order sent.");
+      Print("ENTRY AUTHORIZATION AUDIT | stage=FINAL decision=REJECTED source=CROSS_ASSET_16_MODEL_ENSEMBLE symbol=",sym,
+            " direction=",dir," model=CROSS_ASSET_16_MODEL_ENSEMBLE lots=",(auditLots>=0.0?DoubleToString(auditLots,4):"NOT_CALCULATED"),
+            " riskUSD=",(auditRisk>=0.0?DoubleToString(auditRisk,2):"NOT_CALCULATED"),
+            " SL=",(auditSL>0.0?DoubleToString(auditSL,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " TP=",(auditTP>0.0?DoubleToString(auditTP,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " reason=REJECTED_BY_GATE_DETAILS_IN_ADJACENT_EXECUTION_BLOCK");
       return false;
    }
    double openRisk=PortfolioOpenRiskUSD();
    if(openRisk<0.0)
    {
       Print("CROSS-ASSET EXECUTION BLOCK | symbol=",sym," reason=UNKNOWN_EXISTING_PORTFOLIO_RISK | open position has missing/unverifiable SL risk.");
+      Print("ENTRY AUTHORIZATION AUDIT | stage=FINAL decision=REJECTED source=CROSS_ASSET_16_MODEL_ENSEMBLE symbol=",sym,
+            " direction=",dir," model=CROSS_ASSET_16_MODEL_ENSEMBLE lots=",(auditLots>=0.0?DoubleToString(auditLots,4):"NOT_CALCULATED"),
+            " riskUSD=",(auditRisk>=0.0?DoubleToString(auditRisk,2):"NOT_CALCULATED"),
+            " SL=",(auditSL>0.0?DoubleToString(auditSL,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " TP=",(auditTP>0.0?DoubleToString(auditTP,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " reason=REJECTED_BY_GATE_DETAILS_IN_ADJACENT_EXECUTION_BLOCK");
       return false;
    }
    double riskBudget=EffectiveRiskBudgetUSD();
@@ -1355,24 +1386,45 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
    if(lots<=0.0)
    {
       Print("CROSS-ASSET EXECUTION BLOCK | symbol=",sym," reason=LOT_OR_STOP_RISK_VALIDATION_FAILED riskBudgetUSD=",DoubleToString(riskBudget,2)," | no order sent.");
+      Print("ENTRY AUTHORIZATION AUDIT | stage=FINAL decision=REJECTED source=CROSS_ASSET_16_MODEL_ENSEMBLE symbol=",sym,
+            " direction=",dir," model=CROSS_ASSET_16_MODEL_ENSEMBLE lots=",(auditLots>=0.0?DoubleToString(auditLots,4):"NOT_CALCULATED"),
+            " riskUSD=",(auditRisk>=0.0?DoubleToString(auditRisk,2):"NOT_CALCULATED"),
+            " SL=",(auditSL>0.0?DoubleToString(auditSL,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " TP=",(auditTP>0.0?DoubleToString(auditTP,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " reason=REJECTED_BY_GATE_DETAILS_IN_ADJACENT_EXECUTION_BLOCK");
       return false;
    }
+   auditLots=lots;
    double proposedRisk=EstimateOrderRiskUSD(sym,lots,stopDistance);
+   auditRisk=proposedRisk;
    if(proposedRisk<0.0 || openRisk+proposedRisk>InpPortfolioOpenRiskCapUSD+0.0001)
    {
       Print("CROSS-ASSET EXECUTION BLOCK | symbol=",sym," reason=AGGREGATE_STOP_RISK_CAP openRiskUSD=",DoubleToString(openRisk,2),
             " proposedRiskUSD=",DoubleToString(proposedRisk,2)," capUSD=",DoubleToString(InpPortfolioOpenRiskCapUSD,2)," | no order sent.");
+      Print("ENTRY AUTHORIZATION AUDIT | stage=FINAL decision=REJECTED source=CROSS_ASSET_16_MODEL_ENSEMBLE symbol=",sym,
+            " direction=",dir," model=CROSS_ASSET_16_MODEL_ENSEMBLE lots=",(auditLots>=0.0?DoubleToString(auditLots,4):"NOT_CALCULATED"),
+            " riskUSD=",(auditRisk>=0.0?DoubleToString(auditRisk,2):"NOT_CALCULATED"),
+            " SL=",(auditSL>0.0?DoubleToString(auditSL,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " TP=",(auditTP>0.0?DoubleToString(auditTP,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " reason=REJECTED_BY_GATE_DETAILS_IN_ADJACENT_EXECUTION_BLOCK");
       return false;
    }
    int type=(dir=="BUY"?OP_BUY:OP_SELL);
    double price=(dir=="BUY"?ask:bid);
    double sl=(dir=="BUY"?price-stopDistance:price+stopDistance);
    double tp=(dir=="BUY"?price+targetDistance:price-targetDistance);
+   auditSL=sl; auditTP=tp;
    int stopLevel=(int)MarketInfo(sym,MODE_STOPLEVEL);
    double minStop=stopLevel*point;
    if(MathAbs(price-sl)<minStop || MathAbs(tp-price)<minStop)
    {
       Print("CROSS-ASSET EXECUTION BLOCK | symbol=",sym," reason=BROKER_STOP_LEVEL stopLevel=",stopLevel," | no order sent.");
+      Print("ENTRY AUTHORIZATION AUDIT | stage=FINAL decision=REJECTED source=CROSS_ASSET_16_MODEL_ENSEMBLE symbol=",sym,
+            " direction=",dir," model=CROSS_ASSET_16_MODEL_ENSEMBLE lots=",(auditLots>=0.0?DoubleToString(auditLots,4):"NOT_CALCULATED"),
+            " riskUSD=",(auditRisk>=0.0?DoubleToString(auditRisk,2):"NOT_CALCULATED"),
+            " SL=",(auditSL>0.0?DoubleToString(auditSL,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " TP=",(auditTP>0.0?DoubleToString(auditTP,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " reason=REJECTED_BY_GATE_DETAILS_IN_ADJACENT_EXECUTION_BLOCK");
       return false;
    }
    double spreadCost=EstimateOrderRiskUSD(sym,lots,spread*point);
@@ -1381,9 +1433,16 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
    {
       Print("CROSS-ASSET EXECUTION BLOCK | symbol=",sym," reason=EXECUTION_COST_TOO_HIGH_OR_UNKNOWN spreadCostUSD=",DoubleToString(spreadCost,4),
             " slippageProxyUSD=",DoubleToString(slippageCost,4)," riskBudgetUSD=",DoubleToString(riskBudget,2)," | no order sent.");
+      Print("ENTRY AUTHORIZATION AUDIT | stage=FINAL decision=REJECTED source=CROSS_ASSET_16_MODEL_ENSEMBLE symbol=",sym,
+            " direction=",dir," model=CROSS_ASSET_16_MODEL_ENSEMBLE lots=",(auditLots>=0.0?DoubleToString(auditLots,4):"NOT_CALCULATED"),
+            " riskUSD=",(auditRisk>=0.0?DoubleToString(auditRisk,2):"NOT_CALCULATED"),
+            " SL=",(auditSL>0.0?DoubleToString(auditSL,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " TP=",(auditTP>0.0?DoubleToString(auditTP,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " reason=REJECTED_BY_GATE_DETAILS_IN_ADJACENT_EXECUTION_BLOCK");
       return false;
    }
    price=NormalizeDouble(price,digits); sl=NormalizeDouble(sl,digits); tp=NormalizeDouble(tp,digits);
+   auditSL=sl; auditTP=tp;
    Print("ENTRY AUTHORIZATION AUDIT | stage=RISK_AND_LEVELS_VALIDATED source=CROSS_ASSET_16_MODEL_ENSEMBLE symbol=",sym,
          " direction=",dir," model=CROSS_ASSET_16_MODEL_ENSEMBLE lots=",DoubleToString(lots,4),
          " riskUSD=",DoubleToString(proposedRisk,2)," SL=",DoubleToString(sl,digits)," TP=",DoubleToString(tp,digits),
@@ -1397,6 +1456,12 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
       Print("CROSS-ASSET EXECUTION BLOCK | symbol=",sym," canonicalAsset=",CanonicalAssetKey(sym),
             " reason=ONE_POSITION_PER_CANONICAL_ASSET existingPositions=",finalAssetPositions,
             " | final pre-OrderSend check; no order sent.");
+      Print("ENTRY AUTHORIZATION AUDIT | stage=FINAL decision=REJECTED source=CROSS_ASSET_16_MODEL_ENSEMBLE symbol=",sym,
+            " direction=",dir," model=CROSS_ASSET_16_MODEL_ENSEMBLE lots=",(auditLots>=0.0?DoubleToString(auditLots,4):"NOT_CALCULATED"),
+            " riskUSD=",(auditRisk>=0.0?DoubleToString(auditRisk,2):"NOT_CALCULATED"),
+            " SL=",(auditSL>0.0?DoubleToString(auditSL,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " TP=",(auditTP>0.0?DoubleToString(auditTP,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " reason=REJECTED_BY_GATE_DETAILS_IN_ADJACENT_EXECUTION_BLOCK");
       return false;
    }
    string symbolGuardReason="";
@@ -1405,6 +1470,12 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
    {
       Print("CROSS-ASSET EXECUTION BLOCK | requestedSymbol=",sym," canonicalAsset=",expectedAssetKey,
             " reason=ASSET_SYMBOL_MISMATCH_OR_INVALID_QUOTE detail=",symbolGuardReason," | no order sent.");
+      Print("ENTRY AUTHORIZATION AUDIT | stage=FINAL decision=REJECTED source=CROSS_ASSET_16_MODEL_ENSEMBLE symbol=",sym,
+            " direction=",dir," model=CROSS_ASSET_16_MODEL_ENSEMBLE lots=",(auditLots>=0.0?DoubleToString(auditLots,4):"NOT_CALCULATED"),
+            " riskUSD=",(auditRisk>=0.0?DoubleToString(auditRisk,2):"NOT_CALCULATED"),
+            " SL=",(auditSL>0.0?DoubleToString(auditSL,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " TP=",(auditTP>0.0?DoubleToString(auditTP,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " reason=REJECTED_BY_GATE_DETAILS_IN_ADJACENT_EXECUTION_BLOCK");
       return false;
    }
    Print("ENTRY AUTHORIZATION AUDIT | stage=FINAL decision=AUTHORIZED_TO_SEND source=CROSS_ASSET_16_MODEL_ENSEMBLE symbol=",sym,
@@ -1423,6 +1494,12 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
             " reason=ORDER_SEND_FAILED error=",err," description=",TradeErrorDescription(err));
       Print("CROSS-ASSET ORDER ERROR | symbol=",sym," direction=",dir," error=",err," description=",TradeErrorDescription(err),
             " lots=",DoubleToString(lots,4)," riskUSD=",DoubleToString(proposedRisk,2)," spreadPoints=",spread," | no blind retry and no risk bypass.");
+      Print("ENTRY AUTHORIZATION AUDIT | stage=FINAL decision=REJECTED source=CROSS_ASSET_16_MODEL_ENSEMBLE symbol=",sym,
+            " direction=",dir," model=CROSS_ASSET_16_MODEL_ENSEMBLE lots=",(auditLots>=0.0?DoubleToString(auditLots,4):"NOT_CALCULATED"),
+            " riskUSD=",(auditRisk>=0.0?DoubleToString(auditRisk,2):"NOT_CALCULATED"),
+            " SL=",(auditSL>0.0?DoubleToString(auditSL,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " TP=",(auditTP>0.0?DoubleToString(auditTP,(int)MarketInfo(sym,MODE_DIGITS)):"NOT_CALCULATED"),
+            " reason=REJECTED_BY_GATE_DETAILS_IN_ADJACENT_EXECUTION_BLOCK");
       return false;
    }
    bool readbackOK=false;
