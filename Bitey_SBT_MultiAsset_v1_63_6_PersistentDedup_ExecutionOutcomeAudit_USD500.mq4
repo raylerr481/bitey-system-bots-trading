@@ -4008,7 +4008,8 @@ bool SendOrderUnlocked(int direction)
             " action=do_not_bypass_or_retry_133; compare accountTradeAllowed/accountExpertAllowed with broker permissions; verify symbol contract, account authorization, and trading session | order was not confirmed open.");
       return false;
    }
-   g_lastOrderSendAccepted=true; // A non-negative OrderSend ticket is the MT4 acceptance signal; readback is audited separately below.\n   double actualRiskUSD=EstimateOrderRiskUSD(Symbol(),lots,stopDistance);
+   g_lastOrderSendAccepted=true; // A non-negative OrderSend ticket is the MT4 acceptance signal; readback is audited separately below.
+   double actualRiskUSD=EstimateOrderRiskUSD(Symbol(),lots,stopDistance);
    if(actualRiskUSD<0.0)
    {
       Print("ORDER RISK AUDIT WARNING | ticket=",ticket," reason=POST_ENTRY_RISK_SPEC_INVALID estimatedRiskUSD=UNKNOWN; inspect broker tick specification immediately.");
