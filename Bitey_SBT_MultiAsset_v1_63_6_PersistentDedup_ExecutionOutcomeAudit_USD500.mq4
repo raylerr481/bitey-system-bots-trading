@@ -4063,6 +4063,9 @@ void ReleasePortfolioEntryLock()
 
 bool SendOrder(int direction)
 {
+   g_lastOrderSendAttempted=false;
+   g_lastOrderSendAccepted=false;
+   g_lastOrderSendErrorCode=0;
    if(!AcquirePortfolioEntryLock())
    {
       g_lastExecutionResult="BLOCKED_PORTFOLIO_ENTRY_LOCK_BUSY";
