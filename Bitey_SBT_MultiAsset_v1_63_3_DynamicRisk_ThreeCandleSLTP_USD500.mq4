@@ -245,7 +245,9 @@ double EffectiveRiskBudgetUSD()
             " profitSustainMinutes=",(profitSince>0.0?(int)MathMax(0,(now-(datetime)profitSince)/60):0),
             " lossPersistMinutes=",(lossSince>0.0?(int)MathMax(0,(now-(datetime)lossSince)/60):0),
             " riskBudgetUSD=",DoubleToString(risk,2),
-            " hardRiskCapUSD=",DoubleToString(InpHardRiskCapUSD,2),
+            " dailyLossHeadroomUSD=",DoubleToString(MathMax(0.0,dailyLossHeadroom),2),
+            " portfolioRiskHeadroomUSD=",DoubleToString(MathMax(0.0,portfolioRiskHeadroom),2),
+            " legacyPerTradeCapFieldUSD=",DoubleToString(InpHardRiskCapUSD,2),
             " aggregateRiskCapUSD=",DoubleToString(InpPortfolioOpenRiskCapUSD,2),
             " note=MAXIMUM_NOT_REQUIRED; aggregate_gate_still_authoritative");
       GlobalVariableSet(lastLevelKey,risk);
@@ -1094,7 +1096,7 @@ int OnInit()
          " EffectiveCapitalUSD=",DoubleToString(EffectiveOperatingCapitalUSD(),2),
          " RiskRequestCeilingUSD=",DoubleToString(InpRiskPerTradeUSD,2),
          " NeutralRiskBudgetUSD=",DoubleToString(MathMin(InpRiskPerTradeUSD,InpHardRiskCapUSD),2),
-         " HardRiskCapUSD=",DoubleToString(InpHardRiskCapUSD,2));
+         " LegacyPerTradeCapFieldUSD=",DoubleToString(InpHardRiskCapUSD,2));
    Print("ADAPTIVE RISK CONFIG | enabled=",(InpAdaptiveRiskLadderEnabled?"true":"false"),
          " lossLevelsUSD=",DoubleToString(InpLossRiskConfirmedUSD,2),"/",DoubleToString(InpLossRiskPersistentUSD,2),"/",DoubleToString(InpLossRiskSevereUSD,2),
          " severeLossTriggerUSD=",DoubleToString(InpSeverePortfolioLossTriggerUSD,2),
@@ -3434,8 +3436,8 @@ double CalculateLotsForRisk(double riskUSD,double stopDistancePrice)
          " lotStep=",DoubleToString(lotStep,4));
 
    // If broker lot granularity makes the requested target too small, permit the minimum lot
-   // only in NORMAL non-provisional mode and only if its projected stop-risk is within the
-   // per-position hard cap. The caller separately enforces remaining portfolio-risk capacity.
+   // only in NORMAL non-provisional mode and only if its projected stop-risk fits the dynamic
+   // budget passed by the caller. The caller separately enforces remaining global risk capacity.
    // Reduced-risk governor/provisional entries never use this exception.
    if(rawLots<minLot)
    {
