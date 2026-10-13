@@ -1396,7 +1396,7 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
       return false;
    }
    ResetLastError();
-   int ticket=OrderSend(sym,type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.62 "+expectedAssetKey,InpMagic,0,clrNONE);
+   int ticket=OrderSend(sym,type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.63 "+expectedAssetKey,InpMagic,0,clrNONE);
    if(ticket<0)
    {
       int err=GetLastError();
@@ -3726,7 +3726,7 @@ bool SendOrderUnlocked(int direction)
       return false;
    }
    ResetLastError();
-   int ticket=OrderSend(Symbol(),type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.62 "+expectedAssetKey,InpMagic,0,clrNONE);
+   int ticket=OrderSend(Symbol(),type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.63 "+expectedAssetKey,InpMagic,0,clrNONE);
    if(ticket<0)
    {
       int sendError=GetLastError();
