@@ -2268,7 +2268,7 @@ void EnforceOnePositionPerCanonicalAsset()
          if(CrossAssetHistoricalEvidence(OrderSymbol(),InpCrossAssetTimeframe,posDir,n,wr,avgR,histWhy,hn,hwr,havgR) &&
             n>=InpCrossAssetMinHistorySamples && wr>=InpCrossAssetMinHistoryWinRate && avgR>InpCrossAssetMinHistoryAvgR &&
             hn>=InpCrossAssetMinHoldoutSamples && hwr>=InpCrossAssetMinHoldoutWinRate && havgR>InpCrossAssetMinHoldoutAvgR)
-            rank=CrossAssetOpportunityPriority(technical,wr,avgR,hwr,havgR);
+            rank=CrossAssetOpportunityPriority(technical,wr,avgR,hwr,havgR,n,hn);
          else rank=technical*0.01; // directional signal present but not fully history-qualified
       }
       priorities[total]=rank;
