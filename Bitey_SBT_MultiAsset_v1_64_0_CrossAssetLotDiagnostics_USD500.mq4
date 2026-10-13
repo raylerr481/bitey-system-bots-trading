@@ -516,6 +516,9 @@ bool IsAllowedMultiAssetSymbol()
    StringReplace(list," ","");
    string padded=","+list+",";
    if(key!="" && (list=="*" || StringFind(padded,","+key+",")>=0)) return true;
+   if(key=="XRPUSD" && (StringFind(padded,",XRPUSD,")>=0 || StringFind(padded,",XRPUSDT,")>=0)) return true;
+   if(key=="XLMUSD" && (StringFind(padded,",XLMUSD,")>=0 || StringFind(padded,",XLMUSDT,")>=0)) return true;
+   if(key=="ETCUSD" && (StringFind(padded,",ETCUSD,")>=0 || StringFind(padded,",ETCUSDT,")>=0)) return true;
    return false;
 }
 
@@ -935,13 +938,16 @@ bool SymbolIsInConfiguredAllowlist(string symbolName)
    string list=InpAllowedSymbols;
    StringToUpper(list);
    StringReplace(list," ","");
-   // Canonical keys allow SOLUSD/SOLUSDT, NEARUSD/NEARUSDT, BTCUSD/BTCUSDT and ETHUSD/ETHUSDT aliases.
+   // Canonical keys allow broker quote aliases for supported underlying assets.
    string padded=","+list+",";
    if(list=="*" || StringFind(padded,","+key+",")>=0) return true;
    if(key=="SOLUSDT" && (StringFind(padded,",SOLUSD,")>=0 || StringFind(padded,",SOLUSDT,")>=0)) return true;
    if(key=="NEARUSD" && (StringFind(padded,",NEARUSDT,")>=0 || StringFind(padded,",NEARUSD,")>=0)) return true;
    if(key=="BTCUSDT" && (StringFind(padded,",BTCUSD,")>=0 || StringFind(padded,",BTCUSDT,")>=0)) return true;
    if(key=="ETHUSD" && (StringFind(padded,",ETHUSDT,")>=0 || StringFind(padded,",ETHUSD,")>=0)) return true;
+   if(key=="XRPUSD" && (StringFind(padded,",XRPUSD,")>=0 || StringFind(padded,",XRPUSDT,")>=0)) return true;
+   if(key=="XLMUSD" && (StringFind(padded,",XLMUSD,")>=0 || StringFind(padded,",XLMUSDT,")>=0)) return true;
+   if(key=="ETCUSD" && (StringFind(padded,",ETCUSD,")>=0 || StringFind(padded,",ETCUSDT,")>=0)) return true;
    return false;
 }
 
