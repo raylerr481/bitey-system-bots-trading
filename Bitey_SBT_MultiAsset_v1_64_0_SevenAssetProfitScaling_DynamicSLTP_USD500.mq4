@@ -178,14 +178,17 @@ int EffectiveMaxOpenTrades()
 {
    double net = CampaignNetProfitUSD();
    g_campaignNetUSD = net;
+   int targetSlots = 3;
 
-   if(net <= -5.00) return 1;
-   if(net <= -2.50) return 2;
-   if(net >= 20.00) return 7;
-   if(net >= 15.00) return 6;
-   if(net >= 10.00) return 5;
-   if(net >= 5.00)  return 4;
-   return 3;
+   if(net <= -5.00) targetSlots = 1;
+   else if(net <= -2.50) targetSlots = 2;
+   else if(net >= 20.00) targetSlots = 7;
+   else if(net >= 15.00) targetSlots = 6;
+   else if(net >= 10.00) targetSlots = 5;
+   else if(net >= 5.00)  targetSlots = 4;
+
+   // The configured ceiling can lower the maximum, never raise it above seven.
+   return MathMax(1, MathMin(7, MathMin(InpMaxOpenTrades, targetSlots)));
 }
 
 // Aggregate stop-risk budget tracks active capacity; each position remains capped at USD1.25.
