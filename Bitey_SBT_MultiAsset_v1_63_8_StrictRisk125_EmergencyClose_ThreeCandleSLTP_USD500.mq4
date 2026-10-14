@@ -1900,8 +1900,8 @@ bool EmergencyCloseRiskCapBreach(int ticket,string sym,int type,double lots,doub
 }
 
 // Hard per-ticket risk repair runs independently of the profit/three-candle adaptive manager.
-// It only tightens SL; it never widens SL, closes positions, or changes TP.
-// If price/broker constraints make the USD1.25 cap impossible, it logs a critical failure.
+// It only tightens SL first; if the cap cannot be enforced, it attempts an emergency market close.
+// Broker rejection, disconnection, gaps and slippage can still prevent a guaranteed USD1.25 realized-loss ceiling.
 void EnforceOpenPositionRiskCapUSD125()
 {
    if(!IsConnected() || !IsTradeAllowed() || IsTradeContextBusy()) return;
@@ -1956,7 +1956,8 @@ void EnforceOpenPositionRiskCapUSD125()
             " reason=TARGET_STILL_OVER_CAP oldRiskUSD=",DoubleToString(oldRisk,2),
             " targetRiskUSD=",DoubleToString(newRisk,2)," capUSD=",DoubleToString(capUSD,2),
             " oldSL=",DoubleToString(oldSL,digits)," targetSL=",DoubleToString(targetSL,digits),
-            " action=NO_WIDENING_NO_FORCED_CLOSE");
+            " action=EMERGENCY_CLOSE_ATTEMPT");
+         EmergencyCloseRiskCapBreach(ticket,sym,type,lots,oldRisk,"TARGET_STILL_OVER_CAP");
          continue;
       }
       int stopLevel=(int)MarketInfo(sym,MODE_STOPLEVEL);
@@ -1971,7 +1972,8 @@ void EnforceOpenPositionRiskCapUSD125()
             " targetRiskUSD=",DoubleToString(newRisk,2)," capUSD=",DoubleToString(capUSD,2),
             " bid=",DoubleToString(bid,digits)," ask=",DoubleToString(ask,digits),
             " oldSL=",DoubleToString(oldSL,digits)," targetSL=",DoubleToString(targetSL,digits),
-            " action=KEEP_EXISTING_SLTP_NO_FORCED_CLOSE");
+            " action=EMERGENCY_CLOSE_ATTEMPT");
+         EmergencyCloseRiskCapBreach(ticket,sym,type,lots,oldRisk,"BROKER_DISTANCE_PREVENTS_CAP");
          continue;
       }
       // Skip insignificant changes only if the existing SL already meets the cap.
@@ -1995,6 +1997,8 @@ void EnforceOpenPositionRiskCapUSD125()
          " confirmedSL=",(readOK?DoubleToString(readSL,digits):"N/A"),
          " confirmedRiskUSD=",(readRisk>=0?DoubleToString(readRisk,2):"UNKNOWN"),
          " result=",(confirmed?"CAP_ENFORCED_READBACK_CONFIRMED":"CRITICAL_CAP_NOT_CONFIRMED"));
+      if(!confirmed && (readRisk<0.0 || readRisk>capUSD+0.02))
+         EmergencyCloseRiskCapBreach(ticket,sym,type,lots,(readRisk>=0.0?readRisk:oldRisk),"SL_MODIFY_FAILED_OR_UNCONFIRMED");
        if(!confirmed && (readRisk<0.0 || readRisk>capUSD+0.02))
           EmergencyCloseRiskCapBreach(ticket,sym,type,lots,(readRisk>=0.0?readRisk:oldRisk),"SL_MODIFY_FAILED_OR_UNCONFIRMED");
    }
