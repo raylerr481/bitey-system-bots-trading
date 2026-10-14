@@ -1,6 +1,6 @@
 #property strict
-#property version   "1.640"
-#property description "Bitey SBT Multi-Asset v1.64.0 - seven canonical assets, profit-scaled 1-7 slots, strict USD1.25 per-position risk, adaptive SLTP, fixed USD500"
+#property version   "1.641"
+#property description "Bitey SBT Multi-Asset v1.64.1 - fail-closed USD1.25 risk repair, seven canonical assets, adaptive SLTP, fixed USD500"
 
 // ============================================================================
 // BITEY SBT v1.64.0 — AUTHORITATIVE RISK / POSITION MANAGEMENT RULES
@@ -53,6 +53,7 @@
 // - Campaign net P/L >= +USD 200 activates the legacy profit-protect evidence mode; the separate adaptive USD ladder still controls per-trade risk after sustained-profit confirmation.
 // - Hard risk, daily loss, spread, open-position, and evidence gates remain active; no daily profit target or entry quota.
 // - Historical evidence is an in-sample diagnostic, not proof of future profitability.
+// v1.64.1: fails closed on unknown per-position risk metadata or invalid cap distance by attempting emergency close; portfolio risk remains unknown and blocks new entries until verified.
 // v1.64.0: based on v1.63.8; adds profit-aware dynamic capacity from 1 to 7 simultaneous canonical assets.
 // Slots 1-3 are the defensive/base range; slots 4-7 unlock only as campaign net profit grows. Losses scale capacity down.
 // Maximum remains seven because one position per canonical asset is mandatory; there is no infinite position count.
@@ -2058,10 +2059,15 @@ void EnforceOpenPositionRiskCapUSD125()
       double bid=MarketInfo(sym,MODE_BID), ask=MarketInfo(sym,MODE_ASK);
       if(lots<=0 || open<=0 || tickValue<=0 || tickSize<=0 || point<=0 || bid<=0 || ask<bid || digits<0)
       {
+         // Fail closed: unknown risk is never considered compliant. The account/broker may
+         // reject the close, but we must record an emergency-close attempt rather than silently
+         // leave an unverifiable position active. New entries are independently blocked because
+         // PortfolioOpenRiskUSD() returns -1 when this position's risk cannot be estimated.
          Print("PER_TRADE_RISK_CAP_ENFORCEMENT_FAILED | ticket=",ticket," symbol=",sym,
             " reason=INVALID_LOT_PRICE_OR_TICK_VALUE lots=",DoubleToString(lots,3),
             " tickValue=",DoubleToString(tickValue,6)," tickSizePrice=",DoubleToString(tickSize,8),
-            " action=NO_MODIFICATION");
+            " riskStatus=UNKNOWN action=EMERGENCY_CLOSE_ATTEMPT_AND_BLOCK_NEW_ENTRIES");
+         EmergencyCloseRiskCapBreach(ticket,sym,type,lots,-1.0,"INVALID_LOT_PRICE_OR_TICK_VALUE");
          continue;
       }
       double oldRisk=(oldSL>0?EstimateOrderRiskUSD(sym,lots,MathAbs(open-oldSL)):-1.0);
@@ -2072,7 +2078,8 @@ void EnforceOpenPositionRiskCapUSD125()
       if(distance<=0 || !MathIsValidNumber(distance))
       {
          Print("PER_TRADE_RISK_CAP_ENFORCEMENT_FAILED | ticket=",ticket," symbol=",sym,
-            " reason=INVALID_CAP_DISTANCE action=NO_MODIFICATION");
+            " reason=INVALID_CAP_DISTANCE riskStatus=UNKNOWN action=EMERGENCY_CLOSE_ATTEMPT_AND_BLOCK_NEW_ENTRIES");
+         EmergencyCloseRiskCapBreach(ticket,sym,type,lots,oldRisk,"INVALID_CAP_DISTANCE");
          continue;
       }
       double targetSL=(type==OP_BUY?open-distance:open+distance);
