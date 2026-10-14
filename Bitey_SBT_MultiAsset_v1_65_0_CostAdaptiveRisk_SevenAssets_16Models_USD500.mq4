@@ -3,7 +3,7 @@
 #property description "Bitey SBT Multi-Asset v1.65.0 - cost-aware bounded risk, 7 distinct assets, continuous 16-model evaluation, USD500 reference"
 
 // ============================================================================
-// BITEY SBT v1.64.0 — AUTHORITATIVE RISK / POSITION MANAGEMENT RULES
+// BITEY SBT v1.65.0 — COST-AWARE BOUNDED RISK / POSITION MANAGEMENT RULES
 // These comments document intended safeguards; runtime enforcement and broker
 // acceptance must still be verified in MetaEditor, Strategy Tester and demo.
 // 1) FIXED STRATEGY CAPITAL: USD 500 maximum reference allocation. Never scale
@@ -19,8 +19,8 @@
 // 4) PORTFOLIO LIMIT: dynamic capacity from 1 to 7 simultaneous positions,
 //    one per canonical asset. Base capacity is 3; slots 4-7 unlock at campaign
 //    net profits of +USD5/+10/+15/+20. At net losses <= -USD2.50 capacity is 2;
-//    at <= -USD5 capacity is 1. Aggregate stop-risk is activeSlots x USD1.25,
-//    capped at USD8.75. Existing positions and aliases are counted before entry.
+//    at <= -USD5 capacity is 1. Aggregate stop-risk is capped at 3.5% of USD500
+//    and at activeSlots x effective per-position risk. Existing aliases count before entry.
 // 5) DAILY LOSS: at the effective capital-derived daily loss ceiling, block new entries while
 //    continuing protective management of existing positions.
 // 6) ADAPTIVE SL/TP: preserve the three-favorable-closed-candle confirmation
@@ -34,8 +34,8 @@
 // 8) CONTROL / SAFETY: MT4 remains the execution authority; telemetry and
 //    Q-learning reports must not authorize or bypass an order. No martingale,
 //    no stop-loss bypass, no automatic account switching.
-// 9) LIMITATION: USD 1.25 is a calculated stop-risk target, not a guarantee of
-//    realized loss. Gaps, slippage, spread changes, conversion/tick-value
+// 9) LIMITATION: the adaptive stop-risk ceiling is at most USD2.50 per position
+//    and aggregate/daily budgets are capital-bounded, not loss guarantees. Gaps, slippage, spread changes, conversion/tick-value
 //    differences, requotes, rejected modifications or failed closes can cause
 //    a larger loss. Log every breach and failed protective action explicitly.
 // ============================================================================
@@ -169,6 +169,9 @@ double EffectivePerPositionRiskCapUSD()
    double pct=MathMax(0.10,MathMin(0.50,InpMaxRiskPerTradeCapitalPct));
    return MathMin(capital*pct/100.0,MathMin(2.50,MathMax(0.01,InpHardRiskCapUSD)));
 }
+
+int EffectiveMaxOpenTrades();
+double EffectivePortfolioRiskCapUSD();
 
 double EffectiveDailyLossLimitUSD()
 {
@@ -331,7 +334,7 @@ double EffectiveRiskBudgetUSD()
       risk=MathMin(risk,MathMin(dailyLossHeadroom,portfolioRiskHeadroom));
    }
 
-   risk=MathMin(risk,1.25); // Final guard after all adaptive/profit-state calculations.
+   risk=MathMin(risk,EffectivePerPositionRiskCapUSD()); // Final capital-derived guard after all adaptive/profit-state calculations.
     double previousLevel=(GlobalVariableCheck(lastLevelKey)?GlobalVariableGet(lastLevelKey):-999.0);
    double previousState=(GlobalVariableCheck(lastStateKey)?GlobalVariableGet(lastStateKey):-999.0);
    if(MathAbs(previousLevel-risk)>0.001 || previousState!=(double)stateCode)
@@ -1437,7 +1440,11 @@ double CrossAssetLotsForRisk(string sym,double riskUSD,double stopDistance)
          minLotRisk=minLot*riskPerLot;
          // Cost-aware minimum-lot accommodation is allowed only when its measured SL risk
          // stays under the capital-derived cap and model evidence is not provisional.
+         double openRiskForMinLot=PortfolioOpenRiskUSD();
+         double dailyHeadroomForMinLot=EffectiveDailyLossLimitUSD()+TodayNetProfit();
+         double portfolioHeadroomForMinLot=(openRiskForMinLot>=0.0?EffectivePortfolioRiskCapUSD()-openRiskForMinLot:0.0);
          if(riskUSD<minLotRisk && minLotRisk<=EffectivePerPositionRiskCapUSD()+0.0001 &&
+            minLotRisk<=dailyHeadroomForMinLot+0.0001 && minLotRisk<=portfolioHeadroomForMinLot+0.0001 &&
             g_governorState==0 && !g_currentProvisionalEntry)
             riskUSD=minLotRisk;
          rawLots=riskUSD/riskPerLot;
@@ -3778,7 +3785,11 @@ double CalculateLotsForRisk(double riskUSD,double stopDistancePrice)
    double minLotRisk=minLot*riskPerLot;
    // If broker minimum lot is the only obstacle, permit its true stop-risk only in NORMAL,
    // non-provisional mode and only within the capital-derived per-position ceiling.
+   double openRiskForMinLot=PortfolioOpenRiskUSD();
+   double dailyHeadroomForMinLot=EffectiveDailyLossLimitUSD()+TodayNetProfit();
+   double portfolioHeadroomForMinLot=(openRiskForMinLot>=0.0?EffectivePortfolioRiskCapUSD()-openRiskForMinLot:0.0);
    if(riskUSD<minLotRisk && minLotRisk<=EffectivePerPositionRiskCapUSD()+0.0001 &&
+      minLotRisk<=dailyHeadroomForMinLot+0.0001 && minLotRisk<=portfolioHeadroomForMinLot+0.0001 &&
       g_governorState==0 && !g_currentProvisionalEntry)
       riskUSD=minLotRisk;
    double rawLots=riskUSD/riskPerLot;
