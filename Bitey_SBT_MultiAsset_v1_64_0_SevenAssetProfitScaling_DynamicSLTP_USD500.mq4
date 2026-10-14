@@ -1372,22 +1372,73 @@ double CrossAssetNormalizeLots(string sym,double lots)
 
 double CrossAssetLotsForRisk(string sym,double riskUSD,double stopDistance)
 {
-   double tickValue=MarketInfo(sym,MODE_TICKVALUE), tickSize=TickSizePriceForSymbol(sym);
+   // Diagnostic-only expansion: preserve all risk gates and never force the broker minimum lot.
+   double tickValue=MarketInfo(sym,MODE_TICKVALUE);
+   double tickSize=TickSizePriceForSymbol(sym);
    double minLot=MarketInfo(sym,MODE_MINLOT);
-   if(tickValue<=0.0 || tickSize<=0.0 || riskUSD<=0.0 || stopDistance<=0.0 || minLot<=0.0) return 0.0;
-   double riskPerLot=(stopDistance/tickSize)*tickValue;
-   if(riskPerLot<=0.0) return 0.0;
-   double lots=CrossAssetNormalizeLots(sym,riskUSD/riskPerLot);
-   if(lots<=0.0)
+   double lotStep=MarketInfo(sym,MODE_LOTSTEP);
+   double maxLot=MarketInfo(sym,MODE_MAXLOT);
+   double riskPerLot=0.0, minLotRisk=-1.0, rawLots=0.0, lots=0.0, projected=-1.0;
+   string rejectReason="";
+   if(tickValue<=0.0 || tickSize<=0.0 || riskUSD<=0.0 || stopDistance<=0.0 || minLot<=0.0 || lotStep<=0.0 || maxLot<minLot)
+      rejectReason="INVALID_SYMBOL_RISK_METADATA_OR_BUDGET";
+   else
    {
-      double minLotRisk=minLot*riskPerLot;
-      // Minimum broker lot is permitted only if it fits the dynamic budget.
-      if(minLotRisk<=riskUSD+0.0001 && g_governorState==0 && !g_currentProvisionalEntry)
-         lots=CrossAssetNormalizeLots(sym,minLot);
+      riskPerLot=(stopDistance/tickSize)*tickValue;
+      if(riskPerLot<=0.0)
+         rejectReason="NONPOSITIVE_RISK_PER_LOT";
+      else
+      {
+         minLotRisk=minLot*riskPerLot;
+         rawLots=riskUSD/riskPerLot;
+         lots=CrossAssetNormalizeLots(sym,rawLots);
+         if(lots<=0.0)
+         {
+            // Minimum broker lot is permitted only if it fits the dynamic budget and entry is not provisional.
+            if(minLotRisk<=riskUSD+0.0001 && g_governorState==0 && !g_currentProvisionalEntry)
+               lots=CrossAssetNormalizeLots(sym,minLot);
+            else if(minLotRisk>riskUSD+0.0001)
+               rejectReason="MIN_LOT_EXCEEDS_AVAILABLE_RISK_BUDGET";
+            else if(g_governorState!=0)
+               rejectReason="MIN_LOT_FALLBACK_BLOCKED_BY_RISK_GOVERNOR";
+            else if(g_currentProvisionalEntry)
+               rejectReason="MIN_LOT_FALLBACK_BLOCKED_FOR_PROVISIONAL_EVIDENCE";
+            else
+               rejectReason="LOT_NORMALIZATION_RETURNED_ZERO";
+         }
+         if(rejectReason=="" && lots<=0.0)
+            rejectReason="NORMALIZED_LOT_NOT_TRADABLE";
+         if(rejectReason=="" && lots>0.0)
+         {
+            projected=EstimateOrderRiskUSD(sym,lots,stopDistance);
+            if(projected<0.0)
+               rejectReason="PROJECTED_RISK_UNAVAILABLE";
+            else if(projected>riskUSD+0.0001)
+               rejectReason="PROJECTED_RISK_EXCEEDS_AVAILABLE_BUDGET";
+         }
+      }
    }
-   if(lots<=0.0) return 0.0;
-   double projected=EstimateOrderRiskUSD(sym,lots,stopDistance);
-   if(projected<0.0 || projected>riskUSD+0.0001) return 0.0;
+   if(rejectReason!="")
+   {
+      Print("CROSS-ASSET LOT RISK DETAIL | symbol=",sym,
+            " rejectReason=",rejectReason,
+            " riskBudgetUSD=",DoubleToString(riskUSD,4),
+            " stopDistance=",DoubleToString(stopDistance,(int)MarketInfo(sym,MODE_DIGITS)),
+            " tickValue=",DoubleToString(tickValue,8),
+            " tickSizePrice=",DoubleToString(tickSize,10),
+            " minLot=",DoubleToString(minLot,4),
+            " lotStep=",DoubleToString(lotStep,4),
+            " maxLot=",DoubleToString(maxLot,4),
+            " riskPerLotUSD=",DoubleToString(riskPerLot,4),
+            " minLotRiskUSD=",(minLotRisk>=0.0?DoubleToString(minLotRisk,4):"UNAVAILABLE"),
+            " rawLots=",DoubleToString(rawLots,6),
+            " normalizedLots=",DoubleToString(lots,6),
+            " projectedRiskUSD=",(projected>=0.0?DoubleToString(projected,4):"UNAVAILABLE"),
+            " governorState=",g_governorState,
+            " provisionalEntry=", (g_currentProvisionalEntry?"true":"false"),
+            " | no order sent.");
+      return 0.0;
+   }
    return lots;
 }
 
