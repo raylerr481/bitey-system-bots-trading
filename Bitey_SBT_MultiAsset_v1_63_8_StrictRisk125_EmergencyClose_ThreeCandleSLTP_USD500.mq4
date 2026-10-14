@@ -2,6 +2,43 @@
 #property version   "1.638"
 #property description "Bitey SBT Multi-Asset v1.63.8 - strict USD1.25 per-position risk, USD3.75 portfolio risk, three-candle adaptive SLTP, fixed USD500"
 
+// ============================================================================
+// BITEY SBT v1.63.8 — AUTHORITATIVE RISK / POSITION MANAGEMENT RULES
+// These comments document intended safeguards; runtime enforcement and broker
+// acceptance must still be verified in MetaEditor, Strategy Tester and demo.
+// 1) FIXED STRATEGY CAPITAL: USD 500 maximum reference allocation. Never scale
+//    this value from MT4 balance/equity. Account currency must be USD.
+// 2) PER-POSITION STOP RISK: maximum calculated loss at the installed SL is
+//    USD 1.25 per position. Validate tick size/value, lot size, contract specs,
+//    costs and SL readback; reject an entry if risk is unknown or exceeds cap.
+//    Never widen an SL to fit a lot.
+// 3) EXISTING POSITIONS: re-audit open positions under this EA's magic across
+//    symbols. Try to tighten an over-risk SL. If the cap cannot be enforced or
+//    confirmed by broker readback, attempt an emergency market close and log
+//    the result/error. A close attempt is NOT a guarantee the broker will fill.
+// 4) PORTFOLIO LIMIT: no more than 3 simultaneous positions and no more than
+//    USD 3.75 combined calculated stop-risk (3 x USD 1.25). Count existing
+//    positions before admitting another entry; reject if totals are unknown,
+//    duplicated by broker aliases, or over budget.
+// 5) DAILY LOSS: at -USD 10 net for the trading day, block new entries while
+//    continuing protective management of existing positions.
+// 6) ADAPTIVE SL/TP: preserve the three-favorable-closed-candle confirmation
+//    before normal adaptive changes. Tighten stops to protect gains; do not
+//    move an SL farther from price or increase the original risk. Respect
+//    broker stop/freeze distances and verify every successful modification.
+// 7) ENTRY QUALITY / EXECUTION: market data, spread, quote freshness, lot,
+//    margin, symbol specification, evidence/holdout, duplicate-entry, daily
+//    loss, position-count and aggregate-risk gates remain mandatory. Ranking
+//    an asset alone is not authorization to trade.
+// 8) CONTROL / SAFETY: MT4 remains the execution authority; telemetry and
+//    Q-learning reports must not authorize or bypass an order. No martingale,
+//    no stop-loss bypass, no automatic account switching.
+// 9) LIMITATION: USD 1.25 is a calculated stop-risk target, not a guarantee of
+//    realized loss. Gaps, slippage, spread changes, conversion/tick-value
+//    differences, requotes, rejected modifications or failed closes can cause
+//    a larger loss. Log every breach and failed protective action explicitly.
+// ============================================================================
+
 // RECONSTRUCTION NOTE: rebuilt from Library v1.49.7 plus available 2026-10-12 diagnostics; exact v1.51.4 source was not found.
 // v1.62: carries forward the broker symbol-to-canonical-asset validation immediately before each OrderSend; order comments identify the canonical asset.
 // v1.60: rate-limits successful adaptive SL/TP changes to at most one per ticket per newly closed management-timeframe candle.
