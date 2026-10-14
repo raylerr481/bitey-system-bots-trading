@@ -2676,12 +2676,12 @@ string JsonEscape(string value)
 {
    StringReplace(value, "\\", "\\\\");
    StringReplace(value, "\"", "\\\"");
-   StringReplace(value, "\b", "\\b");
-   StringReplace(value, "\f", "\\f");
+   StringReplace(value, CharToString(8), "\\b");
+   StringReplace(value, CharToString(12), "\\f");
    StringReplace(value, "\n", "\\n");
    StringReplace(value, "\r", "\\r");
    StringReplace(value, "\t", "\\t");
-   StringReplace(value, "\v", "\\u000B");
+   StringReplace(value, CharToString(11), "\\u000B");
    return value;
 }
 
