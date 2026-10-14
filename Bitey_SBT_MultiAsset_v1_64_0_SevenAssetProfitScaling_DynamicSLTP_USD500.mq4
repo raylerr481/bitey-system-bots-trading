@@ -2612,12 +2612,18 @@ void WriteEvidenceRow(string model,string direction,DirectionEvidence &e,int sig
    FileClose(h);
 }
 
+// Escape JSON strings, including whitespace/control characters, before embedding them
+// in outbound telemetry. Backslashes must be escaped before other sequences.
 string JsonEscape(string value)
 {
    StringReplace(value, "\\", "\\\\");
    StringReplace(value, "\"", "\\\"");
-   StringReplace(value, "\r", "\\r");
+   StringReplace(value, "\b", "\\b");
+   StringReplace(value, "\f", "\\f");
    StringReplace(value, "\n", "\\n");
+   StringReplace(value, "\r", "\\r");
+   StringReplace(value, "\t", "\\t");
+   StringReplace(value, "\v", "\\u000B");
    return value;
 }
 
@@ -2661,7 +2667,7 @@ void SendSbtSnapshot(int decision,string decisionText,int buyVotes,int sellVotes
    double spreadPoints = MarketInfo(Symbol(),MODE_SPREAD);
 
    string body="{";
-   body+="\"source\":\"Bitey_SBT_MultiAsset_v1_59\",";
+   body+="\"source\":\"Bitey_SBT_MultiAsset_v1_64_0\",";
    body+="\"symbol\":\""+JsonEscape(Symbol())+"\",";
    body+="\"timeframe\":\""+IntegerToString(Period())+"\",";
    body+="\"chart_timeframe\":\""+IntegerToString(Period())+"\",";
@@ -2673,7 +2679,7 @@ void SendSbtSnapshot(int decision,string decisionText,int buyVotes,int sellVotes
    body+="\"best_strategy\":\""+JsonEscape(bestStrategy)+"\",";
    body+="\"best_score\":"+DoubleToString(bestScore,6)+",";
    body+="\"metrics\":{";
-   body+="\"engine_version\":\"1.59\",";
+   body+="\"engine_version\":\"1.64.0\",";
    body+="\"magic\":"+IntegerToString(InpMagic)+",";
    body+="\"decision\":\""+JsonEscape(decisionText)+"\",";
    body+="\"provisional_evidence\":"+JsonBool(g_currentProvisionalEntry)+",";
@@ -2747,14 +2753,18 @@ void SendSbtSnapshot(int decision,string decisionText,int buyVotes,int sellVotes
    body+="\"bot\":{";
    body+="\"name\":\"Bitey SBT Multi-Model Engine\",";
    body+="\"id\":\"bitey-sbt-multimodel\",";
-   body+="\"version\":\"1.59\",";
+   body+="\"version\":\"1.64.0\",";
    body+="\"magic\":"+IntegerToString(InpMagic)+",";
    body+="\"strategy\":\"ENSEMBLE\",";
    body+="\"signal\":\""+direction+"\",";
    body+="\"active\":true}}";
 
    char post[],result[];
-   StringToCharArray(body,post,0,StringLen(body),CP_UTF8);
+    // Copy the complete UTF-8 payload, then remove StringToCharArray's trailing NUL.
+    // This avoids truncating multibyte characters and excludes NUL from the HTTP body.
+    int copied=StringToCharArray(body,post,0,WHOLE_ARRAY,CP_UTF8);
+    if(copied>0 && ArraySize(post)>0 && post[ArraySize(post)-1]==0)
+       ArrayResize(post,ArraySize(post)-1);
    string headers="Content-Type: application/json; charset=utf-8\r\n";
    if(StringLen(InpSbtToken)>0) headers+="X-MT4-Token: "+InpSbtToken+"\r\n";
    string responseHeaders="";
@@ -2860,7 +2870,7 @@ bool SendClosedTradeReport(int historyIndex)
    body+="\"source\":\"MT4_DESKTOP\",";
    body+="\"bot_id\":\"BITEY_SBT_MULTIMODEL\",";
    body+="\"strategy\":\""+JsonEscape(model)+"\",";
-   body+="\"version\":\"1.59\",";
+   body+="\"version\":\"1.64.0\",";
    body+="\"ticket\":"+IntegerToString(ticket)+",";
    body+="\"magic\":"+IntegerToString(OrderMagicNumber())+",";
    body+="\"symbol\":\""+JsonEscape(OrderSymbol())+"\",";
@@ -2876,12 +2886,12 @@ bool SendClosedTradeReport(int historyIndex)
    body+="\"pnl\":"+DoubleToString(netPnl,2)+",";
    body+="\"commission\":"+DoubleToString(OrderCommission(),2)+",";
    body+="\"swap\":"+DoubleToString(OrderSwap(),2)+",";
-   body+="\"exit_reason\":\""+ExitReasonForSelectedOrder()+"\",";
+   body+="\"exit_reason\":\""+JsonEscape(ExitReasonForSelectedOrder())+"\",";
    body+="\"r_multiple\":"+DoubleToString(rewardR,5)+",";
    body+="\"metadata\":{";
    body+="\"report_family\":\"BITEY_SBT_LIBRARY\",";
    body+="\"learning_scope\":\"shared_bitey_ia_sbt\",";
-   body+="\"source_version\":\"1.59\",";
+   body+="\"source_version\":\"1.64.0\",";
    body+="\"q_learning\":{";
    body+="\"algorithm\":\"Q_LEARNING\",";
    body+="\"policy_key\":\"bitey_shared_trading_q_v1\",";
@@ -2897,7 +2907,11 @@ bool SendClosedTradeReport(int historyIndex)
    body+="\"ineligible_reason\":\""+(hasEntryState?"":"entry_state_missing_after_restart_or_legacy_trade")+"\"}}}";
 
    char post[],result[];
-   StringToCharArray(body,post,0,StringLen(body),CP_UTF8);
+    // Copy the complete UTF-8 payload, then remove StringToCharArray's trailing NUL.
+    // This avoids truncating multibyte characters and excludes NUL from the HTTP body.
+    int copied=StringToCharArray(body,post,0,WHOLE_ARRAY,CP_UTF8);
+    if(copied>0 && ArraySize(post)>0 && post[ArraySize(post)-1]==0)
+       ArrayResize(post,ArraySize(post)-1);
    string headers="Content-Type: application/json; charset=utf-8\r\n";
    if(StringLen(InpSbtToken)>0) headers+="X-MT4-Token: "+InpSbtToken+"\r\n";
    string responseHeaders="";
