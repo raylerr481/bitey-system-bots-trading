@@ -16,10 +16,11 @@
 //    symbols. Try to tighten an over-risk SL. If the cap cannot be enforced or
 //    confirmed by broker readback, attempt an emergency market close and log
 //    the result/error. A close attempt is NOT a guarantee the broker will fill.
-// 4) PORTFOLIO LIMIT: no more than 3 simultaneous positions and no more than
-//    USD 3.75 combined calculated stop-risk (3 x USD 1.25). Count existing
-//    positions before admitting another entry; reject if totals are unknown,
-//    duplicated by broker aliases, or over budget.
+// 4) PORTFOLIO LIMIT: dynamic capacity from 1 to 7 simultaneous positions,
+//    one per canonical asset. Base capacity is 3; slots 4-7 unlock at campaign
+//    net profits of +USD5/+10/+15/+20. At net losses <= -USD2.50 capacity is 2;
+//    at <= -USD5 capacity is 1. Aggregate stop-risk is activeSlots x USD1.25,
+//    capped at USD8.75. Existing positions and aliases are counted before entry.
 // 5) DAILY LOSS: at -USD 10 net for the trading day, block new entries while
 //    continuing protective management of existing positions.
 // 6) ADAPTIVE SL/TP: preserve the three-favorable-closed-candle confirmation
@@ -188,7 +189,7 @@ int EffectiveMaxOpenTrades()
    else if(net >= 5.00)  targetSlots = 4;
 
    // The configured ceiling can lower the maximum, never raise it above seven.
-   return MathMax(1, MathMin(7, MathMin(InpMaxOpenTrades, targetSlots)));
+   return (int)MathMax(1, MathMin(7, MathMin(InpMaxOpenTrades, targetSlots)));
 }
 
 // Aggregate stop-risk budget tracks active capacity; each position remains capped at USD1.25.
