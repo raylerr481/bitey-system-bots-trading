@@ -1439,7 +1439,10 @@ double CrossAssetLotsForRisk(string sym,double riskUSD,double stopDistance)
       rejectReason="INVALID_SYMBOL_RISK_METADATA_OR_BUDGET";
    else
    {
-      riskPerLot=(stopDistance/tickSize)*tickValue;
+      double pointSize=MarketInfo(sym,MODE_POINT);
+       double spreadPts=MarketInfo(sym,MODE_SPREAD);
+       double estimatedEntryCostDistance=(MathMax(0.0,spreadPts)+MathMax(0,InpSlippagePoints))*pointSize;
+       riskPerLot=(stopDistance/tickSize)*tickValue+(estimatedEntryCostDistance/tickSize)*tickValue;
       if(riskPerLot<=0.0)
          rejectReason="NONPOSITIVE_RISK_PER_LOT";
       else
@@ -1597,7 +1600,7 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
       return false;
       }
    }
-   double riskBudget=EffectiveRiskBudgetUSD();
+   double riskBudget=EvidenceAdaptiveRiskBudget(EffectiveRiskBudgetUSD(),wr,avgR,hwr,havgR);
    double stopDistance=atr*InpStopATR, targetDistance=atr*InpTargetATR;
    double lots=CrossAssetLotsForRisk(sym,riskBudget,stopDistance);
    if(lots<=0.0)
@@ -1799,7 +1802,7 @@ bool CrossAssetPreflightReplacement(string sym,string dir,double score,int incum
    double riskBudget=EvidenceAdaptiveRiskBudget(EffectiveRiskBudgetUSD(),wr,avgR,hwr,havgR), stopDistance=atr*InpStopATR, targetDistance=atr*InpTargetATR;
    double lots=CrossAssetLotsForRisk(sym,riskBudget,stopDistance);
    double proposedRisk=(lots>0.0?EstimateOrderRiskUSD(sym,lots,stopDistance):-1.0);
-   if(lots<=0.0 || proposedRisk<0.0 || proposedRisk>5.00+0.0001 || currentRisk-incumbentRisk+proposedRisk>EffectivePortfolioRiskCapUSD()+0.0001)
+   if(lots<=0.0 || proposedRisk<0.0 || proposedRisk>InpHardRiskCapUSD+0.0001 || currentRisk-incumbentRisk+proposedRisk>EffectivePortfolioRiskCapUSD()+0.0001)
    { Print("CROSS-ASSET ROTATION PREFLIGHT BLOCK | candidate=",sym," reason=LOT_OR_POST_ROTATION_RISK_GATE currentRisk=",DoubleToString(currentRisk,2)," incumbentRisk=",DoubleToString(incumbentRisk,2)," proposedRisk=",DoubleToString(proposedRisk,2)); return false; }
    double price=(dir=="BUY"?ask:bid), minStop=MarketInfo(sym,MODE_STOPLEVEL)*point;
    double sl=(dir=="BUY"?price-stopDistance:price+stopDistance), tp=(dir=="BUY"?price+targetDistance:price-targetDistance);
@@ -3780,7 +3783,8 @@ double CalculateLotsForRisk(double riskUSD,double stopDistancePrice)
    double ticksToStop=stopDistancePrice/tickSizePrice;
     double spreadPointsNow=MarketInfo(Symbol(),MODE_SPREAD);
     double estimatedCostDistance=(MathMax(0.0,spreadPointsNow)+MathMax(0,InpSlippagePoints))*Point;
-    double riskPerLot=(ticksToStop*tickValue)+(estimatedCostDistance/tickSizePrice)*tickValue;   riskUSD=MathMin(riskUSD,MathMin(InpHardRiskCapUSD,EffectiveOperatingCapitalUSD()*InpMaxRiskPerTradeCapitalPct/100.0)); // Configured per-position risk guard.
+    double riskPerLot=(ticksToStop*tickValue)+(estimatedCostDistance/tickSizePrice)*tickValue;
+    riskUSD=MathMin(riskUSD,MathMin(InpHardRiskCapUSD,EffectiveOperatingCapitalUSD()*InpMaxRiskPerTradeCapitalPct/100.0)); // Configured per-position risk guard.
    double rawLots=riskUSD/riskPerLot;
    double minLotRisk=minLot*riskPerLot;
 
