@@ -19,7 +19,7 @@
 // 4) PORTFOLIO LIMIT: dynamic capacity from 1 to 7 simultaneous positions,
 //    one per canonical asset. Base capacity is 3; slots 4-7 unlock at campaign
 //    net profits of +USD5/+10/+15/+20. At net losses <= -USD2.50 capacity is 2;
-//    at <= -USD5 capacity is 1. Aggregate stop-risk is capped at USD10; adaptive per-position sizing cannot exceed remaining portfolio or daily headroom. Existing positions and aliases are counted before entry.
+//    at <= -USD5 capacity is 1. Aggregate open stop-risk is capped at USD50 and each position at USD25; sizing cannot exceed remaining portfolio or daily headroom. Existing positions and aliases are counted before entry.
 // 5) DAILY LOSS: at -USD25 net for the trading day, block new entries while
 //    continuing protective management of existing positions.
 // 6) ADAPTIVE SL/TP: preserve the three-favorable-closed-candle confirmation
@@ -100,7 +100,7 @@ input int      InpCrossAssetMaxQuoteAgeSeconds = 120; // Reject stale cross-symb
 input bool     InpAutoAllowDetectedCryptoOnChart = false; // Legacy compatibility only; strict seven-asset allowlist always applies.
 input double   InpPortfolioOpenRiskCapUSD = 50.00; // Hard aggregate open stop-risk ceiling: USD50.00.
 input bool     InpAdaptiveRiskLadderEnabled = true; // Adapt maximum USD risk per new trade to sustained portfolio P/L.
-input double   InpLossRiskConfirmedUSD = 1.25; // Conservative risk budget after loss confirmation; hard per-position cap remains USD5.
+input double   InpLossRiskConfirmedUSD = 1.25; // Conservative adaptive budget after loss confirmation; absolute per-position cap remains USD25.
 input double   InpLossRiskPersistentUSD = 0.75; // Reduce risk during persistent losses.
 input double   InpLossRiskSevereUSD = 0.35; // Reduce risk during severe/prolonged losses.
 input double   InpSeverePortfolioLossTriggerUSD = 5.00; // Immediate severe state when campaign net P/L reaches -USD5.
@@ -1191,7 +1191,7 @@ int OnInit()
       return(INIT_FAILED);
    }
    if(InpOperatingCapitalUSD<=0 || InpRiskPerTradeUSD<=0 || InpHardRiskCapUSD<=0 || EffectivePortfolioRiskCapUSD()<=0 || InpMaxOpenTrades<1 || InpMaxOpenTrades>7 || InpMaxPositionsPerAsset!=1 || InpCrossAssetMaxCryptoPositions<1 || InpSbtTelemetryTimeoutMs<250 ||
-      InpLossRiskConfirmedUSD<=0 || InpLossRiskPersistentUSD<=0 || InpLossRiskSevereUSD<=0 || InpSeverePortfolioLossTriggerUSD<=0 || InpLossConfirmMinutes<1 || InpPersistentLossMinutes<InpLossConfirmMinutes || InpSevereLossMinutes<InpPersistentLossMinutes || InpProfitActivationThresholdUSD<0 || InpProfitSustainMinutes<1 || InpProfitRiskStepUSD<=0 || InpAdaptiveRiskMaximumUSD<=0 || InpAdaptiveRiskMaximumUSD>10.00 || InpHardRiskCapUSD>10.00 || InpRiskPerTradeUSD>10.00 || InpMaxRiskPerTradeCapitalPct<=0 || InpMaxRiskPerTradeCapitalPct>2.00 ||
+      InpLossRiskConfirmedUSD<=0 || InpLossRiskPersistentUSD<=0 || InpLossRiskSevereUSD<=0 || InpSeverePortfolioLossTriggerUSD<=0 || InpLossConfirmMinutes<1 || InpPersistentLossMinutes<InpLossConfirmMinutes || InpSevereLossMinutes<InpPersistentLossMinutes || InpProfitActivationThresholdUSD<0 || InpProfitSustainMinutes<1 || InpProfitRiskStepUSD<=0 || InpAdaptiveRiskMaximumUSD<=0 || InpAdaptiveRiskMaximumUSD>25.00 || InpHardRiskCapUSD>25.00 || InpRiskPerTradeUSD>25.00 || InpMaxRiskPerTradeCapitalPct<=0 || InpMaxRiskPerTradeCapitalPct>5.00 ||
       InpATRPeriod<2 || InpForwardHorizonBars<1 || InpEvidenceLookbackBars<30 ||
       InpBreakEvenTriggerATR<=0 || InpBreakEvenLockATR<0 || InpTrailTriggerATR<=0 || InpTrailDistanceATR<=0 || InpTPExtendTriggerATR<=0 || InpTPExtendDistanceATR<=0 || InpAdaptiveSLTPMinNetProfitUSD<0 || InpSLTPMinChangeATR<=0 || InpSLTPModifyCooldownSeconds<1 ||
       InpPullbackMaxGapATR<0 || InpBreakoutBufferATR<0 || InpStopATR<=0 || InpTargetATR<=0 ||
