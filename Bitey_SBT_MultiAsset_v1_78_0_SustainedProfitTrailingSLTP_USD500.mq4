@@ -2545,8 +2545,9 @@ void ManageAdaptiveSLTP()
       double newSL=oldSL, newTP=oldTP;
       string slReason="UNCHANGED", tpReason="UNCHANGED";
 
-      if(favorable>=InpBreakEvenTriggerATR*atr)
+      if(favorable>=InpBreakEvenTriggerATR*atr || floatingNet>InpAdaptiveSLTPMinNetProfitUSD)
       {
+         // Once the sustained USD5 gate passes, attempt net break-even even before the usual ATR trigger.
          // Cost-adjusted break-even uses this ticket's actual commission/swap and broker tick economics.
          // A one-tick reserve reduces rounding risk; it cannot guarantee a positive realized exit.
          double knownCostsUSD=MathMax(0.0,-(OrderCommission()+OrderSwap()));
