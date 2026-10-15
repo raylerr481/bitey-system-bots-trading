@@ -2420,8 +2420,10 @@ void ManageAdaptiveSLTP()
       int ticket=OrderTicket();
       string sym=OrderSymbol();
       double floatingNet=OrderProfit()+OrderSwap()+OrderCommission();
+      string sltpProfitTimerKey=StringFormat("BiteySLTPProfitSince_%d",ticket);
       if(floatingNet<=0.50)
       {
+         if(GlobalVariableCheck(sltpProfitTimerKey)) GlobalVariableDel(sltpProfitTimerKey);
          string profitGateKey=StringFormat("BiteySLTPProfitGate_%d",ticket);
          double lastGateDiag=(GlobalVariableCheck(profitGateKey)?GlobalVariableGet(profitGateKey):0.0);
          if(now-(datetime)lastGateDiag>=60 || lastGateDiag<=0)
@@ -2462,7 +2464,6 @@ void ManageAdaptiveSLTP()
                " ask=",DoubleToString(ask,digits));
          continue;
       }
-      string sltpProfitTimerKey=StringFormat("BiteySLTPProfitSince_%d",ticket);
       datetime profitSince=0;
       if(GlobalVariableCheck(sltpProfitTimerKey)) profitSince=(datetime)GlobalVariableGet(sltpProfitTimerKey);
       if(floatingNet<=0.50)
