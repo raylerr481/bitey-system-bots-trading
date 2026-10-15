@@ -53,7 +53,7 @@
 // - Campaign net P/L >= +USD 200 activates the legacy profit-protect evidence mode; the separate adaptive USD ladder still controls per-trade risk after sustained-profit confirmation.
 // - Hard risk, daily loss, spread, open-position, and evidence gates remain active; no daily profit target or entry quota.
 // - Historical evidence is an in-sample diagnostic, not proof of future profitability.
-// v1.65.0: preserves v1.64.2 entry-attempt persistence and approved dynamic SL/TP; raises calculated per-position risk ceiling to USD5 and aggregate open stop-risk cap to USD10 while retaining fixed USD500 capital and USD10 daily-loss gate.
+// v1.65.0: preserves v1.64.2 entry-attempt persistence and approved dynamic SL/TP; raises calculated per-position risk ceiling to USD5 and aggregate open stop-risk cap to USD10 while retaining fixed USD500 capital and USD10 daily-loss gate. The 16 local models still execute on the chart symbol only; cross-asset scanner models remain a separate ensemble pending the symbol-independent model refactor.
 // v1.64.1: fails closed on unknown per-position risk metadata or invalid cap distance by attempting emergency close; portfolio risk remains unknown and blocks new entries until verified.
 // v1.64.0: based on v1.63.8; adds profit-aware dynamic capacity from 1 to 7 simultaneous canonical assets.
 // Slots 1-3 are the defensive/base range; slots 4-7 unlock only as campaign net profit grows. Losses scale capacity down.
@@ -100,7 +100,7 @@ input int      InpCrossAssetMaxQuoteAgeSeconds = 120; // Reject stale cross-symb
 input bool     InpAutoAllowDetectedCryptoOnChart = false; // Legacy compatibility only; strict seven-asset allowlist always applies.
 input double   InpPortfolioOpenRiskCapUSD = 10.00; // Hard aggregate open stop-risk ceiling: USD10.00.
 input bool     InpAdaptiveRiskLadderEnabled = true; // Adapt maximum USD risk per new trade to sustained portfolio P/L.
-input double   InpLossRiskConfirmedUSD = 1.25; // Never exceeds the hard USD1.25 per-position cap.
+input double   InpLossRiskConfirmedUSD = 1.25; // Conservative risk budget after loss confirmation; hard per-position cap remains USD5.
 input double   InpLossRiskPersistentUSD = 0.75; // Reduce risk during persistent losses.
 input double   InpLossRiskSevereUSD = 0.35; // Reduce risk during severe/prolonged losses.
 input double   InpSeverePortfolioLossTriggerUSD = 5.00; // Immediate severe state when campaign net P/L reaches -USD5.
