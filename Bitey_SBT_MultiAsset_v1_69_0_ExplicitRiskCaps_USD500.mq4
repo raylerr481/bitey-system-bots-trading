@@ -3,7 +3,7 @@
 #property description "Bitey SBT Multi-Asset v1.69.0 - corrected per-symbol local 16-model evaluation, closed HTF data, adaptive risk, fixed USD500"
 
 // ============================================================================
-// BITEY SBT v1.68.0 — AUTHORITATIVE RISK / POSITION MANAGEMENT RULES
+// BITEY SBT v1.69.0 — AUTHORITATIVE RISK / POSITION MANAGEMENT RULES
 // These comments document intended safeguards; runtime enforcement and broker
 // acceptance must still be verified in MetaEditor, Strategy Tester and demo.
 // 1) FIXED STRATEGY CAPITAL: USD 500 maximum reference allocation. Never scale
@@ -1237,7 +1237,7 @@ int OnInit()
             " | verify broker/terminal clock before relying on campaign P/L.");
       UpdateRiskGovernor();
    }
-   Print("BITEY SBT Multi-Asset Engine v1.68.0 initialized | Symbol=",Symbol(),
+   Print("BITEY SBT Multi-Asset Engine v1.69.0 initialized | Symbol=",Symbol(),
          " TF=",Period()," Mode=",(InpMode==OBSERVE_ONLY?"OBSERVE_ONLY":"AUTO_EXECUTION"),
          " OneShotTestMode=",(InpOneShotTestMode?"true":"false"),
          " OneShotSafetyNotice=",(InpOneShotTestMode?"ENABLED_ONE_ORDER_MAY_BE_REAL":"disabled"),
@@ -1788,7 +1788,7 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
          " technicalScore=",DoubleToString(score,2)," aggregateRiskAfterUSD=",DoubleToString(openRisk+proposedRisk,2),
          " reason=ALL_CHECKED_GATES_PASSED");
    ResetLastError();
-   int ticket=OrderSend(sym,type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.68.0 "+expectedAssetKey,InpMagic,0,clrNONE);
+   int ticket=OrderSend(sym,type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.69.0 "+expectedAssetKey,InpMagic,0,clrNONE);
    if(ticket<0)
    {
       int err=GetLastError();
@@ -5050,7 +5050,7 @@ void EvaluateEngine()
          " | evaluating 16 chart-local models with closed-bar data; the cross-asset ranking separately uses 16 model-family proxies; momentumThresholdATR=",DoubleToString(InpMomentumATRThreshold,2),
          " trendContinuation=",(InpMomentumTrendContinuation?"true":"false"),
          " donchianBufferATR=",DoubleToString(InpBreakoutBufferATR,2),".");
-   Print("BITEY SBT v1.68.0 MULTI-ASSET | governor=",GovernorStateName(g_governorState)," campaignNetUSD=",DoubleToString(g_campaignNetUSD,2)," requiredVotes=",requiredVotes," | ",Symbol()," TF=",Period()," BUY votes=",buyVotes," SELL votes=",sellVotes,
+   Print("BITEY SBT v1.69.0 MULTI-ASSET | governor=",GovernorStateName(g_governorState)," campaignNetUSD=",DoubleToString(g_campaignNetUSD,2)," requiredVotes=",requiredVotes," | ",Symbol()," TF=",Period()," BUY votes=",buyVotes," SELL votes=",sellVotes,
          " | TREND=",trend," MOMENTUM=",momentum," DONCHIAN=",donchian," MEANREV=",meanrev,
          " STRICT_RANGE=",strictRange," ATR_BREAKOUT=",atrBreakout," SESSION_BIAS=",sessionBias,
          " RSI_DIVERGENCE=",rsiDivergence," HTF_TREND=",htfTrend,
