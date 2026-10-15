@@ -165,7 +165,7 @@ double EffectiveDailyLossLimitUSD()
 {
    double capital=EffectiveOperatingCapitalUSD();
    if(capital<=0.0) return 0.0;
-   return MathMin(MathAbs(InpDailyLossLimitUSD),capital*0.056);
+   return MathMin(25.0,MathMin(MathAbs(InpDailyLossLimitUSD),capital*0.05));
 }
 
 
@@ -199,9 +199,9 @@ int EffectiveMaxOpenTrades()
 double EffectivePortfolioRiskCapUSD()
 {
    int slots = EffectiveMaxOpenTrades();
-   double perPositionCap = MathMin(EffectiveOperatingCapitalUSD()*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0, MathMin(InpAdaptiveRiskMaximumUSD, InpHardRiskCapUSD));
+   double perPositionCap = MathMin(25.0,MathMin(EffectiveOperatingCapitalUSD()*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0, MathMin(InpAdaptiveRiskMaximumUSD, InpHardRiskCapUSD)));
    if(slots < 1 || perPositionCap <= 0.0) return 0.0;
-   return MathMin(InpPortfolioOpenRiskCapUSD, slots * perPositionCap);
+   return MathMin(50.0,MathMin(MathAbs(InpPortfolioOpenRiskCapUSD), slots * perPositionCap));
 }
 
 // Raise the base risk budget only when both chronological training and holdout evidence exceed their pass floors.
@@ -321,10 +321,10 @@ double EffectiveRiskBudgetUSD()
       stateCode=6;
    }
 
-   risk=MathMin(risk,MathMin(capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0,MathMin(InpHardRiskCapUSD,MathMax(0.01,InpAdaptiveRiskMaximumUSD))));
+   risk=MathMin(risk,MathMin(25.0,MathMin(capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0,MathMin(InpHardRiskCapUSD,MathMax(0.01,InpAdaptiveRiskMaximumUSD)))));
    // Provisional model evidence remains deliberately half-risk; never increase risk for weak evidence.
    if(g_currentProvisionalEntry) risk=MathMin(risk,InpLossRiskConfirmedUSD*0.50);
-   risk=MathMin(risk,MathMin(capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0,InpHardRiskCapUSD)); // Configured fixed-capital guard.
+   risk=MathMin(risk,MathMin(25.0,MathMin(capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0,InpHardRiskCapUSD))); // Fixed USD25 hard cap.
    // Dynamic risk is bounded by remaining daily-loss and aggregate portfolio risk.
    double openRiskNow=PortfolioOpenRiskUSD();
    double dailyNetNow=TodayNetProfit();
@@ -342,7 +342,7 @@ double EffectiveRiskBudgetUSD()
       risk=MathMin(risk,MathMin(dailyLossHeadroom,portfolioRiskHeadroom));
    }
 
-   risk=MathMin(risk,MathMin(InpHardRiskCapUSD,capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0)); // Final configured fixed-capital guard.
+   risk=MathMin(risk,MathMin(25.0,MathMin(InpHardRiskCapUSD,capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0))); // Final fixed USD25 hard cap.
     double previousLevel=(GlobalVariableCheck(lastLevelKey)?GlobalVariableGet(lastLevelKey):-999.0);
    double previousState=(GlobalVariableCheck(lastStateKey)?GlobalVariableGet(lastStateKey):-999.0);
    if(MathAbs(previousLevel-risk)>0.001 || previousState!=(double)stateCode)
@@ -1459,7 +1459,7 @@ double CrossAssetLotsForRisk(string sym,double riskUSD,double stopDistance)
    double riskPerLot=0.0, minLotRisk=-1.0, rawLots=0.0, lots=0.0, projected=-1.0;
    double effectiveRiskUSD=riskUSD, minLotAllowedRisk=0.0;
    double capital=EffectiveOperatingCapitalUSD();
-   double perPositionCap=MathMin(InpHardRiskCapUSD,MathMin(InpAdaptiveRiskMaximumUSD,capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0));
+   double perPositionCap=MathMin(25.0,MathMin(InpHardRiskCapUSD,MathMin(InpAdaptiveRiskMaximumUSD,capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0)));
    double openRiskNow=PortfolioOpenRiskUSD();
    double aggregateHeadroom=(openRiskNow>=0.0?EffectivePortfolioRiskCapUSD()-openRiskNow:0.0);
    double dailyHeadroom=EffectiveDailyLossLimitUSD()+TodayNetProfit();
