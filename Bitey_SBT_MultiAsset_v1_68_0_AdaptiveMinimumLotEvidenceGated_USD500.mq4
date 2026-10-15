@@ -3,13 +3,14 @@
 #property description "Bitey SBT Multi-Asset v1.68.0 - corrected per-symbol local 16-model evaluation, closed HTF data, adaptive risk, fixed USD500"
 
 // ============================================================================
-// BITEY SBT v1.66.0 — AUTHORITATIVE RISK / POSITION MANAGEMENT RULES
+// BITEY SBT v1.68.0 — AUTHORITATIVE RISK / POSITION MANAGEMENT RULES
 // These comments document intended safeguards; runtime enforcement and broker
 // acceptance must still be verified in MetaEditor, Strategy Tester and demo.
 // 1) FIXED STRATEGY CAPITAL: USD 500 maximum reference allocation. Never scale
 //    this value from MT4 balance/equity. Account currency must be USD.
-// 2) PER-POSITION STOP RISK: maximum calculated loss at the installed SL is
-//    Asset minimum-lot risk may raise the adaptive base budget only after model/train/holdout evidence passes; configured per-trade hard ceiling remains 2% of fixed USD500 (USD10). Validate tick size/value, lot size, contract specs,
+// 2) PER-POSITION STOP RISK: minimum-lot sizing may adapt to validated asset cost only
+//    after model/train/holdout gates pass; the configured per-trade hard ceiling remains
+//    2% of fixed USD500 (USD10). Validate tick size/value, lot size, contract specs,
 //    costs and SL readback; reject an entry if risk is unknown or exceeds cap.
 //    Never widen an SL to fit a lot.
 // 3) EXISTING POSITIONS: re-audit open positions under this EA's magic across
@@ -52,7 +53,7 @@
 // - Campaign net P/L >= +USD 200 activates the legacy profit-protect evidence mode; the separate adaptive USD ladder still controls per-trade risk after sustained-profit confirmation.
 // - Hard risk, daily loss, spread, open-position, and evidence gates remain active; no daily profit target or entry quota.
 // - Historical evidence is an in-sample diagnostic, not proof of future profitability.
-// v1.67.0: corrects higher-timeframe look-ahead by using only the last fully closed HTF candle for live and historical signals; aligns Market Watch alias selection/history sufficiency to InpCrossAssetTimeframe; updates runtime identity and audit messages. All 16 local model families are evaluated independently on each candidate symbol, with per-model evidence and cross-asset chronological train/holdout gates. USD500 capital, adaptive risk and portfolio protections remain mandatory.
+// v1.68.0: permits evidence-gated broker minimum-lot sizing to adapt above the base budget within the USD10/2% hard ceiling; execution-cost ratio uses actual proposed stop risk, while aggregate/daily/evidence gates remain mandatory. v1.67.0: corrects higher-timeframe look-ahead by using only the last fully closed HTF candle for live and historical signals; aligns Market Watch alias selection/history sufficiency to InpCrossAssetTimeframe; updates runtime identity and audit messages. All 16 local model families are evaluated independently on each candidate symbol, with per-model evidence and cross-asset chronological train/holdout gates. USD500 capital, adaptive risk and portfolio protections remain mandatory.
 // v1.66.0: all 16 local model families accept explicit symbol/timeframe parameters. Cross-asset candidates must pass the independent local 16-model direction consensus and per-model historical evidence gate on that candidate symbol before any order sizing/send. Existing cross-asset train/chronological-holdout gates, USD500 virtual capital, adaptive risk and portfolio protections remain mandatory.
 // v1.64.1: fails closed on unknown per-position risk metadata or invalid cap distance by attempting emergency close; portfolio risk remains unknown and blocks new entries until verified.
 // v1.64.0: based on v1.63.8; adds profit-aware dynamic capacity from 1 to 7 simultaneous canonical assets.
@@ -1704,10 +1705,10 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
    }
    double spreadCost=EstimateOrderRiskUSD(sym,lots,spread*point);
    double slippageCost=EstimateOrderRiskUSD(sym,lots,InpSlippagePoints*point);
-   if(spreadCost<0.0 || slippageCost<0.0 || spreadCost+slippageCost>riskBudget*0.35)
+   if(spreadCost<0.0 || slippageCost<0.0 || spreadCost+slippageCost>MathMax(riskBudget,proposedRisk)*0.35)
    {
       Print("CROSS-ASSET EXECUTION BLOCK | symbol=",sym," reason=EXECUTION_COST_TOO_HIGH_OR_UNKNOWN spreadCostUSD=",DoubleToString(spreadCost,4),
-            " slippageProxyUSD=",DoubleToString(slippageCost,4)," riskBudgetUSD=",DoubleToString(riskBudget,2)," | no order sent.");
+            " slippageProxyUSD=",DoubleToString(slippageCost,4)," riskBudgetUSD=",DoubleToString(riskBudget,2)," sizingRiskUSD=",DoubleToString(MathMax(riskBudget,proposedRisk),2)," | no order sent.");
       {
       Print("ENTRY AUTHORIZATION AUDIT | stage=FINAL decision=REJECTED source=CROSS_ASSET_16_MODEL_ENSEMBLE symbol=",sym,
             " direction=",dir," model=CROSS_ASSET_16_MODEL_ENSEMBLE lots=",(auditLots>=0.0?DoubleToString(auditLots,4):"NOT_CALCULATED"),
@@ -1857,7 +1858,7 @@ bool CrossAssetPreflightReplacement(string sym,string dir,double score,int incum
    double sl=(dir=="BUY"?price-stopDistance:price+stopDistance), tp=(dir=="BUY"?price+targetDistance:price-targetDistance);
    if(MathAbs(price-sl)<minStop || MathAbs(tp-price)<minStop) { Print("CROSS-ASSET ROTATION PREFLIGHT BLOCK | candidate=",sym," reason=BROKER_STOP_LEVEL"); return false; }
    double spreadCost=EstimateOrderRiskUSD(sym,lots,spread*point), slipCost=EstimateOrderRiskUSD(sym,lots,InpSlippagePoints*point);
-   if(spreadCost<0.0 || slipCost<0.0 || spreadCost+slipCost>riskBudget*0.35)
+   if(spreadCost<0.0 || slipCost<0.0 || spreadCost+slipCost>MathMax(riskBudget,proposedRisk)*0.35)
    { Print("CROSS-ASSET ROTATION PREFLIGHT BLOCK | candidate=",sym," reason=COST_GATE spreadCost=",DoubleToString(spreadCost,4)," slippageProxy=",DoubleToString(slipCost,4)); return false; }
    Print("CROSS-ASSET ROTATION PREFLIGHT PASS | candidate=",sym," direction=",dir," technicalScore=",DoubleToString(score,2),
          " trainN=",n," trainWR=",DoubleToString(wr,3)," trainAvgRProxy=",DoubleToString(avgR,3),
