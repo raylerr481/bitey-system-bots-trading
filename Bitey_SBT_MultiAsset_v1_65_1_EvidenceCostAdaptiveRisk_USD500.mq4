@@ -2682,7 +2682,7 @@ void ProcessEngine(bool timerInvocation)
             " | closedBarTime=",TimeToString(iTime(Symbol(),Period(),1),TIME_DATE|TIME_MINUTES),
             " | bars=",Bars," | bid=",DoubleToString(Bid,Digits)," ask=",DoubleToString(Ask,Digits),
             " | spreadPoints=",(int)MarketInfo(Symbol(),MODE_SPREAD),
-            " | nextStep=manage positions then evaluate fourteen models.");
+            " | nextStep=manage positions then evaluate sixteen chart-local models.");
    }
    else
    {
@@ -2785,7 +2785,7 @@ void SendSbtSnapshot(int decision,string decisionText,int buyVotes,int sellVotes
    double spreadPoints = MarketInfo(Symbol(),MODE_SPREAD);
 
    string body="{";
-   body+="\"source\":\"Bitey_SBT_MultiAsset_v1_65_0\",";
+   body+="\"source\":\"Bitey_SBT_MultiAsset_v1_65_1\",";
    body+="\"symbol\":\""+JsonEscape(Symbol())+"\",";
    body+="\"timeframe\":\""+IntegerToString(Period())+"\",";
    body+="\"chart_timeframe\":\""+IntegerToString(Period())+"\",";
@@ -2797,7 +2797,7 @@ void SendSbtSnapshot(int decision,string decisionText,int buyVotes,int sellVotes
    body+="\"best_strategy\":\""+JsonEscape(bestStrategy)+"\",";
    body+="\"best_score\":"+DoubleToString(bestScore,6)+",";
    body+="\"metrics\":{";
-   body+="\"engine_version\":\"1.64.0\",";
+   body+="\"engine_version\":\"1.65.1\",";
    body+="\"magic\":"+IntegerToString(InpMagic)+",";
    body+="\"decision\":\""+JsonEscape(decisionText)+"\",";
    body+="\"provisional_evidence\":"+JsonBool(g_currentProvisionalEntry)+",";
