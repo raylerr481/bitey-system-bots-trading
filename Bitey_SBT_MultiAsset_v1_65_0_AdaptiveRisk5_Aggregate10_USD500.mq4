@@ -4196,7 +4196,7 @@ bool SendOrderUnlocked(int direction)
    if(lots<=0) { g_lastExecutionResult="BLOCKED_LOT_CALCULATION_OR_MINIMUM_LOT_RISK"; Print("ORDER BLOCKED | lot calculation failed; inspect preceding LOT CALC / LOT SPEC diagnostics"); return false; }
    double currentPortfolioRisk=PortfolioOpenRiskUSD();
    double proposedRisk=EstimateOrderRiskUSD(Symbol(),lots,stopDistance);
-   if(currentPortfolioRisk<0.0 || proposedRisk<0.0 || proposedRisk>5.00+0.0001 || currentPortfolioRisk+proposedRisk>EffectivePortfolioRiskCapUSD()+0.0001)
+   if(currentPortfolioRisk<0.0 || proposedRisk<0.0 || proposedRisk>InpHardRiskCapUSD+0.0001 || currentPortfolioRisk+proposedRisk>EffectivePortfolioRiskCapUSD()+0.0001)
    {
       g_lastExecutionResult="BLOCKED_PORTFOLIO_OPEN_RISK_CAP";
       Print("ORDER BLOCKED | reason=PORTFOLIO_OPEN_RISK_CAP | openRiskUSD=",DoubleToString(currentPortfolioRisk,2),
