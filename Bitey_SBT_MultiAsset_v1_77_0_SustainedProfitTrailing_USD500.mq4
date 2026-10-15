@@ -2484,9 +2484,9 @@ void ManageAdaptiveSLTP()
          }
          continue;
       }
-      // Profit protection has priority over the three-candle trailing confirmation.
-      // The closed-candle confirmation remains mandatory for TP extension only; a qualifying
-      // net-profitable position may still tighten its SL to break-even/lock/trailing levels.
+      // Profit protection activates only after net profit remains above USD5 for more than two minutes.
+      // Three favorable fully closed management candles are mandatory for all adaptive changes; a qualifying
+      // net-profitable position cannot modify SL or TP before that confirmation.
       bool favorableCandlesConfirmed=ThreeClosedCandlesConfirmFavorableMove(sym,tf,type);
       if(!favorableCandlesConfirmed)
       {
@@ -2498,7 +2498,7 @@ void ManageAdaptiveSLTP()
                   " reason=THREE_CLOSED_FAVORABLE_CANDLES_NOT_CONFIRMED",
                   " side=",(type==OP_BUY?"BUY":"SELL")," timeframe=",tf,
                   " floatingNetUSD=",DoubleToString(floatingNet,2),
-                  " action=ALLOW_PROFIT_LOCK_SL_CHECK; BLOCK_TP_EXTENSION_ONLY");
+                  " action=BLOCK_ALL_ADAPTIVE_SLTP_CHANGES_UNTIL_THREE_CLOSED_CANDLES");
             GlobalVariableSet(candleGateKey,(double)now);
          }
          continue; // Three favorable fully closed candles are mandatory for both SL tightening and TP extension.
