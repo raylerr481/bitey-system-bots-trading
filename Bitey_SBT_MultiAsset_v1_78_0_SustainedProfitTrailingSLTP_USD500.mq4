@@ -2505,9 +2505,10 @@ void ManageAdaptiveSLTP()
                   " reason=THREE_CLOSED_FAVORABLE_CANDLES_NOT_CONFIRMED",
                   " side=",(type==OP_BUY?"BUY":"SELL")," timeframe=",tf,
                   " floatingNetUSD=",DoubleToString(floatingNet,2),
-                  " action=ALLOW_PROFIT_LOCK_SL_CHECK; BLOCK_TP_EXTENSION_ONLY");
+                  " action=BLOCK_ALL_ADAPTIVE_SLTP_UNTIL_THREE_CLOSED_FAVORABLE_CANDLES");
             GlobalVariableSet(candleGateKey,(double)now);
          }
+         continue;
       }
       double point=MarketInfo(sym,MODE_POINT);
       int digits=(int)MarketInfo(sym,MODE_DIGITS);
