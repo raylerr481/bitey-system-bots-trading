@@ -1,5 +1,5 @@
 #property strict
-#property version   "1.740"
+#property version   "1.750"
 #property description "Bitey SBT Multi-Asset v1.74.0 - trade evidence packets, portfolio snapshots, verified execution records, fixed USD500"
 
 // ============================================================================
@@ -1801,7 +1801,7 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
       }
    }
    Print("TRADE EVIDENCE PACKET | schema=1 phase=PRE_ORDER source=CROSS_ASSET",
-         " eaVersion=1.740 symbol=",sym," canonicalAsset=",expectedAssetKey,
+         " eaVersion=1.750 symbol=",sym," canonicalAsset=",expectedAssetKey,
          " timeframe=",InpCrossAssetTimeframe," direction=",dir,
          " selectedModel=CROSS_ASSET_16_MODEL_ENSEMBLE technicalScore=",DoubleToString(score,4),
          " trainN=",n," trainWinRate=",DoubleToString(wr,4)," trainAvgRProxy=",DoubleToString(avgR,6),
@@ -1824,7 +1824,7 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
          " technicalScore=",DoubleToString(score,2)," aggregateRiskAfterUSD=",DoubleToString(openRisk+proposedRisk,2),
          " reason=ALL_CHECKED_GATES_PASSED");
    ResetLastError();
-   int ticket=OrderSend(sym,type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.74.0 "+expectedAssetKey,InpMagic,0,clrNONE);
+   int ticket=OrderSend(sym,type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.75.0 "+expectedAssetKey,InpMagic,0,clrNONE);
    if(ticket<0)
    {
       int err=GetLastError();
@@ -5322,7 +5322,7 @@ void EvaluateEngine()
          " | evaluating 16 chart-local models with closed-bar data; the cross-asset ranking separately uses 16 model-family proxies; momentumThresholdATR=",DoubleToString(InpMomentumATRThreshold,2),
          " trendContinuation=",(InpMomentumTrendContinuation?"true":"false"),
          " donchianBufferATR=",DoubleToString(InpBreakoutBufferATR,2),".");
-   Print("BITEY SBT v1.74.0 MULTI-ASSET | governor=",GovernorStateName(g_governorState)," campaignNetUSD=",DoubleToString(g_campaignNetUSD,2)," requiredVotes=",requiredVotes," | ",Symbol()," TF=",Period()," BUY votes=",buyVotes," SELL votes=",sellVotes,
+   Print("BITEY SBT v1.75.0 MULTI-ASSET | governor=",GovernorStateName(g_governorState)," campaignNetUSD=",DoubleToString(g_campaignNetUSD,2)," requiredVotes=",requiredVotes," | ",Symbol()," TF=",Period()," BUY votes=",buyVotes," SELL votes=",sellVotes,
          " | TREND=",trend," MOMENTUM=",momentum," DONCHIAN=",donchian," MEANREV=",meanrev,
          " STRICT_RANGE=",strictRange," ATR_BREAKOUT=",atrBreakout," SESSION_BIAS=",sessionBias,
          " RSI_DIVERGENCE=",rsiDivergence," HTF_TREND=",htfTrend,
