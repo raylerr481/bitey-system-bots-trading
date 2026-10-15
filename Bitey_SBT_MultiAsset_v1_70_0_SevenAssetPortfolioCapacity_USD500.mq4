@@ -1237,11 +1237,11 @@ int OnInit()
          " AutoAllowCryptoOnChart=",(InpAutoAllowDetectedCryptoOnChart?"true":"false"),
          " OtherCryptoSpreadCeiling=",InpMaxSpreadOtherCryptoPoints,
          " ScannerExecutionScope=PER_SYMBOL_TRAIN_AND_HOLDOUT_PROXY_AUDIT_ONLY");
-   Print("PROFIT-SCALED CAPACITY | campaignNetUSD=",DoubleToString(g_campaignNetUSD,2),
-         " activeSlots=",EffectiveMaxOpenTrades(),"/7",
-         " slotPolicy=1_AT_NET_LE_-5;2_AT_NET_LE_-2.5;3_BASE;4_AT_PLUS5;5_AT_PLUS10;6_AT_PLUS15;7_AT_PLUS20",
-         " duplicatePolicy=ONE_POSITION_PER_CANONICAL_ASSET",
-         " | thresholds are configuration policy, not evidence of profitability.");
+   Print("SEVEN-ASSET CAPACITY | campaignNetUSD=",DoubleToString(g_campaignNetUSD,2),
+          " activeSlots=",EffectiveMaxOpenTrades(),"/7",
+          " slotPolicy=CONFIGURED_CAPACITY_UP_TO_7;PER_POSITION_AND_AGGREGATE_RISK_GOVERNORS_REMAIN_ACTIVE",
+          " duplicatePolicy=ONE_POSITION_PER_CANONICAL_ASSET",
+          " | capacity is not a requirement to open trades and is not evidence of profitability.");
    Print("PORTFOLIO CONFIG | MaxOpenTrades=",EffectiveMaxOpenTrades(),
          " PortfolioOpenRiskCapUSD=",DoubleToString(EffectivePortfolioRiskCapUSD(),2),
          " PortfolioCapitalCapUSD=",DoubleToString(InpOperatingCapitalUSD,2),
