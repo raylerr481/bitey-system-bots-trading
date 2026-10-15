@@ -2674,6 +2674,7 @@ void AuditExistingPositionSupervision(string trigger)
       string asset=CanonicalAssetKey(sym);
       bool hasSL=(OrderStopLoss()>0.0);
       if(!hasSL) missingSL++;
+      int auditedTicket=OrderTicket();
       int canonicalCount=0;
       for(int j=OrdersTotal()-1;j>=0;j--)
       {
@@ -2681,6 +2682,9 @@ void AuditExistingPositionSupervision(string trigger)
          if(OrderMagicNumber()!=InpMagic || (OrderType()!=OP_BUY && OrderType()!=OP_SELL)) continue;
          if(CanonicalAssetKey(OrderSymbol())==asset) canonicalCount++;
       }
+      // The nested OrderSelect loop changes MT4's currently selected order; restore the
+      // audited ticket before reading its fields for the log.
+      if(!OrderSelect(auditedTicket,SELECT_BY_TICKET) || OrderCloseTime()>0) continue;
       if(canonicalCount>1) duplicatePositionRows++;
       double riskUSD=-1.0;
       if(hasSL) riskUSD=EstimateOrderRiskUSD(sym,OrderLots(),MathAbs(OrderOpenPrice()-OrderStopLoss()));
