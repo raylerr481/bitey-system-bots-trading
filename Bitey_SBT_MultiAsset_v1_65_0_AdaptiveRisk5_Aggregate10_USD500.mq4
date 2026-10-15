@@ -1,6 +1,6 @@
 #property strict
 #property version   "1.651"
-#property description "Bitey SBT Multi-Asset v1.65.0 - adaptive USD5 per-position risk, USD10 aggregate open risk, fixed USD500"
+#property description "Bitey SBT Multi-Asset v1.65.1 - evidence-adaptive cost-aware risk, USD10 aggregate/daily caps, fixed USD500"
 
 // ============================================================================
 // BITEY SBT v1.65.0 — AUTHORITATIVE RISK / POSITION MANAGEMENT RULES
@@ -9,7 +9,7 @@
 // 1) FIXED STRATEGY CAPITAL: USD 500 maximum reference allocation. Never scale
 //    this value from MT4 balance/equity. Account currency must be USD.
 // 2) PER-POSITION STOP RISK: maximum calculated loss at the installed SL is
-//    USD 5.00 per position (1% of fixed USD500 capital). Validate tick size/value, lot size, contract specs,
+//    No fixed USD5 ceiling: risk adapts to validated evidence and available headroom, with configured max 2% of fixed USD500. Validate tick size/value, lot size, contract specs,
 //    costs and SL readback; reject an entry if risk is unknown or exceeds cap.
 //    Never widen an SL to fit a lot.
 // 3) EXISTING POSITIONS: re-audit open positions under this EA's magic across
@@ -19,8 +19,7 @@
 // 4) PORTFOLIO LIMIT: dynamic capacity from 1 to 7 simultaneous positions,
 //    one per canonical asset. Base capacity is 3; slots 4-7 unlock at campaign
 //    net profits of +USD5/+10/+15/+20. At net losses <= -USD2.50 capacity is 2;
-//    at <= -USD5 capacity is 1. Aggregate stop-risk is capped at USD10,
-//    capped at USD8.75. Existing positions and aliases are counted before entry.
+//    at <= -USD5 capacity is 1. Aggregate stop-risk is capped at USD10; adaptive per-position sizing cannot exceed remaining portfolio or daily headroom. Existing positions and aliases are counted before entry.
 // 5) DAILY LOSS: at -USD 10 net for the trading day, block new entries while
 //    continuing protective management of existing positions.
 // 6) ADAPTIVE SL/TP: preserve the three-favorable-closed-candle confirmation
@@ -53,7 +52,7 @@
 // - Campaign net P/L >= +USD 200 activates the legacy profit-protect evidence mode; the separate adaptive USD ladder still controls per-trade risk after sustained-profit confirmation.
 // - Hard risk, daily loss, spread, open-position, and evidence gates remain active; no daily profit target or entry quota.
 // - Historical evidence is an in-sample diagnostic, not proof of future profitability.
-// v1.65.0: preserves v1.64.2 entry-attempt persistence and approved dynamic SL/TP; raises calculated per-position risk ceiling to USD5 and aggregate open stop-risk cap to USD10 while retaining fixed USD500 capital and USD10 daily-loss gate. The 16 local models still execute on the chart symbol only; cross-asset scanner models remain a separate ensemble pending the symbol-independent model refactor.
+// v1.65.1: evidence-adaptive risk sizing may exceed the USD5 baseline only when train and chronological holdout both pass; per-position risk is bounded by configured capital percentage and remaining USD10 daily/aggregate headroom. Local model execution still runs on chart symbol only in this patch; per-symbol local-model execution remains a required separate refactor.
 // v1.64.1: fails closed on unknown per-position risk metadata or invalid cap distance by attempting emergency close; portfolio risk remains unknown and blocks new entries until verified.
 // v1.64.0: based on v1.63.8; adds profit-aware dynamic capacity from 1 to 7 simultaneous canonical assets.
 // Slots 1-3 are the defensive/base range; slots 4-7 unlock only as campaign net profit grows. Losses scale capacity down.
@@ -73,8 +72,8 @@ input int      InpMagic = 10102027;
 input AccountTypeReport InpAccountTypeReport = ACCOUNT_REPORT_AUTO; // Requested configuration; does NOT falsify terminal IsDemo().
 input bool     InpBlockOnAccountTypeMismatch = false; // Compatibility only; DEMO/REAL mismatch never gates orders.
 input double   InpOperatingCapitalUSD = 500.0;
-input double   InpRiskPerTradeUSD = 5.00; // Adaptive baseline; hard per-position stop-risk ceiling is USD5 (1% of fixed USD500).
-input double   InpHardRiskCapUSD = 5.00; // Hard per-position stop-risk cap: USD5.00.
+input double   InpRiskPerTradeUSD = 5.00; // Baseline only; evidence may raise it within configured and remaining risk headroom.
+input double   InpHardRiskCapUSD = 10.00; // Adaptive per-position cap, bounded by 2% of fixed capital and remaining daily/aggregate budgets.
 input int      InpMaxPositionsPerAsset = 1; // Exactly one open position per canonical asset, including broker aliases.
 input double   InpDailyLossLimitUSD = 10.00; // USD500 capital: stop new entries at -USD10 (2%); continue protective management.
 input double   InpDailyProfitTargetUSD = 0.00; // Deprecated compatibility input; daily profit targets never block new entries.
@@ -110,8 +109,8 @@ input int      InpSevereLossMinutes = 60; // Long-running loss also steps risk d
 input double   InpProfitActivationThresholdUSD = 0.50; // Portfolio net P/L must exceed this value to start profit persistence timer.
 input int      InpProfitSustainMinutes = 60; // Positive net portfolio result must persist this long before risk can rise to USD5+.
 input double   InpProfitRiskStepUSD = 5.00; // Each additional USD5 of campaign net profit advances the risk budget by USD1.
-input double   InpAdaptiveRiskMaximumUSD = 5.00; // Adaptive risk may decrease, never exceed USD5 per position.
-input double   InpMaxRiskPerTradeCapitalPct = 1.00; // 1% of fixed USD500 = USD5 maximum per position.
+input double   InpAdaptiveRiskMaximumUSD = 10.00; // Adaptive ceiling; remaining daily/aggregate headroom remains authoritative.
+input double   InpMaxRiskPerTradeCapitalPct = 2.00; // Absolute configurable per-position ceiling: 2% of fixed USD500 = USD10.
 input int      InpMaxSpreadSOLPoints = 100;
 input int      InpMaxSpreadEURPoints = 30;
 input int      InpMaxSpreadUSDJPYPoints = 35;
@@ -199,7 +198,7 @@ int EffectiveMaxOpenTrades()
 double EffectivePortfolioRiskCapUSD()
 {
    int slots = EffectiveMaxOpenTrades();
-   double perPositionCap = MathMin(5.00, MathMin(InpRiskPerTradeUSD, InpHardRiskCapUSD));
+   double perPositionCap = MathMin(EffectiveOperatingCapitalUSD()*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0, MathMin(InpRiskPerTradeUSD, InpHardRiskCapUSD));
    if(slots < 1 || perPositionCap <= 0.0) return 0.0;
    return MathMin(InpPortfolioOpenRiskCapUSD, slots * perPositionCap);
 }
@@ -321,10 +320,10 @@ double EffectiveRiskBudgetUSD()
       stateCode=6;
    }
 
-   risk=MathMin(risk,MathMin(capital,MathMin(5.00,MathMax(0.01,InpAdaptiveRiskMaximumUSD))));
+   risk=MathMin(risk,MathMin(capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0,MathMin(InpHardRiskCapUSD,MathMax(0.01,InpAdaptiveRiskMaximumUSD))));
    // Provisional model evidence remains deliberately half-risk; never increase risk for weak evidence.
    if(g_currentProvisionalEntry) risk=MathMin(risk,InpLossRiskConfirmedUSD*0.50);
-   risk=MathMin(risk,MathMin(capital,5.00)); // Absolute non-configurable per-position stop-risk ceiling: USD5.00.
+   risk=MathMin(risk,MathMin(capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0,InpHardRiskCapUSD)); // Configured fixed-capital guard.
    // Dynamic risk is bounded by remaining daily-loss and aggregate portfolio risk.
    double openRiskNow=PortfolioOpenRiskUSD();
    double dailyNetNow=TodayNetProfit();
@@ -342,7 +341,7 @@ double EffectiveRiskBudgetUSD()
       risk=MathMin(risk,MathMin(dailyLossHeadroom,portfolioRiskHeadroom));
    }
 
-   risk=MathMin(risk,5.00); // Final guard after all adaptive/profit-state calculations.
+   risk=MathMin(risk,MathMin(InpHardRiskCapUSD,capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0)); // Final configured fixed-capital guard.
     double previousLevel=(GlobalVariableCheck(lastLevelKey)?GlobalVariableGet(lastLevelKey):-999.0);
    double previousState=(GlobalVariableCheck(lastStateKey)?GlobalVariableGet(lastStateKey):-999.0);
    if(MathAbs(previousLevel-risk)>0.001 || previousState!=(double)stateCode)
@@ -1169,7 +1168,7 @@ int OnInit()
       return(INIT_FAILED);
    }
    if(InpOperatingCapitalUSD<=0 || InpRiskPerTradeUSD<=0 || InpHardRiskCapUSD<=0 || EffectivePortfolioRiskCapUSD()<=0 || InpMaxOpenTrades<1 || InpMaxOpenTrades>7 || InpMaxPositionsPerAsset!=1 || InpCrossAssetMaxCryptoPositions<1 || InpSbtTelemetryTimeoutMs<250 ||
-      InpLossRiskConfirmedUSD<=0 || InpLossRiskPersistentUSD<=0 || InpLossRiskSevereUSD<=0 || InpSeverePortfolioLossTriggerUSD<=0 || InpLossConfirmMinutes<1 || InpPersistentLossMinutes<InpLossConfirmMinutes || InpSevereLossMinutes<InpPersistentLossMinutes || InpProfitActivationThresholdUSD<0 || InpProfitSustainMinutes<1 || InpProfitRiskStepUSD<=0 || InpAdaptiveRiskMaximumUSD<=0 || InpAdaptiveRiskMaximumUSD>5.00 || InpHardRiskCapUSD>5.00 || InpRiskPerTradeUSD>5.00 || InpMaxRiskPerTradeCapitalPct<=0 || InpMaxRiskPerTradeCapitalPct>10 ||
+      InpLossRiskConfirmedUSD<=0 || InpLossRiskPersistentUSD<=0 || InpLossRiskSevereUSD<=0 || InpSeverePortfolioLossTriggerUSD<=0 || InpLossConfirmMinutes<1 || InpPersistentLossMinutes<InpLossConfirmMinutes || InpSevereLossMinutes<InpPersistentLossMinutes || InpProfitActivationThresholdUSD<0 || InpProfitSustainMinutes<1 || InpProfitRiskStepUSD<=0 || InpAdaptiveRiskMaximumUSD<=0 || InpAdaptiveRiskMaximumUSD>10.00 || InpHardRiskCapUSD>10.00 || InpRiskPerTradeUSD>10.00 || InpMaxRiskPerTradeCapitalPct<=0 || InpMaxRiskPerTradeCapitalPct>2.00 ||
       InpATRPeriod<2 || InpForwardHorizonBars<1 || InpEvidenceLookbackBars<30 ||
       InpBreakEvenTriggerATR<=0 || InpBreakEvenLockATR<0 || InpTrailTriggerATR<=0 || InpTrailDistanceATR<=0 || InpTPExtendTriggerATR<=0 || InpTPExtendDistanceATR<=0 || InpAdaptiveSLTPMinNetProfitUSD<0 || InpSLTPMinChangeATR<=0 || InpSLTPModifyCooldownSeconds<1 ||
       InpPullbackMaxGapATR<0 || InpBreakoutBufferATR<0 || InpStopATR<=0 || InpTargetATR<=0 ||
@@ -1617,7 +1616,7 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
    auditLots=lots;
    double proposedRisk=EstimateOrderRiskUSD(sym,lots,stopDistance);
    auditRisk=proposedRisk;
-   if(proposedRisk<0.0 || proposedRisk>5.00+0.0001 || openRisk+proposedRisk>EffectivePortfolioRiskCapUSD()+0.0001)
+   if(proposedRisk<0.0 || proposedRisk>InpHardRiskCapUSD+0.0001 || openRisk+proposedRisk>EffectivePortfolioRiskCapUSD()+0.0001)
    {
       Print("CROSS-ASSET EXECUTION BLOCK | symbol=",sym," reason=AGGREGATE_STOP_RISK_CAP openRiskUSD=",DoubleToString(openRisk,2),
             " proposedRiskUSD=",DoubleToString(proposedRisk,2)," capUSD=",DoubleToString(EffectivePortfolioRiskCapUSD(),2)," | no order sent.");
@@ -2096,7 +2095,7 @@ bool EmergencyCloseRiskCapBreach(int ticket,string sym,int type,double lots,doub
 void EnforceOpenPositionRiskCapAdaptive()
 {
    if(!IsConnected() || !IsTradeAllowed() || IsTradeContextBusy()) return;
-   const double capUSD=5.00;
+   const double capUSD=MathMin(InpHardRiskCapUSD,EffectiveOperatingCapitalUSD()*InpMaxRiskPerTradeCapitalPct/100.0);
    for(int i=OrdersTotal()-1;i>=0;i--)
    {
       if(!OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) continue;
@@ -3779,8 +3778,9 @@ double CalculateLotsForRisk(double riskUSD,double stopDistancePrice)
    }
 
    double ticksToStop=stopDistancePrice/tickSizePrice;
-   double riskPerLot=ticksToStop*tickValue;
-   riskUSD=MathMin(riskUSD,5.00); // Final lot-sizing guard: never size above USD5.00 stop-risk.
+    double spreadPointsNow=MarketInfo(Symbol(),MODE_SPREAD);
+    double estimatedCostDistance=(MathMax(0.0,spreadPointsNow)+MathMax(0,InpSlippagePoints))*Point;
+    double riskPerLot=(ticksToStop*tickValue)+(estimatedCostDistance/tickSizePrice)*tickValue;   riskUSD=MathMin(riskUSD,MathMin(InpHardRiskCapUSD,EffectiveOperatingCapitalUSD()*InpMaxRiskPerTradeCapitalPct/100.0)); // Configured per-position risk guard.
    double rawLots=riskUSD/riskPerLot;
    double minLotRisk=minLot*riskPerLot;
 
