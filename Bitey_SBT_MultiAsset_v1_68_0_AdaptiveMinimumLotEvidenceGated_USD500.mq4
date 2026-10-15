@@ -1481,6 +1481,7 @@ double CrossAssetLotsForRisk(string sym,double riskUSD,double stopDistance)
                lots=CrossAssetNormalizeLots(sym,minLot);
             else if(minLotRisk>riskUSD+0.0001 &&
                     minLotRisk<=MathMin(InpHardRiskCapUSD,EffectiveOperatingCapitalUSD()*InpMaxRiskPerTradeCapitalPct/100.0)+0.0001 &&
+                    riskUSD>=MathMin(InpRiskPerTradeUSD,EffectiveOperatingCapitalUSD())-0.0001 &&
                     g_governorState==0 && !g_currentProvisionalEntry)
             {
                // Evidence-gated asset-specific minimum-lot adaptation; downstream portfolio gates remain.
@@ -3940,7 +3941,7 @@ double CalculateLotsForRisk(double riskUSD,double stopDistancePrice)
    if(rawLots<minLot)
    {
       double adaptiveHardCap=MathMin(InpHardRiskCapUSD,EffectiveOperatingCapitalUSD()*InpMaxRiskPerTradeCapitalPct/100.0);
-      if(g_governorState==0 && !g_currentProvisionalEntry && minLotRisk<=adaptiveHardCap+0.0001)
+      if(riskUSD>=MathMin(InpRiskPerTradeUSD,EffectiveOperatingCapitalUSD())-0.0001 && g_governorState==0 && !g_currentProvisionalEntry && minLotRisk<=adaptiveHardCap+0.0001)
       {
          Print("LOT MINIMUM ADAPTIVE ACCEPTED | requestedRiskUSD=",DoubleToString(riskUSD,2),
                " brokerMinLots=",DoubleToString(minLot,4),
