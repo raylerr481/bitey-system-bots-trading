@@ -1516,7 +1516,10 @@ double CrossAssetLotsForRisk(string sym,double riskUSD,double stopDistance)
             rejectReason="NORMALIZED_LOT_NOT_TRADABLE";
          if(rejectReason=="" && lots>0.0)
          {
+            double projectedCostDistance=(MathMax(0.0,MarketInfo(sym,MODE_SPREAD))+MathMax(0,InpSlippagePoints))*MarketInfo(sym,MODE_POINT);
             projected=EstimateOrderRiskUSD(sym,lots,stopDistance);
+            if(projected>=0.0 && tickSize>0.0)
+               projected+=lots*(projectedCostDistance/tickSize)*tickValue;
             if(projected<0.0)
                rejectReason="PROJECTED_RISK_UNAVAILABLE";
             else if(projected>effectiveRiskUSD+0.0001)
@@ -1682,6 +1685,11 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
    }
    auditLots=lots;
    double proposedRisk=EstimateOrderRiskUSD(sym,lots,stopDistance);
+   double proposedCostDistance=(MathMax(0.0,MarketInfo(sym,MODE_SPREAD))+MathMax(0,InpSlippagePoints))*MarketInfo(sym,MODE_POINT);
+   double proposedTickSize=TickSizePriceForSymbol(sym);
+   double proposedTickValue=MarketInfo(sym,MODE_TICKVALUE);
+   if(proposedRisk>=0.0 && proposedTickSize>0.0 && proposedTickValue>0.0)
+      proposedRisk+=lots*(proposedCostDistance/proposedTickSize)*proposedTickValue;
    auditRisk=proposedRisk;
    if(proposedRisk<0.0 || proposedRisk>InpHardRiskCapUSD+0.0001 || openRisk+proposedRisk>EffectivePortfolioRiskCapUSD()+0.0001)
    {
