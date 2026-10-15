@@ -637,6 +637,8 @@ int MaxSpreadForCurrentSymbol()
 // Cross-asset technical ranking. v1.33 can submit ranked cross-symbol candidates through a
 // separate symbol-scoped execution path with strict portfolio gates. This score is technical
 // consensus only and must not be interpreted as validated historical strategy evidence.
+bool SymbolLocalLiveConsensus(string sym,int tf,string &dirOut,int &votesOut);
+
 double CrossAssetTechnicalScore(string sym, int tf, string &direction, string &reason, int &barsOut)
 {
    direction="NONE"; reason="NO_SIGNAL"; barsOut=iBars(sym,tf);
@@ -951,10 +953,23 @@ void LogCrossAssetRanking()
       double score=-1.0; int histN=0; double histWin=0.0,histAvgR=-999.0; string histReason="NOT_EVALUATED";
       int holdoutN=0; double holdoutWin=0.0,holdoutAvgR=-999.0;
       bool histPass=false;
+      string localDir="NONE"; int localVotes=0;
+      bool localLivePass=false;
       if(basic)
       {
+         // Run the 16 LOCAL model families for each symbol in the scanner, not just the chart symbol.
+         localLivePass=SymbolLocalLiveConsensus(sym,tf,localDir,localVotes);
          score=CrossAssetTechnicalScore(sym,tf,dir,why,b);
-         if(score>0.0) histPass=CrossAssetHistoricalEvidence(sym,tf,dir,histN,histWin,histAvgR,histReason,holdoutN,holdoutWin,holdoutAvgR);
+         bool localDirectionAligned=(localLivePass && localDir==dir);
+         if(score>0.0 && localDirectionAligned)
+            histPass=CrossAssetHistoricalEvidence(sym,tf,dir,histN,histWin,histAvgR,histReason,holdoutN,holdoutWin,holdoutAvgR);
+         else if(score>0.0)
+            histReason="LOCAL_16_MODEL_SYMBOL_SIGNAL_MISMATCH_OR_NO_CONSENSUS";
+         Print("LOCAL MODEL PER-SYMBOL SCAN | symbol=",sym," timeframe=",tf,
+            " localDirection=",localDir," localVotes=",localVotes," requiredVotes=",RequiredModelVotes(),
+            " crossAssetDirection=",dir," localConsensus=",(localLivePass?"PASS":"REJECT"),
+            " directionAligned=",(localDirectionAligned?"true":"false"),
+            " decision=",(localDirectionAligned?"CONTINUE_TO_TRAIN_HOLDOUT_GATE":"REJECT_CANDIDATE"));
       }
       else { dir="NONE"; why=(age<0 || age>120 ? "STALE_QUOTE" : (spr>ceiling ? "SPREAD_GATE" : "QUOTE_OR_TRADE_PERMISSION_GATE")); }
       string oppositeDir=(dir=="BUY"?"SELL":(dir=="SELL"?"BUY":"NONE"));
@@ -969,6 +984,7 @@ void LogCrossAssetRanking()
             " oppositeHoldoutAvgRProxy=",DoubleToString(oppHoldoutAvgR,3)," oppositeEvidenceQualified=",(oppPass?"true":"false"),
             " oppositeReason=",oppReason," | opposite historical pass alone does not override missing live directional consensus.");
       Print("MULTI-ASSET EVALUATION | symbol=",sym," timeframe=",tf," direction=",dir,
+            " localModelDirection=",localDir," localModelVotes=",localVotes," localModelConsensus=",(localLivePass?"PASS":"REJECT"),
             " technicalRankScore=",DoubleToString(score,2)," historySamples=",histN,
             " historyWinRate=",DoubleToString(histWin,3)," historyAvgRProxy=",DoubleToString(histAvgR,3),
             " holdoutSamples=",holdoutN," holdoutWinRate=",DoubleToString(holdoutWin,3)," holdoutAvgRProxy=",DoubleToString(holdoutAvgR,3),
@@ -3450,6 +3466,31 @@ void BuildEvidenceForSymbol(string sym,int tf,int model,int direction,DirectionE
 void BuildEvidence(int model,int direction,DirectionEvidence &e)
 {
    BuildEvidenceForSymbol(Symbol(),Period(),model,direction,e);
+}
+
+bool SymbolLocalLiveConsensus(string sym,int tf,string &dirOut,int &votesOut)
+{
+   dirOut="NONE"; votesOut=0;
+   int t=0,m=0,d=0,r=0,sr=0,a=0,sb=0,rd=0,ht=0,vw=0,br=0,fp=0,vs=0,lr=0,mc=0,be=0;
+   if(!GetModelSignalsForSymbol(sym,tf,1,t,m,d,r,sr,a,sb,rd,ht,vw,br,fp,vs,lr,mc,be))
+   {
+      Print("LOCAL 16-MODEL SYMBOL SCAN | symbol=",sym," timeframe=",tf," decision=REJECT reason=LOCAL_MODEL_DATA_UNAVAILABLE");
+      return false;
+   }
+   int signals[16]; signals[0]=t; signals[1]=m; signals[2]=d; signals[3]=r;
+   signals[4]=sr; signals[5]=a; signals[6]=sb; signals[7]=rd; signals[8]=ht;
+   signals[9]=vw; signals[10]=br; signals[11]=fp; signals[12]=vs; signals[13]=lr;
+   signals[14]=mc; signals[15]=be;
+   int buy=0,sell=0;
+   for(int i=0;i<16;i++) { if(signals[i]>0) buy++; else if(signals[i]<0) sell++; }
+   votesOut=MathMax(buy,sell);
+   if(buy!=sell && votesOut>=RequiredModelVotes()) dirOut=(buy>sell?"BUY":"SELL");
+   bool pass=(dirOut=="BUY" || dirOut=="SELL");
+   Print("LOCAL 16-MODEL PER-SYMBOL VOTES | symbol=",sym," timeframe=",tf,
+      " BUY=",buy," SELL=",sell," chosenDirection=",dirOut,
+      " requiredVotes=",RequiredModelVotes()," decision=",(pass?"PASS":"REJECT"),
+      " modelFamilies=TREND,MOMENTUM,DONCHIAN,MEANREV,STRICT_RANGE,ATR_BREAKOUT,SESSION_BIAS,RSI_DIVERGENCE,HTF_TREND,VWAP_DEVIATION,BREAK_RETEST,FIB_PULLBACK,VOL_SQUEEZE,LINEAR_REGRESSION,MACD_CONFIRM,BOLLINGER_EXPANSION");
+   return pass;
 }
 
 bool EvidencePass(DirectionEvidence &e);
