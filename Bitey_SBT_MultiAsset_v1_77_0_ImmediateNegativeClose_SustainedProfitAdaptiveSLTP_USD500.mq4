@@ -1,5 +1,5 @@
 #property strict
-#property version   "1.760"
+#property version   "1.770"
 #property description "Bitey SBT Multi-Asset v1.77.0 - global positive expectancy gate and close-on-negative floating net profit, fixed USD500"
 
 // ============================================================================
@@ -3039,6 +3039,7 @@ void OnTick()
 {
    // GLOBAL RULE v1.77.0: a managed BUY or SELL with negative net floating P/L triggers
    // an immediate close attempt. Do not evaluate/submit a new entry in this pass.
+   // Profit SL/TP adaptation requires net floating P/L > USD5 continuously for >120 seconds.
    if(!EnforceNonNegativeFloatingProfitClose()) { ManageAdaptiveSLTP(); return; }
    ManageAdaptiveSLTP();
    ProcessEngine(false);
@@ -5466,28 +5467,18 @@ void EvaluateEngine()
             " | entry risk capped at 50% of normal risk | this is exploratory evidence, not proof of edge.");
 
    string gateReason="";
+   // v1.77 safety policy: no forced/test order may bypass local-model evidence,
+   // the cross-asset family checks, or the positive net-expectancy gate.
+   // Keep the legacy input for .set compatibility, but reject execution if enabled.
    if(InpOneShotTestMode)
    {
-      // Account classification is factual telemetry only. The one-shot test can run on demo or real accounts.
-      // Never falsify IsDemo(); actual terminal/account/symbol permissions and all risk gates remain mandatory.
-      Print("ONE-SHOT ACCOUNT CLASSIFICATION | terminalIsDemo=",(IsDemo()?"true":"false"),
-            " | server=",AccountServer()," | classification=informational_only",
-            " | WARNING=one-shot test may place a REAL order; broker permissions and risk gates still apply.");
-      string testKey=OneShotTestKey();
-      if(GlobalVariableCheck(testKey))
-      {
-         Print("TEST MODE COMPLETE | one-shot attempt already recorded for this account/magic/symbol; no further orders will be sent while test mode remains enabled. key=",testKey);
-         SendSbtSnapshot(0,"ONE_SHOT_TEST_ALREADY_ATTEMPTED",buyVotes,sellVotes,trend,momentum,donchian,meanrev,strictRange,
-                         modelsJson,"ONE_SHOT_TEST",0.0,close1,emaFast1,emaSlow1,emaTrend1,rsi1,adx1,atr1,
-                         false,"ONE_SHOT_ALREADY_USED","ONE_SHOT_TEST_ALREADY_ATTEMPTED");
-         return;
-      }
-      decision=(InpTestOrderDirection==TEST_ORDER_BUY?1:-1);
-      decisionText=(decision>0?"ONE-SHOT TEST BUY: signal/evidence selection bypassed":"ONE-SHOT TEST SELL: signal/evidence selection bypassed");
-      bestStrategy="ONE_SHOT_TEST";
-      g_currentProvisionalEntry=false;
-      Print("TEST ORDER ARMED | direction=",(decision>0?"BUY":"SELL"),
-            " | signal/evidence selection bypassed for one test only; all TradeGate, lot/risk, spread, daily-loss, position-count, broker permission and SL/TP checks remain active.");
+      gateReason="ONE_SHOT_DISABLED_MODEL_FAMILY_EVIDENCE_REQUIRED";
+      Print("ONE-SHOT TEST MODE BLOCKED | reason=",gateReason,
+            " | rule=all BUY/SELL entries must pass normal model evidence, family/holdout checks and positive net expectancy; no forced entry.");
+      SendSbtSnapshot(0,gateReason,buyVotes,sellVotes,trend,momentum,donchian,meanrev,strictRange,
+                      modelsJson,"NONE",0.0,close1,emaFast1,emaSlow1,emaTrend1,rsi1,adx1,atr1,
+                      false,gateReason,"NO_ORDER_FORCED_ENTRY_DISABLED");
+      return;
    }
    if(decision==0)
    {
