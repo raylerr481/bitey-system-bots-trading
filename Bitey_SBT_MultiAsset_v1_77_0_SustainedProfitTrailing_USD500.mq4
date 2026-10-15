@@ -2531,7 +2531,7 @@ void ManageAdaptiveSLTP()
 
       double open=OrderOpenPrice(), oldSL=OrderStopLoss(), oldTP=OrderTakeProfit();
       double lots=OrderLots();
-      double tickSize=MarketInfo(sym,MODE_TICKSIZE);
+      double tickSize=MarketInfo(sym,MODE_TICKSIZE)*point; // MT4 reports MODE_TICKSIZE in points; convert to price units.
       double tickValue=MarketInfo(sym,MODE_TICKVALUE);
       if(tickSize<=0.0 || tickValue<=0.0 || lots<=0.0 ||
          InpRoundTurnCommissionPerLotUSD<0.0 || InpExpectedSwapCostPerLotUSD<0.0)
