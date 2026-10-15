@@ -1829,12 +1829,19 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
       }
    }
    bool readbackOK=false;
+   double readbackRisk=-1.0;
+   double readbackEntryPrice=0.0, readbackSL=0.0, readbackTP=0.0, readbackLots=0.0, readbackFloatingNet=0.0;
    if(OrderSelect(ticket,SELECT_BY_TICKET,MODE_TRADES))
    {
+      readbackEntryPrice=OrderOpenPrice();
+      readbackSL=OrderStopLoss();
+      readbackTP=OrderTakeProfit();
+      readbackLots=OrderLots();
+      readbackFloatingNet=OrderProfit()+OrderSwap()+OrderCommission();
       readbackOK=(OrderStopLoss()>0.0 && OrderTakeProfit()>0.0 &&
          MathAbs(OrderStopLoss()-sl)<=MathMax(point,MarketInfo(sym,MODE_TICKSIZE))*1.5 &&
          MathAbs(OrderTakeProfit()-tp)<=MathMax(point,MarketInfo(sym,MODE_TICKSIZE))*1.5);
-      double readbackRisk=(OrderStopLoss()>0.0?EstimateOrderRiskUSD(sym,OrderLots(),MathAbs(OrderOpenPrice()-OrderStopLoss())):-1.0);
+      readbackRisk=(OrderStopLoss()>0.0?EstimateOrderRiskUSD(sym,OrderLots(),MathAbs(OrderOpenPrice()-OrderStopLoss())):-1.0);
       Print("ORDER SLTP READBACK AUDIT | source=CROSS_ASSET ticket=",ticket," symbol=",sym," magic=",OrderMagicNumber(),
          " requestedSL=",DoubleToString(sl,digits)," confirmedSL=",DoubleToString(OrderStopLoss(),digits),
          " requestedTP=",DoubleToString(tp,digits)," confirmedTP=",DoubleToString(OrderTakeProfit(),digits),
@@ -1851,10 +1858,12 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
          " ticket=",ticket," symbol=",sym," canonicalAsset=",expectedAssetKey,
          " direction=",dir," opened=true",
          " readbackStatus=",(readbackOK?"CONFIRMED":"REVIEW_REQUIRED"),
-         " actualEntryPrice=",(OrderSelect(ticket,SELECT_BY_TICKET,MODE_TRADES)?DoubleToString(OrderOpenPrice(),digits):"UNAVAILABLE"),
-         " confirmedSL=",(OrderSelect(ticket,SELECT_BY_TICKET,MODE_TRADES)?DoubleToString(OrderStopLoss(),digits):"UNAVAILABLE"),
-         " confirmedTP=",(OrderSelect(ticket,SELECT_BY_TICKET,MODE_TRADES)?DoubleToString(OrderTakeProfit(),digits):"UNAVAILABLE"),
-         " stopRiskUSD=",(readbackOK?DoubleToString(readbackRisk,4):"UNKNOWN_REVIEW_READBACK"),
+         " actualEntryPrice=",(readbackEntryPrice>0.0?DoubleToString(readbackEntryPrice,digits):"UNAVAILABLE"),
+         " actualLots=",(readbackLots>0.0?DoubleToString(readbackLots,4):"UNAVAILABLE"),
+         " confirmedSL=",(readbackSL>0.0?DoubleToString(readbackSL,digits):"UNAVAILABLE"),
+         " confirmedTP=",(readbackTP>0.0?DoubleToString(readbackTP,digits):"UNAVAILABLE"),
+         " floatingNetUSD=",DoubleToString(readbackFloatingNet,4),
+         " stopRiskUSD=",(readbackRisk>=0.0?DoubleToString(readbackRisk,4):"UNKNOWN_REVIEW_READBACK"),
          " aggregateOpenRiskAfterUSD=",(postEntryPortfolioRisk>=0.0?DoubleToString(postEntryPortfolioRisk,4):"UNKNOWN_FAIL_CLOSED"),
          " aggregateRiskCapUSD=",DoubleToString(EffectivePortfolioRiskCapUSD(),4),
          " openPositionsAfter=",CountOpenTrades(),
