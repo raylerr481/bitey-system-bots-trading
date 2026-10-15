@@ -1,5 +1,5 @@
 #property strict
-#property version   "1.650"
+#property version   "1.651"
 #property description "Bitey SBT Multi-Asset v1.65.0 - adaptive USD5 per-position risk, USD10 aggregate open risk, fixed USD500"
 
 // ============================================================================
@@ -59,7 +59,7 @@
 // Slots 1-3 are the defensive/base range; slots 4-7 unlock only as campaign net profit grows. Losses scale capacity down.
 // Maximum remains seven because one position per canonical asset is mandatory; there is no infinite position count.
 // Every candidate must still pass the existing 16-model ensemble/evidence, holdout, quote, spread, lot, SLTP,
-// per-position USD5, daily-loss, duplicate-asset and portfolio-risk gates.
+// adaptive per-position risk, daily-loss, duplicate-asset and portfolio-risk gates.
 // v1.41: corrects tick-size conversion after live log revealed a 1000x risk/cost overestimate; permits up to three simultaneous positions only on distinct symbols; target risk remains USD1.25 per position, aggregate stop-risk cap USD3.75, hard per-position risk <= USD1.25 and daily loss cap USD10. Each chart instance must independently pass its closed-bar model evidence and trade gates. Existing portfolio positions are audited for symbol duplication, stop-defined risk, floating P/L and crypto concentration before another entry. v1.43 adds a chronological recent holdout segment to each per-symbol directional history proxy and requires the holdout to pass independently; v1.44 adds current-bar near-miss diagnostics only; v1.45 adds per-model BUY/SELL subcondition audits and richer incumbent-versus-candidate comparison logs without changing entry/evidence/risk gates; v1.46 adds a compact no-raw-signal diagnosis and explicit audit provenance. v1.47 adds symbol-specific evidence-gated cross-asset orders; v1.48 ranks cross-assets with 14 model-family proxies; v1.49 restricts the universe to EURUSD, USDJPY, SOLUSD(T), NEARUSD(T), BTCUSD(T), XAUUSD and ETHUSD(T), expands to 16 model-family proxies, scans/ranks all seven, caps allocation at USD500, limits new entries to 7/day, per-trade target risk to USD1.25 (hard cap USD2), daily loss to USD4.50 and daily net-profit entry stop to USD30, with up to 3 concurrent positions and USD3.75 aggregate stop risk. v1.49.3 deduplicates broker aliases so only one best-qualified symbol per canonical asset is ranked and scanned. v1.49.4 attempts at most one new cross-asset entry per evaluation pass, trying candidates in descending evidence-adjusted priority and moving to the next only when a higher-ranked candidate fails a live execution/risk gate. v1.49.5 resolves a directional conflict when the winning side has at least one currently-signalled evidence-qualified model and its best reliability-adjusted expected-R score exceeds the opposing side by max(0.02R, 15% of the larger absolute score); non-conflicted entries still require the configured vote threshold. No model evidence, execution, or portfolio-risk gate is bypassed. v1.49.6 adds incumbent remaining SL/TP reward/risk versus fresh same-direction entry cost diagnostics; v1.49.7 permits up to three concurrent positions while retaining aggregate risk gates; v1.63.8 hardens per-position risk to USD1.25, aggregate risk to USD3.75, and attempts emergency close if the stop cap cannot be confirmed. Historical proxy is not a guarantee; execution requires broker quote/specification, cost, stop, lot, daily loss, trade-count and aggregate-risk gates.
 
 enum EngineMode { OBSERVE_ONLY=0, AUTO_EXECUTION=1 };
@@ -194,7 +194,7 @@ int EffectiveMaxOpenTrades()
    return (int)MathMax(1, MathMin(7, MathMin(InpMaxOpenTrades, targetSlots)));
 }
 
-// Aggregate stop-risk budget is capped at USD10; each position remains capped at USD5.
+// Aggregate stop-risk budget is capped at USD10; per-position risk is dynamically capped by inputs and remaining headroom.
 // This does not guarantee realized losses due to gaps, slippage, spread, or execution failures.
 double EffectivePortfolioRiskCapUSD()
 {
@@ -202,6 +202,31 @@ double EffectivePortfolioRiskCapUSD()
    double perPositionCap = MathMin(5.00, MathMin(InpRiskPerTradeUSD, InpHardRiskCapUSD));
    if(slots < 1 || perPositionCap <= 0.0) return 0.0;
    return MathMin(InpPortfolioOpenRiskCapUSD, slots * perPositionCap);
+}
+
+// Raise the base risk budget only when both chronological training and holdout evidence exceed their pass floors.
+// This is a bounded sizing multiplier, not a claim that the strategy can predict or maximize future profit.
+double EvidenceAdaptiveRiskBudget(double baseRisk,double trainWR,double trainAvgR,double holdoutWR,double holdoutAvgR)
+{
+   double capital=EffectiveOperatingCapitalUSD();
+   if(baseRisk<=0.0 || capital<=0.0) return 0.0;
+   double cap=MathMin(InpHardRiskCapUSD,MathMin(InpAdaptiveRiskMaximumUSD,capital*InpMaxRiskPerTradeCapitalPct/100.0));
+   double wrFloor=InpCrossAssetMinHistoryWinRate, rFloor=InpCrossAssetMinHistoryAvgR;
+   double hwrFloor=InpCrossAssetMinHoldoutWinRate, hrFloor=InpCrossAssetMinHoldoutAvgR;
+   if(trainWR<wrFloor || trainAvgR<=rFloor || holdoutWR<hwrFloor || holdoutAvgR<=hrFloor) return MathMin(baseRisk,cap);
+   // Each evidence component contributes a modest, bounded increment; all four must pass first.
+   double strength=MathMax(0.0,MathMin(1.0,(trainWR-wrFloor)/0.20))
+                 +MathMax(0.0,MathMin(1.0,(trainAvgR-rFloor)/0.10))
+                 +MathMax(0.0,MathMin(1.0,(holdoutWR-hwrFloor)/0.20))
+                 +MathMax(0.0,MathMin(1.0,(holdoutAvgR-hrFloor)/0.10));
+   double multiplier=1.0+0.25*strength; // 1.0x to 2.0x base risk only on passing train AND holdout.
+   double result=MathMin(cap,baseRisk*multiplier);
+   Print("EVIDENCE_ADAPTIVE_RISK | baseUSD=",DoubleToString(baseRisk,2),
+         " multiplier=",DoubleToString(multiplier,2)," trainWR=",DoubleToString(trainWR,3),
+         " trainAvgR=",DoubleToString(trainAvgR,3)," holdoutWR=",DoubleToString(holdoutWR,3),
+         " holdoutAvgR=",DoubleToString(holdoutAvgR,3)," capUSD=",DoubleToString(cap,2),
+         " selectedRiskUSD=",DoubleToString(result,2)," note=historical proxy not a profit guarantee");
+   return result;
 }
 
 double EffectiveRiskBudgetUSD()
@@ -276,7 +301,7 @@ double EffectiveRiskBudgetUSD()
          double excessProfit=MathMax(0.0,net-MathMax(0.0,InpProfitActivationThresholdUSD));
          int profitSteps=(InpProfitRiskStepUSD>0.0?(int)MathFloor(excessProfit/InpProfitRiskStepUSD):0);
          risk=5.0+profitSteps;
-         risk=MathMin(risk,MathMax(5.0,InpAdaptiveRiskMaximumUSD));
+         risk=MathMin(risk,MathMax(InpRiskPerTradeUSD,InpAdaptiveRiskMaximumUSD));
          state="SUSTAINED_PROFIT_RISK_"+DoubleToString(risk,0)+"USD";
          stateCode=10+(int)MathRound(risk);
       }
@@ -1772,7 +1797,7 @@ bool CrossAssetPreflightReplacement(string sym,string dir,double score,int incum
    int cryptoAfterRotation=CrossAssetCryptoOpenCount()-(incumbentIsCrypto?1:0);
    if(IsCryptoLikeSymbol(sym) && cryptoAfterRotation>=InpCrossAssetMaxCryptoPositions)
    { Print("CROSS-ASSET ROTATION PREFLIGHT BLOCK | candidate=",sym," reason=CRYPTO_CONCENTRATION_AFTER_ROTATION cryptoCount=",cryptoAfterRotation," max=",InpCrossAssetMaxCryptoPositions); return false; }
-   double riskBudget=EffectiveRiskBudgetUSD(), stopDistance=atr*InpStopATR, targetDistance=atr*InpTargetATR;
+   double riskBudget=EvidenceAdaptiveRiskBudget(EffectiveRiskBudgetUSD(),wr,avgR,hwr,havgR), stopDistance=atr*InpStopATR, targetDistance=atr*InpTargetATR;
    double lots=CrossAssetLotsForRisk(sym,riskBudget,stopDistance);
    double proposedRisk=(lots>0.0?EstimateOrderRiskUSD(sym,lots,stopDistance):-1.0);
    if(lots<=0.0 || proposedRisk<0.0 || proposedRisk>5.00+0.0001 || currentRisk-incumbentRisk+proposedRisk>EffectivePortfolioRiskCapUSD()+0.0001)
@@ -2057,7 +2082,7 @@ bool EmergencyCloseRiskCapBreach(int ticket,string sym,int type,double lots,doub
    bool stillOpen=OrderSelect(ticket,SELECT_BY_TICKET,MODE_TRADES) && OrderCloseTime()==0;
    bool confirmed=(sent && !stillOpen);
    Print("RISK_CAP_EMERGENCY_CLOSE | ticket=",ticket," symbol=",sym,
-      " riskUSD=",DoubleToString(riskUSD,2)," capUSD=5.00 reason=",reason,
+      " riskUSD=",DoubleToString(riskUSD,2)," capUSD=",DoubleToString(MathMin(InpHardRiskCapUSD,EffectiveOperatingCapitalUSD()*InpMaxRiskPerTradeCapitalPct/100.0),2)," reason=",reason,
       " requestedPrice=",DoubleToString(px,(int)MarketInfo(sym,MODE_DIGITS)),
       " closeSent=",(sent?"true":"false")," error=",err,
       " stillOpen=",(stillOpen?"true":"false"),
@@ -2067,8 +2092,8 @@ bool EmergencyCloseRiskCapBreach(int ticket,string sym,int type,double lots,doub
 
 // Hard per-ticket risk repair runs independently of the profit/three-candle adaptive manager.
 // It only tightens SL first; if the cap cannot be enforced, it attempts an emergency market close.
-// Broker rejection, disconnection, gaps and slippage can still prevent a guaranteed USD5 realized-loss ceiling.
-void EnforceOpenPositionRiskCapUSD500()
+// Broker rejection, disconnection, gaps and slippage can still prevent a guaranteed realized-loss ceiling.
+void EnforceOpenPositionRiskCapAdaptive()
 {
    if(!IsConnected() || !IsTradeAllowed() || IsTradeContextBusy()) return;
    const double capUSD=5.00;
@@ -2539,7 +2564,7 @@ void EnforceOnePositionPerCanonicalAsset()
 
 void OnTimer()
 {
-   EnforceOpenPositionRiskCapUSD500();
+   EnforceOpenPositionRiskCapAdaptive();
    ManageAdaptiveSLTP();
    static datetime lastManagedAudit=0;
    if(lastManagedAudit==0 || TimeCurrent()-lastManagedAudit>=30)
