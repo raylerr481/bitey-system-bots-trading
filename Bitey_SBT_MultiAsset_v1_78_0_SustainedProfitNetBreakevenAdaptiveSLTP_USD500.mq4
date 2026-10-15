@@ -44,6 +44,15 @@
 //    realized loss. Gaps, slippage, spread changes, conversion/tick-value
 //    differences, requotes, rejected modifications or failed closes can cause
 //    a larger loss. Log every breach and failed protective action explicitly.
+// 10) NET-LOSS GUARD: any negative net floating result (profit+swap+commission) triggers an
+//     immediate market-close attempt for BUY and SELL positions with this magic. This is an
+//     execution attempt, not a guarantee of fill or a guarantee that realized loss stays bounded.
+// 11) PROFIT EXTENSION: never close solely because net floating profit reaches USD5. Start
+//     adaptive SL/TP only after net profit stays strictly above USD5 for at least 120 seconds,
+//     and after three favorable fully closed management candles. Move SL toward cost-aware net
+//     break-even first, then lock progressively more profit; extend TP only in the favorable
+//     direction when trend continuation passes. SL never loosens. Unknown cost/tick metadata,
+//     stop/freeze constraints or failed readback must be logged, not treated as confirmed protection.
 // ============================================================================
 
 // RECONSTRUCTION NOTE: rebuilt from Library v1.49.7 plus available 2026-10-12 diagnostics; exact v1.51.4 source was not found.
@@ -1200,7 +1209,7 @@ int OnInit()
    if(InpOperatingCapitalUSD<=0 || InpRiskPerTradeUSD<=0 || InpHardRiskCapUSD<=0 || EffectivePortfolioRiskCapUSD()<=0 || InpMaxOpenTrades<1 || InpMaxOpenTrades>7 || InpMaxPositionsPerAsset!=1 || InpCrossAssetMaxCryptoPositions<1 || InpSbtTelemetryTimeoutMs<250 ||
       InpLossRiskConfirmedUSD<=0 || InpLossRiskPersistentUSD<=0 || InpLossRiskSevereUSD<=0 || InpSeverePortfolioLossTriggerUSD<=0 || InpLossConfirmMinutes<1 || InpPersistentLossMinutes<InpLossConfirmMinutes || InpSevereLossMinutes<InpPersistentLossMinutes || InpProfitActivationThresholdUSD<0 || InpProfitSustainMinutes<1 || InpProfitRiskStepUSD<=0 || InpAdaptiveRiskMaximumUSD<=0 || InpAdaptiveRiskMaximumUSD>25.00 || InpHardRiskCapUSD>25.00 || InpRiskPerTradeUSD>25.00 || InpMaxRiskPerTradeCapitalPct<=0 || InpMaxRiskPerTradeCapitalPct>5.00 ||
       InpATRPeriod<2 || InpForwardHorizonBars<1 || InpEvidenceLookbackBars<30 ||
-      InpBreakEvenTriggerATR<=0 || InpBreakEvenLockATR<0 || InpTrailTriggerATR<=0 || InpTrailDistanceATR<=0 || InpTPExtendTriggerATR<=0 || InpTPExtendDistanceATR<=0 || InpAdaptiveSLTPMinNetProfitUSD<0 || InpSLTPMinChangeATR<=0 || InpSLTPModifyCooldownSeconds<1 ||
+      InpBreakEvenTriggerATR<=0 || InpBreakEvenLockATR<0 || InpTrailTriggerATR<=0 || InpTrailDistanceATR<=0 || InpTPExtendTriggerATR<=0 || InpTPExtendDistanceATR<=0 || InpAdaptiveSLTPMinNetProfitUSD<0 || InpProfitSLTPActivationUSD<0 || InpProfitSLTPSustainSeconds<120 || InpSLTPMinChangeATR<=0 || InpSLTPModifyCooldownSeconds<1 ||
       InpPullbackMaxGapATR<0 || InpBreakoutBufferATR<0 || InpStopATR<=0 || InpTargetATR<=0 ||
       InpMinModelVotes<1 || InpMinModelVotes>MODEL_COUNT || InpCampaignLossStopUSD<=0 || InpStrictLossThresholdUSD<=0 ||
       InpProfitFlexThresholdUSD<=0 || InpProfitProtectThresholdUSD<=0 ||
@@ -3141,7 +3150,7 @@ void SendSbtSnapshot(int decision,string decisionText,int buyVotes,int sellVotes
    double spreadPoints = MarketInfo(Symbol(),MODE_SPREAD);
 
    string body="{";
-   body+="\"source\":\"Bitey_SBT_MultiAsset_v1_74_0\",";
+   body+="\"source\":\"Bitey_SBT_MultiAsset_v1_78_0\",";
    body+="\"symbol\":\""+JsonEscape(Symbol())+"\",";
    body+="\"timeframe\":\""+IntegerToString(Period())+"\",";
    body+="\"chart_timeframe\":\""+IntegerToString(Period())+"\",";
@@ -4803,7 +4812,7 @@ bool SendOrderUnlocked(int direction)
       return false;
    }
    ResetLastError();
-   int ticket=OrderSend(Symbol(),type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.76.0 "+expectedAssetKey,InpMagic,0,clrNONE);
+   int ticket=OrderSend(Symbol(),type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.78.0 "+expectedAssetKey,InpMagic,0,clrNONE);
    if(ticket<0)
    {
       int sendError=GetLastError();
@@ -5456,7 +5465,7 @@ void EvaluateEngine()
          " | evaluating 16 chart-local models with closed-bar data; the cross-asset ranking separately uses 16 model-family proxies; momentumThresholdATR=",DoubleToString(InpMomentumATRThreshold,2),
          " trendContinuation=",(InpMomentumTrendContinuation?"true":"false"),
          " donchianBufferATR=",DoubleToString(InpBreakoutBufferATR,2),".");
-   Print("BITEY SBT v1.76.0 MULTI-ASSET | governor=",GovernorStateName(g_governorState)," campaignNetUSD=",DoubleToString(g_campaignNetUSD,2)," requiredVotes=",requiredVotes," | ",Symbol()," TF=",Period()," BUY votes=",buyVotes," SELL votes=",sellVotes,
+   Print("BITEY SBT v1.78.0 MULTI-ASSET | governor=",GovernorStateName(g_governorState)," campaignNetUSD=",DoubleToString(g_campaignNetUSD,2)," requiredVotes=",requiredVotes," | ",Symbol()," TF=",Period()," BUY votes=",buyVotes," SELL votes=",sellVotes,
          " | TREND=",trend," MOMENTUM=",momentum," DONCHIAN=",donchian," MEANREV=",meanrev,
          " STRICT_RANGE=",strictRange," ATR_BREAKOUT=",atrBreakout," SESSION_BIAS=",sessionBias,
          " RSI_DIVERGENCE=",rsiDivergence," HTF_TREND=",htfTrend,
