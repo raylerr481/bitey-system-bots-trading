@@ -2853,7 +2853,7 @@ void OnTimer()
 {
    // Run before scans and cross-asset execution so a negative open trade is handled
    // before any new order can be considered on this timer pass.
-   if(!EnforceNonNegativeFloatingProfitClose())
+   if(!EnforcePersistentNegativeProfitClose())
    {
       EnforceOpenPositionRiskCapAdaptive();
       ManageAdaptiveSLTP();
@@ -3004,7 +3004,7 @@ void OnTick()
 {
    // GLOBAL RULE: a managed BUY or SELL with negative net floating P/L triggers
    // an immediate close attempt. Do not evaluate/submit a new entry in this pass.
-   if(!EnforceNonNegativeFloatingProfitClose()) { ManageAdaptiveSLTP(); return; }
+   if(!EnforcePersistentNegativeProfitClose()) { ManageAdaptiveSLTP(); return; }
    ManageAdaptiveSLTP();
    ProcessEngine(false);
 }
