@@ -1609,14 +1609,14 @@ double CrossAssetLotsForRisk(string sym,double riskUSD,double stopDistance)
    double dailyHeadroom=EffectiveDailyLossLimitUSD()+TodayNetProfit();
    minLotAllowedRisk=MathMin(perPositionCap,MathMin(MathMax(0.0,aggregateHeadroom),MathMax(0.0,dailyHeadroom)));
    string rejectReason="";
-   if(tickValue<=0.0 || tickSize<=0.0 || riskUSD<=0.0 || stopDistance<=0.0 || minLot<=0.0 || lotStep<=0.0 || maxLot<minLot || capital<=0.0 || openRiskNow<0.0)
+   if(tickValue<=0.0 || tickSize<=0.0 || riskUSD<=0.0 || stopDistance<=0.0 || minLot<=0.0 || lotStep<=0.0 || maxLot<minLot || capital<=0.0 || openRiskNow<0.0 || InpRoundTurnCommissionPerLotUSD<0.0 || InpExpectedSwapCostPerLotUSD<0.0)
       rejectReason="INVALID_SYMBOL_RISK_METADATA_OR_BUDGET";
    else
    {
       double pointSize=MarketInfo(sym,MODE_POINT);
       double spreadPts=MarketInfo(sym,MODE_SPREAD);
       double estimatedEntryCostDistance=(MathMax(0.0,spreadPts)+MathMax(0,InpSlippagePoints))*pointSize;
-      riskPerLot=(stopDistance/tickSize)*tickValue+(estimatedEntryCostDistance/tickSize)*tickValue;
+      riskPerLot=(stopDistance/tickSize)*tickValue+(estimatedEntryCostDistance/tickSize)*tickValue+InpRoundTurnCommissionPerLotUSD+InpExpectedSwapCostPerLotUSD;
       if(riskPerLot<=0.0)
          rejectReason="NONPOSITIVE_RISK_PER_LOT";
       else
@@ -1663,7 +1663,10 @@ double CrossAssetLotsForRisk(string sym,double riskUSD,double stopDistance)
             double projectedCostDistance=(MathMax(0.0,MarketInfo(sym,MODE_SPREAD))+MathMax(0,InpSlippagePoints))*MarketInfo(sym,MODE_POINT);
             projected=EstimateOrderRiskUSD(sym,lots,stopDistance);
             if(projected>=0.0 && tickSize>0.0)
+            {
                projected+=lots*(projectedCostDistance/tickSize)*tickValue;
+               projected+=lots*(InpRoundTurnCommissionPerLotUSD+InpExpectedSwapCostPerLotUSD);
+            }
             if(projected<0.0)
                rejectReason="PROJECTED_RISK_UNAVAILABLE";
             else if(projected>effectiveRiskUSD+0.0001)
@@ -1720,6 +1723,7 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
    else if(score<InpCrossAssetMinTechnicalScore) reason="TECHNICAL_SCORE_BELOW_MINIMUM";
    else if(!IsConnected() || !IsTradeAllowed() || IsTradeContextBusy()) reason="TERMINAL_OR_TRADE_CONTEXT_GATE";
    else if(AccountCurrency()!="USD" || EffectiveOperatingCapitalUSD()<=0.0) reason="USD_CAPITAL_VALIDATION_FAILED";
+   else if(InpRoundTurnCommissionPerLotUSD<0.0 || InpExpectedSwapCostPerLotUSD<0.0) reason="COST_INPUT_UNKNOWN_OR_NEGATIVE";
    else if(CrossAssetOpenCountForSymbol(sym)>0 || CrossAssetSameBaseAlreadyOpen(sym)) reason="ONE_POSITION_PER_CANONICAL_ASSET";
    else if(CountOpenTrades()>=EffectiveMaxOpenTrades()) reason="PORTFOLIO_POSITION_CAP";
    else if(IsCryptoLikeSymbol(sym) && CrossAssetCryptoOpenCount()>=InpCrossAssetMaxCryptoPositions) reason="CRYPTO_CONCENTRATION_CAP";
@@ -1833,7 +1837,10 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
    double proposedTickSize=TickSizePriceForSymbol(sym);
    double proposedTickValue=MarketInfo(sym,MODE_TICKVALUE);
    if(proposedRisk>=0.0 && proposedTickSize>0.0 && proposedTickValue>0.0)
+   {
       proposedRisk+=lots*(proposedCostDistance/proposedTickSize)*proposedTickValue;
+      proposedRisk+=lots*(InpRoundTurnCommissionPerLotUSD+InpExpectedSwapCostPerLotUSD);
+   }
    auditRisk=proposedRisk;
    if(proposedRisk<0.0 || proposedRisk>InpHardRiskCapUSD+0.0001 || openRisk+proposedRisk>EffectivePortfolioRiskCapUSD()+0.0001)
    {
@@ -2042,6 +2049,7 @@ bool CrossAssetPreflightReplacement(string sym,string dir,double score,int incum
    else if(dir!="BUY" && dir!="SELL") reason="INVALID_DIRECTION";
    else if(!IsConnected() || !IsTradeAllowed() || IsTradeContextBusy()) reason="TRADE_PERMISSION_OR_CONTEXT";
    else if(AccountCurrency()!="USD" || EffectiveOperatingCapitalUSD()<=0.0) reason="USD_CAPITAL_VALIDATION";
+   else if(InpRoundTurnCommissionPerLotUSD<0.0 || InpExpectedSwapCostPerLotUSD<0.0) reason="COST_INPUT_UNKNOWN_OR_NEGATIVE";
    else if(CrossAssetOpenCountForSymbol(sym)>0 || CrossAssetSameBaseAlreadyOpen(sym)) reason="ONE_POSITION_PER_CANONICAL_ASSET";
    else if(TodayNetProfit()<=-EffectiveDailyLossLimitUSD()) reason="DAILY_LOSS_LIMIT";
    else if(MarketInfo(sym,MODE_TRADEALLOWED)==0) reason="SYMBOL_TRADING_DISABLED";
@@ -2075,6 +2083,7 @@ bool CrossAssetPreflightReplacement(string sym,string dir,double score,int incum
    double riskBudget=EvidenceAdaptiveRiskBudget(EffectiveRiskBudgetUSD(),wr,avgR,hwr,havgR), stopDistance=atr*InpStopATR, targetDistance=atr*InpTargetATR;
    double lots=CrossAssetLotsForRisk(sym,riskBudget,stopDistance);
    double proposedRisk=(lots>0.0?EstimateOrderRiskUSD(sym,lots,stopDistance):-1.0);
+   if(proposedRisk>=0.0) proposedRisk+=lots*(InpRoundTurnCommissionPerLotUSD+InpExpectedSwapCostPerLotUSD);
    if(lots<=0.0 || proposedRisk<0.0 || proposedRisk>InpHardRiskCapUSD+0.0001 || currentRisk-incumbentRisk+proposedRisk>EffectivePortfolioRiskCapUSD()+0.0001)
    { Print("CROSS-ASSET ROTATION PREFLIGHT BLOCK | candidate=",sym," reason=LOT_OR_POST_ROTATION_RISK_GATE currentRisk=",DoubleToString(currentRisk,2)," incumbentRisk=",DoubleToString(incumbentRisk,2)," proposedRisk=",DoubleToString(proposedRisk,2)); return false; }
    double price=(dir=="BUY"?ask:bid), minStop=MarketInfo(sym,MODE_STOPLEVEL)*point;
