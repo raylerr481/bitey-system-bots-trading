@@ -1056,9 +1056,18 @@ void LogCrossAssetRanking()
    }
    string top=""; int n=MathMin(MathMin(InpCrossAssetTopLogCount,7),count);
    for(int j=0;j<n;j++) { if(top!="") top+=";"; top+=g_crossAssetRankNames[j]+":"+g_crossAssetRankDirs[j]+":T"+DoubleToString(g_crossAssetRankScores[j],1)+"/P"+DoubleToString(g_crossAssetRankPriority[j],1)+"/n"+IntegerToString(g_crossAssetRankSamples[j])+"/R"+DoubleToString(g_crossAssetRankAvgR[j],2)+"/ho"+IntegerToString(g_crossAssetRankHoldoutSamples[j])+"/hoR"+DoubleToString(g_crossAssetRankHoldoutAvgR[j],2); }
-   if(top!="" && top!=g_lastCrossAssetRankingSignature)
-      Print("MULTI-ASSET RANKING SUMMARY | timeframe=",tf," rankedCandidates=",count," top=",top,
-            " | candidates pass directional historical proxy thresholds; proxy is not a true forward test and every order is revalidated by symbol-specific execution/risk gates");
+   if(top!=g_lastCrossAssetRankingSignature || top=="")
+      Print("MULTI-ASSET RANKING SUMMARY | universeSymbols=",total," timeframe=",tf," rankedCandidates=",count,
+            " chartSymbol=",Symbol()," chartLocalSignalRequiredForCandidates=false",
+            " top=",(top!=""?top:"NONE"),
+            " | ranked candidates require live 16-model directional consensus plus independent train/holdout qualification; historical proxy is not a true forward test; order path rechecks symbol-specific execution/risk gates.");
+   Print("GLOBAL UNIVERSE PASS COMPLETE | chartSymbol=",Symbol()," timeframe=",tf,
+         " universeSymbolsInspected=",total," evidenceQualifiedCandidates=",count,
+         " executionEnabled=",(InpCrossAssetAutoExecutionEnabled && InpMarketWatchScannerEnabled && InpCrossAssetRankingEnabled?"true":"false"),
+         " openPositions=",CountOpenTrades(),"/",EffectiveMaxOpenTrades(),
+         " aggregateOpenRiskUSD=",DoubleToString(PortfolioOpenRiskUSD(),2),
+         " aggregateRiskCapUSD=",DoubleToString(EffectivePortfolioRiskCapUSD(),2),
+         " policy=GLOBAL_RANKING_INDEPENDENT_OF_CHART_LOCAL_BUY_SELL_VOTES");
    g_lastCrossAssetRankingSignature=top;
 }
 
@@ -1322,7 +1331,7 @@ int OnInit()
             " | verify broker/terminal clock before relying on campaign P/L.");
       UpdateRiskGovernor();
    }
-   Print("BITEY SBT Multi-Asset Engine v1.73.0 initialized | Symbol=",Symbol(),
+   Print("BITEY SBT Multi-Asset Engine v1.83.0 initialized | Symbol=",Symbol(),
          " TF=",Period()," Mode=",(InpMode==OBSERVE_ONLY?"OBSERVE_ONLY":"AUTO_EXECUTION"),
          " OneShotTestMode=",(InpOneShotTestMode?"true":"false"),
          " OneShotSafetyNotice=",(InpOneShotTestMode?"ENABLED_ONE_ORDER_MAY_BE_REAL":"disabled"),
@@ -1330,7 +1339,7 @@ int OnInit()
          " AllowedSymbols=",InpAllowedSymbols," MarketWatchScanner=",(InpMarketWatchScannerEnabled?"enabled":"disabled"),
          " AutoAllowCryptoOnChart=",(InpAutoAllowDetectedCryptoOnChart?"true":"false"),
          " OtherCryptoSpreadCeiling=",InpMaxSpreadOtherCryptoPoints,
-         " ScannerExecutionScope=PER_SYMBOL_TRAIN_AND_HOLDOUT_PROXY_AUDIT_ONLY");
+         " ScannerExecutionScope=GLOBAL_UNIVERSE_RANKED_CANDIDATE_EXECUTION");
    Print("SEVEN-ASSET CAPACITY | campaignNetUSD=",DoubleToString(g_campaignNetUSD,2),
           " activeSlots=",EffectiveMaxOpenTrades(),"/7",
           " slotPolicy=CONFIGURED_CAPACITY_UP_TO_7;PER_POSITION_AND_AGGREGATE_RISK_GOVERNORS_REMAIN_ACTIVE",
@@ -5545,7 +5554,7 @@ void EvaluateEngine()
          " | evaluating 16 chart-local models with closed-bar data; the cross-asset ranking separately uses 16 model-family proxies; momentumThresholdATR=",DoubleToString(InpMomentumATRThreshold,2),
          " trendContinuation=",(InpMomentumTrendContinuation?"true":"false"),
          " donchianBufferATR=",DoubleToString(InpBreakoutBufferATR,2),".");
-   Print("BITEY SBT v1.80.0 MULTI-ASSET | governor=",GovernorStateName(g_governorState)," campaignNetUSD=",DoubleToString(g_campaignNetUSD,2)," requiredVotes=",requiredVotes," | ",Symbol()," TF=",Period()," BUY votes=",buyVotes," SELL votes=",sellVotes,
+   Print("BITEY SBT v1.83.0 CHART-LOCAL DIAGNOSTIC (NOT GLOBAL GATE) | governor=",GovernorStateName(g_governorState)," campaignNetUSD=",DoubleToString(g_campaignNetUSD,2)," requiredVotes=",requiredVotes," | ",Symbol()," TF=",Period()," BUY votes=",buyVotes," SELL votes=",sellVotes,
          " | TREND=",trend," MOMENTUM=",momentum," DONCHIAN=",donchian," MEANREV=",meanrev,
          " STRICT_RANGE=",strictRange," ATR_BREAKOUT=",atrBreakout," SESSION_BIAS=",sessionBias,
          " RSI_DIVERGENCE=",rsiDivergence," HTF_TREND=",htfTrend,
