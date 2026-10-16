@@ -482,7 +482,7 @@ document.getElementById('matrixClear')?.addEventListener('click',()=>{
 });
 document.getElementById('backToMatrix')?.addEventListener('click',()=>page('matrix'));\ndocument.getElementById('refreshMarket').onclick=async()=>{const symbol=localStorage.getItem('sbt_selected_symbol')||'EURUSD';document.getElementById('miSymbolLabel').textContent=symbol;document.getElementById('apiStatus').textContent='Consultando Market Data…';try{const q=await api('/api/v1/market/quote?symbol='+encodeURIComponent(symbol)+'&timeframe=H1');const price=q.price||q.bid||q.ask;document.getElementById('miPrice').textContent=price?Number(price).toFixed(5):'LIVE';document.getElementById('miBias').textContent='ANALYSIS';document.getElementById('miConfidence').textContent='READY';document.getElementById('apiStatus').textContent='Market data connected';}catch(e){document.getElementById('apiStatus').textContent='Market API unavailable';document.getElementById('miPrice').textContent='—';}};
 const savedSymbol=localStorage.getItem('sbt_selected_symbol');if(savedSymbol)document.getElementById('miSymbolLabel').textContent=savedSymbol;\nconst savedName=localStorage.getItem('sbt_name');if(savedName)document.getElementById('userState').textContent=savedName;document.getElementById('openRegister').onclick=()=>document.getElementById('modal').classList.add('open');document.getElementById('closeModal').onclick=()=>document.getElementById('modal').classList.remove('open');document.getElementById('saveAccount').onclick=()=>{const n=document.getElementById('regName').value.trim()||'Usuario';localStorage.setItem('sbt_name',n);document.getElementById('userState').textContent=n;result('accountResult','<strong>Workspace guardado localmente.</strong><br>La identidad persistente y multiusuario se conectará al backend en la siguiente fase.');document.getElementById('modal').classList.remove('open');};document.getElementById('clearLocal').onclick=()=>{localStorage.removeItem('sbt_name');localStorage.removeItem('sbt_ai');localStorage.removeItem('sbt_platform');localStorage.removeItem('sbt_permissions');localStorage.removeItem('sbt_automation');location.reload();};
-</script><script src="/runtime.js" defer></script>
+</script>
 <script>
 async function loadEvolution(){
  const get=async p=>api(p);
@@ -499,8 +499,7 @@ async function loadEvolution(){
 }
 document.getElementById('evolutionRefresh')?.addEventListener('click',loadEvolution);
 document.querySelectorAll('[data-page="evolution"]').forEach(x=>x.addEventListener('click',()=>setTimeout(loadEvolution,50)));
-</script><script src="/evidence-lab-live.js?v=20261008v15" defer></script>\n<script src="/sbt-control-live.js?v=20261008v15" defer></script><script src="/module-runtime.js?v=20261008smoke2" defer></script></body></html>
-<script>
+</script><script src="/evidence-lab-live.js?v=20261008v15" defer></script>\n<script src="/sbt-control-live.js?v=20261008v15" defer></script><script src="/module-runtime.js?v=20261008smoke2" defer></script><script>
 (async()=>{const btn=document.getElementById('evoIntradayCompare');if(!btn)return;btn.addEventListener('click',async()=>{const symbol=document.getElementById('evoSymbol')?.value||'EURUSD';const status=document.getElementById('evoIntradayStatus');const winner=document.getElementById('evoIntradayWinner');status.textContent='Comparando evidencia persistida de '+symbol+'…';try{const r=await api('/api/v1/evolution/intraday-compare?symbol='+encodeURIComponent(symbol));const rows=(r.matrix||[]).map(x=>{const b=x.best_candidate;const m=b?.metrics||{};return '<tr><td>'+x.strategy+'</td><td>'+x.timeframe+'</td><td>'+x.status+'</td><td>'+(b?Number(b.score).toFixed(3):'—')+'</td><td>'+((m.trades??'—'))+'</td><td>'+((m.months??'—'))+'</td></tr>'}).join('');const body=document.getElementById('evoExperiments');if(body)body.innerHTML=rows||'<tr><td colspan="6" class="muted">Sin evidencia.</td></tr>';const w=r.winner;if(winner)winner.innerHTML=w?'<strong>'+w.strategy+' · '+w.timeframe+'</strong><br>Score '+Number(w.best_candidate.score).toFixed(3)+' · '+(w.best_candidate.metrics.trades??'—')+' trades · '+(w.best_candidate.metrics.months??'—')+' meses<br><span class="small">Elegible solo tras WFO/OOS/robustez.</span>':'Sin combinación elegible todavía.';status.textContent=(r.evidence_combinations||0)+' de '+r.total_combinations+' combinaciones con evidencia · '+(r.eligible_combinations||0)+' elegibles.';}catch(e){status.textContent='Evolution API no disponible: no se inventan resultados.';}});})();
 </script><script>
 (()=>{
@@ -567,3 +566,5 @@ refreshECC();setInterval(refreshECC,10000);
  window.addEventListener('sbt:experiment-selected',e=>{const id=e.detail?.experiment_id;if(id){localStorage.setItem(key,id);sync();}});
 })();
 </script>
+</body>
+</html>
