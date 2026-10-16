@@ -5729,7 +5729,7 @@ void EvaluateEngine()
    // Evidence is attached to the execution attempt, not inferred later from a broker open message.
    RefreshRates();
    Print("TRADE EVIDENCE PACKET | schema=1 phase=PRE_ORDER source=CHART_LOCAL",
-         " eaVersion=1.790 symbol=",Symbol()," canonicalAsset=",CanonicalAssetKey(Symbol()),
+         " eaVersion=1.800 symbol=",Symbol()," canonicalAsset=",CanonicalAssetKey(Symbol()),
          " timeframe=",Period()," closedBarTime=",TimeToString(iTime(Symbol(),Period(),1),TIME_DATE|TIME_SECONDS),
          " decision=",(decision>0?"BUY":"SELL")," selectedModel=",bestStrategy,
          " expectedRScore=",DoubleToString(bestScore,6),
@@ -5765,7 +5765,7 @@ void EvaluateEngine()
          " persistedStatus=",EntryAttemptStatusName(g_lastEntryAttemptStatus),
          " retryPolicy=WAIT_NEXT_NEW_BAR_AND_FULL_REVALIDATION retryAllowed=false_for_current_bar");
    Print("TRADE EVIDENCE PACKET | schema=1 phase=POST_ORDER source=CHART_LOCAL",
-         " eaVersion=1.790 symbol=",Symbol()," canonicalAsset=",CanonicalAssetKey(Symbol()),
+         " eaVersion=1.800 symbol=",Symbol()," canonicalAsset=",CanonicalAssetKey(Symbol()),
          " timeframe=",Period()," closedBarTime=",TimeToString(iTime(Symbol(),Period(),1),TIME_DATE|TIME_SECONDS),
          " decision=",(decision>0?"BUY":"SELL")," selectedModel=",bestStrategy,
          " expectedRScore=",DoubleToString(bestScore,6),
