@@ -2994,14 +2994,14 @@ void AuditExistingPositionSupervision(string trigger)
 
 void OnTimer()
 {
-   // Run before scans and cross-asset execution so a negative open trade is handled
-   // before any new order can be considered on this timer pass.
-   if(!EnforceFloatingLossThresholdClose())
-   {
-      EnforceOpenPositionRiskCapAdaptive();
-      ManageAdaptiveSLTP();
-      return;
-   }
+   // Evaluate the floating-loss guard before new entries, but NEVER let it
+   // terminate universe discovery, candidate ranking, or diagnostics. A failed
+   // close / active loss guard suppresses new orders for this pass only.
+   bool globalLossGuardAllowsEntries=EnforceFloatingLossThresholdClose();
+   if(!globalLossGuardAllowsEntries)
+      Print("UNIVERSE SCAN CONTINUES UNDER LOSS GUARD | scanAllowed=true entryExecutionAllowed=false",
+            " | reason=FLOATING_LOSS_GUARD_ACTIVE_OR_CLOSE_NOT_CONFIRMED",
+            " | policy=continue all-symbol scan/ranking and position supervision; suppress new entries this pass.");
    static datetime lastInheritanceAudit=0;
    if(lastInheritanceAudit==0 || TimeCurrent()-lastInheritanceAudit>=30)
    {
@@ -3017,6 +3017,9 @@ void OnTimer()
       AuditManagedPositionSLTPReadback();
    }
    ScanMarketWatchAssets(false);
+   Print("UNIVERSE SCAN PASS COMPLETE | chartSymbol=",Symbol(),
+         " | lossGuardAllowsNewEntries=", (globalLossGuardAllowsEntries?"true":"false"),
+         " | policy=universe scan is independent of chart-local directional signal");
    EnforceOnePositionPerCanonicalAsset();
    datetime crossNow=TimeCurrent();
    int crossInterval=MathMax(30,InpSignalRecheckSeconds);
@@ -3024,7 +3027,13 @@ void OnTimer()
    {
       g_lastCrossAssetExecutionTime=crossNow;
       // SL/TP-only policy: asset rotation by closing/reopening is disabled.
-      ExecuteCrossAssetRankedCandidates();
+      // Keep the universe scanner alive under the loss guard, but never submit
+      // fresh orders during a pass where the guard did not authorize entries.
+      if(globalLossGuardAllowsEntries)
+         ExecuteCrossAssetRankedCandidates();
+      else
+         Print("GLOBAL CANDIDATE EXECUTION SUPPRESSED | reason=FLOATING_LOSS_GUARD_ACTIVE_OR_CLOSE_NOT_CONFIRMED",
+               " | scan/ranking retained=true | freshOrders=0 | retry=next timer pass after guard clears.");
    }
    // A timer never authorizes trading from stale quotes. Position supervision is
    // frequent; full model evaluation is throttled separately to avoid excess churn.
