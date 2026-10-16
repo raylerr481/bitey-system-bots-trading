@@ -2159,6 +2159,56 @@ bool EmergencyCloseRiskCapBreach(int ticket,string sym,int type,double lots,doub
    return confirmed;
 }
 
+// Best-effort floating net loss exit at -USD1.25 per EA-managed position.
+// Execution gaps, slippage, market closure and broker rejection can exceed the trigger.
+void EnforceFloatingNetLossCapUSD125()
+{
+   const double lossCapUSD=1.25;
+   if(AccountCurrency()!="USD") return;
+   for(int i=OrdersTotal()-1;i>=0;i--)
+   {
+      if(!OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) continue;
+      if(OrderMagicNumber()!=InpMagic) continue;
+      int type=OrderType();
+      if(type!=OP_BUY && type!=OP_SELL) continue;
+      int ticket=OrderTicket();
+      string sym=OrderSymbol();
+      double lots=OrderLots();
+      double net=OrderProfit()+OrderSwap()+OrderCommission();
+      if(net > -lossCapUSD) continue;
+      if(!IsConnected() || !IsTradeAllowed() || IsTradeContextBusy())
+      {
+         Print("FLOATING LOSS CAP CLOSE FAILED | ticket=",ticket," symbol=",sym,
+            " netUSD=",DoubleToString(net,2)," triggerUSD=-1.25 reason=TRADE_CONTEXT_UNAVAILABLE retry=NEXT_PASS");
+         continue;
+      }
+      double px=(type==OP_BUY?MarketInfo(sym,MODE_BID):MarketInfo(sym,MODE_ASK));
+      int digits=(int)MarketInfo(sym,MODE_DIGITS);
+      if(px<=0.0 || lots<=0.0 || digits<0)
+      {
+         Print("FLOATING LOSS CAP CLOSE FAILED | ticket=",ticket," symbol=",sym,
+            " netUSD=",DoubleToString(net,2)," triggerUSD=-1.25 reason=INVALID_PRICE_OR_LOTS retry=NEXT_PASS");
+         continue;
+      }
+      px=NormalizeDouble(px,digits);
+      ResetLastError();
+      bool sent=OrderClose(ticket,lots,px,InpSlippagePoints,clrNONE);
+      int err=(sent?0:GetLastError());
+      bool stillOpen=(OrderSelect(ticket,SELECT_BY_TICKET,MODE_TRADES) && OrderCloseTime()==0);
+      bool confirmed=(sent && !stillOpen);
+      double finalNet=net;
+      if(!stillOpen && OrderSelect(ticket,SELECT_BY_TICKET,MODE_HISTORY))
+         finalNet=OrderProfit()+OrderSwap()+OrderCommission();
+      Print("FLOATING LOSS CAP RESULT | ticket=",ticket," symbol=",sym,
+         " netBeforeUSD=",DoubleToString(net,2)," triggerUSD=-1.25",
+         " closeSent=",(sent?"true":"false")," error=",err,
+         " stillOpen=",(stillOpen?"true":"false"),
+         " result=",(confirmed?"CLOSED_CONFIRMED":"CLOSE_NOT_CONFIRMED_RETRY_REQUIRED"),
+         " finalNetUSD=",DoubleToString(finalNet,2),
+         " warning=slippage_or_gaps_can_exceed_trigger");
+   }
+}
+
 // Hard per-ticket risk repair runs independently of the profit/three-candle adaptive manager.
 // It only tightens SL first; if the cap cannot be enforced, it attempts an emergency market close.
 // Broker rejection, disconnection, gaps and slippage can still prevent a guaranteed USD1.25 realized-loss ceiling.
@@ -2706,6 +2756,7 @@ void EnforceOnePositionPerCanonicalAsset()
 
 void OnTimer()
 {
+   EnforceFloatingNetLossCapUSD125();
    EnforceOpenPositionRiskCapUSD125();
    ManageAdaptiveSLTP();
    static datetime lastManagedAudit=0;
@@ -2843,6 +2894,8 @@ void ProcessEngine(bool timerInvocation)
 
 void OnTick()
 {
+   EnforceFloatingNetLossCapUSD125();
+   EnforceOpenPositionRiskCapUSD125();
    ManageAdaptiveSLTP();
    ProcessEngine(false);
 }
