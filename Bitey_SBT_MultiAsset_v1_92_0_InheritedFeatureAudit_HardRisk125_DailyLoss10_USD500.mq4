@@ -1361,7 +1361,7 @@ int OnInit()
             " | verify broker/terminal clock before relying on campaign P/L.");
       UpdateRiskGovernor();
    }
-   Print("BITEY SBT Multi-Asset Engine v1.91.0 initialized | Symbol=",Symbol(),
+   Print("BITEY SBT Multi-Asset Engine v1.92.0 initialized | Symbol=",Symbol(),
          " TF=",Period()," Mode=",(InpMode==OBSERVE_ONLY?"OBSERVE_ONLY":"AUTO_EXECUTION"),
          " OneShotTestMode=",(InpOneShotTestMode?"true":"false"),
          " OneShotSafetyNotice=",(InpOneShotTestMode?"ENABLED_ONE_ORDER_MAY_BE_REAL":"disabled"),
@@ -2535,8 +2535,8 @@ void EnforceOpenPositionRiskCapAdaptive()
 // v1.76.0 GLOBAL CLOSE-ON-NEGATIVE RULE (BUY and SELL).
 // Applies to open market orders owned by this EA's InpMagic across all symbols.
 // Net floating P/L includes OrderProfit + swap + commission, matching the economic
-// net result rather than price-only movement. Any value strictly below zero triggers
-// a market-close attempt. A detected negative position suppresses new entries for
+// net result rather than price-only movement. Net floating P/L at or below -InpFloatingLossCloseThresholdUSD triggers
+// a market-close attempt. A threshold-breaching position suppresses new entries for
 // this processing pass, including when the close succeeds; failed closes are retried
 // on the next tick/timer pass. Broker execution, slippage and gaps prevent a zero-loss
 // fill guarantee.
@@ -5860,7 +5860,7 @@ void EvaluateEngine()
    // Evidence is attached to the execution attempt, not inferred later from a broker open message.
    RefreshRates();
    Print("TRADE EVIDENCE PACKET | schema=1 phase=PRE_ORDER source=CHART_LOCAL",
-         " eaVersion=1.910 symbol=",Symbol()," canonicalAsset=",CanonicalAssetKey(Symbol()),
+         " eaVersion=1.920 symbol=",Symbol()," canonicalAsset=",CanonicalAssetKey(Symbol()),
          " timeframe=",Period()," closedBarTime=",TimeToString(iTime(Symbol(),Period(),1),TIME_DATE|TIME_SECONDS),
          " decision=",(decision>0?"BUY":"SELL")," selectedModel=",bestStrategy,
          " expectedRScore=",DoubleToString(bestScore,6),
@@ -5896,7 +5896,7 @@ void EvaluateEngine()
          " persistedStatus=",EntryAttemptStatusName(g_lastEntryAttemptStatus),
          " retryPolicy=WAIT_NEXT_NEW_BAR_AND_FULL_REVALIDATION retryAllowed=false_for_current_bar");
    Print("TRADE EVIDENCE PACKET | schema=1 phase=POST_ORDER source=CHART_LOCAL",
-         " eaVersion=1.910 symbol=",Symbol()," canonicalAsset=",CanonicalAssetKey(Symbol()),
+         " eaVersion=1.920 symbol=",Symbol()," canonicalAsset=",CanonicalAssetKey(Symbol()),
          " timeframe=",Period()," closedBarTime=",TimeToString(iTime(Symbol(),Period(),1),TIME_DATE|TIME_SECONDS),
          " decision=",(decision>0?"BUY":"SELL")," selectedModel=",bestStrategy,
          " expectedRScore=",DoubleToString(bestScore,6),
