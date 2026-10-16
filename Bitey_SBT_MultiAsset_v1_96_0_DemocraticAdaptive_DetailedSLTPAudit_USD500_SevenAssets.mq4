@@ -2133,7 +2133,8 @@ void ManageAdaptiveSLTP()
                   DoubleToString(co,diagDigits),DoubleToString(cc,diagDigits),DoubleToString(pc,diagDigits));
                if(diagShift<3) candleTrace+=";";
             }
-            Print("SLTP POSITION DIAGNOSTIC | ticket=",ticket," symbol=",sym,
+            // Split into two Print calls: MQL4 limits the number of parameters in one call.
+            Print("SLTP POSITION DIAGNOSTIC | part=1/2 ticket=",ticket," symbol=",sym,
                " side=",(type==OP_BUY?"BUY":"SELL")," magic=",OrderMagicNumber(),
                " lots=",DoubleToString(OrderLots(),3)," open=",DoubleToString(diagOpen,diagDigits),
                " bid=",DoubleToString(diagBid,diagDigits)," ask=",DoubleToString(diagAsk,diagDigits),
@@ -2144,7 +2145,8 @@ void ManageAdaptiveSLTP()
                " stopRiskEstimateUSD=",(diagRisk>=0?DoubleToString(diagRisk,2):"UNKNOWN"),
                " targetRewardEstimateUSD=",(diagReward>=0?DoubleToString(diagReward,2):"UNKNOWN"),
                " ATR=",DoubleToString(diagATR,diagDigits)," favorableDistance=",DoubleToString(diagFavorable,diagDigits),
-               " favorableATR=",DoubleToString(diagFavorableATR,2),
+               " favorableATR=",DoubleToString(diagFavorableATR,2));
+            Print("SLTP POSITION DIAGNOSTIC | part=2/2 ticket=",ticket," symbol=",sym,
                " profitGateThresholdUSD=",DoubleToString(InpAdaptiveSLTPMinNetProfitUSD,2),
                " profitGatePass=",(floatingNet>InpAdaptiveSLTPMinNetProfitUSD?"true":"false"),
                " threeClosedCandlesPass=",(diagCandles?"true":"false")," candleTrace=",candleTrace,
