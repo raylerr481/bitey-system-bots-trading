@@ -30,6 +30,29 @@
 #dashboard>.grid:not(#evolutionControlCenter .grid) .metric .value{font-size:20px}
 #dashboard>.layout .card{min-height:170px}
 @media(max-width:850px){#evolutionControlCenter .layout{grid-template-columns:1fr}}
+</style><style id="sbt-frame-integrity">
+/* Page-frame integrity: prevent child grids/tables/content from escaping the terminal width. */
+html,body{max-width:100%;overflow-x:hidden}
+.app,.main,.page,.module-shell,.hero,.card,.grid,.layout,.terminal-strip,.top{min-width:0;max-width:100%}
+.main{overflow-x:hidden}
+.page{overflow:hidden}
+.grid>*,.layout>*{min-width:0}
+.card,.hero,.module-shell{overflow:hidden}
+.card h1,.card h2,.card h3,.card h4,.card p,.hero h1,.hero h2,.hero h3,.hero p,.notice,.sub,.muted,.small,.risk,.signal,.kpi,.metric{overflow-wrap:anywhere;word-break:normal}
+.table-wrap,.table-scroll{max-width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+.table{width:100%;min-width:640px}
+.form>*{min-width:0}
+.toolbar{max-width:100%;min-width:0}
+.toolbar .btn,.toolbar input,.toolbar select{min-width:0;max-width:100%}
+.terminal-strip{grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr) minmax(0,.8fr) minmax(0,1fr) minmax(0,1fr)}
+.terminal-cell{min-width:0}
+.experiment-context{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1px;max-width:100%;min-width:0;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:var(--line);margin:0 0 10px}
+.experiment-context .ec{min-width:0;background:#080d13;padding:8px 10px}
+.experiment-context .ec-label{display:block;color:#687687;font-size:8px;letter-spacing:.12em;text-transform:uppercase}
+.experiment-context .ec-value{display:block;margin-top:3px;font-size:11px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shared-status{max-width:100%;min-width:0;overflow:hidden}
+@media(max-width:1050px){.experiment-context{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:650px){.experiment-context{grid-template-columns:repeat(2,minmax(0,1fr))}.experiment-context .ec-value{font-size:10px}.table{min-width:620px}}
 </style></head>
 <body>
 <div class="app">
