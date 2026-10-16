@@ -613,6 +613,8 @@ string CanonicalAssetKey(string sym)
    if(StringFind(sym,"SOLUSDT")==0 || StringFind(sym,"SOLUSD")==0) return "SOLUSDT";
    if(StringFind(sym,"NEARUSDT")==0 || StringFind(sym,"NEARUSD")==0) return "NEARUSD";
    if(StringFind(sym,"BTCUSDT")==0 || StringFind(sym,"BTCUSD")==0 || StringFind(sym,"XBTUSD")==0) return "BTCUSDT";
+   // Broker variants such as BCHUSD.hb and BCHUSDT represent one underlying asset.
+   if(StringFind(sym,"BCHUSDT")==0 || StringFind(sym,"BCHUSD")==0) return "BCH";
    if(StringFind(sym,"ETHUSDT")==0 || StringFind(sym,"ETHUSD")==0) return "ETHUSD";
    // Other visible instruments use their normalized broker symbol as their asset key.
    return sym;
@@ -3905,6 +3907,7 @@ bool SymbolLocalLiveConsensus(string sym,int tf,string &dirOut,int &votesOut)
 }
 
 bool EvidencePass(DirectionEvidence &e);
+string EvidenceRejectReason(DirectionEvidence &e);
 
 bool SymbolLocalEnsemblePass(string sym,int tf,string dir)
 {
@@ -3923,19 +3926,31 @@ bool SymbolLocalEnsemblePass(string sym,int tf,string dir)
    for(int i=0;i<16;i++) if(signals[i]==wanted) directionVotes++;
    for(int j=0;j<16;j++)
    {
-      if(signals[j]!=wanted) continue;
+      // Log every model, including those that do not vote for this direction.
+      // This changes observability only; it does not weaken any evidence threshold.
+      if(signals[j]!=wanted)
+      {
+         Print("LOCAL MODEL SYMBOL EVIDENCE AUDIT | symbol=",sym," timeframe=",tf," modelId=",j,
+            " direction=",dir," currentSignal=",signals[j],
+            " qualified=false rejectReason=MODEL_NOT_VOTING_FOR_REQUESTED_DIRECTION");
+         continue;
+      }
       DirectionEvidence ev; BuildEvidenceForSymbol(sym,tf,j,wanted,ev);
-      bool pass=EvidencePass(ev);
-      Print("LOCAL MODEL SYMBOL EVIDENCE | symbol=",sym," timeframe=",tf," modelId=",j,
-         " direction=",dir," samples=",ev.samples," winRate=",DoubleToString(ev.winRate,3),
-         " avgR=",DoubleToString(ev.avgR,3)," qualified=",(pass?"true":"false"));
-      if(pass) qualifiedVotes++;
+      bool modelPass=EvidencePass(ev);
+      Print("LOCAL MODEL SYMBOL EVIDENCE AUDIT | symbol=",sym," timeframe=",tf," modelId=",j,
+         " direction=",dir," currentSignal=",signals[j]," samples=",ev.samples,
+         " winRate=",DoubleToString(ev.winRate,3)," avgR=",DoubleToString(ev.avgR,3),
+         " qualified=",(modelPass?"true":"false"),
+         " rejectReason=",(modelPass?"NONE":EvidenceRejectReason(ev)));
+      if(modelPass) qualifiedVotes++;
    }
    bool pass=(directionVotes>=RequiredModelVotes() && qualifiedVotes>=RequiredModelVotes());
    Print("LOCAL 16-MODEL SYMBOL ENSEMBLE | symbol=",sym," timeframe=",tf," direction=",dir,
       " directionalVotes=",directionVotes," evidenceQualifiedVotes=",qualifiedVotes,
       " requiredVotes=",RequiredModelVotes()," decision=",(pass?"PASS":"REJECT"),
-      " scope=INDEPENDENT_CANDIDATE_SYMBOL_CLOSED_BAR_AND_PER_MODEL_EVIDENCE");
+      " scope=INDEPENDENT_CANDIDATE_SYMBOL_CLOSED_BAR_AND_PER_MODEL_EVIDENCE",
+      " rule=directionVotes_AND_qualifiedModelEvidenceVotes_must_each_meet_requiredVotes",
+      " note=global_train_holdout_rank_does_not_replace_per_model_evidence");
    return pass;
 }
 
