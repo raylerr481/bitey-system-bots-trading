@@ -1970,7 +1970,7 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
          " technicalScore=",DoubleToString(score,2)," aggregateRiskAfterUSD=",DoubleToString(openRisk+proposedRisk,2),
          " reason=ALL_CHECKED_GATES_PASSED");
    ResetLastError();
-   int ticket=OrderSend(sym,type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.91.0 "+expectedAssetKey,InpMagic,0,clrNONE);
+   int ticket=OrderSend(sym,type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.92.0 "+expectedAssetKey,InpMagic,0,clrNONE);
    if(ticket<0)
    {
       int err=GetLastError();
@@ -4999,7 +4999,7 @@ bool SendOrderUnlocked(int direction)
       return false;
    }
    ResetLastError();
-   int ticket=OrderSend(Symbol(),type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.91.0 "+expectedAssetKey,InpMagic,0,clrNONE);
+   int ticket=OrderSend(Symbol(),type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.92.0 "+expectedAssetKey,InpMagic,0,clrNONE);
    if(ticket<0)
    {
       int sendError=GetLastError();
@@ -5652,7 +5652,7 @@ void EvaluateEngine()
          " | evaluating 16 chart-local models with closed-bar data; the cross-asset ranking separately uses 16 model-family proxies; momentumThresholdATR=",DoubleToString(InpMomentumATRThreshold,2),
          " trendContinuation=",(InpMomentumTrendContinuation?"true":"false"),
          " donchianBufferATR=",DoubleToString(InpBreakoutBufferATR,2),".");
-   Print("BITEY SBT v1.91.0 CHART-LOCAL DIAGNOSTIC (NOT GLOBAL GATE) | governor=",GovernorStateName(g_governorState)," campaignNetUSD=",DoubleToString(g_campaignNetUSD,2)," requiredVotes=",requiredVotes," | ",Symbol()," TF=",Period()," BUY votes=",buyVotes," SELL votes=",sellVotes,
+   Print("BITEY SBT v1.92.0 CHART-LOCAL DIAGNOSTIC (NOT GLOBAL GATE) | governor=",GovernorStateName(g_governorState)," campaignNetUSD=",DoubleToString(g_campaignNetUSD,2)," requiredVotes=",requiredVotes," | ",Symbol()," TF=",Period()," BUY votes=",buyVotes," SELL votes=",sellVotes,
          " | TREND=",trend," MOMENTUM=",momentum," DONCHIAN=",donchian," MEANREV=",meanrev,
          " STRICT_RANGE=",strictRange," ATR_BREAKOUT=",atrBreakout," SESSION_BIAS=",sessionBias,
          " RSI_DIVERGENCE=",rsiDivergence," HTF_TREND=",htfTrend,
