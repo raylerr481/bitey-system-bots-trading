@@ -1094,6 +1094,14 @@ bool SymbolIsInConfiguredAllowlist(string symbolName)
    return false;
 }
 
+bool IsSymbolInMarketWatch(string wanted)
+{
+   int visible=SymbolsTotal(true);
+   for(int k=0;k<visible;k++)
+      if(SymbolName(k,true)==wanted) return true;
+   return false;
+}
+
 void ScanMarketWatchAssets(bool forceLog)
 {
    if(!InpMarketWatchScannerEnabled) return;
@@ -1138,7 +1146,7 @@ void ScanMarketWatchAssets(bool forceLog)
       bool configured=SymbolIsInConfiguredAllowlist(sym);
       if(!configured) { allowlistRejected++; continue; }
 
-      bool alreadySelected=(SymbolSelect(sym,false));
+      bool alreadySelected=IsSymbolInMarketWatch(sym);
       if(expanded && InpExpandedUniverseAutoSelect && !alreadySelected)
       {
          if(!SymbolSelect(sym,true))
