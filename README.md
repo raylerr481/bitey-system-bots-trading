@@ -387,3 +387,16 @@ The source is a reconstructed test build. Static checks passed for balanced deli
 
 ### Approval and validation status
 This is a review draft, not a production release. The source has not been compiled in MetaEditor or validated in MT4 Strategy Tester/demo as part of this change. Historical-bar proxy evidence is not equivalent to real executed-trade evidence and does not guarantee future profits. Keep main unchanged until code review, compilation, and test results are approved.
+
+
+## Bitey SBT Multi-Asset v1.96.0 — Detailed Adaptive SL/TP Audit (approval draft)
+
+Source: `Bitey_SBT_MultiAsset_v1_96_0_DemocraticAdaptive_DetailedSLTPAudit_USD500_SevenAssets.mq4`.
+
+This draft preserves the v1.95.0 execution and protection logic while adding rate-limited, per-position diagnostics to make the expert's SL/TP supervision visible in the MT4 Journal:
+- `SLTP POSITION DIAGNOSTIC`: ticket, symbol, side, lots, entry/current quotes, spread, floating profit/swap/commission/net P/L, existing SL/TP, estimated stop risk and target reward, ATR, favorable distance in ATR, profit-gate status, three-candle result and each of the three candles' OHLC comparison values, plus the active break-even/trailing/TP-extension thresholds.
+- `SLTP MANAGER STATUS`: records when management is disabled or trade permissions/context prevent the manager from running.
+- Existing `SLTP PROFIT GATE`, `SLTP MODIFY DEFERRED`, `SLTP SUPERVISION DECISION`, `SLTP MODIFY SKIPPED` and `SLTP MODIFY AUDIT` records remain. A successful change is only reported as `MODIFY_CONFIRMED` after readback verifies the broker-visible SL and TP values.
+- Diagnostics are rate-limited by ticket (default 30 seconds) to keep the Journal useful; set `InpSLTPVerboseDiagnostics=true` and adjust `InpSLTPDiagnosticIntervalSeconds` in EA inputs.
+
+The additional diagnostics are observational and do not by themselves make a trade or SL/TP modification more profitable. The existing profit threshold, three-favorable-closed-candle gate, break-even/trailing triggers, broker stop/freeze-distance checks and one-successful-modification-per-closed-bar policy still govern modifications. No MetaEditor compilation, Strategy Tester run, or demo execution has been performed for this draft. Do not deploy as production until those checks pass; keep `main` unchanged pending review.
