@@ -1339,7 +1339,8 @@ int OnInit()
          " AllowedSymbols=",InpAllowedSymbols," MarketWatchScanner=",(InpMarketWatchScannerEnabled?"enabled":"disabled"),
          " AutoAllowCryptoOnChart=",(InpAutoAllowDetectedCryptoOnChart?"true":"false"),
          " OtherCryptoSpreadCeiling=",InpMaxSpreadOtherCryptoPoints,
-         " ScannerExecutionScope=GLOBAL_UNIVERSE_RANKED_CANDIDATE_EXECUTION");
+         " ScannerExecutionScope=GLOBAL_UNIVERSE_RANKED_CANDIDATE_EXECUTION",
+          " ChartLocalSignalRequiredForCrossAssetOrder=false");
    Print("SEVEN-ASSET CAPACITY | campaignNetUSD=",DoubleToString(g_campaignNetUSD,2),
           " activeSlots=",EffectiveMaxOpenTrades(),"/7",
           " slotPolicy=CONFIGURED_CAPACITY_UP_TO_7;PER_POSITION_AND_AGGREGATE_RISK_GOVERNORS_REMAIN_ACTIVE",
