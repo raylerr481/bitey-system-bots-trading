@@ -13,10 +13,10 @@
 // acceptance must still be verified in MetaEditor, Strategy Tester and demo.
 // 1) FIXED STRATEGY CAPITAL: USD 500 maximum reference allocation. Never scale
 //    this value from MT4 balance/equity. Account currency must be USD.
-// 2) PER-POSITION STOP RISK: maximum calculated stop risk is USD25 (5% of fixed USD500).
-//    Evidence may adapt the requested budget up to this cap, never beyond it. Validate tick
-//    size/value, lot size, contract specs, costs and SL readback; fail closed if unknown.
-//    Never widen an SL to fit a lot.
+// 2) PER-POSITION STOP RISK: hard calculated stop-risk ceiling is USD1.25 (0.25% of fixed USD500).
+//    No evidence score or adaptive ladder may raise this cap. Validate tick size/value, lot size,
+//    contract specs, costs and SL readback; fail closed if unknown. Never widen an SL to fit a lot.
+//    If broker stop/freeze rules make the cap impossible to enforce, attempt emergency close and log it.
 // 3) EXISTING POSITIONS: re-audit open positions under this EA's magic across
 //    symbols. Try to tighten an over-risk SL. If the cap cannot be enforced or
 //    confirmed by broker readback, attempt an emergency market close and log
@@ -25,8 +25,9 @@
 //    one per canonical asset (broker aliases count as the same asset). Do NOT reduce
 //    the slot count because of campaign profit/loss tiers. Entry is still blocked
 //    whenever aggregate calculated open stop-risk headroom is insufficient. Aggregate
-//    ceiling USD100, per-position ceiling USD25; actual lots must fit the selected
-//    symbol's tick value, contract size, spread, commission/swap estimate, SL distance,
+//    ceiling USD100 remains a secondary portfolio limit; with seven positions and a hard
+//    USD1.25 cap, calculated stop-risk should ordinarily be no more than USD8.75 in total.
+//    Actual lots must fit tick value, contract size, spread, commission/swap, SL distance,
 //    margin and remaining portfolio headroom. Seven slots are capacity, not a forced quota.
 // 5) DAILY LOSS: at -USD25 net for the trading day, block new entries while
 //    continuing protective management of existing positions.
@@ -49,9 +50,10 @@
 //    realized loss. Gaps, slippage, spread changes, conversion/tick-value
 //    differences, requotes, rejected modifications or failed closes can cause
 //    a larger loss. Log every breach and failed protective action explicitly.
-// 10) NET-LOSS GUARD: any negative net floating result (profit+swap+commission) triggers an
-//     immediate market-close attempt for BUY and SELL positions with this magic. This is an
-//     execution attempt, not a guarantee of fill or a guarantee that realized loss stays bounded.
+// 10) FLOATING-LOSS GUARD: attempt market close only when net floating P/L
+//     (profit+swap+commission) reaches or falls below -USD1.25 for managed BUY/SELL positions.
+//     Negative values between USD0 and -USD1.25 alone do not trigger a close. The threshold is
+//     not a guaranteed realized-loss ceiling: slippage, gaps and rejected closes may exceed it.
 // 11) PROFIT EXTENSION: never close solely because net floating profit reaches USD5. Start
 //     adaptive SL/TP only after net profit stays strictly above USD5 for at least 120 seconds,
 //     and after three favorable fully closed management candles. Move SL toward cost-aware net
@@ -73,7 +75,7 @@
 // - Campaign net P/L >= +USD 200 activates the legacy profit-protect evidence mode; the separate adaptive USD ladder still controls per-trade risk after sustained-profit confirmation.
 // - Hard risk, daily loss, spread, open-position, and evidence gates remain active; no daily profit target or entry quota.
 // - Historical evidence is an in-sample diagnostic, not proof of future profitability.
-// v1.73.0: prioritizes the seven-asset portfolio objective: up to seven distinct canonical assets concurrently, exactly one position per asset, no profit-tier slot throttling, and candidate evaluation in descending evidence-adjusted rank. Each candidate must pass the asset-scoped local ensemble and independent chronological train/holdout evidence, quote freshness, spread, lot, margin, cost-aware SL/TP, duplicate-asset, daily-loss and aggregate-risk gates. Fixed strategy capital USD500. Portfolio risk ceiling USD100; per-position ceiling USD25; daily loss cutoff USD25. Capacity never forces a trade. NOTE: this source currently implements 16 local model families per asset plus 16 cross-asset proxy families; it does not silently disable two local families. v1.70.0: corrects higher-timeframe look-ahead by using only the last fully closed HTF candle for live and historical signals; aligns Market Watch alias selection/history sufficiency to InpCrossAssetTimeframe; updates runtime identity and audit messages. All 16 local model families are evaluated independently on each candidate symbol, with per-model evidence and cross-asset chronological train/holdout gates. USD500 capital, adaptive risk and portfolio protections remain mandatory.
+// v1.82.0: retains up to seven distinct canonical assets, one position per asset, all local 16-model and cross-asset evidence/holdout gates, and fixed USD500 strategy capital. Hard per-position stop-risk USD1.25; floating-loss close trigger -USD1.25; daily loss cutoff remains configured separately. Capacity never forces a trade. v1.70.0: corrects higher-timeframe look-ahead by using only the last fully closed HTF candle for live and historical signals; aligns Market Watch alias selection/history sufficiency to InpCrossAssetTimeframe; updates runtime identity and audit messages. All 16 local model families are evaluated independently on each candidate symbol, with per-model evidence and cross-asset chronological train/holdout gates.
 // v1.66.0: all 16 local model families accept explicit symbol/timeframe parameters. Cross-asset candidates must pass the independent local 16-model direction consensus and per-model historical evidence gate on that candidate symbol before any order sizing/send. Existing cross-asset train/chronological-holdout gates, USD500 virtual capital, adaptive risk and portfolio protections remain mandatory.
 // v1.64.1: fails closed on unknown per-position risk metadata or invalid cap distance by attempting emergency close; portfolio risk remains unknown and blocks new entries until verified.
 // v1.64.0: based on v1.63.8; adds profit-aware dynamic capacity from 1 to 7 simultaneous canonical assets.
