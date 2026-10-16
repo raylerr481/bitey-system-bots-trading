@@ -108,7 +108,7 @@ input int      InpMaxTradesPerDay = 0; // Deprecated compatibility input; no dai
 input int      InpMaxOpenTrades = 7; // Active portfolio capacity: up to seven distinct canonical assets; risk gates may still block entries.
 input string   InpAllowedSymbols = "*"; // "*" admits every symbol visible in MT4 Market Watch; explicit lists can restrict it.
 input bool     InpMarketWatchScannerEnabled = true; // Discovers active instruments in Market Watch; discovery alone never authorizes an order.
-input int      InpMarketWatchScanIntervalSeconds = 60; // Periodic quote/history/specification scan.
+input int      InpMarketWatchScanIntervalSeconds = 15; // v1.83 audit: scan/rank at the 15-second minimum instead of waiting 60 seconds.
 input bool     InpExpandedUniverseScanEnabled = true; // v1.80: discover broker-listed symbols beyond current Market Watch, in bounded batches.
 input int      InpExpandedUniverseSymbolsPerPass = 25; // v1.80: cap symbols processed per scan pass to limit terminal load.
 input bool     InpExpandedUniverseAutoSelect = true; // v1.80: select allowlisted symbols into Market Watch so MT4 can load quotes/history.
@@ -1056,8 +1056,8 @@ void LogCrossAssetRanking()
    }
    string top=""; int n=MathMin(MathMin(InpCrossAssetTopLogCount,7),count);
    for(int j=0;j<n;j++) { if(top!="") top+=";"; top+=g_crossAssetRankNames[j]+":"+g_crossAssetRankDirs[j]+":T"+DoubleToString(g_crossAssetRankScores[j],1)+"/P"+DoubleToString(g_crossAssetRankPriority[j],1)+"/n"+IntegerToString(g_crossAssetRankSamples[j])+"/R"+DoubleToString(g_crossAssetRankAvgR[j],2)+"/ho"+IntegerToString(g_crossAssetRankHoldoutSamples[j])+"/hoR"+DoubleToString(g_crossAssetRankHoldoutAvgR[j],2); }
-   if(top!=g_lastCrossAssetRankingSignature || top=="")
-      Print("MULTI-ASSET RANKING SUMMARY | universeSymbols=",total," timeframe=",tf," rankedCandidates=",count,
+   // Emit the ranking on every actual scan, even when the top candidates are unchanged.
+   Print("MULTI-ASSET RANKING SUMMARY | universeSymbols=",total," timeframe=",tf," rankedCandidates=",count,
             " chartSymbol=",Symbol()," chartLocalSignalRequiredForCandidates=false",
             " top=",(top!=""?top:"NONE"),
             " | ranked candidates require live 16-model directional consensus plus independent train/holdout qualification; historical proxy is not a true forward test; order path rechecks symbol-specific execution/risk gates.");
@@ -1229,8 +1229,8 @@ void ScanMarketWatchAssets(bool forceLog)
       g_expandedUniverseScanCursor=endIndex;
       if(g_expandedUniverseScanCursor>=sourceTotal) g_expandedUniverseScanCursor=0;
    }
-   if(forceLog || signature!=g_lastMarketWatchScanSignature)
-      Print("EXPANDED UNIVERSE SCAN SUMMARY | brokerSymbols=",brokerTotal,
+   // Emit every actual scan summary; unchanged symbol state must not hide scan activity.
+   Print("EXPANDED UNIVERSE SCAN SUMMARY | brokerSymbols=",brokerTotal,
             " marketWatchSymbols=",SymbolsTotal(true)," source=",(expanded?"ALL_BROKER_SYMBOLS":"MARKET_WATCH"),
             " scannedThisPass=",scanned," batchLimit=",batchLimit," selectedIntoMarketWatch=",selectedNow,
             " nextCursor=",g_expandedUniverseScanCursor," allowlistRejected=",allowlistRejected,
@@ -3017,7 +3017,9 @@ void OnTimer()
       AuditManagedPositionSLTPReadback();
    }
    ScanMarketWatchAssets(false);
-   Print("UNIVERSE SCAN PASS COMPLETE | chartSymbol=",Symbol(),
+   Print("UNIVERSE TIMER PASS | chartSymbol=",Symbol(),
+         " | scannerIntervalSeconds=",MathMax(15,InpMarketWatchScanIntervalSeconds),
+         " | note=timer pass does not guarantee a new scan; inspect EXPANDED UNIVERSE SCAN SUMMARY timestamp",
          " | lossGuardAllowsNewEntries=", (globalLossGuardAllowsEntries?"true":"false"),
          " | policy=universe scan is independent of chart-local directional signal");
    EnforceOnePositionPerCanonicalAsset();
