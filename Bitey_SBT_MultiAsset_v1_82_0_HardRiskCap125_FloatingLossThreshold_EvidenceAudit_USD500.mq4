@@ -3137,7 +3137,7 @@ void OnTick()
 {
    // GLOBAL RULE: a managed BUY or SELL with negative net floating P/L triggers
    // an immediate close attempt. Do not evaluate/submit a new entry in this pass.
-   if(!EnforceNonNegativeFloatingProfitClose()) { ManageAdaptiveSLTP(); return; }
+   if(!EnforceFloatingLossThresholdClose()) { ManageAdaptiveSLTP(); return; }
    ManageAdaptiveSLTP();
    ProcessEngine(false);
 }
