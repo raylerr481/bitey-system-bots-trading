@@ -1,4 +1,6 @@
 (() => {
+  if (window.__BITEY_SBT_RUNTIME_INITIALIZED__) return;
+  window.__BITEY_SBT_RUNTIME_INITIALIZED__ = true;
   const API=(window.SBT_API_URL||'https://bitey-system-bots-trading-api.onrender.com').replace(/\/$/,'');
   window.SBT_API_URL=API;
   window.SBT_LIVE_TRADING_ENABLED=false;window.SBT_SAFETY={live:false,real_money:false,broker_orders:0};
