@@ -102,7 +102,7 @@ input double   InpRiskPerTradeUSD = 1.25; // Baseline; evidence may never exceed
 input double   InpHardRiskCapUSD = 1.25; // HARD per-position stop-risk ceiling: USD1.25 (0.25% of fixed USD500); evidence cannot raise it.
 input double   InpFloatingLossCloseThresholdUSD = 1.25; // Close attempt when net floating P/L <= -USD1.25.
 input int      InpMaxPositionsPerAsset = 1; // Exactly one open position per canonical asset, including broker aliases.
-input double   InpDailyLossLimitUSD = 25.00; // USD500 capital: block new entries at -USD25 (5%); continue protective management.
+input double   InpDailyLossLimitUSD = 10.00; // Fixed USD500 capital: block new entries at -USD10 (2%); continue protective management.
 input double   InpDailyProfitTargetUSD = 0.00; // Deprecated compatibility input; daily profit targets never block new entries.
 input int      InpMaxTradesPerDay = 0; // Deprecated compatibility input; no daily entry quota is enforced.
 input int      InpMaxOpenTrades = 7; // Active portfolio capacity: up to seven distinct canonical assets; risk gates may still block entries.
