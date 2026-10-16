@@ -1071,7 +1071,7 @@ int OnInit()
       Print("SYMBOL GATE | chart symbol is not in configured multi-asset allowlist ",InpAllowedSymbols,". Current chart=",Symbol(),". No trading.");
       return(INIT_FAILED);
    }
-   if(InpOperatingCapitalUSD<=0 || InpRiskPerTradeUSD<=0 || InpHardRiskCapUSD<=0 || InpPortfolioOpenRiskCapUSD<=0 || InpMaxOpenTrades<1 || InpMaxOpenTrades>3 || InpMaxPositionsPerAsset!=1 || InpCrossAssetMaxCryptoPositions<1 || InpSbtTelemetryTimeoutMs<250 ||
+   if(InpOperatingCapitalUSD<=0 || InpRiskPerTradeUSD<=0 || InpHardRiskCapUSD<=0 || InpPortfolioOpenRiskCapUSD<=0 || InpMaxOpenTrades<1 || InpMaxOpenTrades>7 || InpMaxPositionsPerAsset!=1 || InpCrossAssetMaxCryptoPositions<1 || InpSbtTelemetryTimeoutMs<250 ||
       InpLossRiskConfirmedUSD<=0 || InpLossRiskPersistentUSD<=0 || InpLossRiskSevereUSD<=0 || InpSeverePortfolioLossTriggerUSD<=0 || InpLossConfirmMinutes<1 || InpPersistentLossMinutes<InpLossConfirmMinutes || InpSevereLossMinutes<InpPersistentLossMinutes || InpProfitActivationThresholdUSD<0 || InpProfitSustainMinutes<1 || InpProfitRiskStepUSD<=0 || InpAdaptiveRiskMaximumUSD<=0 || InpAdaptiveRiskMaximumUSD>1.25 || InpHardRiskCapUSD>1.25 || InpRiskPerTradeUSD>1.25 || InpMaxRiskPerTradeCapitalPct<=0 || InpMaxRiskPerTradeCapitalPct>10 ||
       InpATRPeriod<2 || InpForwardHorizonBars<1 || InpEvidenceLookbackBars<30 ||
       InpBreakEvenTriggerATR<=0 || InpBreakEvenLockATR<0 || InpTrailTriggerATR<=0 || InpTrailDistanceATR<=0 || InpTPExtendTriggerATR<=0 || InpTPExtendDistanceATR<=0 || InpAdaptiveSLTPMinNetProfitUSD<0 || InpSLTPMinChangeATR<=0 || InpSLTPModifyCooldownSeconds<1 ||
@@ -1561,7 +1561,7 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
          " technicalScore=",DoubleToString(score,2)," aggregateRiskAfterUSD=",DoubleToString(openRisk+proposedRisk,2),
          " reason=ALL_CHECKED_GATES_PASSED");
    ResetLastError();
-   int ticket=OrderSend(sym,type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.63.8 "+expectedAssetKey,InpMagic,0,clrNONE);
+   int ticket=OrderSend(sym,type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.94.0 "+expectedAssetKey,InpMagic,0,clrNONE);
    if(ticket<0)
    {
       int err=GetLastError();
@@ -4063,7 +4063,7 @@ bool SendOrderUnlocked(int direction)
       return false;
    }
    ResetLastError();
-   int ticket=OrderSend(Symbol(),type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.63 "+expectedAssetKey,InpMagic,0,clrNONE);
+   int ticket=OrderSend(Symbol(),type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.94.0 "+expectedAssetKey,InpMagic,0,clrNONE);
    if(ticket<0)
    {
       int sendError=GetLastError();
@@ -4798,7 +4798,7 @@ void EvaluateEngine()
                       false,gateReason,gateReason);
       return;
    }
-   // Permit up to InpMaxOpenTrades concurrent positions, including same-direction entries on this symbol.
+   // Portfolio limit is InpMaxOpenTrades; canonical-asset deduplication still forbids stacking on one asset.
    // Never stack into an opposite-direction incumbent; a single opposing position may use guarded replacement.
    int sameSymbolOpenNow=CountOpenTradesForSymbol();
    bool anySameDirection=false;
