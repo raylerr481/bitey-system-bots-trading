@@ -770,9 +770,9 @@ double CrossAssetTechnicalScore(string sym, int tf, string &direction, string &r
    bool directionalTie=(buy==sell);
    string consensusRejectReason="";
    if(!adxPass) consensusRejectReason+="ADX_BELOW_10;";
-   if(!directionalCoveragePass) consensusRejectReason+="DIRECTIONAL_VOTES_BELOW_5;";
+   if(!directionalCoveragePass) consensusRejectReason+="DIRECTIONAL_VOTES_BELOW_CONFIGURED_MINIMUM;";
    if(directionalTie) consensusRejectReason+="BUY_SELL_TIE;";
-   if(!voteWinnerPass) consensusRejectReason+="WINNING_SIDE_BELOW_5;";
+   if(!voteWinnerPass) consensusRejectReason+="WINNING_SIDE_BELOW_CONFIGURED_MINIMUM;";
    Print("CROSS-ASSET 16-MODEL ENSEMBLE | symbol=",sym," timeframe=",tf,
          " modelFamilies=16 buyVotes=",buy," sellVotes=",sell," directionalVotes=",directional,
          " winningVotes=",winning," winningVotesRequired=",InpCrossAssetMinWinningVotes," directionalVotesRequired=",InpCrossAssetMinDirectionalVotes," voteMargin=",voteMargin,
