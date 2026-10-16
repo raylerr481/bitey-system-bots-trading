@@ -96,7 +96,7 @@ input bool     InpBlockOnAccountTypeMismatch = false; // Compatibility only; DEM
 input double   InpOperatingCapitalUSD = 500.0;
 input double   InpRoundTurnCommissionPerLotUSD = -1.0; // UNKNOWN by default: set actual round-turn commission per 1.00 lot; use 0 only if broker is commission-free. Negative value blocks new entries.
 input double   InpExpectedSwapCostPerLotUSD = -1.0; // UNKNOWN by default: set a conservative holding swap cost per 1.00 lot; use 0 only if verified not applicable. Negative value blocks new entries.
-input double   InpRiskPerTradeUSD = 5.00; // Baseline only; evidence may raise it within configured and remaining risk headroom.
+input double   InpRiskPerTradeUSD = 1.25; // Baseline; evidence may never exceed the USD1.25 hard cap.
 input double   InpHardRiskCapUSD = 1.25; // HARD per-position stop-risk ceiling: USD1.25 (0.25% of fixed USD500); evidence cannot raise it.
 input double   InpFloatingLossCloseThresholdUSD = 1.25; // Close attempt when net floating P/L <= -USD1.25.
 input int      InpMaxPositionsPerAsset = 1; // Exactly one open position per canonical asset, including broker aliases.
@@ -122,12 +122,12 @@ input int      InpCrossAssetMinHoldoutSamples = 6; // Minimum recent chronologic
 input double   InpCrossAssetMinHoldoutWinRate = 0.40; // Holdout proxy win-rate floor.
 input double   InpCrossAssetMinHoldoutAvgR = 0.00; // Holdout proxy average net R must be positive.
 input bool     InpAllowTechnicalOnlyCrossAssetExecution = true; // Legacy-compatible execution switch; train AND holdout evidence are still mandatory; technical-only candidates are never ranked for execution.
-input int      InpCrossAssetMaxCryptoPositions = 7; // Up to seven distinct crypto assets permitted; aggregate USD100 and per-position USD25 risk caps still apply.
+input int      InpCrossAssetMaxCryptoPositions = 7; // Up to seven distinct crypto assets; per-position risk hard-capped at USD1.25.
 input int      InpCrossAssetMaxQuoteAgeSeconds = 120; // Reject stale cross-symbol quotes.
 input bool     InpAutoAllowDetectedCryptoOnChart = false; // Legacy compatibility only; strict seven-asset allowlist always applies.
-input double   InpPortfolioOpenRiskCapUSD = 100.00; // Aggregate calculated open stop-risk ceiling: USD100 (20% of fixed USD500), required headroom for up to seven qualified assets.
+input double   InpPortfolioOpenRiskCapUSD = 100.00; // Secondary aggregate ceiling; hard per-position cap remains USD1.25.
 input bool     InpAdaptiveRiskLadderEnabled = true; // Adapt maximum USD risk per new trade to sustained portfolio P/L.
-input double   InpLossRiskConfirmedUSD = 1.25; // Conservative adaptive budget after loss confirmation; absolute per-position cap remains USD25.
+input double   InpLossRiskConfirmedUSD = 1.25; // Conservative adaptive budget after loss confirmation; hard cap USD1.25.
 input double   InpLossRiskPersistentUSD = 0.75; // Reduce risk during persistent losses.
 input double   InpLossRiskSevereUSD = 0.35; // Reduce risk during severe/prolonged losses.
 input double   InpSeverePortfolioLossTriggerUSD = 5.00; // Immediate severe state when campaign net P/L reaches -USD5.
@@ -1274,7 +1274,7 @@ int OnInit()
       return(INIT_FAILED);
    }
    if(InpOperatingCapitalUSD<=0 || InpRiskPerTradeUSD<=0 || InpHardRiskCapUSD<=0 || EffectivePortfolioRiskCapUSD()<=0 || InpMaxOpenTrades<1 || InpMaxOpenTrades>7 || InpMaxPositionsPerAsset!=1 || InpCrossAssetMaxCryptoPositions<1 || InpSbtTelemetryTimeoutMs<250 ||
-      InpLossRiskConfirmedUSD<=0 || InpLossRiskPersistentUSD<=0 || InpLossRiskSevereUSD<=0 || InpSeverePortfolioLossTriggerUSD<=0 || InpLossConfirmMinutes<1 || InpPersistentLossMinutes<InpLossConfirmMinutes || InpSevereLossMinutes<InpPersistentLossMinutes || InpProfitActivationThresholdUSD<0 || InpProfitSustainMinutes<1 || InpProfitRiskStepUSD<=0 || InpAdaptiveRiskMaximumUSD<=0 || InpAdaptiveRiskMaximumUSD>25.00 || InpHardRiskCapUSD>25.00 || InpRiskPerTradeUSD>25.00 || InpMaxRiskPerTradeCapitalPct<=0 || InpMaxRiskPerTradeCapitalPct>5.00 ||
+      InpLossRiskConfirmedUSD<=0 || InpLossRiskPersistentUSD<=0 || InpLossRiskSevereUSD<=0 || InpSeverePortfolioLossTriggerUSD<=0 || InpLossConfirmMinutes<1 || InpPersistentLossMinutes<InpLossConfirmMinutes || InpSevereLossMinutes<InpPersistentLossMinutes || InpProfitActivationThresholdUSD<0 || InpProfitSustainMinutes<1 || InpProfitRiskStepUSD<=0 || InpAdaptiveRiskMaximumUSD<=0 || InpAdaptiveRiskMaximumUSD>1.25 || InpHardRiskCapUSD>1.25 || InpRiskPerTradeUSD>1.25 || InpFloatingLossCloseThresholdUSD<=0 || InpFloatingLossCloseThresholdUSD>1.25 || InpMaxRiskPerTradeCapitalPct<=0 || InpMaxRiskPerTradeCapitalPct>0.25 ||
       InpATRPeriod<2 || InpForwardHorizonBars<1 || InpEvidenceLookbackBars<30 ||
       InpBreakEvenTriggerATR<=0 || InpBreakEvenLockATR<0 || InpTrailTriggerATR<=0 || InpTrailDistanceATR<=0 || InpTPExtendTriggerATR<=0 || InpTPExtendDistanceATR<=0 || InpAdaptiveSLTPMinNetProfitUSD<0 || InpProfitSLTPActivationUSD<0 || InpProfitSLTPSustainSeconds<120 || InpSLTPMinChangeATR<=0 || InpSLTPModifyCooldownSeconds<1 ||
       InpPullbackMaxGapATR<0 || InpBreakoutBufferATR<0 || InpStopATR<=0 || InpTargetATR<=0 ||
@@ -2476,7 +2476,7 @@ bool EnforceFloatingLossThresholdClose()
       }
       if(!IsTradeAllowed() || IsTradeContextBusy())
       {
-         Print("NEGATIVE PROFIT AUTO-CLOSE | status=PENDING_RETRY | ticket=",ticket,
+         Print("USD1.25 FLOATING-LOSS CLOSE | status=PENDING_RETRY | ticket=",ticket,
                " symbol=",sym," side=",(type==OP_BUY?"BUY":"SELL"),
                " netFloatingUSD=",DoubleToString(netFloating,4),
                " reason=TRADING_NOT_ALLOWED_OR_CONTEXT_BUSY; entries_suppressed=true");
@@ -2485,7 +2485,7 @@ bool EnforceFloatingLossThresholdClose()
       ResetLastError();
       bool closed=OrderClose(ticket,lots,NormalizeDouble(closePrice,digits),InpSlippagePoints,clrNONE);
       int err=(closed?0:GetLastError());
-      Print("NEGATIVE PROFIT AUTO-CLOSE | status=",(closed?"CLOSE_REQUEST_ACCEPTED":"FAILED_RETRY_REQUIRED"),
+      Print("USD1.25 FLOATING-LOSS CLOSE | status=",(closed?"CLOSE_REQUEST_ACCEPTED":"FAILED_RETRY_REQUIRED"),
             " ticket=",ticket," symbol=",sym," side=",(type==OP_BUY?"BUY":"SELL"),
             " lots=",DoubleToString(lots,4),
             " netFloatingBeforeCloseUSD=",DoubleToString(netFloating,4),
