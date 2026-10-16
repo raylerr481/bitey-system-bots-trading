@@ -344,7 +344,7 @@ double EffectiveRiskBudgetUSD()
    risk=MathMin(risk,MathMin(25.0,MathMin(capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0,MathMin(InpHardRiskCapUSD,MathMax(0.01,InpAdaptiveRiskMaximumUSD)))));
    // Provisional model evidence remains deliberately half-risk; never increase risk for weak evidence.
    if(g_currentProvisionalEntry) risk=MathMin(risk,InpLossRiskConfirmedUSD*0.50);
-   risk=MathMin(risk,MathMin(25.0,MathMin(capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0,InpHardRiskCapUSD))); // Fixed USD25 hard cap.
+   risk=MathMin(risk,MathMin(25.0,MathMin(capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0,InpHardRiskCapUSD))); // Legacy USD25 clamp is superseded by the hard USD1.25 cap below.
    // Dynamic risk is bounded by remaining daily-loss and aggregate portfolio risk.
    double openRiskNow=PortfolioOpenRiskUSD();
    double dailyNetNow=TodayNetProfit();
@@ -362,7 +362,7 @@ double EffectiveRiskBudgetUSD()
       risk=MathMin(risk,MathMin(dailyLossHeadroom,portfolioRiskHeadroom));
    }
 
-   risk=MathMin(risk,MathMin(25.0,MathMin(InpHardRiskCapUSD,capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0))); // Final fixed USD25 hard cap.
+   risk=MathMin(risk,MathMin(25.0,MathMin(InpHardRiskCapUSD,capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0))); // Final per-position hard cap is USD1.25.
     double previousLevel=(GlobalVariableCheck(lastLevelKey)?GlobalVariableGet(lastLevelKey):-999.0);
    double previousState=(GlobalVariableCheck(lastStateKey)?GlobalVariableGet(lastStateKey):-999.0);
    if(MathAbs(previousLevel-risk)>0.001 || previousState!=(double)stateCode)
