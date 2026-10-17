@@ -1,5 +1,5 @@
 #property strict
-#property version   "1.975"
+#property version   "1.976"
 #property description "Bitey SBT v1.97.6 - execution-attempt dedup fix, multi-reason diagnostics, fixed USD500, 7 unique assets"
 
 // ============================================================================
