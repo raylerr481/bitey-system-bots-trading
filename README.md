@@ -366,3 +366,37 @@ The complete adaptive risk and position-management rules are maintained in [docs
 The current downloadable test source adds the portfolio-conditioned per-trade risk ladder (USD 3 → 2 → 1 under losses; USD 5 → 6 → 7 → 8+ after sustained net profits), configurable persistence thresholds, a default USD 12 per-trade ceiling and USD 14 aggregate stop-risk ceiling. Adaptive SL/TP requires net floating profit above USD 0.05 and three consecutive favorable closed candles on the configured timeframe (H1 by default). It also wires MACD_CONFIRM and BOLLINGER_EXPANSION into the chart-local engine, bringing that engine to 16 model families, while retaining the separate 16-proxy cross-asset ranking, seven-asset allowlist, one-position-per-canonical-asset gate, train/holdout evidence, candidate ranking, telemetry, and modification readback audit.
 
 The source is a reconstructed test build. Static checks passed for balanced delimiters, duplicate input names, all 16 model names and signal wiring, risk-ladder branches, three-candle gating and aggregate-risk checks. **MetaEditor compilation and demo validation have not been performed here**; do not treat this as a compiled or broker-validated release.
+
+
+## Bitey SBT Multi-Asset v1.95.0 — Democratic Adaptive Governance (approval draft)
+
+### Mandatory protections — immutable to model voting
+- Fixed strategy reference capital: **USD 500**, independent of MT4 account balance/equity.
+- Maximum **7 simultaneous positions** in total.
+- Exactly **one position per canonical asset**, including broker aliases.
+- **No martingale**, loss-recovery volume escalation, risk bypass, or control evasion.
+- Broker/terminal execution and deterministic risk gates remain authoritative; a vote never authorizes bypassing a failed gate.
+
+### Democratic decision policy
+- The EA evaluates 16 chart-local model families; cross-asset ranking separately evaluates 16 model-family evidence proxies.
+- Each model's BUY/SELL proposal counts only when its directional train/holdout evidence passes. Silent or failed-evidence models abstain.
+- When BUY and SELL both have qualified votes, the EA compares aggregate reliability-adjusted expected-R scores per qualified vote. It requires a meaningful edge; a near tie means WAIT. A single model's score or raw majority alone cannot override evidence or execution controls.
+- The winning direction/model is only a candidate. Quote freshness, spread, symbol specification, lot/margin, duplicate-asset, open-position and risk gates must still pass before an order can be sent.
+- Adaptive SL/TP management remains: tighten stops to protect favorable movement, never widen an SL to increase risk, and adapt targets to validated market conditions.
+- The target governance extends adaptive evaluation to volume, asset ranking, thresholds, model weights and position exits, seeking positive **net** expectancy after trading costs. These broader parameters must have explicit auditable proposal/score/selection logic before being described as fully democratically voted; v1.95.0 currently operationalizes aggregate democratic BUY/SELL conflict resolution while retaining the existing adaptive parameter calculations.
+
+### Approval and validation status
+This is a review draft, not a production release. The source has not been compiled in MetaEditor or validated in MT4 Strategy Tester/demo as part of this change. Historical-bar proxy evidence is not equivalent to real executed-trade evidence and does not guarantee future profits. Keep main unchanged until code review, compilation, and test results are approved.
+
+
+## Bitey SBT Multi-Asset v1.96.0 — Detailed Adaptive SL/TP Audit (approval draft)
+
+Source: `Bitey_SBT_MultiAsset_v1_96_0_DemocraticAdaptive_DetailedSLTPAudit_USD500_SevenAssets.mq4`.
+
+This draft preserves the v1.95.0 execution and protection logic while adding rate-limited, per-position diagnostics to make the expert's SL/TP supervision visible in the MT4 Journal:
+- `SLTP POSITION DIAGNOSTIC`: ticket, symbol, side, lots, entry/current quotes, spread, floating profit/swap/commission/net P/L, existing SL/TP, estimated stop risk and target reward, ATR, favorable distance in ATR, profit-gate status, three-candle result and each of the three candles' OHLC comparison values, plus the active break-even/trailing/TP-extension thresholds.
+- `SLTP MANAGER STATUS`: records when management is disabled or trade permissions/context prevent the manager from running.
+- Existing `SLTP PROFIT GATE`, `SLTP MODIFY DEFERRED`, `SLTP SUPERVISION DECISION`, `SLTP MODIFY SKIPPED` and `SLTP MODIFY AUDIT` records remain. A successful change is only reported as `MODIFY_CONFIRMED` after readback verifies the broker-visible SL and TP values.
+- Diagnostics are rate-limited by ticket (default 30 seconds) to keep the Journal useful; set `InpSLTPVerboseDiagnostics=true` and adjust `InpSLTPDiagnosticIntervalSeconds` in EA inputs.
+
+The additional diagnostics are observational and do not by themselves make a trade or SL/TP modification more profitable. The existing profit threshold, three-favorable-closed-candle gate, break-even/trailing triggers, broker stop/freeze-distance checks and one-successful-modification-per-closed-bar policy still govern modifications. No MetaEditor compilation, Strategy Tester run, or demo execution has been performed for this draft. Do not deploy as production until those checks pass; keep `main` unchanged pending review.
