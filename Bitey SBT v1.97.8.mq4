@@ -1000,7 +1000,9 @@ void LogCrossAssetRanking()
       datetime qt=(datetime)MarketInfo(sym,MODE_TIME); int age=(qt>0?(int)(TimeCurrent()-qt):999999);
       int spr=(int)MarketInfo(sym,MODE_SPREAD), bars=iBars(sym,tf); string dir,why; int b;
       int ceiling=CrossAssetSpreadCeilingFor(sym);
-      bool basic=(bid>0 && ask>=bid && age>=0 && age<=120 && point>0 && MarketInfo(sym,MODE_TRADEALLOWED)!=0 && spr>=0 && spr<=ceiling);
+      bool quoteValid=(bid>0 && ask>=bid && point>0 && qt>0 && age>=0 && age<=InpCrossAssetMaxQuoteAgeSeconds);
+       bool spreadValid=(ceiling>0 && spr>=0 && spr<=ceiling);
+       bool basic=(quoteValid && MarketInfo(sym,MODE_TRADEALLOWED)!=0 && spreadValid);
       double score=-1.0; int histN=0; double histWin=0.0,histAvgR=-999.0; string histReason="NOT_EVALUATED";
       int holdoutN=0; double holdoutWin=0.0,holdoutAvgR=-999.0;
       bool histPass=false;
@@ -1009,7 +1011,15 @@ void LogCrossAssetRanking()
          score=CrossAssetTechnicalScore(sym,tf,dir,why,b);
          if(score>0.0) histPass=CrossAssetHistoricalEvidence(sym,tf,dir,histN,histWin,histAvgR,histReason,holdoutN,holdoutWin,holdoutAvgR);
       }
-      else { dir="NONE"; why=(age<0 || age>120 ? "STALE_QUOTE" : (spr>ceiling ? "SPREAD_GATE" : "QUOTE_OR_TRADE_PERMISSION_GATE")); }
+      else
+       {
+          dir="NONE";
+          if(qt<=0 || age<0 || age>InpCrossAssetMaxQuoteAgeSeconds) why="STALE_QUOTE";
+          else if(point<=0 || bid<=0 || ask<bid) why="INVALID_BID_ASK_OR_POINT";
+          else if(ceiling<=0 || spr<0 || spr>ceiling) why="SPREAD_GATE";
+          else if(MarketInfo(sym,MODE_TRADEALLOWED)==0) why="BROKER_SYMBOL_TRADE_DISABLED";
+          else why="QUOTE_OR_TRADE_PERMISSION_GATE";
+       }
       string oppositeDir=(dir=="BUY"?"SELL":(dir=="SELL"?"BUY":"NONE"));
       int oppN=0,oppHoldoutN=0; double oppWin=0.0,oppAvgR=-999.0,oppHoldoutWin=0.0,oppHoldoutAvgR=-999.0; string oppReason="NOT_EVALUATED";
       bool oppPass=false;
@@ -1368,7 +1378,7 @@ string PreferredSymbolForAsset(string key,int tf,int requiredBars)
       int spread=(int)MarketInfo(sym,MODE_SPREAD);
       datetime qt=(datetime)MarketInfo(sym,MODE_TIME);
       int age=(qt>0?(int)(TimeCurrent()-qt):999999);
-      bool fresh=(bid>0.0 && ask>=bid && age>=0 && age<=120);
+      bool fresh=(bid>0.0 && ask>=bid && qt>0 && age>=0 && age<=InpCrossAssetMaxQuoteAgeSeconds);
       bool tradeable=(MarketInfo(sym,MODE_TRADEALLOWED)!=0);
       bool enough=(iBars(sym,tf)>=requiredBars);
       bool specs=(point>0.0 && tickValue>0.0 && tickSize>0.0);
