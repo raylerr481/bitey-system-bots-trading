@@ -28,7 +28,7 @@
 // 1) FIXED STRATEGY CAPITAL: USD 500 maximum reference allocation. Never scale
 //    this value from MT4 balance/equity. Account currency must be USD.
 // 2) PER-POSITION STOP RISK: maximum calculated loss at the installed SL is
-//    USD 1.25 per position. Validate tick size/value, lot size, contract specs,
+//    baseline USD1.25 and adaptive hard ceiling USD2.00 per position. Validate tick value, lot size and contract specs,
 //    costs and SL readback; reject an entry if risk is unknown or exceeds cap.
 //    Never widen an SL to fit a lot.
 // 3) EXISTING POSITIONS: re-audit open positions under this EA's magic across
@@ -36,7 +36,7 @@
 //    confirmed by broker readback, attempt an emergency market close and log
 //    the result/error. A close attempt is NOT a guarantee the broker will fill.
 // 4) PORTFOLIO LIMIT: no more than 7 simultaneous positions, one per canonical
-//    asset, and no more than USD 8.75 combined calculated stop-risk (7 x USD 1.25).
+//    asset, and no more than USD8.75 combined calculated stop-risk across the portfolio.
 //    Count existing positions before admitting another entry; reject if totals are
 //    unknown, duplicated by broker aliases, or over budget.
 // 5) DAILY LOSS: at -USD 10 net for the trading day, block new entries while
@@ -52,7 +52,7 @@
 // 8) CONTROL / SAFETY: MT4 remains the execution authority; telemetry and
 //    Q-learning reports must not authorize or bypass an order. No martingale,
 //    no stop-loss bypass, no automatic account switching.
-// 9) LIMITATION: USD 1.25 is a calculated stop-risk target, not a guarantee of
+// 9) LIMITATION: calculated stop-risk is not a guarantee of
 //    realized loss. Gaps, slippage, spread changes, conversion/tick-value
 //    differences, requotes, rejected modifications or failed closes can cause
 //    a larger loss. Log every breach and failed protective action explicitly.
@@ -91,7 +91,7 @@ input int      InpMaxPositionsPerAsset = 1; // Exactly one open position per can
 input double   InpDailyLossLimitUSD = 10.00; // USD500 capital: stop new entries at -USD10 (2%); continue protective management.
 input double   InpDailyProfitTargetUSD = 0.00; // Deprecated compatibility input; daily profit targets never block new entries.
 input int      InpMaxTradesPerDay = 0; // Deprecated compatibility input; no daily entry quota is enforced.
-input int      InpMaxOpenTrades = 7; // Seven distinct-asset slots maximum; USD1.25 hard risk per position.
+input int      InpMaxOpenTrades = 7; // Seven distinct-asset slots maximum; per-position risk adapts up to USD2.
 input string   InpAllowedSymbols = "*"; // "*" admits every symbol visible in MT4 Market Watch; explicit lists can restrict it.
 input bool     InpMarketWatchScannerEnabled = true; // Discovers active instruments in Market Watch; discovery alone never authorizes an order.
 input int      InpMarketWatchScanIntervalSeconds = 60; // Periodic quote/history/specification scan.
@@ -112,7 +112,7 @@ input int      InpCrossAssetMaxQuoteAgeSeconds = 120; // Reject stale cross-symb
 input bool     InpAutoAllowDetectedCryptoOnChart = false; // Legacy compatibility only; canonical normalization prevents duplicate broker aliases; discovered assets still require every evidence and execution gate.
 input double   InpPortfolioOpenRiskCapUSD = 8.75; // Aggregate stop-risk ceiling remains USD8.75 when per-position risk adapts.
 input bool     InpAdaptiveRiskLadderEnabled = true; // Adapt maximum USD risk per new trade to sustained portfolio P/L.
-input double   InpLossRiskConfirmedUSD = 1.25; // Never exceeds the hard USD1.25 per-position cap.
+input double   InpLossRiskConfirmedUSD = 1.25; // Baseline during neutral/confirmed states; hard cap remains adaptive.
 input double   InpLossRiskPersistentUSD = 0.75; // Reduce risk during persistent losses.
 input double   InpLossRiskSevereUSD = 0.35; // Reduce risk during severe/prolonged losses.
 input double   InpSeverePortfolioLossTriggerUSD = 5.00; // Immediate severe state when campaign net P/L reaches -USD5.
@@ -545,7 +545,7 @@ string CanonicalAssetKey(string sym)
    if(StringLen(sym)>=1 && StringSubstr(sym,0,1)=="#") sym=StringSubstr(sym,1);
 
    // Major/minor FX: aliases such as EURUSD.a and EURUSDm collapse to one asset.
-   string fxPairs="|EURUSD|GBPUSD|AUDUSD|NZDUSD|USDCAD|USDCHF|USDJPY|EURGBP|EURJPY|EURCHF|EURAUD|EURNZD|EURCAD|GBPJPY|GBPCHF|GBPAUD|GBPCAD|GBPNZD|AUDJPY|AUDNZD|AUDCAD|AUDCHF|NZDJPY|NZDCAD|NZDCHF|CADJPY|CADCHF|CHFJPY|";
+   string fxPairs="|EURUSD|GBPUSD|AUDUSD|NZDUSD|USDCAD|USDCHF|USDJPY|EURGBP|EURJPY|EURCHF|EURAUD|EURNZD|EURCAD|GBPJPY|GBPCHF|GBPAUD|GBPCAD|GBPNZD|AUDJPY|AUDNZD|AUDCAD|AUDCHF|NZDJPY|NZDCAD|NZDCHF|CADJPY|CADCHF|CHFJPY|EURNOK|EURSEK|EURPLN|EURHUF|EURTRY|USDNOK|USDSEK|USDMXN|USDZAR|USDTRY|USDSGD|USDHKD|USDCNH|";
    string fxParts[];
    int fxCount=StringSplit(fxPairs,'|',fxParts);
    for(int i=0;i<fxCount;i++)
@@ -569,7 +569,7 @@ string CanonicalAssetKey(string sym)
    }
 
    // Crypto aliases normalize quote-currency variants to avoid duplicate exposure.
-   string cryptoAliases="|BTCUSDT|BTCUSD|XBTUSD|ETHUSDT|ETHUSD|SOLUSDT|SOLUSD|NEARUSDT|NEARUSD|XRPUSDT|XRPUSD|ADAUSDT|ADAUSD|DOGEUSDT|DOGEUSD|BNBUSDT|BNBUSD|AVAXUSDT|AVAXUSD|DOTUSDT|DOTUSD|LINKUSDT|LINKUSD|LTCUSDT|LTCUSD|BCHUSDT|BCHUSD|TRXUSDT|TRXUSD|ATOMUSDT|ATOMUSD|UNIUSDT|UNIUSD|ETCUSDT|ETCUSD|XLMUSDT|XLMUSD|TONUSDT|TONUSD|SHIBUSDT|SHIBUSD|FILUSDT|FILUSD|APTUSDT|APTUSD|ARBUSDT|ARBUSD|OPUSDT|OPUSD|SUIUSDT|SUIUSD|INJUSDT|INJUSD|ICPUSDT|ICPUSD|ALGOUSDT|ALGOUSD|HBARUSDT|HBARUSD|VETUSDT|VETUSD|AAVEUSDT|AAVEUSD|FETUSDT|FETUSD|RENDERUSDT|RENDERUSD|TAOUSDT|TAOUSD|PEPEUSDT|PEPEUSD|WIFUSDT|WIFUSD|POLUSDT|POLUSD|";
+   string cryptoAliases="|BTCUSDT|BTCUSD|XBTUSD|ETHUSDT|ETHUSD|SOLUSDT|SOLUSD|NEARUSDT|NEARUSD|XRPUSDT|XRPUSD|ADAUSDT|ADAUSD|DOGEUSDT|DOGEUSD|BNBUSDT|BNBUSD|AVAXUSDT|AVAXUSD|DOTUSDT|DOTUSD|LINKUSDT|LINKUSD|LTCUSDT|LTCUSD|BCHUSDT|BCHUSD|TRXUSDT|TRXUSD|ATOMUSDT|ATOMUSD|UNIUSDT|UNIUSD|ETCUSDT|ETCUSD|XLMUSDT|XLMUSD|TONUSDT|TONUSD|SHIBUSDT|SHIBUSD|FILUSDT|FILUSD|APTUSDT|APTUSD|ARBUSDT|ARBUSD|OPUSDT|OPUSD|SUIUSDT|SUIUSD|INJUSDT|INJUSD|ICPUSDT|ICPUSD|ALGOUSDT|ALGOUSD|HBARUSDT|HBARUSD|VETUSDT|VETUSD|AAVEUSDT|AAVEUSD|FETUSDT|FETUSD|RENDERUSDT|RENDERUSD|TAOUSDT|TAOUSD|PEPEUSDT|PEPEUSD|WIFUSDT|WIFUSD|POLUSDT|POLUSD|MATICUSDT|MATICUSD|";
    string cryptoParts[];
    int cryptoCount=StringSplit(cryptoAliases,'|',cryptoParts);
    for(int k=0;k<cryptoCount;k++)
@@ -1261,7 +1261,7 @@ int OnInit()
       return(INIT_FAILED);
    }
    if(InpOperatingCapitalUSD<=0 || InpRiskPerTradeUSD<=0 || InpHardRiskCapUSD<=0 || InpPortfolioOpenRiskCapUSD<=0 || InpMaxOpenTrades<1 || InpMaxOpenTrades>7 || InpMaxPositionsPerAsset!=1 || InpCrossAssetMaxCryptoPositions<1 || InpSbtTelemetryTimeoutMs<250 ||
-      InpLossRiskConfirmedUSD<=0 || InpLossRiskPersistentUSD<=0 || InpLossRiskSevereUSD<=0 || InpSeverePortfolioLossTriggerUSD<=0 || InpLossConfirmMinutes<1 || InpPersistentLossMinutes<InpLossConfirmMinutes || InpSevereLossMinutes<InpPersistentLossMinutes || InpProfitActivationThresholdUSD<0 || InpProfitSustainMinutes<1 || InpProfitRiskStepUSD<=0 || InpAdaptiveRiskMaximumUSD<=0 || InpAdaptiveRiskMaximumUSD>2.00 || InpHardRiskCapUSD>2.00 || InpRiskPerTradeUSD>2.00 || InpMaxRiskPerTradeCapitalPct>0.40 || InpMaxRiskPerTradeCapitalPct<=0 || InpMaxRiskPerTradeCapitalPct>10 ||
+      InpLossRiskConfirmedUSD<=0 || InpLossRiskPersistentUSD<=0 || InpLossRiskSevereUSD<=0 || InpSeverePortfolioLossTriggerUSD<=0 || InpLossConfirmMinutes<1 || InpPersistentLossMinutes<InpLossConfirmMinutes || InpSevereLossMinutes<InpPersistentLossMinutes || InpProfitActivationThresholdUSD<0 || InpProfitSustainMinutes<1 || InpProfitRiskStepUSD<=0 || InpAdaptiveRiskMaximumUSD<=0 || InpAdaptiveRiskMaximumUSD>2.00 || InpHardRiskCapUSD>2.00 || InpRiskPerTradeUSD>2.00 || InpMaxRiskPerTradeCapitalPct<=0 || InpMaxRiskPerTradeCapitalPct>0.40 ||
       InpATRPeriod<2 || InpForwardHorizonBars<1 || InpEvidenceLookbackBars<30 ||
       InpBreakEvenTriggerATR<=0 || InpBreakEvenLockATR<0 || InpTrailTriggerATR<=0 || InpTrailDistanceATR<=0 || InpTPExtendTriggerATR<=0 || InpTPExtendDistanceATR<=0 || InpAdaptiveSLTPMinNetProfitUSD<0 || InpSLTPMinChangeATR<=0 || InpSLTPModifyCooldownSeconds<1 ||
       InpPullbackMaxGapATR<0 || InpBreakoutBufferATR<0 || InpStopATR<=0 || InpTargetATR<=0 ||
@@ -2135,7 +2135,7 @@ bool EmergencyCloseRiskCapBreach(int ticket,string sym,int type,double lots,doub
    bool stillOpen=OrderSelect(ticket,SELECT_BY_TICKET,MODE_TRADES) && OrderCloseTime()==0;
    bool confirmed=(sent && !stillOpen);
    Print("RISK_CAP_EMERGENCY_CLOSE | ticket=",ticket," symbol=",sym,
-      " riskUSD=",DoubleToString(riskUSD,2)," capUSD=1.25 reason=",reason,
+      " riskUSD=",DoubleToString(riskUSD,2)," capUSD=",DoubleToString(EffectivePerTradeRiskCapUSD(),2)," reason=",reason,
       " requestedPrice=",DoubleToString(px,(int)MarketInfo(sym,MODE_DIGITS)),
       " closeSent=",(sent?"true":"false")," error=",err,
       " stillOpen=",(stillOpen?"true":"false"),
