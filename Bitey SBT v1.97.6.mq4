@@ -3898,7 +3898,7 @@ double CalculateLotsForRisk(double riskUSD,double stopDistancePrice)
    {
       double capital=EffectiveOperatingCapitalUSD();
       double normalRisk=MathMin(InpRiskPerTradeUSD,capital);
-      bool normalBudget=(riskUSD>=normalRisk-0.0001 && g_governorState==0 && !g_currentProvisionalEntry);
+      bool normalBudget=((riskUSD>=normalRisk-0.0001 || minLotRisk<=riskUSD+0.0001) && g_governorState==0 && !g_currentProvisionalEntry);
       if(normalBudget && minLotRisk<=riskUSD+0.0001)
       {
          Print("LOT MINIMUM ACCEPTED | requestedRiskUSD=",DoubleToString(riskUSD,2),
