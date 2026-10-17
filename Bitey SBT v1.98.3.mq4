@@ -2246,11 +2246,13 @@ void EnforceOpenPositionRiskCapUSD125()
          EmergencyCloseRiskCapBreach(ticket,sym,type,lots,-1.0,"INVALID_LOT_PRICE_OR_TICK_VALUE_RISK_UNKNOWN");
          continue;
       }
-      double oldRisk=(oldSL>0?EstimateOrderRiskUSD(sym,lots,MathAbs(open-oldSL)):-1.0);
+      double rawOldRisk=(oldSL>0?EstimateOrderRiskUSD(sym,lots,MathAbs(open-oldSL)):-1.0);
+      double oldRisk=(rawOldRisk>=0?rawOldRisk+knownCostReserve:-1.0);
       if(oldRisk>=0 && oldRisk<=capUSD+0.01) continue;
 
       // Convert the hard USD cap to a price distance using this symbol's live tick value.
-      double stopRiskBudget=MathMax(0.01,capUSD-knownCostReserve);\n      double distance=stopRiskBudget*tickSize/(lots*tickValue);
+      double stopRiskBudget=MathMax(0.01,capUSD-knownCostReserve);
+      double distance=stopRiskBudget*tickSize/(lots*tickValue);
       if(distance<=0 || !MathIsValidNumber(distance))
       {
          Print("PER_TRADE_RISK_CAP_ENFORCEMENT_FAILED | ticket=",ticket," symbol=",sym,
@@ -2267,12 +2269,13 @@ void EnforceOpenPositionRiskCapUSD125()
          if(type==OP_BUY && targetSL<oldSL) targetSL=oldSL;
          if(type==OP_SELL && targetSL>oldSL) targetSL=oldSL;
       }
-      double rawNewRisk=EstimateOrderRiskUSD(sym,lots,MathAbs(open-targetSL));\n      double newRisk=(rawNewRisk>=0?rawNewRisk+knownCostReserve:-1.0);
+      double rawNewRisk=EstimateOrderRiskUSD(sym,lots,MathAbs(open-targetSL));
+      double newRisk=(rawNewRisk>=0?rawNewRisk+knownCostReserve:-1.0);
       if(newRisk<0 || newRisk>capUSD+0.02)
       {
          Print("PER_TRADE_RISK_CAP_ENFORCEMENT_FAILED | ticket=",ticket," symbol=",sym,
             " reason=TARGET_STILL_OVER_CAP oldRiskUSD=",DoubleToString(oldRisk,2),
-            " targetRiskUSD=",DoubleToString(newRisk,2)," capUSD=",DoubleToString(capUSD,2),
+            " targetRiskUSD=",DoubleToString(newRisk,2)," capUSD=",DoubleToString(capUSD,2)," knownCostReserveUSD=",DoubleToString(knownCostReserve,2),
             " oldSL=",DoubleToString(oldSL,digits)," targetSL=",DoubleToString(targetSL,digits),
             " action=EMERGENCY_CLOSE_ATTEMPT");
          EmergencyCloseRiskCapBreach(ticket,sym,type,lots,oldRisk,"TARGET_STILL_OVER_CAP");
@@ -2302,7 +2305,8 @@ void EnforceOpenPositionRiskCapUSD125()
       int err=(ok?0:GetLastError());
       bool readOK=OrderSelect(ticket,SELECT_BY_TICKET,MODE_TRADES);
       double readSL=(readOK?OrderStopLoss():0.0);
-      double rawReadRisk=(readOK && readSL>0?EstimateOrderRiskUSD(sym,lots,MathAbs(open-readSL)):-1.0);\n      double readRisk=(rawReadRisk>=0?rawReadRisk+knownCostReserve:-1.0);
+      double rawReadRisk=(readOK && readSL>0?EstimateOrderRiskUSD(sym,lots,MathAbs(open-readSL)):-1.0);
+      double readRisk=(rawReadRisk>=0?rawReadRisk+knownCostReserve:-1.0);
       bool confirmed=(ok && readOK && readSL>0 && readRisk>=0 && readRisk<=capUSD+0.02 &&
          (oldSL<=0 || (type==OP_BUY?readSL>=oldSL-point*0.5:readSL<=oldSL+point*0.5)));
       Print("PER_TRADE_RISK_CAP_ENFORCEMENT | ticket=",ticket," symbol=",sym,
