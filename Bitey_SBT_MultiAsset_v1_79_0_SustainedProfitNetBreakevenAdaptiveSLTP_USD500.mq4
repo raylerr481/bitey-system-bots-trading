@@ -16,13 +16,13 @@
 //    symbols. Try to tighten an over-risk SL. If the cap cannot be enforced or
 //    confirmed by broker readback, attempt an emergency market close and log
 //    the result/error. A close attempt is NOT a guarantee the broker will fill.
-// 4) PORTFOLIO PRIORITY: target capacity is seven simultaneous positions, exactly
+// 4) PORTFOLIO PRIORITY: target capacity is up to three simultaneous positions, exactly
 //    one per canonical asset (broker aliases count as the same asset). Do NOT reduce
 //    the slot count because of campaign profit/loss tiers. Entry is still blocked
 //    whenever aggregate calculated open stop-risk headroom is insufficient. Aggregate
 //    ceiling USD100, per-position ceiling USD25; actual lots must fit the selected
 //    symbol's tick value, contract size, spread, commission/swap estimate, SL distance,
-//    margin and remaining portfolio headroom. Seven slots are capacity, not a forced quota.
+//    margin and remaining portfolio headroom. Three slots are capacity, not a forced quota.
 // 5) DAILY LOSS: at -USD25 net for the trading day, block new entries while
 //    continuing protective management of existing positions.
 // 6) COST-AWARE ADAPTIVE SL/TP: manage all open symbols for this magic. Include
@@ -71,9 +71,9 @@
 // v1.79.0: discovers a broad Market Watch universe and ranks candidates; opens at most three distinct qualified assets concurrently, exactly one position per canonical key, no profit-tier slot throttling, and candidate evaluation in descending evidence-adjusted rank. Each candidate must pass the asset-scoped local ensemble and independent chronological train/holdout evidence, quote freshness, spread, lot, margin, cost-aware SL/TP, duplicate-asset, daily-loss and aggregate-risk gates. Fixed strategy capital USD500. Portfolio risk ceiling USD100; per-position ceiling USD25; daily loss cutoff USD25. Capacity never forces a trade. NOTE: this source currently implements 16 local model families per asset plus 16 cross-asset proxy families; it does not silently disable two local families. v1.70.0: corrects higher-timeframe look-ahead by using only the last fully closed HTF candle for live and historical signals; aligns Market Watch alias selection/history sufficiency to InpCrossAssetTimeframe; updates runtime identity and audit messages. All 16 local model families are evaluated independently on each candidate symbol, with per-model evidence and cross-asset chronological train/holdout gates. USD500 capital, adaptive risk and portfolio protections remain mandatory.
 // v1.66.0: all 16 local model families accept explicit symbol/timeframe parameters. Cross-asset candidates must pass the independent local 16-model direction consensus and per-model historical evidence gate on that candidate symbol before any order sizing/send. Existing cross-asset train/chronological-holdout gates, USD500 virtual capital, adaptive risk and portfolio protections remain mandatory.
 // v1.64.1: fails closed on unknown per-position risk metadata or invalid cap distance by attempting emergency close; portfolio risk remains unknown and blocks new entries until verified.
-// v1.64.0: based on v1.63.8; adds profit-aware dynamic capacity from 1 to 7 simultaneous canonical assets.
-// Slots 1-3 are the defensive/base range; slots 4-7 unlock only as campaign net profit grows. Losses scale capacity down.
-// Maximum remains seven because one position per canonical asset is mandatory; there is no infinite position count.
+// v1.64.0: based on v1.63.8; historical note: earlier builds used profit-aware dynamic capacity from 1 to 7; v1.79.0 caps concurrent positions at three.
+// Historical v1.64 behavior that unlocked slots 4-7 based on campaign profit is no longer active in v1.79.0.
+// Current maximum is three concurrent positions; one position per canonical asset remains mandatory.
 // Every candidate must still pass the existing 16-model ensemble/evidence, holdout, quote, spread, lot, SLTP,
 // adaptive per-position risk, daily-loss, duplicate-asset and portfolio-risk gates.
 // v1.41: corrects tick-size conversion after live log revealed a 1000x risk/cost overestimate; permits up to three simultaneous positions only on distinct symbols; target risk remains USD1.25 per position, aggregate stop-risk cap USD3.75, hard per-position risk <= USD1.25 and daily loss cap USD10. Each chart instance must independently pass its closed-bar model evidence and trade gates. Existing portfolio positions are audited for symbol duplication, stop-defined risk, floating P/L and crypto concentration before another entry. v1.43 adds a chronological recent holdout segment to each per-symbol directional history proxy and requires the holdout to pass independently; v1.44 adds current-bar near-miss diagnostics only; v1.45 adds per-model BUY/SELL subcondition audits and richer incumbent-versus-candidate comparison logs without changing entry/evidence/risk gates; v1.46 adds a compact no-raw-signal diagnosis and explicit audit provenance. v1.47 adds symbol-specific evidence-gated cross-asset orders; v1.48 ranks cross-assets with 14 model-family proxies; v1.49 restricts the universe to EURUSD, USDJPY, SOLUSD(T), NEARUSD(T), BTCUSD(T), XAUUSD and ETHUSD(T), expands to 16 model-family proxies, scans/ranks all seven, caps allocation at USD500, limits new entries to 7/day, per-trade target risk to USD1.25 (hard cap USD2), daily loss to USD4.50 and daily net-profit entry stop to USD30, with up to 3 concurrent positions and USD3.75 aggregate stop risk. v1.49.3 deduplicates broker aliases so only one best-qualified symbol per canonical asset is ranked and scanned. v1.49.4 attempts at most one new cross-asset entry per evaluation pass, trying candidates in descending evidence-adjusted priority and moving to the next only when a higher-ranked candidate fails a live execution/risk gate. v1.49.5 resolves a directional conflict when the winning side has at least one currently-signalled evidence-qualified model and its best reliability-adjusted expected-R score exceeds the opposing side by max(0.02R, 15% of the larger absolute score); non-conflicted entries still require the configured vote threshold. No model evidence, execution, or portfolio-risk gate is bypassed. v1.49.6 adds incumbent remaining SL/TP reward/risk versus fresh same-direction entry cost diagnostics; v1.49.7 permits up to three concurrent positions while retaining aggregate risk gates; v1.63.8 hardens per-position risk to USD1.25, aggregate risk to USD3.75, and attempts emergency close if the stop cap cannot be confirmed. Historical proxy is not a guarantee; execution requires broker quote/specification, cost, stop, lot, daily loss, trade-count and aggregate-risk gates.
@@ -1263,8 +1263,8 @@ int OnInit()
          " AutoAllowCryptoOnChart=",(InpAutoAllowDetectedCryptoOnChart?"true":"false"),
          " OtherCryptoSpreadCeiling=",InpMaxSpreadOtherCryptoPoints,
          " ScannerExecutionScope=PER_SYMBOL_TRAIN_AND_HOLDOUT_PROXY_AUDIT_ONLY");
-   Print("SEVEN-ASSET CAPACITY | campaignNetUSD=",DoubleToString(g_campaignNetUSD,2),
-          " activeSlots=",EffectiveMaxOpenTrades(),"/7",
+   Print("THREE-ASSET PORTFOLIO CAPACITY | campaignNetUSD=",DoubleToString(g_campaignNetUSD,2),
+          " activeSlots=",EffectiveMaxOpenTrades(),"/3",
           " slotPolicy=UP_TO_THREE_BEST_QUALIFIED_DISTINCT_ASSETS_FROM_MARKET_WATCH;PER_POSITION_AND_AGGREGATE_RISK_GOVERNORS_REMAIN_ACTIVE",
           " duplicatePolicy=ONE_POSITION_PER_CANONICAL_ASSET",
           " | capacity is not a requirement to open trades and is not evidence of profitability.");
