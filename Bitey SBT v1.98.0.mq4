@@ -1012,6 +1012,11 @@ bool IsSecondaryCFDAsset(string sym)
    return (StringFind(assets,"|"+key+"|")>=0);
 }
 
+bool IsApprovedMarketClass(string sym)
+{
+   return (IsForexCanonicalAsset(sym) || LooksLikeCryptoSymbol(sym) || IsSecondaryCFDAsset(sym));
+}
+
 double CrossAssetOpportunityPriority(double technicalScore,double winRate,double avgR,double holdoutWinRate,double holdoutAvgR)
 {
    // Technical consensus leads; independent train/holdout quality adjusts the ordering.
@@ -1045,7 +1050,7 @@ void LogCrossAssetRanking()
    for(int i=0;i<total;i++)
    {
       string sym=SymbolName(i,InpScanAllTerminalSymbols?false:true);
-      if(sym=="" || !SymbolIsInConfiguredAllowlist(sym)) continue;
+      if(sym=="" || !SymbolIsInConfiguredAllowlist(sym) || !IsApprovedMarketClass(sym)) continue;
       // Explicitly subscribe before reading cross-symbol quote/history data. This may
       // prompt MT4 to request data; it does not manufacture a tick or bypass freshness.
       if(!SymbolSelect(sym,true))
@@ -1104,7 +1109,7 @@ void LogCrossAssetRanking()
             " execution=RANKED_ONLY_UNTIL_EVIDENCE_AND_ORDER_GATES_PASS");
       double classBonus=CrossAssetClassPriority(sym);
        double priority=(score>0 && histPass && classBonus>-1000.0?CrossAssetOpportunityPriority(score,histWin,histAvgR,holdoutWin,holdoutAvgR)+classBonus:-1.0);
-       if(score>0) Print("ASSET CLASS RANKING | symbol=",sym," canonical=",key," class=",(IsForexCanonicalAsset(sym)?"FOREX":(LooksLikeCryptoSymbol(sym)?"CRYPTO":"OTHER"))," classPriorityBonus=",DoubleToString(classBonus,1)," evidenceAdjustedPriority=",DoubleToString(priority,2)," categoryTier=",(IsForexCanonicalAsset(sym)?"1_FOREX":(LooksLikeCryptoSymbol(sym)?"2_CRYPTO":(IsSecondaryCFDAsset(sym)?"3_SECONDARY_CFD":"EXCLUDED_UNKNOWN_CLASS")));
+       if(score>0) Print("ASSET CLASS RANKING | symbol=",sym," canonical=",key," class=",(IsForexCanonicalAsset(sym)?"FOREX":(LooksLikeCryptoSymbol(sym)?"CRYPTO":"SECONDARY_CFD"))," classPriorityBonus=",DoubleToString(classBonus,1)," evidenceAdjustedPriority=",DoubleToString(priority,2)," categoryTier=",(IsForexCanonicalAsset(sym)?"1_FOREX":(LooksLikeCryptoSymbol(sym)?"2_CRYPTO":(IsSecondaryCFDAsset(sym)?"3_SECONDARY_CFD":"EXCLUDED_UNKNOWN_CLASS")));
       if(score>0 && histPass && count<100)
       {
          int pos=count;
@@ -1191,8 +1196,8 @@ void ScanMarketWatchAssets(bool forceLog)
       string sym=SymbolName(i,InpScanAllTerminalSymbols?false:true);
       if(sym=="") continue;
       bool configured=SymbolIsInConfiguredAllowlist(sym);
-      if(!configured) continue; // "*" scans all visible instruments; an explicit list remains restrictive.
-      string key=CanonicalAssetKey(sym);
+       if(!configured || !IsApprovedMarketClass(sym)) continue; // Unknown/unclassified market symbols are excluded until mapped and validated.
+       string key=CanonicalAssetKey(sym);
       if(key=="" || sym!=PreferredSymbolForAsset(key,Period(),requiredBars)) continue; // collapse USD/USDT and broker-suffix aliases
       bool crypto=LooksLikeCryptoSymbol(sym);
       if(crypto) cryptoFound++;
