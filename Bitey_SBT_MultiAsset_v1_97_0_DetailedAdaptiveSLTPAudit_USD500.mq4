@@ -72,7 +72,7 @@
 // - Campaign net P/L >= +USD 200 activates the legacy profit-protect evidence mode; the separate adaptive USD ladder still controls per-trade risk after sustained-profit confirmation.
 // - Hard risk, daily loss, spread, open-position, and evidence gates remain active; no daily profit target or entry quota.
 // - Historical evidence is an in-sample diagnostic, not proof of future profitability.
-// v1.41: corrects tick-size conversion after live log revealed a 1000x risk/cost overestimate; permits up to three simultaneous positions only on distinct symbols; target risk remains USD1.25 per position, aggregate stop-risk cap USD3.75, hard per-position risk <= USD1.25 and daily loss cap USD10. Each chart instance must independently pass its closed-bar model evidence and trade gates. Existing portfolio positions are audited for symbol duplication, stop-defined risk, floating P/L and crypto concentration before another entry. v1.43 adds a chronological recent holdout segment to each per-symbol directional history proxy and requires the holdout to pass independently; v1.44 adds current-bar near-miss diagnostics only; v1.45 adds per-model BUY/SELL subcondition audits and richer incumbent-versus-candidate comparison logs without changing entry/evidence/risk gates; v1.46 adds a compact no-raw-signal diagnosis and explicit audit provenance. v1.47 adds symbol-specific evidence-gated cross-asset orders; v1.48 ranks cross-assets with 14 model-family proxies; v1.49 restricts the universe to EURUSD, USDJPY, SOLUSD(T), NEARUSD(T), BTCUSD(T), XAUUSD and ETHUSD(T), expands to 16 model-family proxies, scans/ranks all seven, caps allocation at USD500, limits new entries to 7/day, per-trade target risk to USD1.25 (hard cap USD2), daily loss to USD4.50 and daily net-profit entry stop to USD30, with up to 3 concurrent positions and USD3.75 aggregate stop risk. v1.49.3 deduplicates broker aliases so only one best-qualified symbol per canonical asset is ranked and scanned. v1.49.4 attempts at most one new cross-asset entry per evaluation pass, trying candidates in descending evidence-adjusted priority and moving to the next only when a higher-ranked candidate fails a live execution/risk gate. v1.49.5 resolves a directional conflict when the winning side has at least one currently-signalled evidence-qualified model and its best reliability-adjusted expected-R score exceeds the opposing side by max(0.02R, 15% of the larger absolute score); non-conflicted entries still require the configured vote threshold. No model evidence, execution, or portfolio-risk gate is bypassed. v1.49.6 adds incumbent remaining SL/TP reward/risk versus fresh same-direction entry cost diagnostics; v1.49.7 permits up to three concurrent positions while retaining aggregate risk gates; v1.63.8 hardens per-position risk to USD1.25, aggregate risk to USD3.75, and attempts emergency close if the stop cap cannot be confirmed. Historical proxy is not a guarantee; execution requires broker quote/specification, cost, stop, lot, daily loss, trade-count and aggregate-risk gates.
+// v1.41: corrects tick-size conversion after live log revealed a 1000x risk/cost overestimate; permits up to three simultaneous positions only on distinct symbols; target risk remains USD1.25 per position, aggregate stop-risk cap USD3.75, hard per-position risk <= USD1.25 and daily loss cap USD10. Each chart instance must independently pass its closed-bar model evidence and trade gates. Existing portfolio positions are audited for symbol duplication, stop-defined risk, floating P/L and crypto concentration before another entry. v1.43 adds a chronological recent holdout segment to each per-symbol directional history proxy and requires the holdout to pass independently; v1.44 adds current-bar near-miss diagnostics only; v1.45 adds per-model BUY/SELL subcondition audits and richer incumbent-versus-candidate comparison logs without changing entry/evidence/risk gates; v1.46 adds a compact no-raw-signal diagnosis and explicit audit provenance. v1.47 adds symbol-specific evidence-gated cross-asset orders; v1.48 ranks cross-assets with 14 model-family proxies; v1.97 broadens canonical discovery to major/minor FX pairs, metals, energy, index CFDs and multiple liquid crypto aliases; scans/ranks eligible Market Watch assets with the 16-model-family proxy, caps allocation at USD500, limits new entries to 7/day, per-trade target risk to USD1.25 (hard cap USD2), daily loss to USD4.50 and daily net-profit entry stop to USD30, with up to 3 concurrent positions and USD3.75 aggregate stop risk. v1.49.3 deduplicates broker aliases so only one best-qualified symbol per canonical asset is ranked and scanned. v1.49.4 attempts at most one new cross-asset entry per evaluation pass, trying candidates in descending evidence-adjusted priority and moving to the next only when a higher-ranked candidate fails a live execution/risk gate. v1.49.5 resolves a directional conflict when the winning side has at least one currently-signalled evidence-qualified model and its best reliability-adjusted expected-R score exceeds the opposing side by max(0.02R, 15% of the larger absolute score); non-conflicted entries still require the configured vote threshold. No model evidence, execution, or portfolio-risk gate is bypassed. v1.49.6 adds incumbent remaining SL/TP reward/risk versus fresh same-direction entry cost diagnostics; v1.49.7 permits up to three concurrent positions while retaining aggregate risk gates; v1.63.8 hardens per-position risk to USD1.25, aggregate risk to USD3.75, and attempts emergency close if the stop cap cannot be confirmed. Historical proxy is not a guarantee; execution requires broker quote/specification, cost, stop, lot, daily loss, trade-count and aggregate-risk gates.
 
 enum EngineMode { OBSERVE_ONLY=0, AUTO_EXECUTION=1 };
 enum AccountTypeReport { ACCOUNT_REPORT_AUTO=0, ACCOUNT_REPORT_DEMO_CONFIRMED=1, ACCOUNT_REPORT_REAL_CONFIRMED=2 };
@@ -97,7 +97,7 @@ input bool     InpMarketWatchScannerEnabled = true; // Discovers active instrume
 input int      InpMarketWatchScanIntervalSeconds = 60; // Periodic quote/history/specification scan.
 input bool     InpCrossAssetRankingEnabled = true; // Rank discovered symbols using independent H1 trend/momentum/RSI/ADX checks; ranking does not itself authorize orders.
 input int      InpCrossAssetTimeframe = PERIOD_H1; // Cross-asset ranking timeframe.
-input int      InpCrossAssetTopLogCount = 7; // Number of highest-ranked eligible symbols to report.
+input int      InpCrossAssetTopLogCount = 20; // Report a broader ranked shortlist; open positions remain capped at seven.
 input bool     InpCrossAssetAutoExecutionEnabled = true; // Master switch for cross-symbol execution; additional evidence gate below applies.
 input double   InpCrossAssetMinTechnicalScore = 58.0; // Minimum technical ranking score; not proof of profitability.
 input int      InpCrossAssetMinHistorySamples = 12; // Minimum non-overlapping historical directional samples before an asset can be evidence-qualified.
@@ -107,9 +107,9 @@ input int      InpCrossAssetMinHoldoutSamples = 6; // Minimum recent chronologic
 input double   InpCrossAssetMinHoldoutWinRate = 0.40; // Holdout proxy win-rate floor.
 input double   InpCrossAssetMinHoldoutAvgR = 0.00; // Holdout proxy average net R must be positive.
 input bool     InpAllowTechnicalOnlyCrossAssetExecution = true; // Legacy-compatible execution switch; train AND holdout evidence are still mandatory; technical-only candidates are never ranked for execution.
-input int      InpCrossAssetMaxCryptoPositions = 4; // Four configured crypto assets can each hold one position; aggregate risk/slot caps still apply.
+input int      InpCrossAssetMaxCryptoPositions = 4; // Broader crypto discovery; cap simultaneous crypto exposure at four and total positions at seven.
 input int      InpCrossAssetMaxQuoteAgeSeconds = 120; // Reject stale cross-symbol quotes.
-input bool     InpAutoAllowDetectedCryptoOnChart = false; // Legacy compatibility only; strict seven-asset allowlist always applies.
+input bool     InpAutoAllowDetectedCryptoOnChart = false; // Legacy compatibility only; canonical normalization prevents duplicate broker aliases; discovered assets still require every evidence and execution gate.
 input double   InpPortfolioOpenRiskCapUSD = 8.75; // Hard portfolio stop-risk budget: 7 positions x USD1.25.
 input bool     InpAdaptiveRiskLadderEnabled = true; // Adapt maximum USD risk per new trade to sustained portfolio P/L.
 input double   InpLossRiskConfirmedUSD = 1.25; // Never exceeds the hard USD1.25 per-position cap.
@@ -131,7 +131,7 @@ input int      InpMaxSpreadNEARPoints = 100;
 input int      InpMaxSpreadBTCPoints = 200;
 input int      InpMaxSpreadXAUPoints = 80;
 input int      InpMaxSpreadETHPoints = 150;
-input int      InpMaxSpreadOtherCryptoPoints = 150; // Applies only to ETH/BTC/NEAR/SOL members of the fixed universe; verify broker point scale.
+input int      InpMaxSpreadOtherCryptoPoints = 150; // Default spread ceiling for discovered crypto assets; verify broker point scale per symbol.
 // Conservative replacement: require a validated alternative and confirm its entry before closing the incumbent.
 input bool     InpEnablePositionReplacement = false;
 input bool     InpPositionReplacementAuditOnly = false; // Replacement still requires safe prechecks and a confirmed alternative order.
@@ -531,17 +531,63 @@ void FinalizeEvidence(DirectionEvidence &e)
 string CanonicalAssetKey(string sym)
 {
    StringToUpper(sym);
-   // Normalize known aliases; other Market Watch instruments use their broker symbol as the canonical key.
+   // Strip common broker prefixes; retain suffix-tolerant prefix matching below.
    if(StringLen(sym)>=2 && StringSubstr(sym,0,2)=="M.") sym=StringSubstr(sym,2);
    if(StringLen(sym)>=1 && StringSubstr(sym,0,1)=="#") sym=StringSubstr(sym,1);
-   if(StringFind(sym,"EURUSD")==0) return "EURUSD";
-   if(StringFind(sym,"USDJPY")==0) return "USDJPY";
-   if(StringFind(sym,"XAUUSD")==0) return "XAUUSD";
-   if(StringFind(sym,"SOLUSDT")==0 || StringFind(sym,"SOLUSD")==0) return "SOLUSDT";
-   if(StringFind(sym,"NEARUSDT")==0 || StringFind(sym,"NEARUSD")==0) return "NEARUSD";
-   if(StringFind(sym,"BTCUSDT")==0 || StringFind(sym,"BTCUSD")==0 || StringFind(sym,"XBTUSD")==0) return "BTCUSDT";
-   if(StringFind(sym,"ETHUSDT")==0 || StringFind(sym,"ETHUSD")==0) return "ETHUSD";
-   // Other visible instruments use their normalized broker symbol as their asset key.
+
+   // Major/minor FX: aliases such as EURUSD.a and EURUSDm collapse to one asset.
+   string fxPairs="|EURUSD|GBPUSD|AUDUSD|NZDUSD|USDCAD|USDCHF|USDJPY|EURGBP|EURJPY|EURCHF|EURAUD|EURNZD|EURCAD|GBPJPY|GBPCHF|GBPAUD|GBPCAD|GBPNZD|AUDJPY|AUDNZD|AUDCAD|AUDCHF|NZDJPY|NZDCAD|NZDCHF|CADJPY|CADCHF|CHFJPY|";
+   string fxParts[];
+   int fxCount=StringSplit(fxPairs,'|',fxParts);
+   for(int i=0;i<fxCount;i++)
+   {
+      if(fxParts[i]=="" || StringFind(sym,fxParts[i])!=0) continue;
+      return fxParts[i];
+   }
+
+   // Metals, energy and common index CFDs, including broker suffixes.
+   string cfdAssets="|XAUUSD|XAGUSD|XPTUSD|XPDUSD|USOIL|UKOIL|NGAS|US30|DJ30|NAS100|USTEC|US100|SPX500|US500|S&P500|GER40|DE40|DAX40|UK100|FRA40|JP225|JPN225|AUS200|HK50|";
+   string cfdParts[];
+   int cfdCount=StringSplit(cfdAssets,'|',cfdParts);
+   for(int j=0;j<cfdCount;j++)
+   {
+      if(cfdParts[j]=="" || StringFind(sym,cfdParts[j])!=0) continue;
+      if(cfdParts[j]=="DJ30") return "US30";
+      if(cfdParts[j]=="USTEC" || cfdParts[j]=="US100") return "NAS100";
+      if(cfdParts[j]=="DE40" || cfdParts[j]=="DAX40") return "GER40";
+      if(cfdParts[j]=="JPN225") return "JP225";
+      return cfdParts[j];
+   }
+
+   // Crypto aliases normalize quote-currency variants to avoid duplicate exposure.
+   string cryptoAliases="|BTCUSDT|BTCUSD|XBTUSD|ETHUSDT|ETHUSD|SOLUSDT|SOLUSD|NEARUSDT|NEARUSD|XRPUSDT|XRPUSD|ADAUSDT|ADAUSD|DOGEUSDT|DOGEUSD|BNBUSDT|BNBUSD|AVAXUSDT|AVAXUSD|DOTUSDT|DOTUSD|LINKUSDT|LINKUSD|LTCUSDT|LTCUSD|BCHUSDT|BCHUSD|TRXUSDT|TRXUSD|ATOMUSDT|ATOMUSD|UNIUSDT|UNIUSD|ETCUSDT|ETCUSD|XLMUSDT|XLMUSD|";
+   string cryptoParts[];
+   int cryptoCount=StringSplit(cryptoAliases,'|',cryptoParts);
+   for(int k=0;k<cryptoCount;k++)
+   {
+      if(cryptoParts[k]=="" || StringFind(sym,cryptoParts[k])!=0) continue;
+      string base=cryptoParts[k];
+      if(StringFind(base,"BTC")==0 || StringFind(base,"XBT")==0) return "BTC";
+      if(StringFind(base,"ETH")==0) return "ETH";
+      if(StringFind(base,"SOL")==0) return "SOL";
+      if(StringFind(base,"NEAR")==0) return "NEAR";
+      if(StringFind(base,"XRP")==0) return "XRP";
+      if(StringFind(base,"ADA")==0) return "ADA";
+      if(StringFind(base,"DOGE")==0) return "DOGE";
+      if(StringFind(base,"BNB")==0) return "BNB";
+      if(StringFind(base,"AVAX")==0) return "AVAX";
+      if(StringFind(base,"DOT")==0) return "DOT";
+      if(StringFind(base,"LINK")==0) return "LINK";
+      if(StringFind(base,"LTC")==0) return "LTC";
+      if(StringFind(base,"BCH")==0) return "BCH";
+      if(StringFind(base,"TRX")==0) return "TRX";
+      if(StringFind(base,"ATOM")==0) return "ATOM";
+      if(StringFind(base,"UNI")==0) return "UNI";
+      if(StringFind(base,"ETC")==0) return "ETC";
+      if(StringFind(base,"XLM")==0) return "XLM";
+   }
+   // Other Market Watch symbols remain eligible for discovery but still face quote,
+   // spread, evidence, lot-cost, daily-loss and portfolio-risk checks before any order.
    return sym;
 }
 
