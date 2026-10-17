@@ -605,8 +605,9 @@ string CanonicalAssetKey(string sym)
    if(StringFind(sym,"NEARUSDT")==0 || StringFind(sym,"NEARUSD")==0) return "NEARUSD";
    if(StringFind(sym,"BTCUSDT")==0 || StringFind(sym,"BTCUSD")==0 || StringFind(sym,"XBTUSD")==0) return "BTCUSDT";
    if(StringFind(sym,"ETHUSDT")==0 || StringFind(sym,"ETHUSD")==0) return "ETHUSD";
-   // Other visible instruments use their normalized broker symbol as their asset key.
-   return sym;
+   // Strict seven-asset universe: unknown broker symbols and unrelated instruments fail closed.
+   // Broker suffixes/prefixes are accepted only when the normalized symbol starts with an approved asset key.
+   return "";
 }
 
 // Fail closed unless the requested broker symbol resolves to one approved canonical asset
