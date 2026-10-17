@@ -68,7 +68,7 @@
 // - Campaign net P/L >= +USD 200 activates the legacy profit-protect evidence mode; the separate adaptive USD ladder still controls per-trade risk after sustained-profit confirmation.
 // - Hard risk, daily loss, spread, open-position, and evidence gates remain active; no daily profit target or entry quota.
 // - Historical evidence is an in-sample diagnostic, not proof of future profitability.
-// v1.73.0: prioritizes the seven-asset portfolio objective: up to seven distinct canonical assets concurrently, exactly one position per asset, no profit-tier slot throttling, and candidate evaluation in descending evidence-adjusted rank. Each candidate must pass the asset-scoped local ensemble and independent chronological train/holdout evidence, quote freshness, spread, lot, margin, cost-aware SL/TP, duplicate-asset, daily-loss and aggregate-risk gates. Fixed strategy capital USD500. Portfolio risk ceiling USD100; per-position ceiling USD25; daily loss cutoff USD25. Capacity never forces a trade. NOTE: this source currently implements 16 local model families per asset plus 16 cross-asset proxy families; it does not silently disable two local families. v1.70.0: corrects higher-timeframe look-ahead by using only the last fully closed HTF candle for live and historical signals; aligns Market Watch alias selection/history sufficiency to InpCrossAssetTimeframe; updates runtime identity and audit messages. All 16 local model families are evaluated independently on each candidate symbol, with per-model evidence and cross-asset chronological train/holdout gates. USD500 capital, adaptive risk and portfolio protections remain mandatory.
+// v1.79.0: discovers a broad Market Watch universe and ranks candidates; opens at most three distinct qualified assets concurrently, exactly one position per canonical key, no profit-tier slot throttling, and candidate evaluation in descending evidence-adjusted rank. Each candidate must pass the asset-scoped local ensemble and independent chronological train/holdout evidence, quote freshness, spread, lot, margin, cost-aware SL/TP, duplicate-asset, daily-loss and aggregate-risk gates. Fixed strategy capital USD500. Portfolio risk ceiling USD100; per-position ceiling USD25; daily loss cutoff USD25. Capacity never forces a trade. NOTE: this source currently implements 16 local model families per asset plus 16 cross-asset proxy families; it does not silently disable two local families. v1.70.0: corrects higher-timeframe look-ahead by using only the last fully closed HTF candle for live and historical signals; aligns Market Watch alias selection/history sufficiency to InpCrossAssetTimeframe; updates runtime identity and audit messages. All 16 local model families are evaluated independently on each candidate symbol, with per-model evidence and cross-asset chronological train/holdout gates. USD500 capital, adaptive risk and portfolio protections remain mandatory.
 // v1.66.0: all 16 local model families accept explicit symbol/timeframe parameters. Cross-asset candidates must pass the independent local 16-model direction consensus and per-model historical evidence gate on that candidate symbol before any order sizing/send. Existing cross-asset train/chronological-holdout gates, USD500 virtual capital, adaptive risk and portfolio protections remain mandatory.
 // v1.64.1: fails closed on unknown per-position risk metadata or invalid cap distance by attempting emergency close; portfolio risk remains unknown and blocks new entries until verified.
 // v1.64.0: based on v1.63.8; adds profit-aware dynamic capacity from 1 to 7 simultaneous canonical assets.
@@ -97,13 +97,13 @@ input int      InpMaxPositionsPerAsset = 1; // Exactly one open position per can
 input double   InpDailyLossLimitUSD = 25.00; // USD500 capital: block new entries at -USD25 (5%); continue protective management.
 input double   InpDailyProfitTargetUSD = 0.00; // Deprecated compatibility input; daily profit targets never block new entries.
 input int      InpMaxTradesPerDay = 0; // Deprecated compatibility input; no daily entry quota is enforced.
-input int      InpMaxOpenTrades = 7; // Active portfolio capacity: up to seven distinct canonical assets; risk gates may still block entries.
+input int      InpMaxOpenTrades = 3; // Select up to the three highest-ranked eligible assets from the Market Watch universe; live gates remain mandatory.
 input string   InpAllowedSymbols = "*"; // "*" admits every symbol visible in MT4 Market Watch; explicit lists can restrict it.
 input bool     InpMarketWatchScannerEnabled = true; // Discovers active instruments in Market Watch; discovery alone never authorizes an order.
 input int      InpMarketWatchScanIntervalSeconds = 60; // Periodic quote/history/specification scan.
 input bool     InpCrossAssetRankingEnabled = true; // Rank discovered symbols using independent H1 trend/momentum/RSI/ADX checks; ranking does not itself authorize orders.
 input int      InpCrossAssetTimeframe = PERIOD_H1; // Cross-asset ranking timeframe.
-input int      InpCrossAssetTopLogCount = 7; // Number of highest-ranked eligible symbols to report.
+input int      InpCrossAssetTopLogCount = 3; // Number of highest-ranked eligible symbols to report by default.
 input bool     InpCrossAssetAutoExecutionEnabled = true; // Master switch for cross-symbol execution; additional evidence gate below applies.
 input double   InpCrossAssetMinTechnicalScore = 58.0; // Minimum technical ranking score; not proof of profitability.
 input int      InpCrossAssetMinHistorySamples = 12; // Minimum non-overlapping historical directional samples before an asset can be evidence-qualified.
@@ -113,10 +113,10 @@ input int      InpCrossAssetMinHoldoutSamples = 6; // Minimum recent chronologic
 input double   InpCrossAssetMinHoldoutWinRate = 0.40; // Holdout proxy win-rate floor.
 input double   InpCrossAssetMinHoldoutAvgR = 0.00; // Holdout proxy average net R must be positive.
 input bool     InpAllowTechnicalOnlyCrossAssetExecution = true; // Legacy-compatible execution switch; train AND holdout evidence are still mandatory; technical-only candidates are never ranked for execution.
-input int      InpCrossAssetMaxCryptoPositions = 7; // Up to seven distinct crypto assets permitted; aggregate USD100 and per-position USD25 risk caps still apply.
+input int      InpCrossAssetMaxCryptoPositions = 3; // Crypto positions are also bounded by the three-position portfolio cap.
 input int      InpCrossAssetMaxQuoteAgeSeconds = 120; // Reject stale cross-symbol quotes.
-input bool     InpAutoAllowDetectedCryptoOnChart = false; // Legacy compatibility only; strict seven-asset allowlist always applies.
-input double   InpPortfolioOpenRiskCapUSD = 100.00; // Aggregate calculated open stop-risk ceiling: USD100 (20% of fixed USD500), required headroom for up to seven qualified assets.
+input bool     InpAutoAllowDetectedCryptoOnChart = false; // Legacy compatibility only; InpAllowedSymbols and execution gates control eligibility.
+input double   InpPortfolioOpenRiskCapUSD = 100.00; // Aggregate calculated open stop-risk ceiling: USD100 (20% of fixed USD500); actual three-position headroom may be lower.
 input bool     InpAdaptiveRiskLadderEnabled = true; // Adapt maximum USD risk per new trade to sustained portfolio P/L.
 input double   InpLossRiskConfirmedUSD = 1.25; // Conservative adaptive budget after loss confirmation; absolute per-position cap remains USD25.
 input double   InpLossRiskPersistentUSD = 0.75; // Reduce risk during persistent losses.
@@ -187,20 +187,20 @@ double EffectiveDailyLossLimitUSD()
 }
 
 
-// Seven-slot portfolio capacity is fixed by configuration up to the hard ceiling of seven.
+// Portfolio capacity is configurable up to three concurrent positions selected from the wider Market Watch universe.
 // Prototypes are required because the gates call these helpers throughout the EA.
 int EffectiveMaxOpenTrades();
 double EffectivePortfolioRiskCapUSD();
 
 
-// Portfolio objective: keep all seven distinct-asset slots available regardless of campaign P/L tiers.
+// Portfolio objective: keep up to three distinct-asset slots available regardless of campaign P/L tiers.
 // Adaptive risk may reduce order size during losses, but never silently reduces slot capacity.
 // USD100 aggregate calculated stop-risk, USD25 per-position, and USD25 daily-loss gates remain authoritative.
 int EffectiveMaxOpenTrades()
 {
    double net = CampaignNetProfitUSD();
    g_campaignNetUSD = net;
-   return (int)MathMax(1, MathMin(7, InpMaxOpenTrades));
+   return (int)MathMax(1, MathMin(3, InpMaxOpenTrades));
 }
 
 // Aggregate stop-risk budget is capped at USD100; per-position risk is capped at USD25 and remaining headroom.
@@ -595,7 +595,7 @@ void FinalizeEvidence(DirectionEvidence &e)
 string CanonicalAssetKey(string sym)
 {
    StringToUpper(sym);
-   // Normalize known aliases; other Market Watch instruments use their broker symbol as the canonical key.
+   // Normalize known aliases; every other Market Watch instrument uses its normalized broker symbol as its own canonical key.
    if(StringLen(sym)>=2 && StringSubstr(sym,0,2)=="M.") sym=StringSubstr(sym,2);
    if(StringLen(sym)>=1 && StringSubstr(sym,0,1)=="#") sym=StringSubstr(sym,1);
    if(StringFind(sym,"EURUSD")==0) return "EURUSD";
@@ -605,9 +605,9 @@ string CanonicalAssetKey(string sym)
    if(StringFind(sym,"NEARUSDT")==0 || StringFind(sym,"NEARUSD")==0) return "NEARUSD";
    if(StringFind(sym,"BTCUSDT")==0 || StringFind(sym,"BTCUSD")==0 || StringFind(sym,"XBTUSD")==0) return "BTCUSDT";
    if(StringFind(sym,"ETHUSDT")==0 || StringFind(sym,"ETHUSD")==0) return "ETHUSD";
-   // Strict seven-asset universe: unknown broker symbols and unrelated instruments fail closed.
-   // Broker suffixes/prefixes are accepted only when the normalized symbol starts with an approved asset key.
-   return "";
+   // No hard-coded asset-count limit: allow any non-empty normalized Market Watch symbol.
+   // Known aliases above remain grouped; other broker symbols are keyed independently and still face all live gates.
+   return sym;
 }
 
 // Fail closed unless the requested broker symbol resolves to one approved canonical asset
@@ -1049,7 +1049,7 @@ void LogCrossAssetRanking()
    g_lastCrossAssetRankingSignature=top;
 }
 
-// Market Watch discovery and ranking are restricted to one selected broker symbol per canonical asset.
+// Market Watch discovery and ranking cover all configured visible symbols, with one selected broker symbol per canonical asset.
 // Ranked candidates may be executed by the guarded cross-asset order path; discovery alone never authorizes an order.
 bool LooksLikeCryptoSymbol(string symbolName)
 {
@@ -1159,7 +1159,7 @@ void ScanMarketWatchAssets(bool forceLog)
       Print("MARKET WATCH SCAN SUMMARY | symbolsVisible=",total," activeQuotes=",active,
             " cryptoLikeDetected=",cryptoFound," configuredEligible=",eligible,
             " cryptoOrConfiguredBlocked=",blocked," | eligibleSymbols=",(activeList!=""?activeList:"none"),
-            " | canonicalAssetDeduplication=true | universe=MarketWatch_or_configured_allowlist | autoAttach=false | crossAssetRanking=",(InpCrossAssetRankingEnabled?"enabled":"disabled"),
+            " | canonicalAssetDeduplication=knownAliases_plus_exactNormalizedSymbol | universe=MarketWatch_or_configured_allowlist | autoAttach=false | crossAssetRanking=",(InpCrossAssetRankingEnabled?"enabled":"disabled"),
             " | execution=guarded-cross-asset-path; discovery/ranking alone never authorizes an order.");
    g_lastMarketWatchScanSignature=signature;
    LogCrossAssetRanking();
@@ -1207,7 +1207,7 @@ int OnInit()
       Print("SYMBOL GATE | chart symbol is not in configured multi-asset allowlist ",InpAllowedSymbols,". Current chart=",Symbol(),". No trading.");
       return(INIT_FAILED);
    }
-   if(InpOperatingCapitalUSD<=0 || InpRiskPerTradeUSD<=0 || InpHardRiskCapUSD<=0 || EffectivePortfolioRiskCapUSD()<=0 || InpMaxOpenTrades<1 || InpMaxOpenTrades>7 || InpMaxPositionsPerAsset!=1 || InpCrossAssetMaxCryptoPositions<1 || InpSbtTelemetryTimeoutMs<250 ||
+   if(InpOperatingCapitalUSD<=0 || InpRiskPerTradeUSD<=0 || InpHardRiskCapUSD<=0 || EffectivePortfolioRiskCapUSD()<=0 || InpMaxOpenTrades<1 || InpMaxOpenTrades>3 || InpMaxPositionsPerAsset!=1 || InpCrossAssetMaxCryptoPositions<1 || InpSbtTelemetryTimeoutMs<250 ||
       InpLossRiskConfirmedUSD<=0 || InpLossRiskPersistentUSD<=0 || InpLossRiskSevereUSD<=0 || InpSeverePortfolioLossTriggerUSD<=0 || InpLossConfirmMinutes<1 || InpPersistentLossMinutes<InpLossConfirmMinutes || InpSevereLossMinutes<InpPersistentLossMinutes || InpProfitActivationThresholdUSD<0 || InpProfitSustainMinutes<1 || InpProfitRiskStepUSD<=0 || InpAdaptiveRiskMaximumUSD<=0 || InpAdaptiveRiskMaximumUSD>25.00 || InpHardRiskCapUSD>25.00 || InpRiskPerTradeUSD>25.00 || InpMaxRiskPerTradeCapitalPct<=0 || InpMaxRiskPerTradeCapitalPct>5.00 ||
       InpATRPeriod<2 || InpForwardHorizonBars<1 || InpEvidenceLookbackBars<30 ||
       InpBreakEvenTriggerATR<=0 || InpBreakEvenLockATR<0 || InpTrailTriggerATR<=0 || InpTrailDistanceATR<=0 || InpTPExtendTriggerATR<=0 || InpTPExtendDistanceATR<=0 || InpAdaptiveSLTPMinNetProfitUSD<0 || InpProfitSLTPActivationUSD<0 || InpProfitSLTPSustainSeconds<120 || InpSLTPMinChangeATR<=0 || InpSLTPModifyCooldownSeconds<1 ||
@@ -1265,13 +1265,13 @@ int OnInit()
          " ScannerExecutionScope=PER_SYMBOL_TRAIN_AND_HOLDOUT_PROXY_AUDIT_ONLY");
    Print("SEVEN-ASSET CAPACITY | campaignNetUSD=",DoubleToString(g_campaignNetUSD,2),
           " activeSlots=",EffectiveMaxOpenTrades(),"/7",
-          " slotPolicy=CONFIGURED_CAPACITY_UP_TO_7;PER_POSITION_AND_AGGREGATE_RISK_GOVERNORS_REMAIN_ACTIVE",
+          " slotPolicy=UP_TO_THREE_BEST_QUALIFIED_DISTINCT_ASSETS_FROM_MARKET_WATCH;PER_POSITION_AND_AGGREGATE_RISK_GOVERNORS_REMAIN_ACTIVE",
           " duplicatePolicy=ONE_POSITION_PER_CANONICAL_ASSET",
           " | capacity is not a requirement to open trades and is not evidence of profitability.");
    Print("PORTFOLIO CONFIG | MaxOpenTrades=",EffectiveMaxOpenTrades(),
          " PortfolioOpenRiskCapUSD=",DoubleToString(EffectivePortfolioRiskCapUSD(),2),
          " PortfolioCapitalCapUSD=",DoubleToString(InpOperatingCapitalUSD,2),
-         " PerAssetAllocationUSD=",DoubleToString(InpOperatingCapitalUSD/7.0,2),
+         " PerAssetAllocationUSD=",DoubleToString(InpOperatingCapitalUSD/3.0,2),
          " MaxPositionsPerAsset=",InpMaxPositionsPerAsset,
          " EffectiveCapitalUSD=",DoubleToString(EffectiveOperatingCapitalUSD(),2),
          " RiskRequestCeilingUSD=",DoubleToString(InpRiskPerTradeUSD,2),
@@ -2164,7 +2164,7 @@ void ExecuteCrossAssetRankedCandidates()
    // open as many distinct qualified assets as there are free slots in this pass.
    // Each send rechecks the live duplicate, spread, quote, evidence, daily and
    // aggregate-risk gates; failure on one candidate does not block later candidates.
-   // This permits up to seven concurrent positions, but never forces an entry.
+   // This permits up to three concurrent positions selected from the wider universe, but never forces an entry.
    for(int i=0;i<100 && opened<slots;i++)
    {
       string sym=g_crossAssetRankNames[i];
