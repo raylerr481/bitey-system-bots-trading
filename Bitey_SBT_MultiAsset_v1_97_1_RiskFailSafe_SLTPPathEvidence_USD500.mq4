@@ -865,18 +865,29 @@ bool CrossAssetHistoricalEvidence(string sym,int tf,string candidateDirection,in
       if(riskUnit<=0.0 || targetDistance<=0.0) continue;
       double grossMove=0.0;
       bool exited=false;
+      bool pathDataValid=true;
       int outcomeEndShift=shift-horizon;
       if(outcomeEndShift<1) continue;
       for(int futureShift=shift-1;futureShift>=outcomeEndShift;futureShift--)
       {
+         double futureOpen=iOpen(sym,tf,futureShift);
          double futureHigh=iHigh(sym,tf,futureShift), futureLow=iLow(sym,tf,futureShift);
-         if(futureHigh<=0.0 || futureLow<=0.0) { exited=false; break; }
-         bool hitStop=(targetDir>0 ? futureLow<=c-riskUnit : futureHigh>=c+riskUnit);
-         bool hitTarget=(targetDir>0 ? futureHigh>=c+targetDistance : futureLow<=c-targetDistance);
+         if(futureOpen<=0.0 || futureHigh<=0.0 || futureLow<=0.0 || futureHigh<futureLow)
+         { pathDataValid=false; break; }
+         double stopPrice=(targetDir>0?c-riskUnit:c+riskUnit);
+         double targetPrice=(targetDir>0?c+targetDistance:c-targetDistance);
+         // Model adverse/favorable gaps at the candle open rather than assuming a fill at the requested level.
+         if(targetDir>0 && futureOpen<=stopPrice) { grossMove=futureOpen-c; exited=true; break; }
+         if(targetDir<0 && futureOpen>=stopPrice) { grossMove=c-futureOpen; exited=true; break; }
+         if(targetDir>0 && futureOpen>=targetPrice) { grossMove=futureOpen-c; exited=true; break; }
+         if(targetDir<0 && futureOpen<=targetPrice) { grossMove=c-futureOpen; exited=true; break; }
+         bool hitStop=(targetDir>0 ? futureLow<=stopPrice : futureHigh>=stopPrice);
+         bool hitTarget=(targetDir>0 ? futureHigh>=targetPrice : futureLow<=targetPrice);
          if(hitStop && hitTarget) { grossMove=-riskUnit; exited=true; break; }
          if(hitStop) { grossMove=-riskUnit; exited=true; break; }
          if(hitTarget) { grossMove=targetDistance; exited=true; break; }
       }
+      if(!pathDataValid) continue;
       if(!exited)
       {
          double futureClose=iClose(sym,tf,outcomeEndShift);
