@@ -567,24 +567,24 @@ string CanonicalAssetKey(string sym)
    {
       if(cryptoParts[k]=="" || StringFind(sym,cryptoParts[k])!=0) continue;
       string base=cryptoParts[k];
-      if(StringFind(base,"BTC")==0 || StringFind(base,"XBT")==0) return "BTC";
-      if(StringFind(base,"ETH")==0) return "ETH";
-      if(StringFind(base,"SOL")==0) return "SOL";
-      if(StringFind(base,"NEAR")==0) return "NEAR";
-      if(StringFind(base,"XRP")==0) return "XRP";
-      if(StringFind(base,"ADA")==0) return "ADA";
-      if(StringFind(base,"DOGE")==0) return "DOGE";
-      if(StringFind(base,"BNB")==0) return "BNB";
-      if(StringFind(base,"AVAX")==0) return "AVAX";
-      if(StringFind(base,"DOT")==0) return "DOT";
-      if(StringFind(base,"LINK")==0) return "LINK";
-      if(StringFind(base,"LTC")==0) return "LTC";
-      if(StringFind(base,"BCH")==0) return "BCH";
-      if(StringFind(base,"TRX")==0) return "TRX";
-      if(StringFind(base,"ATOM")==0) return "ATOM";
-      if(StringFind(base,"UNI")==0) return "UNI";
-      if(StringFind(base,"ETC")==0) return "ETC";
-      if(StringFind(base,"XLM")==0) return "XLM";
+      if(StringFind(base,"BTC")==0 || StringFind(base,"XBT")==0) return "BTCUSDT";
+      if(StringFind(base,"ETH")==0) return "ETHUSD";
+      if(StringFind(base,"SOL")==0) return "SOLUSDT";
+      if(StringFind(base,"NEAR")==0) return "NEARUSD";
+      if(StringFind(base,"XRP")==0) return "XRPUSD";
+      if(StringFind(base,"ADA")==0) return "ADAUSD";
+      if(StringFind(base,"DOGE")==0) return "DOGEUSD";
+      if(StringFind(base,"BNB")==0) return "BNBUSD";
+      if(StringFind(base,"AVAX")==0) return "AVAXUSD";
+      if(StringFind(base,"DOT")==0) return "DOTUSD";
+      if(StringFind(base,"LINK")==0) return "LINKUSD";
+      if(StringFind(base,"LTC")==0) return "LTCUSD";
+      if(StringFind(base,"BCH")==0) return "BCHUSD";
+      if(StringFind(base,"TRX")==0) return "TRXUSD";
+      if(StringFind(base,"ATOM")==0) return "ATOMUSD";
+      if(StringFind(base,"UNI")==0) return "UNIUSD";
+      if(StringFind(base,"ETC")==0) return "ETCUSD";
+      if(StringFind(base,"XLM")==0) return "XLMUSD";
    }
    // Other Market Watch symbols remain eligible for discovery but still face quote,
    // spread, evidence, lot-cost, daily-loss and portfolio-risk checks before any order.
