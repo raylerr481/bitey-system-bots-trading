@@ -319,6 +319,7 @@ input int      InpATRPeriod = 14;
 input double   InpStopATR = 1.30;
 input double   InpTargetATR = 2.60;
 // Adaptive exit management (v1.59: three-candle, profit-only adaptive SL/TP)
+input bool     InpCloseOnNetProfitReversal = true; // Close managed position when net floating P/L crosses from positive to zero/negative, independent of SL/TP.
 input bool     InpAdaptiveSLTPEnabled = true;
 input double   InpAdaptiveSLTPMinNetProfitUSD = 0.05; // Do not adapt SL/TP unless floating net P/L (profit+swap+commission) exceeds this USD threshold.
 input ENUM_TIMEFRAMES InpAdaptiveSLTPTimeframe = PERIOD_H1; // Timeframe used to confirm three consecutive favorable closed candles on every managed asset.
@@ -2063,6 +2064,52 @@ void EnforceOpenPositionRiskCapUSD125()
    }
 }
 
+// Independent protective rule: once a managed ticket has shown positive net floating P/L,
+// close it automatically when net P/L later reaches zero or below. This does not depend on SL/TP.
+// Persist the observed-positive flag across EA/terminal restarts where terminal Global Variables remain.
+// If the ticket is already negative before this EA ever observes positive net P/L, no unseen crossing is inferred.
+void CloseOnNetProfitReversal()
+{
+   if(!InpCloseOnNetProfitReversal) return;
+   datetime now=TimeCurrent();
+   if(!IsTradeAllowed() || IsTradeContextBusy() || !IsConnected()) return;
+   for(int i=OrdersTotal()-1;i>=0;i--)
+   {
+      if(!OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) continue;
+      if(OrderMagicNumber()!=InpMagic) continue;
+      int type=OrderType();
+      if(type!=OP_BUY && type!=OP_SELL) continue;
+      int ticket=OrderTicket();
+      string sym=OrderSymbol();
+      string seenKey=StringFormat("BiteyNetPositiveSeen_%d",ticket);
+      double net=OrderProfit()+OrderSwap()+OrderCommission();
+      if(net>0.0)
+      {
+         if(!GlobalVariableCheck(seenKey)) GlobalVariableSet(seenKey,1.0);
+         continue;
+      }
+      if(!GlobalVariableCheck(seenKey) || GlobalVariableGet(seenKey)<0.5) continue;
+      double lots=OrderLots();
+      int digits=(int)MarketInfo(sym,MODE_DIGITS);
+      double closePrice=(type==OP_BUY?MarketInfo(sym,MODE_BID):MarketInfo(sym,MODE_ASK));
+      if(closePrice<=0.0)
+      {
+         Print("NET PROFIT REVERSAL CLOSE | ticket=",ticket," symbol=",sym," netUSD=",DoubleToString(net,2)," result=RETRY reason=NO_VALID_MARKET_PRICE");
+         continue;
+      }
+      closePrice=NormalizeDouble(closePrice,digits);
+      ResetLastError();
+      bool closed=OrderClose(ticket,lots,closePrice,InpSlippagePoints,clrNONE);
+      int err=(closed?0:GetLastError());
+      Print("NET PROFIT REVERSAL CLOSE | ticket=",ticket," symbol=",sym,
+            " side=",(type==OP_BUY?"BUY":"SELL")," lots=",DoubleToString(lots,3),
+            " netBeforeCloseUSD=",DoubleToString(net,2)," price=",DoubleToString(closePrice,digits),
+            " sltpIndependent=true result=",(closed?"CLOSED":"FAILED_RETRY_NEXT_TICK_OR_TIMER"),
+            " error=",err," observedPositivePreviously=true time=",TimeToString(now,TIME_DATE|TIME_SECONDS));
+      if(closed && GlobalVariableCheck(seenKey)) GlobalVariableDel(seenKey);
+   }
+}
+
 // Manage every open symbol for this EA magic, not only the chart symbol.
 // Profit-only rule: do not adapt SL/TP unless floating net P/L (profit+swap+commission)
 // is strictly above InpAdaptiveSLTPMinNetProfitUSD. Existing broker SL/TP remain untouched
@@ -2503,6 +2550,7 @@ void EnforceOnePositionPerCanonicalAsset()
 
 void OnTimer()
 {
+   CloseOnNetProfitReversal();
    EnforceOpenPositionRiskCapUSD125();
    ManageAdaptiveSLTP();
    static datetime lastManagedAudit=0;
@@ -2640,6 +2688,7 @@ void ProcessEngine(bool timerInvocation)
 
 void OnTick()
 {
+   CloseOnNetProfitReversal();
    ManageAdaptiveSLTP();
    ProcessEngine(false);
 }
