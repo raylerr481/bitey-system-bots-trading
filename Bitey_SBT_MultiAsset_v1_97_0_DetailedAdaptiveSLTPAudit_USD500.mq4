@@ -1,9 +1,9 @@
 #property strict
-#property version   "1.970"
-#property description "Bitey SBT v1.97.0 - 16-model democracy, adaptive SL/TP, fixed USD500, 7 unique assets, no martingale"
+#property version   "1.971"
+#property description "Bitey SBT v1.97.1 - risk fail-safe fixes, SL/TP path evidence proxy, fixed USD500, 7 unique assets, no martingale"
 
 // ============================================================================
-// BITEY SBT v1.97.0 — DEMOCRATIC MODEL GOVERNANCE + ADAPTIVE PROFIT MANAGEMENT
+// BITEY SBT v1.97.1 — RISK FAIL-SAFE + SL/TP PATH EVIDENCE PROXY
 // These comments document intended safeguards; runtime enforcement and broker
 // acceptance must still be verified in MetaEditor, Strategy Tester and demo.
 // GOVERNANCE CONTRACT (v1.97.0):
@@ -744,8 +744,8 @@ double CrossAssetTechnicalScore(string sym, int tf, string &direction, string &r
 
 // Per-symbol directional historical bar study using the same 16 model-family proxy votes
 // as the live cross-asset candidate selector. Uses non-overlapping closed-bar samples,
-// fixed 1.5 ATR normalization and a current-spread cost proxy. It remains a HISTORICAL_PROXY:
-// it does not simulate stop/target intrabar paths, slippage or broker fills.
+// configured ATR SL/TP OHLC path simulation and a current-spread cost proxy. It remains an EXECUTION_PROXY:
+// entry is modeled at bar close; historical spread, commission, swap, slippage and broker fills are not exact.
 bool CrossAssetHistoricalEvidence(string sym,int tf,string candidateDirection,int &samplesOut,double &winRateOut,double &avgROut,string &reasonOut,
                                   int &holdoutSamplesOut,double &holdoutWinRateOut,double &holdoutAvgROut)
 {
@@ -856,11 +856,35 @@ bool CrossAssetHistoricalEvidence(string sym,int tf,string candidateDirection,in
       if(adx<10.0 || directionalVotes<5 || buy==sell || MathMax(buy,sell)<5) continue;
       int historicalDir=(buy>sell?1:-1);
       if(historicalDir!=targetDir) continue;
-      double futureClose=iClose(sym,tf,shift-horizon);
-      if(futureClose<=0.0) continue;
-      double riskUnit=atr*1.5;
-      if(riskUnit<=0.0) continue;
-      double netR=((futureClose-c)*targetDir-spreadCost)/riskUnit;
+      // Approximate the actual configured SL/TP path on subsequent OHLC bars.
+      // Conservative intrabar ordering: if SL and TP are both touched, count the stop first.
+      // Entry is modeled at the signal bar close; live market fills, commissions, swaps and slippage
+      // still require MT4 Strategy Tester confirmation and are never represented as exact here.
+      double riskUnit=atr*InpStopATR;
+      double targetDistance=atr*InpTargetATR;
+      if(riskUnit<=0.0 || targetDistance<=0.0) continue;
+      double grossMove=0.0;
+      bool exited=false;
+      int outcomeEndShift=shift-horizon;
+      if(outcomeEndShift<1) continue;
+      for(int futureShift=shift-1;futureShift>=outcomeEndShift;futureShift--)
+      {
+         double futureHigh=iHigh(sym,tf,futureShift), futureLow=iLow(sym,tf,futureShift);
+         if(futureHigh<=0.0 || futureLow<=0.0) { exited=false; break; }
+         bool hitStop=(targetDir>0 ? futureLow<=c-riskUnit : futureHigh>=c+riskUnit);
+         bool hitTarget=(targetDir>0 ? futureHigh>=c+targetDistance : futureLow<=c-targetDistance);
+         if(hitStop && hitTarget) { grossMove=-riskUnit; exited=true; break; }
+         if(hitStop) { grossMove=-riskUnit; exited=true; break; }
+         if(hitTarget) { grossMove=targetDistance; exited=true; break; }
+      }
+      if(!exited)
+      {
+         double futureClose=iClose(sym,tf,outcomeEndShift);
+         if(futureClose<=0.0) continue;
+         grossMove=(futureClose-c)*targetDir;
+      }
+      // Convert spread to R; use the current spread as a conservative cost proxy, not historical spread.
+      double netR=(grossMove-spreadCost)/riskUnit;
       if(shift<=holdoutCutoff)
       {
          holdoutSamplesOut++;
@@ -899,7 +923,7 @@ bool CrossAssetHistoricalEvidence(string sym,int tf,string candidateDirection,in
       ",holdoutN="+IntegerToString(holdoutSamplesOut)+"/"+IntegerToString(InpCrossAssetMinHoldoutSamples)+":"+(holdoutNPass?"PASS":"FAIL")+
       ",holdoutWR="+DoubleToString(holdoutWinRateOut,3)+"/"+DoubleToString(InpCrossAssetMinHoldoutWinRate,3)+":"+(holdoutWRPass?"PASS":"FAIL")+
       ",holdoutAvgR="+DoubleToString(holdoutAvgROut,3)+"/"+DoubleToString(InpCrossAssetMinHoldoutAvgR,3)+":"+(holdoutRPass?"PASS":"FAIL")+
-      ",evidenceType=HISTORICAL_BAR_PROXY_NOT_REAL_TRADES";
+      ",evidenceType=SLTP_OHLC_EXECUTION_PROXY_CURRENT_SPREAD_ONLY_NOT_MT4_TESTER";
    Print("CROSS-ASSET EVIDENCE GATE AUDIT | symbol=",sym," direction=",candidateDirection," ",reasonOut," result=",(pass?"PASS":"REJECT"));
    return pass;
 }
@@ -2032,7 +2056,9 @@ void EnforceOpenPositionRiskCapUSD125()
          Print("PER_TRADE_RISK_CAP_ENFORCEMENT_FAILED | ticket=",ticket," symbol=",sym,
             " reason=INVALID_LOT_PRICE_OR_TICK_VALUE lots=",DoubleToString(lots,3),
             " tickValue=",DoubleToString(tickValue,6)," tickSizePrice=",DoubleToString(tickSize,8),
-            " action=NO_MODIFICATION");
+            " action=EMERGENCY_CLOSE_ATTEMPT reasonRisk=UNKNOWN");
+         // Unknown stop risk is not treated as safe. Attempt one controlled emergency close.
+         EmergencyCloseRiskCapBreach(ticket,sym,type,lots,-1.0,"INVALID_LOT_PRICE_OR_TICK_VALUE_RISK_UNKNOWN");
          continue;
       }
       double oldRisk=(oldSL>0?EstimateOrderRiskUSD(sym,lots,MathAbs(open-oldSL)):-1.0);
@@ -2043,7 +2069,8 @@ void EnforceOpenPositionRiskCapUSD125()
       if(distance<=0 || !MathIsValidNumber(distance))
       {
          Print("PER_TRADE_RISK_CAP_ENFORCEMENT_FAILED | ticket=",ticket," symbol=",sym,
-            " reason=INVALID_CAP_DISTANCE action=NO_MODIFICATION");
+            " reason=INVALID_CAP_DISTANCE action=EMERGENCY_CLOSE_ATTEMPT");
+         EmergencyCloseRiskCapBreach(ticket,sym,type,lots,oldRisk,"INVALID_CAP_DISTANCE");
          continue;
       }
       double targetSL=(type==OP_BUY?open-distance:open+distance);
@@ -2103,10 +2130,11 @@ void EnforceOpenPositionRiskCapUSD125()
          " confirmedSL=",(readOK?DoubleToString(readSL,digits):"N/A"),
          " confirmedRiskUSD=",(readRisk>=0?DoubleToString(readRisk,2):"UNKNOWN"),
          " result=",(confirmed?"CAP_ENFORCED_READBACK_CONFIRMED":"CRITICAL_CAP_NOT_CONFIRMED"));
-      if(!confirmed && (readRisk<0.0 || readRisk>capUSD+0.02))
+      if(!confirmed)
+      {
+         // One close attempt per supervision pass; a failed attempt is retried on the next pass.
          EmergencyCloseRiskCapBreach(ticket,sym,type,lots,(readRisk>=0.0?readRisk:oldRisk),"SL_MODIFY_FAILED_OR_UNCONFIRMED");
-       if(!confirmed && (readRisk<0.0 || readRisk>capUSD+0.02))
-          EmergencyCloseRiskCapBreach(ticket,sym,type,lots,(readRisk>=0.0?readRisk:oldRisk),"SL_MODIFY_FAILED_OR_UNCONFIRMED");
+      }
    }
 }
 
