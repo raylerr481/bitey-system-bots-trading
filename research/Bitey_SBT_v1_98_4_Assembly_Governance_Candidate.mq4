@@ -3,6 +3,8 @@
 #property description "Bitey SBT Assembly Governance Candidate; chart-local research build."
 #property description "Live trading is disabled by default. Validate in Strategy Tester/demo before any live use."
 
+#include "../mt4/BiteySBTTelemetry.mqh"
+
 // IMPORTANT:
 // - This is a standalone research candidate, NOT a drop-in replacement for the production EA.
 // - It operates on the chart symbol only; it does not implement the production multi-asset scanner.
@@ -51,6 +53,7 @@ int ModelGroup[MODEL_COUNT] = {
 }; // 0 trend, 1 breakout, 2 mean-reversion, 3 session
 
 datetime g_lastBar = 0;
+string g_telemetryModels = "";
 datetime g_dayStart = 0;
 
 struct Evidence
@@ -91,6 +94,7 @@ void OnTick()
 
 void EvaluateAssembly()
 {
+  g_telemetryModels = "";
  int rawBuy=0, rawSell=0, qualifiedBuy=0, qualifiedSell=0;
  bool buyGroups[4], sellGroups[4];
  ArrayInitialize(buyGroups,false);
@@ -136,6 +140,11 @@ void EvaluateAssembly()
          " | SELL n=",es.samples," wr=",DoubleToString(es.winRate,3),
          " avgR=",DoubleToString(es.avgR,3)," result=",(es.pass?"PASS":"REJECT"),
          " | evidenceType=BAR_REPLAY_PROXY");
+    string modelJson = "{\"model\":\""+ModelName[m]+"\",\"current_signal\":\""+SignalText(signal)+"\",\"side_evaluated\":\"BUY\",\"samples\":"+IntegerToString(eb.samples)+",\"win_rate\":"+DoubleToString(eb.winRate,6)+",\"avg_r\":"+DoubleToString(eb.avgR,6)+",\"qualified\":"+(eb.pass?"true":"false")+"}";
+    if(StringLen(g_telemetryModels)>0) g_telemetryModels += ",";
+    g_telemetryModels += modelJson;
+    modelJson = "{\"model\":\""+ModelName[m]+"\",\"current_signal\":\""+SignalText(signal)+"\",\"side_evaluated\":\"SELL\",\"samples\":"+IntegerToString(es.samples)+",\"win_rate\":"+DoubleToString(es.winRate,6)+",\"avg_r\":"+DoubleToString(es.avgR,6)+",\"qualified\":"+(es.pass?"true":"false")+"}";
+    g_telemetryModels += ","+modelJson;
  }
 
  int buyGroupCount=CountGroups(buyGroups);
@@ -172,6 +181,24 @@ void EvaluateAssembly()
        " bestSell=",(bestSell>=0?ModelName[bestSell]:"NONE"),
        " | decision=",decision," | reason=",reason,
        " | liveOrdersEnabled=",EnableLiveOrders);
+
+  string eventId = Symbol()+"-"+IntegerToString(Period())+"-"+IntegerToString((int)iTime(Symbol(),Period(),1));
+  string barTime = TimeToString(iTime(Symbol(),Period(),1),TIME_DATE|TIME_SECONDS);
+  StringReplace(barTime,".","-"); StringReplace(barTime," ","T");
+  string utcTime = TimeToString(TimeGMT(),TIME_DATE|TIME_SECONDS);
+  StringReplace(utcTime,".","-"); StringReplace(utcTime," ","T");
+  string payload = "{\"schema_version\":\"1.0\",\"event_id\":\""+eventId+
+    "\",\"event_time_utc\":\""+utcTime+"Z\",\"broker_time\":\""+barTime+
+    "\",\"event_type\":\"assembly_decision\",\"symbol\":\""+Symbol()+
+    "\",\"timeframe\":\""+IntegerToString(Period())+"\",\"bar_time\":\""+barTime+
+    "Z\",\"ea_version\":\"1.984\",\"source_commit\":\"improve-v1.98.4-assembly-governance-candidate\",\"variant_id\":\"assembly-governance-v1.984\",\"decision\":\""+decision+
+    "\",\"reason\":\""+reason+"\",\"risk_policy\":\"ALL_ACCOUNTS_REAL_RISK\",\"spread_points\":"+DoubleToString(MarketInfo(Symbol(),MODE_SPREAD),1)+
+    ",\"atr\":"+DoubleToString(iATR(Symbol(),Period(),ATRPeriod,1),Digits)+
+    ",\"intended_risk_usd\":"+DoubleToString(MaxRiskUSDPerTrade,2)+
+    ",\"effective_capital_usd\":"+DoubleToString(EffectiveCapitalUSD,2)+
+    ",\"evidence_type\":\"BAR_REPLAY_PROXY\",\"models\":["+g_telemetryModels+
+    "],\"training_metrics\":{\"raw_buy\":"+IntegerToString(rawBuy)+",\"raw_sell\":"+IntegerToString(rawSell)+",\"qualified_buy\":"+IntegerToString(qualifiedBuy)+",\"qualified_sell\":"+IntegerToString(qualifiedSell)+",\"buy_groups\":"+IntegerToString(buyGroupCount)+",\"sell_groups\":"+IntegerToString(sellGroupCount)+"},\"holdout_metrics\":null,\"order\":null}";
+  SBT_SendTelemetryJSON(payload);
 
  if(direction!=0 && EnableLiveOrders) TryOpen(direction);
 }
