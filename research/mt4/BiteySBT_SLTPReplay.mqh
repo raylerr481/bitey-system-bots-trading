@@ -72,8 +72,8 @@ SBT99ReplayStats SBT99_ReplaySLTP(int model,
       {
          double hi=iHigh(Symbol(),Period(),barShift);
          double lo=iLow(Symbol(),Period(),barShift);
-         bool hitSL=(side==1 ? lo<=sl : hi>=sl);
-         bool hitTP=(side==1 ? hi>=tp : lo<=tp);
+         bool hitSL=(side==1 ? lo<=sl : (hi+spread)>=sl);
+         bool hitTP=(side==1 ? hi>=tp : (lo+spread)<=tp);
 
          if(hitSL && hitTP)
          {
@@ -101,6 +101,8 @@ SBT99ReplayStats SBT99_ReplaySLTP(int model,
          // Horizon exit at the last available close; spread was already charged at entry.
          double exitPrice=iClose(Symbol(),Period(),lastShift);
          if(exitPrice<=0.0) continue;
+         // OHLC history is treated as BID data: a SELL exits at ASK (close + spread).
+         if(side==-1) exitPrice+=spread;
          double move=(exitPrice-entryPrice)*side;
          resultR=move/stopDistance;
       }
