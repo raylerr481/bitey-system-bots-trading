@@ -1,0 +1,98 @@
+//==================================================================
+// STRUCTS
+//==================================================================
+
+struct DecisionSnapshot
+{
+   datetime time;
+   int shift;
+   int direction;
+   int regime;
+   int selectedStrategy;
+   int buyVotes;
+   int sellVotes;
+
+   double confidence;
+   double evidence;
+
+   // CORRECCIÓN v2.63:
+   // directional pertenece también al snapshot.
+   double directional;
+
+   double buyEvidence;
+   double sellEvidence;
+
+   double adx;
+   double atrPoints;
+   double rsi;
+   double emaGapATR;
+   double momentumATR;
+   double bodyRatio;
+   double spreadPoints;
+
+   double buyScore;
+   double sellScore;
+
+   bool adaptiveOK;
+   bool riskOK;
+};
+
+
+//==================================================================
+// DECISION RECORD
+//==================================================================
+
+struct DecisionRecord
+{
+   datetime time;
+
+   int direction;
+   int regime;
+   int strategy;
+
+   int buyVotes;
+   int sellVotes;
+
+   double confidence;
+   double evidence;
+
+   // CORRECCIÓN PRINCIPAL:
+   // Este campo faltaba en la versión anterior.
+   double directional;
+
+   double buyEvidence;
+   double sellEvidence;
+
+   double buyScore;
+   double sellScore;
+
+   double adx;
+   double atrPoints;
+   double rsi;
+   double emaGapATR;
+   double momentumATR;
+   double bodyRatio;
+   double spreadPoints;
+
+   bool adaptiveOK;
+   bool riskOK;
+
+   string riskReason;
+   string adaptiveReason;
+
+   bool cooldownOK;
+   bool sessionOK;
+   bool dailyOK;
+
+   int liveLossStreak;
+   int openTrades;
+
+   string decision;
+
+   int ticket;
+};
+
+
+DecisionRecord g_decisions[];
+int g_decisionCount = 0;
+int g_lastOrderTicket = 0;
