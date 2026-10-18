@@ -19,33 +19,38 @@ struct SBT99ReplayStats
    double avgR;
    double grossWinR;
    double grossLossR;
+   double profitFactor;
+   double maxDrawdownR;
    bool sufficient;
 };
 
 int ModelSignal(int model, int s);
 
-SBT99ReplayStats SBT99_ReplaySLTP(int model,
+void SBT99_ReplaySLTP(int model,
                                   int side,
                                   int lookbackBars,
                                   int horizonBars,
                                   int atrPeriod,
                                   double stopATR,
                                   double targetATR,
-                                  double spreadPoints)
+                                  double spreadPoints,
+                                  SBT99ReplayStats &r)
 {
-   SBT99ReplayStats r;
    r.trades=0; r.wins=0; r.losses=0; r.ambiguousBars=0;
    r.winRate=0.0; r.netR=0.0; r.avgR=0.0;
-   r.grossWinR=0.0; r.grossLossR=0.0; r.sufficient=false;
+   r.grossWinR=0.0; r.grossLossR=0.0; r.profitFactor=0.0; r.maxDrawdownR=0.0; r.sufficient=false;
 
    if((side!=1 && side!=-1) || lookbackBars<1 || horizonBars<1 ||
       atrPeriod<2 || stopATR<=0.0 || targetATR<=0.0 || Bars<horizonBars+atrPeriod+10)
-      return r;
+      return;
 
    int maxSignalShift=MathMin(lookbackBars, Bars-horizonBars-atrPeriod-3);
+   int nextAllowedSignalShift=2147483647;
+   double equityR=0.0, peakR=0.0;
    // Iterate from older bars to newer bars so results are deterministic.
    for(int sigShift=maxSignalShift; sigShift>=horizonBars+2; sigShift--)
    {
+      if(sigShift>nextAllowedSignalShift) continue;
       if(ModelSignal(model,sigShift)!=side) continue;
 
       double atr=iATR(Symbol(),Period(),atrPeriod,sigShift);
@@ -75,16 +80,23 @@ SBT99ReplayStats SBT99_ReplaySLTP(int model,
          bool hitSL=(side==1 ? lo<=sl : (hi+spread)>=sl);
          bool hitTP=(side==1 ? hi>=tp : (lo+spread)<=tp);
 
+         double barOpen=iOpen(Symbol(),Period(),barShift);
          if(hitSL && hitTP)
          {
             r.ambiguousBars++;
-            resultR=-1.0; // pessimistic tie-break; never assume target came first
+            // SL-first. Account for a gap through the stop at the bar open.
+            if(side==1 && barOpen<sl) resultR=(entryPrice-barOpen)/stopDistance;
+            else if(side==-1 && barOpen+spread>sl) resultR=(entryPrice-(barOpen+spread))/stopDistance;
+            else resultR=-1.0;
             finished=true;
             break;
          }
          if(hitSL)
          {
-            resultR=-1.0;
+            // A gap through the stop fills at the adverse open, not at the stop.
+            if(side==1 && barOpen<sl) resultR=(entryPrice-barOpen)/stopDistance;
+            else if(side==-1 && barOpen+spread>sl) resultR=(entryPrice-(barOpen+spread))/stopDistance;
+            else resultR=-1.0;
             finished=true;
             break;
          }
@@ -109,6 +121,11 @@ SBT99ReplayStats SBT99_ReplaySLTP(int model,
 
       r.trades++;
       r.netR+=resultR;
+      equityR+=resultR;
+      if(equityR>peakR) peakR=equityR;
+      double dd=peakR-equityR;
+      if(dd>r.maxDrawdownR) r.maxDrawdownR=dd;
+      nextAllowedSignalShift=lastShift-1; // avoid overlapping outcome windows for this model/side
       if(resultR>0.0)
       {
          r.wins++;
@@ -125,8 +142,9 @@ SBT99ReplayStats SBT99_ReplaySLTP(int model,
    {
       r.winRate=(double)r.wins/(double)r.trades;
       r.avgR=r.netR/(double)r.trades;
+      if(r.grossLossR>0.0) r.profitFactor=r.grossWinR/r.grossLossR;
+      else if(r.grossWinR>0.0) r.profitFactor=99.0;
    }
    r.sufficient=(r.trades>=12);
-   return r;
 }
 #endif
