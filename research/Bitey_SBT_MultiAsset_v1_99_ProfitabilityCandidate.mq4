@@ -1,9 +1,9 @@
 #property strict
-#property version   "1.990"
-#property description "Bitey SBT Multi-Asset v1.99 research candidate - 16 models, bounded USD500 risk"
+#property version   "1.991"
+#property description "Bitey SBT Multi-Asset v1.99.1 operational research candidate - 16 models, bounded USD500 risk"
 
 // ============================================================================
- // BITEY SBT MULTI-ASSET v1.99 — PROFITABILITY RESEARCH CANDIDATE
+ // BITEY SBT MULTI-ASSET v1.99.1 — OPERATIONAL RESEARCH CANDIDATE
  // Derived from the repository's reconstructed v1.98.2 source; not an exact
  // recovery of any missing historical source. Production files are untouched.
  //
@@ -4803,7 +4803,7 @@ bool SendOrderUnlocked(int direction)
       return false;
    }
    ResetLastError();
-   int ticket=OrderSend(Symbol(),type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.78.0 "+expectedAssetKey,InpMagic,0,clrNONE);
+   int ticket=OrderSend(Symbol(),type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.99.1 "+expectedAssetKey,InpMagic,0,clrNONE);
    if(ticket<0)
    {
       int sendError=GetLastError();
