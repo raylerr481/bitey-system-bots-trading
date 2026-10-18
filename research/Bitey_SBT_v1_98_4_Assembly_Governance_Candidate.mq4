@@ -284,8 +284,14 @@ int ModelSignal(int model, int s)
    case 8: // HTF_TREND_CONFIRM
    {
      int tf=HigherTimeframe(Period());
-     double hf=iMA(Symbol(),tf,9,0,MODE_EMA,PRICE_CLOSE,1);
-     double hs=iMA(Symbol(),tf,21,0,MODE_EMA,PRICE_CLOSE,1);
+     // Align HTF evidence to the historical bar being evaluated.
+     // +1 deliberately uses the last fully closed HTF bar, avoiding look-ahead.
+     int htShift=iBarShift(Symbol(),tf,iTime(Symbol(),Period(),s),false);
+     if(htShift<0) break;
+     htShift++;
+     if(htShift>=iBars(Symbol(),tf)) break;
+     double hf=iMA(Symbol(),tf,9,0,MODE_EMA,PRICE_CLOSE,htShift);
+     double hs=iMA(Symbol(),tf,21,0,MODE_EMA,PRICE_CLOSE,htShift);
      if(hf>hs && c>emaSlow) return SIDE_BUY;
      if(hf<hs && c<emaSlow) return SIDE_SELL;
      break;
@@ -417,9 +423,9 @@ void TryOpen(int direction)
  double riskPerLot=(stopDistance/(tickSize*Point))*tickValue;
  if(riskPerLot<=0) return;
  double riskCap=MathMin(MaxRiskUSDPerTrade,EffectiveCapitalUSD*0.0025);
- double lots=MathFloor((riskCap/riskPerLot)/lotStep)*lotStep;
+ double lots=MathFloor((riskCap/riskPerLot)/lotStep + 1e-8)*lotStep;
  lots=MathMin(lots,maxLot);
- lots=NormalizeDouble(lots,2);
+ lots=NormalizeDouble(lots,LotDigits(lotStep));
  if(lots<minLot)
  {
    Print("SBT ORDER BLOCK | reason=MIN_LOT_EXCEEDS_RISK_CAP | minLot=",minLot,
@@ -458,6 +464,18 @@ void TryOpen(int direction)
        " | intendedRiskUSD=",DoubleToString(actualRisk,2),
        " | sl=",DoubleToString(sl,Digits)," | tp=",DoubleToString(tp,Digits),
        " | warning=stop_execution_slippage_gaps_and_contract_conversion_can_exceed_intended_risk");
+}
+
+int LotDigits(double step)
+{
+ int digits=0;
+ double scaled=step;
+ while(digits<8 && MathAbs(scaled-MathRound(scaled))>1e-8)
+ {
+   scaled*=10.0;
+   digits++;
+ }
+ return digits;
 }
 
 int CountManagedPositions()
