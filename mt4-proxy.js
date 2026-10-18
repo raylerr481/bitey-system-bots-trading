@@ -105,6 +105,7 @@ export async function handleMt4Proxy(request, env, pathname) {
   const allowed = new Map([
     ["/api/v1/mt4/bitey-report", { method: "POST", upstream: "/api/v1/mt4/bitey-report" }],
     ["/api/v1/mt4/trade-closed", { method: "POST", upstream: "/api/v1/mt4/trade-closed" }],
+    ["/api/v1/mt4/signal-event", { method: "POST", upstream: "/api/v1/mt4/signal-event" }],
     ["/api/v1/mt4/active-bot", { method: "GET", upstream: "/api/v1/mt4/active-bot" }],
     ["/api/v1/mt4/trades", { method: "GET", upstream: "/api/v1/mt4/trades" }],
   ]);
