@@ -1,3 +1,7 @@
+#property strict
+#property version   "1.990"
+#property description "Bitey SBT Multi-Asset v1.99 research candidate - 16 models, bounded USD500 risk"
+
 // ============================================================================
  // BITEY SBT MULTI-ASSET v1.99 — PROFITABILITY RESEARCH CANDIDATE
  // Derived from the repository's reconstructed v1.98.2 source; not an exact
