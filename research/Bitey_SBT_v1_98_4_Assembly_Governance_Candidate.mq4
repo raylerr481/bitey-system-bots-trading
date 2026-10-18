@@ -194,7 +194,7 @@ void EvaluateAssembly()
     "\",\"event_time_utc\":\""+utcTime+"Z\",\"broker_time\":\""+barTime+
     "\",\"event_type\":\"assembly_decision\",\"symbol\":\""+Symbol()+
     "\",\"timeframe\":\""+IntegerToString(Period())+"\",\"bar_time\":\""+barTime+
-    "Z\",\"ea_version\":\"1.984\",\"source_commit\":\"improve-v1.98.4-assembly-governance-candidate\",\"variant_id\":\"assembly-governance-v1.984\",\"decision\":\""+decision+
+    "\",\"ea_version\":\"1.990\",\"source_commit\":\"research-v1.99-telemetry-and-evidence\",\"variant_id\":\"assembly-governance-v1.990\",\"decision\":\""+decision+
     "\",\"reason\":\""+reason+"\",\"risk_policy\":\"ALL_ACCOUNTS_REAL_RISK\",\"spread_points\":"+DoubleToString(MarketInfo(Symbol(),MODE_SPREAD),1)+
     ",\"atr\":"+DoubleToString(iATR(Symbol(),Period(),ATRPeriod,1),Digits)+
     ",\"intended_risk_usd\":"+DoubleToString(MaxRiskUSDPerTrade,2)+
