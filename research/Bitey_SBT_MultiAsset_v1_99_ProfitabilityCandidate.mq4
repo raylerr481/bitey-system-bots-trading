@@ -1,47 +1,23 @@
 // ============================================================================
-// BITEY SBT MULTI-ASSET v1.99 — PROFITABILITY RESEARCH CANDIDATE
-// Derived from the repository's reconstructed v1.98.2 source; not an exact
-// recovery of any missing historical source. Production files are untouched.
-//
-// SAFETY CONTRACT FOR THIS CANDIDATE:
-// - OBSERVE_ONLY by default; cross-asset order submission disabled by default.
-// - Fixed effective strategy capital USD500; never scale from account balance.
-// - Target and hard per-position stop risk <= USD1.25; aggregate open stop risk
-//   <= USD8.75 for up to seven positions, subject to all symbol/portfolio checks.
-// - Daily loss limit USD10 blocks new entries while protective management remains.
-// - One position per canonical asset, no martingale, no account switching.
-// - Emergency close is attempted only when net floating P/L <= -USD1.25 or when
-//   existing stop-risk protection determines the position exceeds the hard cap.
-// - An emergency close is an execution attempt, not a guaranteed fill or loss cap.
-// - Evidence is historical OHLC proxy, not a guarantee of future profitability.
-// - MT4 remains the execution authority. Telemetry/learning never authorize orders.
-// - Compile, review, Strategy Tester and forward-demo validation are required.
-// ============================================================================
-
-
-// RECONSTRUCTION NOTE: rebuilt from Library v1.49.7 plus available 2026-10-12 diagnostics; exact v1.51.4 source was not found.
-// v1.62: carries forward the broker symbol-to-canonical-asset validation immediately before each OrderSend; order comments identify the canonical asset.
-// v1.60: rate-limits successful adaptive SL/TP changes to at most one per ticket per newly closed management-timeframe candle.
-// v1.51.5: separates training from chronological holdout metrics, logs threshold failures, verifies opened-order SL/TP by readback, and audits managed positions.
-// v1.51.7: supervises all symbols sharing this magic, per-ticket cooldown, and rate-limited idle-decision audit. v1.51.9 blocks same-direction stacking in the chart execution path so one canonical asset can hold at most one live position. v1.57.0 added the strict net-profit gate. v1.58.0 adds the configurable loss/profit USD risk ladder; v1.58.1 corrects virtual capital so it remains fixed at USD500 independently of account equity and requires three favorable closed candles before adaptive SL/TP changes. Reconstructed from v1.49.7 + available diagnostics; not an exact patch of missing v1.51.4.
-// IMPORTANT
-// - AUTO_EXECUTION is the default; account classification is reported but never gates orders.
-// - The EA uses a fixed virtual strategy allocation of USD 500, not the whole account balance.
-// - Campaign net P/L <= -USD 50 switches the engine to STRICT mode, not a permanent stop.
-// - Campaign net P/L >= +USD 100 enables limited evidence flexibility.
-// - Campaign net P/L >= +USD 200 activates the legacy profit-protect evidence mode; the separate adaptive USD ladder still controls per-trade risk after sustained-profit confirmation.
-// - Hard risk, daily loss, spread, open-position, and evidence gates remain active; no daily profit target or entry quota.
-// - Historical evidence is an in-sample diagnostic, not proof of future profitability.
-// v1.79.0: discovers a broad Market Watch universe and ranks candidates; opens at most three distinct qualified assets concurrently, exactly one position per canonical key, no profit-tier slot throttling, and candidate evaluation in descending evidence-adjusted rank. Each candidate must pass the asset-scoped local ensemble and independent chronological train/holdout evidence, quote freshness, spread, lot, margin, cost-aware SL/TP, duplicate-asset, daily-loss and aggregate-risk gates. Fixed strategy capital USD500. Portfolio risk ceiling USD100; per-position ceiling USD25; daily loss cutoff USD25. Capacity never forces a trade. NOTE: this source currently implements 16 local model families per asset plus 16 cross-asset proxy families; it does not silently disable two local families. v1.70.0: corrects higher-timeframe look-ahead by using only the last fully closed HTF candle for live and historical signals; aligns Market Watch alias selection/history sufficiency to InpCrossAssetTimeframe; updates runtime identity and audit messages. All 16 local model families are evaluated independently on each candidate symbol, with per-model evidence and cross-asset chronological train/holdout gates. USD500 capital, adaptive risk and portfolio protections remain mandatory.
-// v1.66.0: all 16 local model families accept explicit symbol/timeframe parameters. Cross-asset candidates must pass the independent local 16-model direction consensus and per-model historical evidence gate on that candidate symbol before any order sizing/send. Existing cross-asset train/chronological-holdout gates, USD500 virtual capital, adaptive risk and portfolio protections remain mandatory.
-// v1.64.1: fails closed on unknown per-position risk metadata or invalid cap distance by attempting emergency close; portfolio risk remains unknown and blocks new entries until verified.
-// v1.64.0: based on v1.63.8; historical note: earlier builds used profit-aware dynamic capacity from 1 to 7; v1.79.0 caps concurrent positions at three.
-// Historical v1.64 behavior that unlocked slots 4-7 based on campaign profit is no longer active in v1.79.0.
-// Current maximum is three concurrent positions; one position per canonical asset remains mandatory.
-// Every candidate must still pass the existing 16-model ensemble/evidence, holdout, quote, spread, lot, SLTP,
-// adaptive per-position risk, daily-loss, duplicate-asset and portfolio-risk gates.
-// v1.41: corrects tick-size conversion after live log revealed a 1000x risk/cost overestimate; permits up to three simultaneous positions only on distinct symbols; target risk remains USD1.25 per position, aggregate stop-risk cap USD3.75, hard per-position risk <= USD1.25 and daily loss cap USD10. Each chart instance must independently pass its closed-bar model evidence and trade gates. Existing portfolio positions are audited for symbol duplication, stop-defined risk, floating P/L and crypto concentration before another entry. v1.43 adds a chronological recent holdout segment to each per-symbol directional history proxy and requires the holdout to pass independently; v1.44 adds current-bar near-miss diagnostics only; v1.45 adds per-model BUY/SELL subcondition audits and richer incumbent-versus-candidate comparison logs without changing entry/evidence/risk gates; v1.46 adds a compact no-raw-signal diagnosis and explicit audit provenance. v1.47 adds symbol-specific evidence-gated cross-asset orders; v1.48 ranks cross-assets with 14 model-family proxies; v1.49 restricts the universe to EURUSD, USDJPY, SOLUSD(T), NEARUSD(T), BTCUSD(T), XAUUSD and ETHUSD(T), expands to 16 model-family proxies, scans/ranks all seven, caps allocation at USD500, limits new entries to 7/day, per-trade target risk to USD1.25 (hard cap USD2), daily loss to USD4.50 and daily net-profit entry stop to USD30, with up to 3 concurrent positions and USD3.75 aggregate stop risk. v1.49.3 deduplicates broker aliases so only one best-qualified symbol per canonical asset is ranked and scanned. v1.49.4 attempts at most one new cross-asset entry per evaluation pass, trying candidates in descending evidence-adjusted priority and moving to the next only when a higher-ranked candidate fails a live execution/risk gate. v1.49.5 resolves a directional conflict when the winning side has at least one currently-signalled evidence-qualified model and its best reliability-adjusted expected-R score exceeds the opposing side by max(0.02R, 15% of the larger absolute score); non-conflicted entries still require the configured vote threshold. No model evidence, execution, or portfolio-risk gate is bypassed. v1.49.6 adds incumbent remaining SL/TP reward/risk versus fresh same-direction entry cost diagnostics; v1.49.7 permits up to three concurrent positions while retaining aggregate risk gates; v1.63.8 hardens per-position risk to USD1.25, aggregate risk to USD3.75, and attempts emergency close if the stop cap cannot be confirmed. Historical proxy is not a guarantee; execution requires broker quote/specification, cost, stop, lot, daily loss, trade-count and aggregate-risk gates.
-
+ // BITEY SBT MULTI-ASSET v1.99 — PROFITABILITY RESEARCH CANDIDATE
+ // Derived from the repository's reconstructed v1.98.2 source; not an exact
+ // recovery of any missing historical source. Production files are untouched.
+ //
+ // SAFETY CONTRACT:
+ // - OBSERVE_ONLY by default; cross-asset order submission disabled by default.
+ // - Fixed effective strategy capital USD500; never scale from account balance.
+ // - Per-position stop-risk hard cap USD1.25; aggregate open stop-risk cap USD8.75.
+ // - Daily loss limit USD10 blocks new entries while protective management remains.
+ // - Up to seven positions, one per canonical asset; no martingale/account switching.
+ // - Emergency close is attempted only when net floating loss reaches USD1.25,
+ //   or when the existing stop-risk audit requires an emergency close.
+ // - Emergency close is an attempt, not a guaranteed fill or loss ceiling.
+ // - The existing 16 model families and chronological train/holdout gates remain.
+ // - Historical OHLC proxies do not prove future profitability; validate costs,
+ //   broker specifications, Strategy Tester results and forward-demo behavior.
+ // - Telemetry does not authorize orders. MT4 remains the execution authority.
+ // ============================================================================
+ 
 enum EngineMode { OBSERVE_ONLY=0, AUTO_EXECUTION=1 };
 enum AccountTypeReport { ACCOUNT_REPORT_AUTO=0, ACCOUNT_REPORT_DEMO_CONFIRMED=1, ACCOUNT_REPORT_REAL_CONFIRMED=2 };
 enum ModelId { MODEL_TREND=0, MODEL_MOMENTUM=1, MODEL_DONCHIAN=2, MODEL_MEANREV=3, MODEL_STRICT_RANGE=4, MODEL_ATR_BREAKOUT=5, MODEL_SESSION_BIAS=6, MODEL_RSI_DIVERGENCE=7, MODEL_HTF_TREND=8, MODEL_VWAP_DEVIATION=9, MODEL_BREAK_RETEST=10, MODEL_FIB_PULLBACK=11, MODEL_VOL_SQUEEZE=12, MODEL_LINEAR_REGRESSION=13, MODEL_MACD_CONFIRM=14, MODEL_BOLLINGER_EXPANSION=15 };
@@ -151,7 +127,7 @@ double EffectiveDailyLossLimitUSD()
 }
 
 
-// Portfolio capacity is configurable up to three concurrent positions selected from the wider Market Watch universe.
+// Portfolio capacity is configurable up to seven concurrent positions selected from the wider Market Watch universe.
 // Prototypes are required because the gates call these helpers throughout the EA.
 int EffectiveMaxOpenTrades();
 double EffectivePortfolioRiskCapUSD();
@@ -2160,7 +2136,7 @@ void ExecuteCrossAssetRankedCandidates()
    // open as many distinct qualified assets as there are free slots in this pass.
    // Each send rechecks the live duplicate, spread, quote, evidence, daily and
    // aggregate-risk gates; failure on one candidate does not block later candidates.
-   // This permits up to three concurrent positions selected from the wider universe, but never forces an entry.
+   // This permits up to seven concurrent positions selected from the wider universe, but never forces an entry.
    for(int i=0;i<100 && opened<slots;i++)
    {
       string sym=g_crossAssetRankNames[i];
@@ -2427,7 +2403,7 @@ bool EnforceNonNegativeFloatingProfitClose()
             " | broker fill and realized result must be verified in history");
    }
    if(negativePositionDetected)
-      Print("NEGATIVE PROFIT GLOBAL GUARD | action=NO_NEW_ENTRY_THIS_PASS | all negative managed positions checked; any failed close will be retried on next tick/timer.");
+      Print("NEGATIVE PROFIT GLOBAL GUARD | action=NO_NEW_ENTRY_THIS_PASS | all positions beyond the configured loss threshold checked; any failed close will be retried on next tick/timer.");
    return safeToEvaluateEntries;
 }
 
