@@ -1,5 +1,5 @@
 #property strict
-#property version   "1.984"
+#property version   "1.990"
 #property description "Bitey SBT Assembly Governance Candidate; chart-local research build."
 #property description "Live trading is disabled by default. Validate in Strategy Tester/demo before any live use."
 
@@ -23,6 +23,8 @@ input int      MaxTradesPerDay         = 3;
 input int      MinSamples              = 12;
 input double   MinWinRate              = 0.420;
 input double   MinAverageR             = 0.020;
+input double   MinReplayProfitFactor    = 1.10;
+input double   MaxReplayDrawdownR       = 5.00;
 input int      EvidenceLookbackBars    = 600;
 input int      OutcomeHorizonBars      = 5;
 input int      ATRPeriod               = 14;
@@ -221,7 +223,9 @@ Evidence BuildEvidence(int model, int side)
  e.wins=stats.wins;
  e.winRate=stats.winRate;
  e.avgR=stats.avgR;
- e.pass=(e.samples>=MinSamples && e.winRate>=MinWinRate && e.avgR>MinAverageR);
+ e.pass=(e.samples>=MinSamples && e.winRate>=MinWinRate &&
+          e.avgR>MinAverageR && stats.profitFactor>=MinReplayProfitFactor &&
+          stats.maxDrawdownR<=MaxReplayDrawdownR);
 
  Print("SBT SLTP REPLAY EVIDENCE | model=",ModelName[model],
        " | side=",SignalText(side),
@@ -232,7 +236,9 @@ Evidence BuildEvidence(int model, int side)
        " | avgR=",DoubleToString(stats.avgR,3),
        " | ambiguousBars=",stats.ambiguousBars,
        " | pass=",e.pass,
-       " | costs=spread_proxy_only_commission_swap_slippage_not_included");
+       " | costs=spread_proxy_only_commission_swap_slippage_not_included",
+        " | gates=minPF:",DoubleToString(MinReplayProfitFactor,2),
+        " maxDD_R:",DoubleToString(MaxReplayDrawdownR,2));
  return e;
 }
 
