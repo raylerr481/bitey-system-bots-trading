@@ -83,6 +83,7 @@ void OnTick()
  datetime bar = iTime(Symbol(), Period(), 1);
  if(bar <= 0 || bar == g_lastBar) return;
  g_lastBar = bar;
+ AuditManagedPositions();
  EvaluateAssembly();
 }
 
