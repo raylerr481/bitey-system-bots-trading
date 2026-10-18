@@ -315,10 +315,14 @@ int ModelSignal(int model, int s)
      if(range>atr && emaFast<emaSlow && c<swingH-0.38*range && c>swingH-0.62*range && bear) return SIDE_SELL;
      break;
    }
-   case 14: // BREAK_RETEST simplified one-bar retest
-     if(c1>hh && l<=hh && c>hh && bull) return SIDE_BUY;
-     if(c1<ll && h>=ll && c<ll && bear) return SIDE_SELL;
+   case 14: // BREAK_RETEST: older closed bar breaks prior range; current closed bar retests it
+   {
+     double priorHigh=iHigh(Symbol(),Period(),iHighest(Symbol(),Period(),MODE_HIGH,20,s+2));
+     double priorLow=iLow(Symbol(),Period(),iLowest(Symbol(),Period(),MODE_LOW,20,s+2));
+     if(c1>priorHigh && l<=priorHigh && c>priorHigh && bull) return SIDE_BUY;
+     if(c1<priorLow && h>=priorLow && c<priorLow && bear) return SIDE_SELL;
      break;
+   }
    case 15: // VWAP_DEVIATION proxy: rolling typical-price average (not session VWAP)
    {
      double sumPV=0.0, sumV=0.0;
@@ -383,9 +387,9 @@ void TryOpen(int direction)
    Print("SBT ORDER BLOCK | reason=ONE_POSITION_PER_CHART_SYMBOL");
    return;
  }
- if(DailyClosedNet()<=-MaxDailyLossUSD)
+ if(DailyNetIncludingFloating()<=-MaxDailyLossUSD)
  {
-   Print("SBT ORDER BLOCK | reason=DAILY_LOSS_LIMIT | net=",DoubleToString(DailyClosedNet(),2));
+   Print("SBT ORDER BLOCK | reason=DAILY_LOSS_LIMIT | netIncludingFloating=",DoubleToString(DailyNetIncludingFloating(),2));
    return;
  }
  if(TradesOpenedToday()>=MaxTradesPerDay)
@@ -465,7 +469,7 @@ int CountManagedPositions()
  return count;
 }
 
-double DailyClosedNet()
+double DailyNetIncludingFloating()
 {
  datetime start=iTime(Symbol(),PERIOD_D1,0);
  double net=0.0;
@@ -473,7 +477,43 @@ double DailyClosedNet()
    if(OrderSelect(i,SELECT_BY_POS,MODE_HISTORY))
      if(OrderMagicNumber()==MagicNumber && OrderSymbol()==Symbol() && OrderCloseTime()>=start)
        net+=OrderProfit()+OrderSwap()+OrderCommission();
+ for(int j=OrdersTotal()-1;j>=0;j--)
+   if(OrderSelect(j,SELECT_BY_POS,MODE_TRADES))
+     if(OrderMagicNumber()==MagicNumber && OrderSymbol()==Symbol() &&
+        (OrderType()==OP_BUY || OrderType()==OP_SELL))
+       net+=OrderProfit()+OrderSwap()+OrderCommission();
  return net;
+}
+
+void AuditManagedPositions()
+{
+ double tickValue=MarketInfo(Symbol(),MODE_TICKVALUE);
+ double tickSize=MarketInfo(Symbol(),MODE_TICKSIZE);
+ for(int i=OrdersTotal()-1;i>=0;i--)
+ {
+   if(!OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) continue;
+   if(OrderMagicNumber()!=MagicNumber || OrderSymbol()!=Symbol()) continue;
+   if(OrderType()!=OP_BUY && OrderType()!=OP_SELL) continue;
+   bool missingSL=(OrderStopLoss()<=0);
+   bool missingTP=(OrderTakeProfit()<=0);
+   double riskUSD=-1.0;
+   if(!missingSL && tickValue>0 && tickSize>0)
+   {
+     double distance=(OrderType()==OP_BUY ? OrderOpenPrice()-OrderStopLoss()
+                                          : OrderStopLoss()-OrderOpenPrice());
+     riskUSD=MathMax(0.0,distance/tickSize*tickValue*OrderLots());
+   }
+   Print("SBT MANAGED SLTP AUDIT | ticket=",OrderTicket(),
+         " | symbol=",OrderSymbol()," | missingSL=",missingSL,
+         " | missingTP=",missingTP," | estimatedStopRiskUSD=",
+         (riskUSD<0?"UNKNOWN":DoubleToString(riskUSD,2)),
+         " | riskCapUSD=",DoubleToString(MaxRiskUSDPerTrade,2),
+         " | action=ALERT_ONLY_NO_AUTOMATIC_CLOSE");
+   if(missingSL || missingTP || riskUSD<0 || riskUSD>MaxRiskUSDPerTrade+0.01)
+     Print("SBT RISK ALERT | ticket=",OrderTicket(),
+           " | reason=",(missingSL?"MISSING_SL":(missingTP?"MISSING_TP":(riskUSD<0?"RISK_UNCOMPUTABLE":"STOP_RISK_ABOVE_CAP"))),
+           " | verify manually; intended risk is not a guarantee against gaps/slippage");
+ }
 }
 
 int TradesOpenedToday()
