@@ -4,6 +4,7 @@
 #property description "Live trading is disabled by default. Validate in Strategy Tester/demo before any live use."
 
 #include "../mt4/BiteySBTTelemetry.mqh"
+#include "../mt4/BiteySBT_SLTPReplay.mqh"
 
 // IMPORTANT:
 // - This is a standalone research candidate, NOT a drop-in replacement for the production EA.
@@ -206,32 +207,32 @@ void EvaluateAssembly()
 Evidence BuildEvidence(int model, int side)
 {
  Evidence e;
- e.samples=0; e.wins=0; e.winRate=0; e.avgR=0; e.pass=false;
- int maxShift=MathMin(EvidenceLookbackBars, Bars-OutcomeHorizonBars-3);
- if(maxShift<OutcomeHorizonBars+3) return e;
+ e.samples=0; e.wins=0; e.winRate=0.0; e.avgR=0.0; e.pass=false;
 
- double sumR=0.0;
- for(int shift=OutcomeHorizonBars+2; shift<=maxShift; shift++)
- {
-   int sig=ModelSignal(model,shift);
-   if(sig!=side) continue;
-   double atr=iATR(Symbol(),Period(),ATRPeriod,shift);
-   if(atr<=Point) continue;
-   double entry=iClose(Symbol(),Period(),shift);
-   double exitPrice=iClose(Symbol(),Period(),shift-OutcomeHorizonBars);
-   double move=(exitPrice-entry)*side;
-   double spreadCost=MarketInfo(Symbol(),MODE_SPREAD)*Point;
-   double r=(move-spreadCost)/(atr*StopATR);
-   e.samples++;
-   sumR+=r;
-   if(r>0.0) e.wins++;
- }
- if(e.samples>0)
- {
-   e.winRate=(double)e.wins/e.samples;
-   e.avgR=sumR/e.samples;
- }
+ // Research v1.99: evaluate actual ATR-based SL/TP touches on subsequent OHLC bars.
+ // If both SL and TP fall inside one bar, the replay helper assumes SL first.
+ // Spread uses the currently observed spread as a proxy; commissions, swaps,
+ // slippage, gaps and historical spread variation still require separate validation.
+ double spreadPoints=MarketInfo(Symbol(),MODE_SPREAD);
+ SBT99ReplayStats stats=SBT99_ReplaySLTP(model,side,EvidenceLookbackBars,
+                                         OutcomeHorizonBars,ATRPeriod,
+                                         StopATR,TargetATR,spreadPoints);
+ e.samples=stats.trades;
+ e.wins=stats.wins;
+ e.winRate=stats.winRate;
+ e.avgR=stats.avgR;
  e.pass=(e.samples>=MinSamples && e.winRate>=MinWinRate && e.avgR>MinAverageR);
+
+ Print("SBT SLTP REPLAY EVIDENCE | model=",ModelName[model],
+       " | side=",SignalText(side),
+       " | trades=",stats.trades,
+       " | wins=",stats.wins,
+       " | winRate=",DoubleToString(stats.winRate,3),
+       " | netR=",DoubleToString(stats.netR,3),
+       " | avgR=",DoubleToString(stats.avgR,3),
+       " | ambiguousBars=",stats.ambiguousBars,
+       " | pass=",e.pass,
+       " | costs=spread_proxy_only_commission_swap_slippage_not_included");
  return e;
 }
 
