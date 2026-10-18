@@ -368,7 +368,7 @@ double PipValuePerLotUSD()
  if(tickValue<=0 || tickSize<=0) return 0.0;
  // MODE_TICKVALUE is normally in deposit currency; this candidate requires USD account currency.
  if(AccountCurrency()!="USD") return 0.0;
- return tickValue/tickSize;
+ return tickValue/(tickSize*Point);
 }
 
 void TryOpen(int direction)
@@ -414,7 +414,7 @@ void TryOpen(int direction)
    Print("SBT ORDER BLOCK | reason=INVALID_CONTRACT_SPECIFICATION");
    return;
  }
- double riskPerLot=(stopDistance/tickSize)*tickValue;
+ double riskPerLot=(stopDistance/(tickSize*Point))*tickValue;
  if(riskPerLot<=0) return;
  double riskCap=MathMin(MaxRiskUSDPerTrade,EffectiveCapitalUSD*0.0025);
  double lots=MathFloor((riskCap/riskPerLot)/lotStep)*lotStep;
@@ -502,7 +502,7 @@ void AuditManagedPositions()
    {
      double distance=(OrderType()==OP_BUY ? OrderOpenPrice()-OrderStopLoss()
                                           : OrderStopLoss()-OrderOpenPrice());
-     riskUSD=MathMax(0.0,distance/tickSize*tickValue*OrderLots());
+     riskUSD=MathMax(0.0,distance/(tickSize*Point)*tickValue*OrderLots());
    }
    Print("SBT MANAGED SLTP AUDIT | ticket=",OrderTicket(),
          " | symbol=",OrderSymbol()," | missingSL=",missingSL,
