@@ -45,7 +45,62 @@ img,canvas,svg,video{max-width:100%}
 #dashboard>.grid:not(#evolutionControlCenter .grid) .metric .value{font-size:20px}
 #dashboard>.layout .card{min-height:170px}
 @media(max-width:850px){#evolutionControlCenter .layout{grid-template-columns:1fr}}
-</style></head>
+</style>
+<style id="sbt-section-width-fix">
+/* Keep the content viewport the same width when switching between menu sections. */
+html, body, .app { width:100%; max-width:100%; }
+.main {
+  width:calc(100% - 252px);
+  max-width:calc(100% - 252px);
+  min-width:0;
+  box-sizing:border-box;
+}
+.page, .page.active {
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+.page.active > * {
+  min-width:0;
+  max-width:100%;
+  box-sizing:border-box;
+}
+.page.active > .hero,
+.page.active > .card,
+.page.active > .grid,
+.page.active > .layout,
+.page.active > .module-shell,
+.page.active > .experiment-context,
+.page.active > .shared-status,
+.page.active > .terminal-strip {
+  width:100%;
+}
+.page .grid,
+.page .layout,
+.page .module-shell,
+.page .card,
+.page .hero,
+.page .experiment-context,
+.page .shared-status,
+.page .terminal-strip,
+.page .table-wrap,
+.page .table-responsive {
+  min-width:0;
+  max-width:100%;
+  box-sizing:border-box;
+}
+.page .layout { grid-template-columns:minmax(0,1.45fr) minmax(0,.9fr); }
+.page .grid { grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); }
+.page .card, .page .module-shell { overflow-wrap:anywhere; }
+.page img, .page canvas, .page svg, .page video, .page iframe { max-width:100%; }
+@media (max-width:850px) {
+  .main { width:100%; max-width:100%; margin-left:0; }
+  .page .layout { grid-template-columns:minmax(0,1fr); }
+}
+</style>
+
+</head>
 <body>
 <div class="app">
 <aside class="side" id="side"><div class="brand"><div class="logo">B</div><div>Bitey SBT<small>TRADING INTELLIGENCE OS</small></div></div>
