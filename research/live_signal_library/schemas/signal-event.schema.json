@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/raylerr481/bitey-system-bots-trading/blob/main/research/live_signal_library/schemas/signal-event.schema.json",
+  "title": "Bitey SBT Signal Event",
+  "description": "Sanitized event contract for auditable, real-money-equivalent research across demo and live accounts.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "event_id",
+    "event_time_utc",
+    "event_type",
+    "symbol",
+    "timeframe",
+    "bar_time",
+    "ea_version",
+    "source_commit",
+    "decision",
+    "reason",
+    "risk_policy"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "event_id": { "type": "string", "minLength": 8 },
+    "event_time_utc": { "type": "string", "format": "date-time" },
+    "broker_time": { "type": ["string", "null"] },
+    "event_type": {
+      "type": "string",
+      "enum": ["model_audit", "assembly_decision", "order_attempt", "order_result", "position_audit", "compile_result", "tester_result"]
+    },
+    "symbol": { "type": "string", "minLength": 1 },
+    "canonical_symbol": { "type": ["string", "null"] },
+    "timeframe": { "type": "string", "minLength": 1 },
+    "bar_time": { "type": "string", "format": "date-time" },
+    "ea_version": { "type": "string" },
+    "source_commit": { "type": "string" },
+    "variant_id": { "type": ["string", "null"] },
+    "decision": { "type": "string", "enum": ["BUY", "SELL", "WAIT", "BLOCK", "SUCCESS", "FAIL", "UNKNOWN"] },
+    "reason": { "type": "string" },
+    "account_type_diagnostic": { "type": ["string", "null"], "enum": ["demo", "live", "unknown", null] },
+    "risk_policy": { "type": "string", "const": "ALL_ACCOUNTS_REAL_RISK" },
+    "spread_points": { "type": ["number", "null"], "minimum": 0 },
+    "atr": { "type": ["number", "null"], "minimum": 0 },
+    "intended_risk_usd": { "type": ["number", "null"], "minimum": 0 },
+    "effective_capital_usd": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+    "stop_distance": { "type": ["number", "null"], "minimum": 0 },
+    "target_distance": { "type": ["number", "null"], "minimum": 0 },
+    "evidence_type": { "type": ["string", "null"] },
+    "models": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["model", "current_signal", "side_evaluated", "samples", "win_rate", "avg_r", "qualified"],
+        "properties": {
+          "model": { "type": "string" },
+          "current_signal": { "type": "string", "enum": ["BUY", "SELL", "NONE"] },
+          "side_evaluated": { "type": "string", "enum": ["BUY", "SELL"] },
+          "samples": { "type": "integer", "minimum": 0 },
+          "win_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+          "avg_r": { "type": "number" },
+          "qualified": { "type": "boolean" },
+          "group": { "type": ["string", "null"] }
+        },
+        "additionalProperties": true
+      }
+    },
+    "training_metrics": { "type": ["object", "null"] },
+    "holdout_metrics": { "type": ["object", "null"] },
+    "order": { "type": ["object", "null"] },
+    "notes": { "type": ["string", "null"] }
+  },
+  "additionalProperties": true
+}
