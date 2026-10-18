@@ -47,56 +47,69 @@ img,canvas,svg,video{max-width:100%}
 @media(max-width:850px){#evolutionControlCenter .layout{grid-template-columns:1fr}}
 </style>
 <style id="sbt-section-width-fix">
-/* Keep the content viewport the same width when switching between menu sections. */
-html, body, .app { width:100%; max-width:100%; }
+/* V2: one stable content viewport across all navigation sections. */
+html, body { width:100%; max-width:100%; margin:0; }
+body { overflow-x:hidden; }
+.app { width:100%; max-width:100%; min-width:0; }
+.side { width:252px; max-width:86vw; }
 .main {
-  width:calc(100% - 252px);
+  display:block;
+  margin-left:252px;
+  width:auto;
   max-width:calc(100% - 252px);
   min-width:0;
   box-sizing:border-box;
+  overflow-x:hidden;
+  padding-left:clamp(12px,1.4vw,24px);
+  padding-right:clamp(12px,1.4vw,24px);
 }
 .page, .page.active {
+  display:none;
   width:100%;
   max-width:100%;
   min-width:0;
+  margin:0;
   box-sizing:border-box;
 }
-.page.active > * {
-  min-width:0;
-  max-width:100%;
+.page.active { display:block; }
+.page > *, .page.active > * {
+  min-width:0 !important;
+  max-width:100% !important;
   box-sizing:border-box;
 }
-.page.active > .hero,
-.page.active > .card,
-.page.active > .grid,
-.page.active > .layout,
-.page.active > .module-shell,
-.page.active > .experiment-context,
-.page.active > .shared-status,
-.page.active > .terminal-strip {
+.page .grid, .page .layout, .page .module-shell, .page .card,
+.page .hero, .page .experiment-context, .page .shared-status,
+.page .terminal-strip, .page .form, .page .test-grid {
   width:100%;
-}
-.page .grid,
-.page .layout,
-.page .module-shell,
-.page .card,
-.page .hero,
-.page .experiment-context,
-.page .shared-status,
-.page .terminal-strip,
-.page .table-wrap,
-.page .table-responsive {
   min-width:0;
   max-width:100%;
   box-sizing:border-box;
 }
-.page .layout { grid-template-columns:minmax(0,1.45fr) minmax(0,.9fr); }
-.page .grid { grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); }
-.page .card, .page .module-shell { overflow-wrap:anywhere; }
+.page .grid {
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));
+}
+.page .layout {
+  grid-template-columns:minmax(0,1.45fr) minmax(0,.9fr);
+}
+.page .card, .page .module-shell, .page .hero { overflow-wrap:anywhere; }
+.page table { width:100%; max-width:100%; }
+.page .table-wrap, .page .table-responsive { width:100%; max-width:100%; overflow-x:auto; }
 .page img, .page canvas, .page svg, .page video, .page iframe { max-width:100%; }
-@media (max-width:850px) {
-  .main { width:100%; max-width:100%; margin-left:0; }
+@media (max-width:1050px) {
+  .main { padding-left:16px; padding-right:16px; }
+  .page .grid { grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr)); }
   .page .layout { grid-template-columns:minmax(0,1fr); }
+}
+@media (max-width:850px) {
+  .side { transform:translateX(-100%); width:min(280px,86vw); }
+  .side.open { transform:translateX(0); }
+  .main { margin-left:0; width:100%; max-width:100%; padding:14px; }
+}
+@media (max-width:560px) {
+  .main { padding:10px; }
+  .page .grid, .page .test-grid, .page .form { grid-template-columns:minmax(0,1fr); }
+  .terminal-strip { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .page table { display:block; overflow-x:auto; }
 }
 </style>
 
