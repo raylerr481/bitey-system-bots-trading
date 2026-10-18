@@ -1,0 +1,2979 @@
+//+------------------------------------------------------------------+
+//| AI_Trading_Bot_v2.33_AdaptiveEntry_Fixed.mq4                    |
+//| Adaptive Regime + Walk Forward + Adaptive Entry                |
+//| Fixed execution flow build                                      |
+//+------------------------------------------------------------------+
+
+#property strict
+#property version "2.33"
+#property description "Adaptive AI Trading EA - Fixed Zero Trade Issue"
+
+
+//==================================================================
+// INPUTS
+//==================================================================
+
+//---------------- Risk ----------------
+
+input double InpRiskPercent       = 0.25;
+input int    InpMaxOpenTrades     = 1;
+input int    InpMagicNumber       = 2035033;
+input int    InpSlippage          = 5;
+
+
+//---------------- Indicators ----------------
+
+input int InpATRPeriod            = 14;
+input int InpADXPeriod            = 14;
+input int InpRSIPeriod            = 14;
+
+input int InpFastEMA              = 8;
+input int InpSlowEMA              = 21;
+input int InpTrendEMA             = 200;
+
+
+//---------------- Risk Reward ----------------
+
+input double InpSL_ATR            = 1.30;
+input double InpTP_ATR            = 2.60;
+
+
+//---------------- Market Filter ----------------
+
+input int    InpMaxSpreadPoints   = 50;
+input double InpMaxSpreadATR      = 0.60;
+
+input int InpSessionStart         = 7;
+input int InpSessionEnd           = 20;
+
+
+//---------------- Trade Control ----------------
+
+input int InpCooldownBars         = 3;
+
+
+//---------------- Walk Forward ----------------
+
+input int InpTrainBars            = 120;
+input int InpOOSBars              = 50;
+
+input int InpAuditGap             = 3;
+input int InpAuditHorizon         = 12;
+
+input int InpRecalibrationBars    = 12;
+
+
+// v2.33 relaxed
+
+input int    InpMinTrainTrades    = 4;
+input int    InpMinOOSTrades      = 2;
+
+input double InpMinOOSPF          = 0.65;
+input double InpMinOOSExpectancy  = -0.10;
+input double InpMaxOOSDrawdown    = 20.0;
+
+
+
+//---------------- Learning Mode ----------------
+
+input bool InpLearningMode        = true;
+input int  InpLearningBars        = 200;
+
+
+
+//---------------- Regime ----------------
+
+input int InpRegimeLookback       = 20;
+
+input double InpATRExpansion      = 1.25;
+input double InpATRContraction    = 0.80;
+
+input double InpTrendADX          = 22.0;
+input double InpRangeADX          = 18.0;
+
+
+//---------------- Hurst ----------------
+
+input int    InpHurstPeriod       = 40;
+input double InpHurstTrend        = 0.55;
+input double InpHurstRange        = 0.45;
+
+
+//---------------- Protection ----------------
+
+input bool InpUseLossProtection   = true;
+
+input int InpMaxLossStreak        = 3;
+input int InpLossPauseBars        = 6;
+
+
+input bool InpUseFlipProtection   = true;
+
+input int InpMaxDirectionFlips    = 2;
+input int InpFlipWindowBars       = 24;
+
+
+
+//---------------- Adaptive Entry ----------------
+
+input bool   InpAdaptiveEntry      = true;
+
+input double InpSessionRSIBuy      = 48;
+input double InpSessionRSISell     = 52;
+
+input double InpMomentumBodyATR    = 0.20;
+
+input double InpBreakoutATRBuffer  = 0.05;
+
+input double InpTrendADXFailsafe   = 18;
+
+
+
+//---------------- Quality v2.33 ----------------
+
+input double InpMinBodyATR         = 0.05;
+input double InpMinEMADistance     = 0.025;
+
+
+
+//---------------- Reporting ----------------
+
+input bool InpAutoReport           = true;
+input bool InpVerbose              = true;
+
+
+
+//==================================================================
+// CONSTANTS
+//==================================================================
+
+#define STRAT_COUNT 8
+
+
+#define STRAT_TREND       0
+#define STRAT_MEANREV     1
+#define STRAT_MOMENTUM    2
+#define STRAT_BREAKOUT    3
+#define STRAT_SESSION     4
+#define STRAT_DIVERGENCE  5
+#define STRAT_RANGE       6
+#define STRAT_FRACTAL_HTF 7
+
+
+
+#define SIGNAL_NONE  0
+#define SIGNAL_BUY   1
+#define SIGNAL_SELL -1
+
+
+
+#define REGIME_UNKNOWN     0
+#define REGIME_TREND_UP    1
+#define REGIME_TREND_DOWN  2
+#define REGIME_RANGE       3
+#define REGIME_BREAKOUT    4
+#define REGIME_HIGH_VOL    5
+#define REGIME_CONTRACTING 6
+#define REGIME_TRANSITION  7
+
+
+
+//==================================================================
+// GLOBAL VARIABLES
+//==================================================================
+
+
+int gBestStrategy=-1;
+
+double gBestScore=-999999;
+
+double gBestPF=0;
+double gBestExp=0;
+double gBestDD=100;
+
+
+int gBestTrainTrades=0;
+int gBestOOSTrades=0;
+
+
+
+int gCurrentRegime=REGIME_UNKNOWN;
+int gPreviousRegime=REGIME_UNKNOWN;
+
+
+double gCurrentATRRatio=1;
+double gCurrentADX=0;
+double gCurrentHurst=0.5;
+double gCurrentStdRatio=1;
+
+
+
+datetime gLastBarTime=0;
+
+datetime gLastTradeBarTime=0;
+
+
+
+long gBarSequence=0;
+
+int gCalibrationCount=0;
+
+int gLastCalibrationBar=-1;
+
+
+
+long gOpenedTrades=0;
+
+long gOrderErrors=0;
+
+
+
+//---------------- Diagnostics ----------------
+
+
+long gBlockPosition=0;
+long gBlockSession=0;
+long gBlockSpread=0;
+long gBlockCooldown=0;
+long gBlockLoss=0;
+long gBlockFlip=0;
+long gBlockContext=0;
+long gBlockNoSignal=0;
+
+
+
+long gRawSignals[STRAT_COUNT];
+
+long gQualityPass[STRAT_COUNT];
+
+long gContextPass[STRAT_COUNT];
+
+long gStrategyOpened[STRAT_COUNT];
+
+
+
+long gRejectedQuality=0;
+
+long gRejectedContext=0;
+
+long gSelectedSignals=0;
+
+
+
+int gLossStreak=0;
+
+int gLossPauseRemaining=0;
+
+
+
+int gLastDirection=0;
+
+int gFlipCount=0;
+
+
+
+datetime gFlipStart=0;
+
+
+
+//==================================================================
+// END PART 1
+//==================================================================
+
+//==================================================================
+// BASIC INDICATORS
+//==================================================================
+
+
+double ATR(int shift)
+{
+   return iATR(Symbol(),
+               Period(),
+               InpATRPeriod,
+               shift);
+}
+
+
+
+double ADX(int shift)
+{
+   return iADX(Symbol(),
+               Period(),
+               InpADXPeriod,
+               PRICE_CLOSE,
+               MODE_MAIN,
+               shift);
+}
+
+
+
+double RSI(int shift)
+{
+   return iRSI(Symbol(),
+               Period(),
+               InpRSIPeriod,
+               PRICE_CLOSE,
+               shift);
+}
+
+
+
+double EMA(int period,int shift)
+{
+   return iMA(Symbol(),
+              Period(),
+              period,
+              0,
+              MODE_EMA,
+              PRICE_CLOSE,
+              shift);
+}
+
+
+
+double CandleBody(int shift)
+{
+   return MathAbs(
+      iClose(Symbol(),Period(),shift)
+      -
+      iOpen(Symbol(),Period(),shift)
+   );
+}
+
+
+
+double CandleRange(int shift)
+{
+   return iHigh(Symbol(),Period(),shift)
+          -
+          iLow(Symbol(),Period(),shift);
+}
+
+
+
+bool IsNewBar()
+{
+   datetime t=iTime(Symbol(),
+                    Period(),
+                    0);
+
+
+   if(t<=0)
+      return false;
+
+
+   if(t!=gLastBarTime)
+   {
+      gLastBarTime=t;
+      return true;
+   }
+
+
+   return false;
+}
+
+
+
+bool HasEnoughBars()
+{
+   int minimum=
+      InpTrendEMA+
+      InpTrainBars+
+      InpOOSBars+
+      InpHurstPeriod+
+      100;
+
+
+   return Bars>minimum;
+}
+
+
+
+//==================================================================
+// STANDARD DEVIATION
+//==================================================================
+
+
+double StdDev(int shift,int period)
+{
+
+   if(period<2)
+      return 0;
+
+
+   double mean=0;
+
+
+   for(int i=shift;
+       i<shift+period;
+       i++)
+   {
+      mean+=iClose(Symbol(),
+                   Period(),
+                   i);
+   }
+
+
+   mean/=period;
+
+
+   double variance=0;
+
+
+   for(int j=shift;
+       j<shift+period;
+       j++)
+   {
+
+      double d=
+         iClose(Symbol(),
+                Period(),
+                j)
+         -
+         mean;
+
+
+      variance+=d*d;
+   }
+
+
+   variance/=(period-1);
+
+
+   return MathSqrt(variance);
+}
+
+
+
+//==================================================================
+// HURST ESTIMATION
+//==================================================================
+
+
+double HurstExponent(int shift)
+{
+
+   int n=InpHurstPeriod;
+
+
+   if(n<20 ||
+      Bars<shift+n+5)
+      return 0.50;
+
+
+
+   double mean=0;
+
+
+   for(int i=0;i<n;i++)
+   {
+      mean+=iClose(Symbol(),
+                   Period(),
+                   shift+i);
+   }
+
+
+   mean/=n;
+
+
+
+   double cumulative=0;
+
+   double maxDev=-DBL_MAX;
+
+   double minDev=DBL_MAX;
+
+   double variance=0;
+
+
+
+   for(int j=0;j<n;j++)
+   {
+
+      double dev=
+         iClose(Symbol(),
+                Period(),
+                shift+j)
+         -
+         mean;
+
+
+      cumulative+=dev;
+
+
+      if(cumulative>maxDev)
+         maxDev=cumulative;
+
+
+      if(cumulative<minDev)
+         minDev=cumulative;
+
+
+      variance+=dev*dev;
+   }
+
+
+
+   double sd=
+      MathSqrt(variance/n);
+
+
+
+   if(sd<=0)
+      return 0.50;
+
+
+
+   double R=maxDev-minDev;
+
+
+   if(R<=0)
+      return 0.50;
+
+
+
+   double rs=R/sd;
+
+
+   if(rs<=0)
+      return 0.50;
+
+
+
+   double h=
+      MathLog(rs)/
+      MathLog(n);
+
+
+
+   if(h<0)
+      h=0;
+
+
+   if(h>1)
+      h=1;
+
+
+
+   return h;
+}
+
+
+
+//==================================================================
+// VOLATILITY RATIOS
+//==================================================================
+
+
+double ATRRatio(int shift)
+{
+
+   double current=ATR(shift);
+
+
+   if(current<=0)
+      return 1;
+
+
+   double avg=0;
+
+
+   for(int i=shift+1;
+       i<=shift+InpRegimeLookback;
+       i++)
+   {
+      avg+=ATR(i);
+   }
+
+
+   avg/=InpRegimeLookback;
+
+
+   if(avg<=0)
+      return 1;
+
+
+   return current/avg;
+}
+
+
+
+double StdRatio(int shift)
+{
+
+   double current=
+      StdDev(shift,
+             InpRegimeLookback);
+
+
+   if(current<=0)
+      return 1;
+
+
+
+   double avg=0;
+
+
+
+   for(int i=shift+1;
+       i<=shift+InpRegimeLookback;
+       i++)
+   {
+      avg+=StdDev(i,
+                  InpRegimeLookback);
+   }
+
+
+
+   avg/=InpRegimeLookback;
+
+
+
+   if(avg<=0)
+      return 1;
+
+
+
+   return current/avg;
+}
+
+
+
+//==================================================================
+// REGIME DETECTION v2.33
+//==================================================================
+
+
+int DetectRegime(int shift)
+{
+
+   double atrRatio=
+      ATRRatio(shift);
+
+
+   double stdRatio=
+      StdRatio(shift);
+
+
+   double adx=
+      ADX(shift);
+
+
+   double hurst=
+      HurstExponent(shift);
+
+
+
+   double fast=
+      EMA(InpFastEMA,shift);
+
+
+   double slow=
+      EMA(InpSlowEMA,shift);
+
+
+   double trend=
+      EMA(InpTrendEMA,shift);
+
+
+
+   double close=
+      iClose(Symbol(),
+             Period(),
+             shift);
+
+
+
+   gCurrentATRRatio=atrRatio;
+
+   gCurrentStdRatio=stdRatio;
+
+   gCurrentADX=adx;
+
+   gCurrentHurst=hurst;
+
+
+
+   // High volatility trend
+
+   if(atrRatio>=InpATRExpansion &&
+      stdRatio>=InpATRExpansion &&
+      adx>=InpTrendADX)
+   {
+      return REGIME_HIGH_VOL;
+   }
+
+
+
+   // Breakout detection
+
+
+   double high12=-DBL_MAX;
+
+   double low12=DBL_MAX;
+
+
+
+   for(int i=shift+1;
+       i<=shift+12;
+       i++)
+   {
+
+      high12=
+      MathMax(high12,
+              iHigh(Symbol(),
+                    Period(),
+                    i));
+
+
+      low12=
+      MathMin(low12,
+              iLow(Symbol(),
+                   Period(),
+                   i));
+
+   }
+
+
+
+   if((close>high12 ||
+       close<low12)
+       &&
+       atrRatio>1.05)
+   {
+      return REGIME_BREAKOUT;
+   }
+
+
+
+
+   // Trend
+
+
+   if(adx>=InpTrendADX)
+   {
+
+      if(close>trend &&
+         fast>slow)
+      {
+         return REGIME_TREND_UP;
+      }
+
+
+
+      if(close<trend &&
+         fast<slow)
+      {
+         return REGIME_TREND_DOWN;
+      }
+
+   }
+
+
+
+
+   // Compression
+
+
+   if(atrRatio<=InpATRContraction &&
+      stdRatio<=InpATRContraction)
+   {
+      return REGIME_CONTRACTING;
+   }
+
+
+
+
+   // Range
+
+
+   if(adx<=InpRangeADX ||
+      hurst<=InpHurstRange)
+   {
+      return REGIME_RANGE;
+   }
+
+
+
+
+   // Hurst trend persistence
+
+
+   if(hurst>=InpHurstTrend)
+   {
+
+      if(close>trend &&
+         fast>slow)
+         return REGIME_TREND_UP;
+
+
+
+      if(close<trend &&
+         fast<slow)
+         return REGIME_TREND_DOWN;
+
+   }
+
+
+
+   return REGIME_TRANSITION;
+}
+
+
+
+//==================================================================
+// UPDATE REGIME
+//==================================================================
+
+
+void UpdateRegime(int shift)
+{
+
+   int detected=
+      DetectRegime(shift);
+
+
+
+   if(gCurrentRegime==REGIME_UNKNOWN)
+   {
+      gCurrentRegime=detected;
+      gPreviousRegime=detected;
+      return;
+   }
+
+
+
+   if(detected!=gCurrentRegime)
+   {
+
+      gPreviousRegime=
+         gCurrentRegime;
+
+
+      gCurrentRegime=
+         detected;
+
+
+
+      gLastCalibrationBar=-1;
+
+
+
+      if(InpVerbose)
+      {
+         Print(
+         "B33 REGIME CHANGE ",
+         gPreviousRegime,
+         " -> ",
+         gCurrentRegime,
+         " ATR=",
+         DoubleToString(gCurrentATRRatio,2),
+         " ADX=",
+         DoubleToString(gCurrentADX,2),
+         " HURST=",
+         DoubleToString(gCurrentHurst,3)
+         );
+      }
+
+   }
+
+}
+
+
+//==================================================================
+// END PART 2
+//==================================================================
+//==================================================================
+// STRATEGY NAMES
+//==================================================================
+
+string StrategyName(int s)
+{
+   switch(s)
+   {
+      case STRAT_TREND:
+         return "TREND";
+
+      case STRAT_MEANREV:
+         return "MEANREV";
+
+      case STRAT_MOMENTUM:
+         return "MOMENTUM";
+
+      case STRAT_BREAKOUT:
+         return "BREAKOUT";
+
+      case STRAT_SESSION:
+         return "SESSION";
+
+      case STRAT_DIVERGENCE:
+         return "DIVERGENCE";
+
+      case STRAT_RANGE:
+         return "RANGE";
+
+      case STRAT_FRACTAL_HTF:
+         return "FRACTAL_HTF";
+   }
+
+   return "UNKNOWN";
+}
+
+
+
+//==================================================================
+// MARKET ALIVE FILTER v2.33
+//==================================================================
+
+
+bool MarketAlive(int shift)
+{
+
+   double atr=ATR(shift);
+
+
+   if(atr<=0)
+      return false;
+
+
+
+   double range=
+      CandleRange(shift);
+
+
+
+   if(range < atr*0.15)
+      return false;
+
+
+
+   return true;
+}
+
+
+
+//==================================================================
+// RAW SIGNAL ENGINE
+//==================================================================
+
+
+int RawSignal(int strategy,int shift)
+{
+
+   if(shift<2)
+      return SIGNAL_NONE;
+
+
+
+   double close0=
+      iClose(Symbol(),
+             Period(),
+             shift);
+
+
+
+   double close1=
+      iClose(Symbol(),
+             Period(),
+             shift+1);
+
+
+
+   double emaFast=
+      EMA(InpFastEMA,shift);
+
+
+   double emaSlow=
+      EMA(InpSlowEMA,shift);
+
+
+   double emaTrend=
+      EMA(InpTrendEMA,shift);
+
+
+
+   double rsi=
+      RSI(shift);
+
+
+
+   double adx=
+      ADX(shift);
+
+
+
+   double atr=
+      ATR(shift);
+
+
+
+   if(atr<=0)
+      return SIGNAL_NONE;
+
+
+
+//==================================================================
+// TREND STRATEGY
+//==================================================================
+
+
+if(strategy==STRAT_TREND)
+{
+
+   if(adx>=InpTrendADX &&
+      close0>emaTrend &&
+      emaFast>emaSlow &&
+      close0>emaFast)
+   {
+      return SIGNAL_BUY;
+   }
+
+
+
+   if(adx>=InpTrendADX &&
+      close0<emaTrend &&
+      emaFast<emaSlow &&
+      close0<emaFast)
+   {
+      return SIGNAL_SELL;
+   }
+
+
+
+   // adaptive trend entry
+
+   if(InpAdaptiveEntry &&
+      adx>=InpTrendADXFailsafe)
+   {
+
+      if(emaFast>emaSlow &&
+         close0>emaSlow &&
+         rsi>=48)
+      {
+         return SIGNAL_BUY;
+      }
+
+
+
+      if(emaFast<emaSlow &&
+         close0<emaSlow &&
+         rsi<=52)
+      {
+         return SIGNAL_SELL;
+      }
+
+   }
+
+}
+
+
+
+//==================================================================
+// MEAN REVERSION
+//==================================================================
+
+
+if(strategy==STRAT_MEANREV)
+{
+
+   if(adx<=InpRangeADX &&
+      rsi<=30)
+   {
+      return SIGNAL_BUY;
+   }
+
+
+
+   if(adx<=InpRangeADX &&
+      rsi>=70)
+   {
+      return SIGNAL_SELL;
+   }
+
+}
+
+
+
+//==================================================================
+// MOMENTUM
+//==================================================================
+
+
+if(strategy==STRAT_MOMENTUM)
+{
+
+   double body=
+      CandleBody(shift);
+
+
+
+   if(body>=atr*InpMomentumBodyATR &&
+      close0>close1 &&
+      close0>emaFast &&
+      emaFast>emaSlow &&
+      rsi>50)
+   {
+      return SIGNAL_BUY;
+   }
+
+
+
+   if(body>=atr*InpMomentumBodyATR &&
+      close0<close1 &&
+      close0<emaFast &&
+      emaFast<emaSlow &&
+      rsi<50)
+   {
+      return SIGNAL_SELL;
+   }
+
+}
+
+
+
+//==================================================================
+// BREAKOUT
+//==================================================================
+
+
+if(strategy==STRAT_BREAKOUT)
+{
+
+   double high12=-DBL_MAX;
+
+   double low12=DBL_MAX;
+
+
+
+   for(int i=shift+1;
+       i<=shift+12;
+       i++)
+   {
+
+      high12=
+      MathMax(high12,
+              iHigh(Symbol(),
+                    Period(),
+                    i));
+
+      low12=
+      MathMin(low12,
+              iLow(Symbol(),
+                   Period(),
+                   i));
+
+   }
+
+
+
+   if(close0>high12 &&
+      adx>=InpTrendADX)
+   {
+      return SIGNAL_BUY;
+   }
+
+
+
+   if(close0<low12 &&
+      adx>=InpTrendADX)
+   {
+      return SIGNAL_SELL;
+   }
+
+
+
+   // adaptive breakout
+
+
+   if(InpAdaptiveEntry &&
+      adx>=InpTrendADXFailsafe)
+   {
+
+      double buffer=
+         atr*InpBreakoutATRBuffer;
+
+
+
+      if(close0>high12-buffer)
+         return SIGNAL_BUY;
+
+
+
+      if(close0<low12+buffer)
+         return SIGNAL_SELL;
+
+   }
+
+}
+
+
+
+//==================================================================
+// SESSION STRATEGY
+//==================================================================
+
+
+if(strategy==STRAT_SESSION)
+{
+
+   int hour=
+      TimeHour(
+      iTime(Symbol(),
+            Period(),
+            shift));
+
+
+
+   if(hour>=InpSessionStart &&
+      hour<InpSessionEnd)
+   {
+
+
+      bool bullish=
+         close0>
+         iOpen(Symbol(),
+               Period(),
+               shift);
+
+
+
+      bool bearish=
+         close0<
+         iOpen(Symbol(),
+               Period(),
+               shift);
+
+
+
+      if(emaFast>emaSlow &&
+         close0>=emaFast &&
+         rsi>=50)
+      {
+         return SIGNAL_BUY;
+      }
+
+
+
+      if(emaFast<emaSlow &&
+         close0<=emaFast &&
+         rsi<=50)
+      {
+         return SIGNAL_SELL;
+      }
+
+
+
+      // adaptive session entry
+
+
+      if(InpAdaptiveEntry)
+      {
+
+         if(bullish &&
+            close0>emaSlow &&
+            rsi>=InpSessionRSIBuy)
+         {
+            return SIGNAL_BUY;
+         }
+
+
+
+         if(bearish &&
+            close0<emaSlow &&
+            rsi<=InpSessionRSISell)
+         {
+            return SIGNAL_SELL;
+         }
+
+      }
+
+   }
+
+}
+
+
+
+//==================================================================
+// DIVERGENCE
+//==================================================================
+
+
+if(strategy==STRAT_DIVERGENCE)
+{
+
+   double oldRSI=
+      RSI(shift+3);
+
+
+
+   double oldLow=
+      iLow(Symbol(),
+           Period(),
+           shift+3);
+
+
+
+   double oldHigh=
+      iHigh(Symbol(),
+            Period(),
+            shift+3);
+
+
+
+   if(adx<=InpRangeADX)
+   {
+
+      if(close0<oldLow &&
+         rsi>oldRSI &&
+         rsi<50)
+      {
+         return SIGNAL_BUY;
+      }
+
+
+
+      if(close0>oldHigh &&
+         rsi<oldRSI &&
+         rsi>50)
+      {
+         return SIGNAL_SELL;
+      }
+
+   }
+
+}
+
+
+
+//==================================================================
+// RANGE
+//==================================================================
+
+
+if(strategy==STRAT_RANGE)
+{
+
+   if(adx<=InpRangeADX)
+   {
+
+      double high10=-DBL_MAX;
+
+      double low10=DBL_MAX;
+
+
+
+      for(int r=shift+1;
+          r<=shift+10;
+          r++)
+      {
+
+         high10=
+         MathMax(high10,
+                 iHigh(Symbol(),
+                       Period(),
+                       r));
+
+
+
+         low10=
+         MathMin(low10,
+                 iLow(Symbol(),
+                      Period(),
+                      r));
+
+      }
+
+
+
+      double range=
+         high10-low10;
+
+
+
+      if(range>0)
+      {
+
+         if(close0<=low10+range*0.25 &&
+            rsi<45)
+            return SIGNAL_BUY;
+
+
+
+         if(close0>=high10-range*0.25 &&
+            rsi>55)
+            return SIGNAL_SELL;
+
+      }
+
+   }
+
+}
+
+
+
+//==================================================================
+// FRACTAL HTF
+//==================================================================
+
+
+if(strategy==STRAT_FRACTAL_HTF)
+{
+
+   double htfFast=
+      iMA(Symbol(),
+          PERIOD_H4,
+          InpFastEMA,
+          0,
+          MODE_EMA,
+          PRICE_CLOSE,
+          1);
+
+
+
+   double htfSlow=
+      iMA(Symbol(),
+          PERIOD_H4,
+          InpSlowEMA,
+          0,
+          MODE_EMA,
+          PRICE_CLOSE,
+          1);
+
+
+
+   if(htfFast>htfSlow &&
+      close0>emaFast)
+   {
+      return SIGNAL_BUY;
+   }
+
+
+
+   if(htfFast<htfSlow &&
+      close0<emaFast)
+   {
+      return SIGNAL_SELL;
+   }
+
+}
+
+
+
+return SIGNAL_NONE;
+
+}
+
+
+
+//==================================================================
+// END PART 3
+//==================================================================
+//==================================================================
+// STRATEGY COMPATIBILITY v2.33
+// Adaptive regime tolerance
+//==================================================================
+
+bool StrategyCompatible(int strategy,int direction)
+{
+   int r=gCurrentRegime;
+
+
+   //===============================================================
+   // TREND FAMILY
+   //===============================================================
+
+   if(strategy==STRAT_TREND ||
+      strategy==STRAT_MOMENTUM ||
+      strategy==STRAT_FRACTAL_HTF)
+   {
+
+      if(r==REGIME_TREND_UP &&
+         direction==SIGNAL_BUY)
+         return true;
+
+
+      if(r==REGIME_TREND_DOWN &&
+         direction==SIGNAL_SELL)
+         return true;
+
+
+      // High volatility accepts both directions
+      if(r==REGIME_HIGH_VOL)
+         return true;
+
+
+      // v2.33 FIX:
+      // Transition no longer blocks everything
+      if(r==REGIME_TRANSITION)
+      {
+         if(gCurrentADX>=InpTrendADXFailsafe)
+            return true;
+      }
+
+
+      return false;
+   }
+
+
+
+   //===============================================================
+   // BREAKOUT
+   //===============================================================
+
+   if(strategy==STRAT_BREAKOUT)
+   {
+
+      if(r==REGIME_BREAKOUT ||
+         r==REGIME_HIGH_VOL)
+         return true;
+
+
+      // adaptive breakout
+      if(r==REGIME_TRANSITION &&
+         gCurrentATRRatio>=1.10 &&
+         gCurrentADX>=18)
+         return true;
+
+
+      return false;
+   }
+
+
+
+   //===============================================================
+   // MEAN REVERSION FAMILY
+   //===============================================================
+
+   if(strategy==STRAT_MEANREV ||
+      strategy==STRAT_RANGE ||
+      strategy==STRAT_DIVERGENCE)
+   {
+
+      if(r==REGIME_RANGE ||
+         r==REGIME_CONTRACTING)
+         return true;
+
+
+      // softer transition
+      if(r==REGIME_TRANSITION &&
+         gCurrentADX<=20)
+         return true;
+
+
+      return false;
+   }
+
+
+
+   //===============================================================
+   // SESSION STRATEGY
+   //===============================================================
+
+   if(strategy==STRAT_SESSION)
+   {
+
+      if(r!=REGIME_UNKNOWN)
+         return true;
+
+   }
+
+
+   return false;
+}
+
+
+
+//==================================================================
+// QUALITY CHECK v2.33
+// Less blocking, more scoring
+//==================================================================
+
+bool QualityOK(int strategy,
+               int direction,
+               int shift)
+{
+
+   double atr=ATR(shift);
+
+
+   if(atr<=0)
+      return false;
+
+
+
+   double close0=
+      iClose(Symbol(),
+             Period(),
+             shift);
+
+
+   double fast=
+      EMA(InpFastEMA,
+          shift);
+
+
+   double slow=
+      EMA(InpSlowEMA,
+          shift);
+
+
+   double body=
+      CandleBody(shift);
+
+
+
+   //---------------------------------------------------------------
+   // TREND STYLE
+   //---------------------------------------------------------------
+
+   if(strategy==STRAT_TREND ||
+      strategy==STRAT_MOMENTUM ||
+      strategy==STRAT_BREAKOUT ||
+      strategy==STRAT_FRACTAL_HTF)
+   {
+
+      // v2.33:
+      // reduced from 0.10 ATR
+      // to avoid zero entries
+
+      if(body < atr*0.05)
+         return false;
+
+
+
+      // EMA separation filter
+
+      if(MathAbs(fast-slow)<atr*0.02)
+         return false;
+
+
+
+      if(direction==SIGNAL_BUY &&
+         close0<slow)
+         return false;
+
+
+
+      if(direction==SIGNAL_SELL &&
+         close0>slow)
+         return false;
+
+   }
+
+
+
+   //---------------------------------------------------------------
+   // MOMENTUM ADAPTIVE
+   //---------------------------------------------------------------
+
+   if(InpAdaptiveEntry &&
+      strategy==STRAT_MOMENTUM)
+   {
+
+      double rsi=
+         RSI(shift);
+
+
+      if(direction==SIGNAL_BUY &&
+         rsi<45)
+         return false;
+
+
+      if(direction==SIGNAL_SELL &&
+         rsi>55)
+         return false;
+
+   }
+
+
+
+   return true;
+}
+
+
+
+//==================================================================
+// VALID SIGNAL v2.33
+// Pipeline diagnostics
+//==================================================================
+
+int ValidSignal(int strategy,
+                int shift,
+                bool countStats)
+{
+
+   int signal=
+      RawSignal(strategy,
+                shift);
+
+
+
+   if(signal==SIGNAL_NONE)
+      return SIGNAL_NONE;
+
+
+
+   if(countStats)
+   {
+      gRawSignals[strategy]++;
+      gStrategyDetected[strategy]++;
+   }
+
+
+
+   //---------------------------------------------------------------
+   // QUALITY
+   //---------------------------------------------------------------
+
+   if(!QualityOK(strategy,
+                 signal,
+                 shift))
+   {
+
+      if(countStats)
+         gRejectedQuality++;
+
+
+      return SIGNAL_NONE;
+   }
+
+
+
+   if(countStats)
+      gQualityPass[strategy]++;
+
+
+
+   //---------------------------------------------------------------
+   // REGIME
+   //---------------------------------------------------------------
+
+   if(!StrategyCompatible(strategy,
+                          signal))
+   {
+
+      if(countStats)
+         gRejectedContext++;
+
+
+      return SIGNAL_NONE;
+   }
+
+
+
+   if(countStats)
+   {
+      gContextPass[strategy]++;
+      gStrategyQualified[strategy]++;
+   }
+
+
+
+   return signal;
+}
+
+
+
+//==================================================================
+// ADAPTIVE STRATEGY PRIORITY
+//==================================================================
+
+int StrategyPriority(int index)
+{
+
+   switch(index)
+   {
+
+      case 0:
+         return STRAT_TREND;
+
+      case 1:
+         return STRAT_MOMENTUM;
+
+      case 2:
+         return STRAT_BREAKOUT;
+
+      case 3:
+         return STRAT_SESSION;
+
+      case 4:
+         return STRAT_RANGE;
+
+      case 5:
+         return STRAT_MEANREV;
+
+      case 6:
+         return STRAT_DIVERGENCE;
+
+      case 7:
+         return STRAT_FRACTAL_HTF;
+   }
+
+
+   return STRAT_TREND;
+}
+
+
+
+//==================================================================
+// ADAPTIVE SIGNAL SELECTOR v2.33
+// Main zero-trade fix
+//==================================================================
+
+bool SelectSignal(int shift,
+                  int &strategy,
+                  int &direction)
+{
+
+   strategy=-1;
+   direction=SIGNAL_NONE;
+
+
+
+   //---------------------------------------------------------------
+   // 1. Try Walk Forward winner
+   //---------------------------------------------------------------
+
+   if(gBestStrategy>=0)
+   {
+
+      int bestSignal=
+         ValidSignal(gBestStrategy,
+                     shift,
+                     true);
+
+
+      if(bestSignal!=SIGNAL_NONE)
+      {
+
+         strategy=gBestStrategy;
+         direction=bestSignal;
+
+         gSelectedSignals++;
+
+         return true;
+      }
+
+   }
+
+
+
+   //---------------------------------------------------------------
+   // 2. Adaptive fallback
+   //---------------------------------------------------------------
+
+
+   for(int i=0;i<STRAT_COUNT;i++)
+   {
+
+      int s=
+         StrategyPriority(i);
+
+
+
+      if(s==gBestStrategy)
+         continue;
+
+
+
+      int signal=
+         ValidSignal(s,
+                     shift,
+                     true);
+
+
+
+      if(signal==SIGNAL_NONE)
+         continue;
+
+
+
+      strategy=s;
+      direction=signal;
+
+
+      gSelectedSignals++;
+
+
+      if(InpVerbose)
+      {
+         Print("B33 ADAPTIVE FALLBACK ",
+               StrategyName(strategy),
+               " DIR=",
+               direction==SIGNAL_BUY?
+               "BUY":"SELL");
+      }
+
+
+      return true;
+   }
+
+
+
+   //---------------------------------------------------------------
+   // 3. Emergency adaptive entry
+   //---------------------------------------------------------------
+
+   if(InpAdaptiveEntry)
+   {
+
+      int trendSignal=
+         RawSignal(STRAT_TREND,
+                   shift);
+
+
+
+      if(trendSignal!=SIGNAL_NONE)
+      {
+
+         strategy=STRAT_TREND;
+         direction=trendSignal;
+
+
+         gSelectedSignals++;
+
+
+         Print("B33 EMERGENCY TREND ENTRY");
+
+
+         return true;
+      }
+
+   }
+
+
+
+   return false;
+}
+
+//==================================================================
+// SCORE STRATEGY v2.33
+// Adaptive scoring - no total elimination
+//==================================================================
+
+double ScoreStrategy(AuditStats &train,
+                     AuditStats &oos)
+{
+
+   double score=0.0;
+
+
+
+   //---------------------------------------------------------------
+   // Sample size
+   //---------------------------------------------------------------
+
+   if(train.trades < InpMinTrainTrades)
+   {
+      score-=40;
+   }
+   else
+   {
+      score+=MathMin(train.trades,30);
+   }
+
+
+
+   if(oos.trades < InpMinOOSTrades)
+   {
+      score-=35;
+   }
+   else
+   {
+      score+=oos.trades*1.5;
+   }
+
+
+
+   //---------------------------------------------------------------
+   // Profit Factor
+   //---------------------------------------------------------------
+
+   if(oos.profitFactor>0)
+   {
+      score +=
+      oos.profitFactor*35.0;
+   }
+   else
+   {
+      score-=20;
+   }
+
+
+
+   //---------------------------------------------------------------
+   // Expectancy
+   //---------------------------------------------------------------
+
+   score +=
+   oos.expectancy*120.0;
+
+
+
+   //---------------------------------------------------------------
+   // Payoff
+   //---------------------------------------------------------------
+
+   if(oos.payoff>0)
+      score+=oos.payoff*8.0;
+
+
+
+   //---------------------------------------------------------------
+   // Stability
+   //---------------------------------------------------------------
+
+   if(train.profitFactor>0 &&
+      oos.profitFactor>0)
+   {
+
+      double stability=
+      oos.profitFactor/
+      train.profitFactor;
+
+
+      if(stability>1)
+         stability=1;
+
+
+      score+=
+      stability*20;
+   }
+
+
+
+   //---------------------------------------------------------------
+   // Drawdown control
+   //---------------------------------------------------------------
+
+   score-=
+   oos.maxDrawdown*2.5;
+
+
+
+   //---------------------------------------------------------------
+   // v2.33 protection
+   // Never allow all strategies dead
+   //---------------------------------------------------------------
+
+   if(score<-500)
+      score=-500;
+
+
+
+   return score;
+}
+
+
+
+//==================================================================
+// WALK FORWARD v2.33
+// Adaptive calibration
+//==================================================================
+
+void WalkForward(int shift)
+{
+
+   gBestStrategy=-1;
+
+   gBestScore=-999999;
+
+   gBestPF=0;
+
+   gBestExp=-999;
+
+   gBestDD=100;
+
+   gBestTrainTrades=0;
+
+   gBestOOSTrades=0;
+
+
+
+   double secondBest=-999999;
+
+
+
+   for(int s=0;
+       s<STRAT_COUNT;
+       s++)
+   {
+
+      AuditStats train;
+      AuditStats oos;
+
+
+
+      AuditStrategy(s,
+                    shift,
+                    train,
+                    oos);
+
+
+
+      double score=
+      ScoreStrategy(train,
+                    oos);
+
+
+
+      if(InpVerbose)
+      {
+
+         Print(
+         "B33 WF ",
+         StrategyName(s),
+
+         " TRAIN=",
+         train.trades,
+
+         " OOS=",
+         oos.trades,
+
+         " PF=",
+         DoubleToString(
+         oos.profitFactor,3),
+
+         " EXP=",
+         DoubleToString(
+         oos.expectancy,4),
+
+         " DD=",
+         DoubleToString(
+         oos.maxDrawdown,3),
+
+         " SCORE=",
+         DoubleToString(
+         score,2)
+         );
+
+      }
+
+
+
+      //------------------------------------------------------------
+      // Ranking
+      //------------------------------------------------------------
+
+      if(score > gBestScore)
+      {
+
+         secondBest=
+         gBestScore;
+
+
+         gBestScore=score;
+
+
+         gBestStrategy=s;
+
+
+         gBestPF=
+         oos.profitFactor;
+
+
+         gBestExp=
+         oos.expectancy;
+
+
+         gBestDD=
+         oos.maxDrawdown;
+
+
+         gBestTrainTrades=
+         train.trades;
+
+
+         gBestOOSTrades=
+         oos.trades;
+
+      }
+
+   }
+
+
+
+   //---------------------------------------------------------------
+   // Safety fallback
+   //---------------------------------------------------------------
+
+   if(gBestStrategy<0)
+   {
+
+      gBestStrategy=
+      STRAT_SESSION;
+
+
+      gBestScore=0;
+
+
+      Print(
+      "B33 WF FALLBACK SESSION"
+      );
+
+   }
+
+
+
+   gCalibrationCount++;
+
+
+   gLastCalibrationBar=
+   (int)gBarSequence;
+
+
+
+   if(InpVerbose)
+   {
+
+      Print(
+      "================================"
+      );
+
+
+      Print(
+      "B33 WF BEST=",
+      StrategyName(gBestStrategy),
+
+      " SCORE=",
+      DoubleToString(
+      gBestScore,2),
+
+      " PF=",
+      DoubleToString(
+      gBestPF,3),
+
+      " EXP=",
+      DoubleToString(
+      gBestExp,4),
+
+      " DD=",
+      DoubleToString(
+      gBestDD,3),
+
+      " TRAIN=",
+      gBestTrainTrades,
+
+      " OOS=",
+      gBestOOSTrades
+      );
+
+
+      Print(
+      "================================"
+      );
+
+   }
+
+}
+
+
+
+//==================================================================
+// ADAPTIVE RECALIBRATION CONTROL v2.33
+//==================================================================
+
+bool NeedRecalibration()
+{
+
+   //---------------------------------------------------------------
+   // First calibration
+   //---------------------------------------------------------------
+
+   if(gBestStrategy<0)
+      return true;
+
+
+
+   //---------------------------------------------------------------
+   // Regular interval
+   //---------------------------------------------------------------
+
+   if(
+   (gBarSequence-gLastCalibrationBar)
+   >=InpRecalibrationBars
+   )
+      return true;
+
+
+
+   //---------------------------------------------------------------
+   // Regime change
+   //---------------------------------------------------------------
+
+   if(gPreviousRegime!=
+      gCurrentRegime)
+      return true;
+
+
+
+   //---------------------------------------------------------------
+   // High volatility
+   //---------------------------------------------------------------
+
+   if(gCurrentATRRatio>=
+      InpATRExpansion)
+      return true;
+
+
+
+   return false;
+}
+//==================================================================
+// SPREAD INTELLIGENCE v2.33
+//==================================================================
+
+bool SpreadOK()
+{
+
+   RefreshRates();
+
+
+   double spreadPoints=
+   (Ask-Bid)/Point;
+
+
+   gLastSpreadPoints=
+   spreadPoints;
+
+
+
+   //---------------------------------------------------------------
+   // Hard limit
+   //---------------------------------------------------------------
+
+   if(spreadPoints >
+      InpMaxSpreadPoints)
+   {
+
+      gBlockSpread++;
+
+
+      return false;
+   }
+
+
+
+   //---------------------------------------------------------------
+   // ATR dynamic spread
+   //---------------------------------------------------------------
+
+   double atr=
+   ATR(1);
+
+
+
+   if(atr<=0)
+      return false;
+
+
+
+   double ratio=
+   (spreadPoints*Point)/atr;
+
+
+
+   gLastSpreadATRRatio=
+   ratio;
+
+
+
+   //---------------------------------------------------------------
+   // v2.33 adaptive:
+   // during high volatility allow more spread
+   //---------------------------------------------------------------
+
+   double maxRatio=
+   InpMaxSpreadATR;
+
+
+
+   if(gCurrentRegime==
+      REGIME_HIGH_VOL)
+   {
+      maxRatio*=1.5;
+   }
+
+
+
+   if(ratio>maxRatio)
+   {
+
+      gSpreadAtrBlocks++;
+
+
+      return false;
+
+   }
+
+
+
+   return true;
+}
+
+
+
+//==================================================================
+// LOT CALCULATION v2.33
+//==================================================================
+
+double CalculateLots(double stopDistance)
+{
+
+   if(stopDistance<=0)
+      return 0;
+
+
+
+   double riskMoney=
+
+   AccountBalance()
+   *
+   InpRiskPercent
+   /
+   100.0;
+
+
+
+   double tickValue=
+
+   MarketInfo(Symbol(),
+   MODE_TICKVALUE);
+
+
+
+   double tickSize=
+
+   MarketInfo(Symbol(),
+   MODE_TICKSIZE);
+
+
+
+   if(tickValue<=0 ||
+      tickSize<=0)
+      return 0;
+
+
+
+   double moneyPerLot=
+
+   (stopDistance/tickSize)
+   *
+   tickValue;
+
+
+
+   if(moneyPerLot<=0)
+      return 0;
+
+
+
+   double lots=
+
+   riskMoney/
+   moneyPerLot;
+
+
+
+   double minLot=
+
+   MarketInfo(Symbol(),
+   MODE_MINLOT);
+
+
+
+   double maxLot=
+
+   MarketInfo(Symbol(),
+   MODE_MAXLOT);
+
+
+
+   double step=
+
+   MarketInfo(Symbol(),
+   MODE_LOTSTEP);
+
+
+
+   if(step<=0)
+      step=0.01;
+
+
+
+   lots=
+   MathFloor(lots/step)
+   *
+   step;
+
+
+
+   //---------------------------------------------------------------
+   // v2.33
+   // Never return invalid lot
+   //---------------------------------------------------------------
+
+   if(lots<minLot)
+      lots=minLot;
+
+
+
+   if(lots>maxLot)
+      lots=maxLot;
+
+
+
+   return NormalizeDouble(
+   lots,2);
+
+}
+
+
+
+//==================================================================
+// STOP VALIDATION v2.33
+//==================================================================
+
+bool StopsValid(int direction,
+                double entry,
+                double sl,
+                double tp)
+{
+
+   double stopLevel=
+
+   MarketInfo(Symbol(),
+   MODE_STOPLEVEL)
+   *
+   Point;
+
+
+
+   if(stopLevel<Point)
+      stopLevel=Point*2;
+
+
+
+   if(direction==
+      SIGNAL_BUY)
+   {
+
+      if(entry-sl <
+         stopLevel)
+         return false;
+
+
+
+      if(tp-entry <
+         stopLevel)
+         return false;
+
+   }
+
+
+
+   if(direction==
+      SIGNAL_SELL)
+   {
+
+      if(sl-entry <
+         stopLevel)
+         return false;
+
+
+
+      if(entry-tp <
+         stopLevel)
+         return false;
+
+   }
+
+
+   return true;
+
+}
+
+
+
+//==================================================================
+// EXECUTE TRADE v2.33
+// ECN compatible
+//==================================================================
+
+bool ExecuteTrade(int strategy,
+                  int direction)
+{
+
+
+   RefreshRates();
+
+
+
+   double atr=
+   ATR(1);
+
+
+
+   if(atr<=0)
+      return false;
+
+
+
+   double slDistance=
+   atr*InpSL_ATR;
+
+
+
+   double tpDistance=
+   atr*InpTP_ATR;
+
+
+
+   double price;
+
+
+   double sl;
+
+
+   double tp;
+
+
+
+   if(direction==
+      SIGNAL_BUY)
+   {
+
+      price=Ask;
+
+      sl=
+      price-slDistance;
+
+      tp=
+      price+tpDistance;
+
+   }
+   else
+   {
+
+      price=Bid;
+
+      sl=
+      price+slDistance;
+
+      tp=
+      price-tpDistance;
+
+   }
+
+
+
+   price=
+   NormalizeDouble(
+   price,Digits);
+
+
+
+   sl=
+   NormalizeDouble(
+   sl,Digits);
+
+
+
+   tp=
+   NormalizeDouble(
+   tp,Digits);
+
+
+
+   if(!StopsValid(direction,
+                  price,
+                  sl,
+                  tp))
+   {
+
+      Print(
+      "B33 INVALID STOPS"
+      );
+
+
+      return false;
+
+   }
+
+
+
+   double lots=
+
+   CalculateLots(
+   slDistance);
+
+
+
+   if(lots<=0)
+   {
+
+      Print(
+      "B33 INVALID LOT"
+      );
+
+
+      return false;
+
+   }
+
+
+
+   int type=
+
+   direction==SIGNAL_BUY?
+   OP_BUY:
+   OP_SELL;
+
+
+
+   string comment=
+
+   "B33_"+
+   StrategyName(strategy);
+
+
+
+   ResetLastError();
+
+
+
+   //---------------------------------------------------------------
+   // ECN MODE
+   //---------------------------------------------------------------
+
+   int ticket=
+
+   OrderSend(
+      Symbol(),
+      type,
+      lots,
+      price,
+      InpSlippage,
+      0,
+      0,
+      comment,
+      InpMagicNumber,
+      0,
+      clrNONE
+   );
+
+
+
+   if(ticket<0)
+   {
+
+      int error=
+      GetLastError();
+
+
+      gOrderSendErrors++;
+
+
+      Print(
+      "B33 ORDER ERROR=",
+      error
+      );
+
+
+      return false;
+
+   }
+
+
+
+   //---------------------------------------------------------------
+   // Attach stops
+   //---------------------------------------------------------------
+
+   if(OrderSelect(ticket,
+                  SELECT_BY_TICKET))
+   {
+
+      bool modified=
+
+      OrderModify(
+      ticket,
+      OrderOpenPrice(),
+      sl,
+      tp,
+      0,
+      clrNONE);
+
+
+
+      if(!modified)
+      {
+
+         Print(
+         "B33 MODIFY ERROR=",
+         GetLastError()
+         );
+
+      }
+
+   }
+
+
+
+   gOpenedTrades++;
+
+
+   gStrategyOpened[strategy]++;
+
+
+
+   gLastTradeBarTime=
+
+   iTime(Symbol(),
+         Period(),
+         1);
+
+
+
+   gLastTradeDirection=
+   direction;
+
+
+
+   Print(
+   "B33 OPENED ",
+   StrategyName(strategy),
+   " ",
+   direction==SIGNAL_BUY?
+   "BUY":"SELL",
+   " LOT=",
+   DoubleToString(lots,2)
+   );
+
+
+
+   return true;
+
+}
+//==================================================================
+// DIAGNOSTICS v2.33
+//==================================================================
+
+void Diagnostics()
+{
+
+Print("========================================");
+Print("AI BOT v2.33 FINAL DIAGNOSTICS");
+
+
+Print("Symbol=",
+      Symbol());
+
+Print("Period=",
+      Period());
+
+
+Print("REGIME=",
+      RegimeName(gCurrentRegime));
+
+
+Print("BEST STRATEGY=",
+      BestStrategyText());
+
+
+Print("BEST SCORE=",
+      DoubleToString(gBestScore,2));
+
+
+Print("ATR RATIO=",
+      DoubleToString(gCurrentATRRatio,3));
+
+
+Print("ADX=",
+      DoubleToString(gCurrentADX,2));
+
+
+Print("HURST=",
+      DoubleToString(gCurrentHurst,3));
+
+
+
+Print("----------------------------------------");
+
+Print("Bars evaluated=",
+      gBarsEvaluated);
+
+
+Print("Calibrations=",
+      gCalibrationCount);
+
+
+Print("Trades opened=",
+      gOpenedTrades);
+
+
+Print("Order errors=",
+      gOrderSendErrors);
+
+
+
+Print("----------------------------------------");
+
+Print("BLOCK POSITION=",
+      gBlockPosition);
+
+
+Print("BLOCK SESSION=",
+      gBlockSession);
+
+
+Print("BLOCK SPREAD=",
+      gBlockSpread);
+
+
+Print("BLOCK COOLDOWN=",
+      gBlockCooldown);
+
+
+Print("BLOCK LOSS=",
+      gBlockLoss);
+
+
+Print("BLOCK CONTEXT=",
+      gBlockContext);
+
+
+Print("NO SIGNAL=",
+      gBlockNoSignal);
+
+
+
+Print("----------------------------------------");
+
+Print("RAW SIGNALS");
+
+for(int i=0;i<STRAT_COUNT;i++)
+{
+
+Print(
+StrategyName(i),
+
+" RAW=",
+gRawSignals[i],
+
+" QUALITY=",
+gQualityPass[i],
+
+" CONTEXT=",
+gContextPass[i],
+
+" OPENED=",
+gStrategyOpened[i]);
+
+}
+
+
+
+Print("========================================");
+
+}

@@ -1,0 +1,99 @@
+//+------------------------------------------------------------------+
+//| AI_Trading_Bot_v2.31_RegimeIntelligence_Optimized.mq4            |
+//| Adaptive Regime + 8 Strategy Walk-Forward EA (Enhanced)          |
+//+------------------------------------------------------------------+
+#property strict
+#property version    "2.32"
+#property description "Optimized Adaptive market regime intelligence with robust order execution"
+
+//==================================================================
+// INPUTS (Resumen de parámetros críticos optimizados)
+//==================================================================
+input double InpRiskPercent         = 0.25;
+input int    InpMaxOpenTrades       = 1;
+input int    InpMagicNumber         = 2035031;
+input int    InpSlippage            = 5;
+
+input int    InpATRPeriod           = 14;
+input int    InpADXPeriod           = 14;
+input int    InpRSIPeriod           = 14;
+input int    InpFastEMA             = 8;
+input int    InpSlowEMA             = 21;
+input int    InpTrendEMA            = 200;
+
+input double InpSL_ATR              = 1.30;
+input double InpTP_ATR              = 2.60;
+input int    InpMaxSpreadPoints     = 30;
+
+// (Constantes y globales se mantienen estructuralmente idénticas por compatibilidad)
+#define STRAT_COUNT 8
+#define SIGNAL_NONE  0
+#define SIGNAL_BUY   1
+#define SIGNAL_SELL -1
+
+// Función mejorada de cálculo de lotes acorde al riesgo porcentual y límites del bróker
+double GetOptimizedLotSize(double slPoints)
+{
+   if(slPoints <= 0) return SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_MIN);
+   
+   double accountEquity = AccountEquity();
+   double riskMoney     = accountEquity * (InpRiskPercent / 100.0);
+   double tickValue     = SymbolInfoDouble(Symbol(), SYMBOL_TRADE_TICK_VALUE);
+   double tickSize      = SymbolInfoDouble(Symbol(), SYMBOL_TRADE_TICK_SIZE);
+   
+   if(tickValue <= 0 || tickSize <= 0) return SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_MIN);
+   
+   double lotStep       = SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_STEP);
+   double minLot        = SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_MIN);
+   double maxLot        = SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_MAX);
+   
+   double moneyPerLotStep = (slPoints / tickSize) * tickValue * lotStep;
+   if(moneyPerLotStep <= 0) return minLot;
+   
+   double calculatedLots = minLot + MathFloor(riskMoney / moneyPerLotStep) * lotStep;
+   
+   if(calculatedLots < minLot) calculatedLots = minLot;
+   if(calculatedLots > maxLot) calculatedLots = maxLot;
+   
+   return calculatedLots;
+}
+
+// Función de ejecución robusta con control de errores estándar
+bool ExecuteOrder(int direction, double sl, double tp, int strategy)
+{
+   if(OrdersTotal() >= InpMaxOpenTrades) return false;
+   
+   double price = 0.0;
+   int cmd = 0;
+   
+   if(direction == SIGNAL_BUY)
+   {
+      price = SymbolInfoDouble(Symbol(), SYMBOL_ASK);
+      cmd = OP_BUY;
+   }
+   else if(direction == SIGNAL_SELL)
+   {
+      price = SymbolInfoDouble(Symbol(), SYMBOL_BID);
+      cmd = OP_SELL;
+   }
+   else
+   {
+      return false;
+   }
+   
+   double atrVal = iATR(Symbol(), Period(), InpATRPeriod, 0);
+   double slPoints = MathAbs(price - sl);
+   double lots = GetOptimizedLotSize(slPoints / Point);
+   
+   int ticket = OrderSend(Symbol(), cmd, lots, price, InpSlippage, sl, tp, 
+                          StringConcatenate("B31_Strat_", IntegerToString(strategy)), 
+                          InpMagicNumber, 0, (direction == SIGNAL_BUY ? clrBlue : clrRed));
+                          
+   if(ticket < 0)
+   {
+      Print("Error al enviar orden. Código de error: ", GetLastError());
+      return false;
+   }
+   
+   return true;
+}
