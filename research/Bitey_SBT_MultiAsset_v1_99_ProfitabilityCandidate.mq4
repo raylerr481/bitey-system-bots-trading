@@ -2895,9 +2895,17 @@ void AuditExistingPositionSupervision(string trigger)
 
 void OnTimer()
 {
-   // Run before scans and cross-asset execution so a negative open trade is handled
-   // before any new order can be considered on this timer pass.
-   if(!EnforceNonNegativeFloatingProfitClose())
+    // In research OBSERVE_ONLY mode, scan and report only. Do not run position
+    // close/modify routines or the cross-asset execution path.
+    if(InpMode==OBSERVE_ONLY)
+    {
+       ScanMarketWatchAssets(false);
+       ProcessEngine(true);
+       return;
+    }
+    // Run before scans and cross-asset execution so a threshold-breached position
+    // is handled before any new order can be considered on this timer pass.
+    if(!EnforceNonNegativeFloatingProfitClose())
    {
       EnforceOpenPositionRiskCapAdaptive();
       ManageAdaptiveSLTP();
@@ -3046,11 +3054,16 @@ void ProcessEngine(bool timerInvocation)
 
 void OnTick()
 {
-   // GLOBAL RULE: a managed BUY or SELL with negative net floating P/L triggers
-   // an immediate close attempt. Do not evaluate/submit a new entry in this pass.
-   if(!EnforceNonNegativeFloatingProfitClose()) { ManageAdaptiveSLTP(); return; }
-   ManageAdaptiveSLTP();
-   ProcessEngine(false);
+    // Research default must be truly non-executing: do not close, modify or manage
+    // existing orders while OBSERVE_ONLY is selected. Keep signal diagnostics active.
+    if(InpMode==OBSERVE_ONLY)
+    {
+       ProcessEngine(false);
+       return;
+    }
+    if(!EnforceNonNegativeFloatingProfitClose()) { ManageAdaptiveSLTP(); return; }
+    ManageAdaptiveSLTP();
+    ProcessEngine(false);
 }
 
 void EnsureCSVHeader()
