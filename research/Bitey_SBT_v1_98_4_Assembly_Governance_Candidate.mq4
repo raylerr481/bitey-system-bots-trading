@@ -8,7 +8,9 @@
 // - It operates on the chart symbol only; it does not implement the production multi-asset scanner.
 // - Historical model evidence is a bar-replay proxy, not broker-executed model-specific P/L.
 // - No martingale, no account switching, fixed effective capital reference USD 500.
-// - EnableLiveOrders defaults false. Never enable until tested in Strategy Tester and demo.
+// - Risk policy is identical on demo and live accounts: always assume real-money exposure.
+ // - Demo/Strategy Tester validates mechanics only; it does not justify relaxed risk gates.
+ // - EnableLiveOrders defaults false until source validation and execution tests are complete.
 
 input int      MagicNumber             = 10102027;
 input double   EffectiveCapitalUSD     = 500.00;
@@ -73,7 +75,7 @@ int OnInit()
  Print("SBT ASSEMBLY CANDIDATE READY | version=1.984 | symbol=",Symbol(),
        " | liveOrders=",EnableLiveOrders," | effectiveCapitalUSD=",DoubleToString(EffectiveCapitalUSD,2),
        " | riskCapUSD=",DoubleToString(MaxRiskUSDPerTrade,2),
-       " | groups=trend,breakout,mean_reversion,session | mode=closed-bar");
+       " | groups=trend,breakout,mean_reversion,session | mode=closed-bar | accountTypePolicy=ALL_ACCOUNTS_REAL_RISK");
  return(INIT_SUCCEEDED);
 }
 
