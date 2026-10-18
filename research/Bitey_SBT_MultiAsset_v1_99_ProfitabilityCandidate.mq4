@@ -33,7 +33,8 @@ input double   InpRoundTurnCommissionPerLotUSD = -1.0; // UNKNOWN by default: se
 input double   InpExpectedSwapCostPerLotUSD = -1.0; // UNKNOWN by default: set a conservative holding swap cost per 1.00 lot; use 0 only if verified not applicable. Negative value blocks new entries.
 input double   InpRiskPerTradeUSD = 1.25; // USD1.25 baseline; evidence cannot exceed the hard cap.
 input double   InpHardRiskCapUSD = 1.25; // Hard per-position stop-risk ceiling for this research candidate.
-input int      InpMaxPositionsPerAsset = 1; // Exactly one open position per canonical asset, including broker aliases.\ninput double   InpEmergencyFloatingLossUSD = 1.25; // Close attempt only once net floating loss reaches this threshold.
+input int      InpMaxPositionsPerAsset = 1; // Exactly one open position per canonical asset, including broker aliases.
+input double   InpEmergencyFloatingLossUSD = 1.25; // Close attempt only once net floating loss reaches this threshold.
 input double   InpDailyLossLimitUSD = 10.00; // Block new entries at -USD10; keep protecting existing positions.
 input double   InpDailyProfitTargetUSD = 0.00; // Deprecated compatibility input; daily profit targets never block new entries.
 input int      InpMaxTradesPerDay = 0; // Deprecated compatibility input; no daily entry quota is enforced.
