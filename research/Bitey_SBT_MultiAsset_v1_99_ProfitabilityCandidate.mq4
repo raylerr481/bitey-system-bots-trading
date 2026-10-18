@@ -8,7 +8,7 @@
  // recovery of any missing historical source. Production files are untouched.
  //
  // SAFETY CONTRACT:
- // - OBSERVE_ONLY by default; cross-asset order submission disabled by default.
+ // - AUTO_EXECUTION by default on the MT4 account the user has manually attached (DEMO or REAL). All existing risk/evidence/broker gates remain mandatory.
  // - Fixed effective strategy capital USD500; never scale from account balance.
  // - Per-position stop-risk hard cap USD1.25; aggregate open stop-risk cap USD8.75.
  // - Daily loss limit USD10 blocks new entries while protective management remains.
@@ -27,7 +27,7 @@ enum AccountTypeReport { ACCOUNT_REPORT_AUTO=0, ACCOUNT_REPORT_DEMO_CONFIRMED=1,
 enum ModelId { MODEL_TREND=0, MODEL_MOMENTUM=1, MODEL_DONCHIAN=2, MODEL_MEANREV=3, MODEL_STRICT_RANGE=4, MODEL_ATR_BREAKOUT=5, MODEL_SESSION_BIAS=6, MODEL_RSI_DIVERGENCE=7, MODEL_HTF_TREND=8, MODEL_VWAP_DEVIATION=9, MODEL_BREAK_RETEST=10, MODEL_FIB_PULLBACK=11, MODEL_VOL_SQUEEZE=12, MODEL_LINEAR_REGRESSION=13, MODEL_MACD_CONFIRM=14, MODEL_BOLLINGER_EXPANSION=15 };
 enum TestOrderDirection { TEST_ORDER_SELL=-1, TEST_ORDER_BUY=1 };
 
-input EngineMode InpMode = OBSERVE_ONLY;
+input EngineMode InpMode = AUTO_EXECUTION;
 input int      InpMagic = 10102027;
 // AUTO reports the terminal-detected classification; terminal IsDemo() remains the factual diagnostic.
 input AccountTypeReport InpAccountTypeReport = ACCOUNT_REPORT_AUTO; // Requested configuration; does NOT falsify terminal IsDemo().
@@ -49,7 +49,7 @@ input int      InpMarketWatchScanIntervalSeconds = 60; // Periodic quote/history
 input bool     InpCrossAssetRankingEnabled = true; // Rank discovered symbols using independent H1 trend/momentum/RSI/ADX checks; ranking does not itself authorize orders.
 input int      InpCrossAssetTimeframe = PERIOD_H1; // Cross-asset ranking timeframe.
 input int      InpCrossAssetTopLogCount = 3; // Number of highest-ranked eligible symbols to report by default.
-input bool     InpCrossAssetAutoExecutionEnabled = false; // Research candidate: keep cross-symbol execution disabled by default.
+input bool     InpCrossAssetAutoExecutionEnabled = true; // Operational default: cross-asset entries allowed only after all evidence, cost, quote, and risk gates pass.
 input double   InpCrossAssetMinTechnicalScore = 58.0; // Minimum technical ranking score; not proof of profitability.
 input int      InpCrossAssetMinHistorySamples = 12; // Minimum non-overlapping historical directional samples before an asset can be evidence-qualified.
 input double   InpCrossAssetMinHistoryWinRate = 0.42; // Historical proxy win-rate floor; not a guarantee.
@@ -69,9 +69,9 @@ input double   InpLossRiskSevereUSD = 0.35; // Reduce risk during severe/prolong
 input double   InpSeverePortfolioLossTriggerUSD = 5.00; // Immediate severe state when campaign net P/L reaches -USD5.
 input int      InpLossConfirmMinutes = 5; // Negative net portfolio result must persist this long before confirmed-loss state.
 input int      InpPersistentLossMinutes = 15; // Persistent negative result steps risk down to USD2.
-input int      InpSevereLossMinutes = 60; // Long-running loss also steps risk down to USD1.
+input int      InpSevereLossMinutes = 60; // Long-running loss reduces risk to the configured USD0.35 level.
 input double   InpProfitActivationThresholdUSD = 0.50; // Portfolio net P/L must exceed this value to start profit persistence timer.
-input int      InpProfitSustainMinutes = 60; // Positive net portfolio result must persist this long before risk can rise to USD5+.
+input int      InpProfitSustainMinutes = 60; // Positive net portfolio result must persist this long before any bounded adaptive sizing adjustment; hard cap remains USD1.25.
 input double   InpProfitRiskStepUSD = 5.00; // Each additional USD5 of campaign net profit advances the risk budget by USD1.
 input double   InpAdaptiveRiskMaximumUSD = 1.25; // Adaptive per-position ceiling remains USD1.25.
 input double   InpMaxRiskPerTradeCapitalPct = 0.25; // USD1.25 is 0.25% of fixed USD500.
@@ -138,9 +138,9 @@ int EffectiveMaxOpenTrades();
 double EffectivePortfolioRiskCapUSD();
 
 
-// Portfolio objective: keep up to three distinct-asset slots available regardless of campaign P/L tiers.
-// Adaptive risk may reduce order size during losses, but never silently reduces slot capacity.
-// USD100 aggregate calculated stop-risk, USD25 per-position, and USD25 daily-loss gates remain authoritative.
+// Portfolio objective: keep up to seven distinct-asset slots available regardless of campaign P/L tiers.
+// Adaptive risk may reduce order size during losses, but never silently reduces configured slot capacity.
+// Effective input-derived aggregate, per-position and daily-loss gates remain authoritative.
 int EffectiveMaxOpenTrades()
 {
    double net = CampaignNetProfitUSD();
@@ -148,14 +148,14 @@ int EffectiveMaxOpenTrades()
    return (int)MathMax(1, MathMin(7, InpMaxOpenTrades));
 }
 
-// Aggregate stop-risk budget is capped at USD100; per-position risk is capped at USD25 and remaining headroom.
+// Aggregate stop-risk is capped by configured USD8.75 and available headroom; per-position risk is capped by the USD1.25 hard ceiling and remaining headroom.
 // This does not guarantee realized losses due to gaps, slippage, spread, or execution failures.
 double EffectivePortfolioRiskCapUSD()
 {
    int slots = EffectiveMaxOpenTrades();
-   double perPositionCap = MathMin(25.0,MathMin(EffectiveOperatingCapitalUSD()*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0, MathMin(InpAdaptiveRiskMaximumUSD, InpHardRiskCapUSD)));
+   double perPositionCap = MathMin(1.25,MathMin(EffectiveOperatingCapitalUSD()*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0, MathMin(InpAdaptiveRiskMaximumUSD, InpHardRiskCapUSD)));
    if(slots < 1 || perPositionCap <= 0.0) return 0.0;
-   return MathMin(100.0,MathMin(MathAbs(InpPortfolioOpenRiskCapUSD), slots * perPositionCap));
+   return MathMin(8.75,MathMin(MathAbs(InpPortfolioOpenRiskCapUSD), slots * perPositionCap));
 }
 
 // Raise the base risk budget only when both chronological training and holdout evidence exceed their pass floors.
@@ -275,10 +275,10 @@ double EffectiveRiskBudgetUSD()
       stateCode=6;
    }
 
-   risk=MathMin(risk,MathMin(25.0,MathMin(capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0,MathMin(InpHardRiskCapUSD,MathMax(0.01,InpAdaptiveRiskMaximumUSD)))));
+   risk=MathMin(risk,MathMin(1.25,MathMin(capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0,MathMin(InpHardRiskCapUSD,MathMax(0.01,InpAdaptiveRiskMaximumUSD)))));
    // Provisional model evidence remains deliberately half-risk; never increase risk for weak evidence.
    if(g_currentProvisionalEntry) risk=MathMin(risk,InpLossRiskConfirmedUSD*0.50);
-   risk=MathMin(risk,MathMin(25.0,MathMin(capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0,InpHardRiskCapUSD))); // Fixed USD25 hard cap.
+   risk=MathMin(risk,MathMin(1.25,MathMin(capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0,InpHardRiskCapUSD))); // Fixed USD1.25 hard cap.
    // Dynamic risk is bounded by remaining daily-loss and aggregate portfolio risk.
    double openRiskNow=PortfolioOpenRiskUSD();
    double dailyNetNow=TodayNetProfit();
@@ -296,7 +296,7 @@ double EffectiveRiskBudgetUSD()
       risk=MathMin(risk,MathMin(dailyLossHeadroom,portfolioRiskHeadroom));
    }
 
-   risk=MathMin(risk,MathMin(25.0,MathMin(InpHardRiskCapUSD,capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0))); // Final fixed USD25 hard cap.
+   risk=MathMin(risk,MathMin(1.25,MathMin(InpHardRiskCapUSD,capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0))); // Final fixed USD1.25 hard cap.
     double previousLevel=(GlobalVariableCheck(lastLevelKey)?GlobalVariableGet(lastLevelKey):-999.0);
    double previousState=(GlobalVariableCheck(lastStateKey)?GlobalVariableGet(lastStateKey):-999.0);
    if(MathAbs(previousLevel-risk)>0.001 || previousState!=(double)stateCode)
@@ -1231,7 +1231,7 @@ int OnInit()
             " | verify broker/terminal clock before relying on campaign P/L.");
       UpdateRiskGovernor();
    }
-   Print("BITEY SBT Multi-Asset Engine v1.73.0 initialized | Symbol=",Symbol(),
+   Print("BITEY SBT Multi-Asset Engine v1.99.1 initialized | Symbol=",Symbol(),
          " TF=",Period()," Mode=",(InpMode==OBSERVE_ONLY?"OBSERVE_ONLY":"AUTO_EXECUTION"),
          " OneShotTestMode=",(InpOneShotTestMode?"true":"false"),
          " OneShotSafetyNotice=",(InpOneShotTestMode?"ENABLED_ONE_ORDER_MAY_BE_REAL":"disabled"),
@@ -1240,15 +1240,15 @@ int OnInit()
          " AutoAllowCryptoOnChart=",(InpAutoAllowDetectedCryptoOnChart?"true":"false"),
          " OtherCryptoSpreadCeiling=",InpMaxSpreadOtherCryptoPoints,
          " ScannerExecutionScope=PER_SYMBOL_TRAIN_AND_HOLDOUT_PROXY_AUDIT_ONLY");
-   Print("THREE-ASSET PORTFOLIO CAPACITY | campaignNetUSD=",DoubleToString(g_campaignNetUSD,2),
+   Print("SEVEN-ASSET PORTFOLIO CAPACITY | campaignNetUSD=",DoubleToString(g_campaignNetUSD,2),
           " activeSlots=",EffectiveMaxOpenTrades(),"/7",
-          " slotPolicy=UP_TO_THREE_BEST_QUALIFIED_DISTINCT_ASSETS_FROM_MARKET_WATCH;PER_POSITION_AND_AGGREGATE_RISK_GOVERNORS_REMAIN_ACTIVE",
+          " slotPolicy=UP_TO_SEVEN_BEST_QUALIFIED_DISTINCT_ASSETS_FROM_MARKET_WATCH;PER_POSITION_AND_AGGREGATE_RISK_GOVERNORS_REMAIN_ACTIVE",
           " duplicatePolicy=ONE_POSITION_PER_CANONICAL_ASSET",
           " | capacity is not a requirement to open trades and is not evidence of profitability.");
    Print("PORTFOLIO CONFIG | MaxOpenTrades=",EffectiveMaxOpenTrades(),
          " PortfolioOpenRiskCapUSD=",DoubleToString(EffectivePortfolioRiskCapUSD(),2),
          " PortfolioCapitalCapUSD=",DoubleToString(InpOperatingCapitalUSD,2),
-         " PerAssetAllocationUSD=",DoubleToString(InpOperatingCapitalUSD/3.0,2),
+         " PerAssetAllocationUSD=",DoubleToString(InpOperatingCapitalUSD/7.0,2),
          " MaxPositionsPerAsset=",InpMaxPositionsPerAsset,
          " EffectiveCapitalUSD=",DoubleToString(EffectiveOperatingCapitalUSD(),2),
          " RiskRequestCeilingUSD=",DoubleToString(InpRiskPerTradeUSD,2),
@@ -1453,7 +1453,7 @@ double CrossAssetLotsForRisk(string sym,double riskUSD,double stopDistance)
    double riskPerLot=0.0, minLotRisk=-1.0, rawLots=0.0, lots=0.0, projected=-1.0;
    double effectiveRiskUSD=riskUSD, minLotAllowedRisk=0.0;
    double capital=EffectiveOperatingCapitalUSD();
-   double perPositionCap=MathMin(25.0,MathMin(InpHardRiskCapUSD,MathMin(InpAdaptiveRiskMaximumUSD,capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0)));
+   double perPositionCap=MathMin(1.25,MathMin(InpHardRiskCapUSD,MathMin(InpAdaptiveRiskMaximumUSD,capital*MathMax(0.01,InpMaxRiskPerTradeCapitalPct)/100.0)));
    double openRiskNow=PortfolioOpenRiskUSD();
    double aggregateHeadroom=(openRiskNow>=0.0?EffectivePortfolioRiskCapUSD()-openRiskNow:0.0);
    double dailyHeadroom=EffectiveDailyLossLimitUSD()+TodayNetProfit();
@@ -5456,7 +5456,7 @@ void EvaluateEngine()
          " | evaluating 16 chart-local models with closed-bar data; the cross-asset ranking separately uses 16 model-family proxies; momentumThresholdATR=",DoubleToString(InpMomentumATRThreshold,2),
          " trendContinuation=",(InpMomentumTrendContinuation?"true":"false"),
          " donchianBufferATR=",DoubleToString(InpBreakoutBufferATR,2),".");
-   Print("BITEY SBT v1.79.0 MULTI-ASSET | governor=",GovernorStateName(g_governorState)," campaignNetUSD=",DoubleToString(g_campaignNetUSD,2)," requiredVotes=",requiredVotes," | ",Symbol()," TF=",Period()," BUY votes=",buyVotes," SELL votes=",sellVotes,
+   Print("BITEY SBT v1.99.1 MULTI-ASSET | governor=",GovernorStateName(g_governorState)," campaignNetUSD=",DoubleToString(g_campaignNetUSD,2)," requiredVotes=",requiredVotes," | ",Symbol()," TF=",Period()," BUY votes=",buyVotes," SELL votes=",sellVotes,
          " | TREND=",trend," MOMENTUM=",momentum," DONCHIAN=",donchian," MEANREV=",meanrev,
          " STRICT_RANGE=",strictRange," ATR_BREAKOUT=",atrBreakout," SESSION_BIAS=",sessionBias,
          " RSI_DIVERGENCE=",rsiDivergence," HTF_TREND=",htfTrend,
@@ -5656,7 +5656,7 @@ void EvaluateEngine()
    // Evidence is attached to the execution attempt, not inferred later from a broker open message.
    RefreshRates();
    Print("TRADE EVIDENCE PACKET | schema=1 phase=PRE_ORDER source=CHART_LOCAL",
-         " eaVersion=1.790 symbol=",Symbol()," canonicalAsset=",CanonicalAssetKey(Symbol()),
+         " eaVersion=1.991 symbol=",Symbol()," canonicalAsset=",CanonicalAssetKey(Symbol()),
          " timeframe=",Period()," closedBarTime=",TimeToString(iTime(Symbol(),Period(),1),TIME_DATE|TIME_SECONDS),
          " decision=",(decision>0?"BUY":"SELL")," selectedModel=",bestStrategy,
          " expectedRScore=",DoubleToString(bestScore,6),
@@ -5692,7 +5692,7 @@ void EvaluateEngine()
          " persistedStatus=",EntryAttemptStatusName(g_lastEntryAttemptStatus),
          " retryPolicy=WAIT_NEXT_NEW_BAR_AND_FULL_REVALIDATION retryAllowed=false_for_current_bar");
    Print("TRADE EVIDENCE PACKET | schema=1 phase=POST_ORDER source=CHART_LOCAL",
-         " eaVersion=1.790 symbol=",Symbol()," canonicalAsset=",CanonicalAssetKey(Symbol()),
+         " eaVersion=1.991 symbol=",Symbol()," canonicalAsset=",CanonicalAssetKey(Symbol()),
          " timeframe=",Period()," closedBarTime=",TimeToString(iTime(Symbol(),Period(),1),TIME_DATE|TIME_SECONDS),
          " decision=",(decision>0?"BUY":"SELL")," selectedModel=",bestStrategy,
          " expectedRScore=",DoubleToString(bestScore,6),
