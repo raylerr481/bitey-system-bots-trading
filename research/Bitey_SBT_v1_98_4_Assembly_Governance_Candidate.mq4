@@ -3,8 +3,8 @@
 #property description "Bitey SBT Assembly Governance Candidate; chart-local research build."
 #property description "Live trading is disabled by default. Validate in Strategy Tester/demo before any live use."
 
-#include "../mt4/BiteySBTTelemetry.mqh"
-#include "../mt4/BiteySBT_SLTPReplay.mqh"
+#include "mt4/BiteySBTTelemetry.mqh"
+#include "mt4/BiteySBT_SLTPReplay.mqh"
 
 // IMPORTANT:
 // - This is a standalone research candidate, NOT a drop-in replacement for the production EA.
