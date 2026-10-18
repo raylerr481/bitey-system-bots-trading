@@ -85,6 +85,7 @@ bool SBT99_LogEvent(string eventType, string message, string decision, string re
       + "\"timeframe\":\"" + IntegerToString(Period()) + "\","
       + "\"ea_version\":\"1.99-research-telemetry\","
       + "\"source_commit\":\"research-v1.99-telemetry-and-evidence\","
+      + "\"risk_policy\":\"ALL_ACCOUNTS_REAL_RISK\","
       + "\"decision\":\"" + SBT99_JsonEscape(decision) + "\","
       + "\"reason\":\"" + SBT99_JsonEscape(reason) + "\","
       + "\"message\":\"" + SBT99_JsonEscape(message) + "\","
