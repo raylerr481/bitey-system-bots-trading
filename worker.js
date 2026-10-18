@@ -48,7 +48,7 @@ async function yahooChart(symbol, timeframe, limit = 200) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const BUILD = '20261009-mt4-telemetry-proxy-v1';
+    const BUILD = '20261018-mt4-runtime-single-load-v2';
 
     if (url.pathname.startsWith('/api/v1/mt4/')) {
       return handleMt4Proxy(request, env, url.pathname);
@@ -94,7 +94,7 @@ export default {
 
     return new HTMLRewriter().on('body', {
       element(element) {
-        element.append(`<script src="/runtime.js?v=20261007mt4telemetryfix2"></script>`, { html: true });
+        if (url.pathname !== "/" && url.pathname !== "/index.html") { element.append(`<script src="/runtime.js?v=20261018runtime-single-load"></script>`, { html: true }); }
         element.append(`<script>
 (() => {
   async function syncMt4Bridge() {
