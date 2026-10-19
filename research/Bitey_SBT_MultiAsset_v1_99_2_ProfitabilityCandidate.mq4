@@ -18,6 +18,13 @@ input ENUM_TIMEFRAMES InpTimeframe = PERIOD_H1;
 input int InpATRPeriod = 14;
 input double InpStopATR = 1.5;
 input double InpTargetATR = 2.0;
+input bool InpEnableAdaptiveManagement = true;
+input double InpBreakEvenTriggerATR = 1.0;
+input double InpTrailStartATR = 1.5;
+input double InpTrailDistanceATR = 1.2;
+input double InpExtendTargetTriggerFraction = 0.80;
+input double InpMaxTargetDistanceATR = 4.0;
+input double InpStrongTrendADX = 22.0;
 input int InpTrainBars = 120;
 input int InpHoldoutBars = 30;
 input int InpHorizonBars = 3;
@@ -269,6 +276,109 @@ void ScanSymbol(string symbol)
    LogDecision(symbol,"OPENED",StringFormat("TICKET_%d",ticket),direction,votes,tw,tr,tn,hw,hr,hn);
 }
 
+
+bool TrendStillSupportsTrade(string symbol,int type)
+{
+   double adx=iADX(symbol,InpTimeframe,14,PRICE_CLOSE,MODE_MAIN,1);
+   double fast=iMA(symbol,InpTimeframe,9,0,MODE_EMA,PRICE_CLOSE,1);
+   double slow=iMA(symbol,InpTimeframe,21,0,MODE_EMA,PRICE_CLOSE,1);
+   double close1=iClose(symbol,InpTimeframe,1);
+   if(adx<InpStrongTrendADX || fast<=0 || slow<=0 || close1<=0) return false;
+   if(type==OP_BUY) return (fast>slow && close1>fast);
+   if(type==OP_SELL) return (fast<slow && close1<fast);
+   return false;
+}
+
+void ManageAdaptiveStopsAndTargets()
+{
+   if(!InpEnableAdaptiveManagement) return;
+   for(int i=OrdersTotal()-1;i>=0;i--)
+   {
+      if(!OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) continue;
+      if(OrderMagicNumber()!=InpMagic) continue;
+      int type=OrderType();
+      if(type!=OP_BUY && type!=OP_SELL) continue; // Never modify pending orders or manual trades.
+      string symbol=OrderSymbol();
+      double point=MarketInfo(symbol,MODE_POINT);
+      int digits=(int)MarketInfo(symbol,MODE_DIGITS);
+      double atr=iATR(symbol,InpTimeframe,InpATRPeriod,1);
+      double tickValue=MarketInfo(symbol,MODE_TICKVALUE);
+      double tickSize=MarketInfo(symbol,MODE_TICKSIZE);
+      if(point<=0 || atr<=0 || tickValue<=0 || tickSize<=0) continue;
+      double bid=MarketInfo(symbol,MODE_BID), ask=MarketInfo(symbol,MODE_ASK);
+      if(bid<=0 || ask<=0) continue;
+      double market=(type==OP_BUY?bid:ask);
+      double favorable=(type==OP_BUY?market-OrderOpenPrice():OrderOpenPrice()-market);
+      if(favorable<=0) continue;
+      double stopLevel=MarketInfo(symbol,MODE_STOPLEVEL)*point;
+      double freezeLevel=MarketInfo(symbol,MODE_FREEZELEVEL)*point;
+      double minDistance=MathMax(stopLevel,freezeLevel)+point;
+      double desiredSL=OrderStopLoss();
+      double desiredTP=OrderTakeProfit();
+      bool changeSL=false,changeTP=false;
+      string reason="";
+
+      // Break-even after favorable movement; the SL is only tightened, never loosened.
+      if(favorable>=atr*InpBreakEvenTriggerATR)
+      {
+         double be=OrderOpenPrice();
+         if(type==OP_BUY) be+=point;
+         else be-=point;
+         if(type==OP_BUY && (desiredSL<=0 || be>desiredSL+point) && market-be>=minDistance)
+         { desiredSL=be; changeSL=true; reason="BREAK_EVEN"; }
+         if(type==OP_SELL && (desiredSL<=0 || be<desiredSL-point) && be-market>=minDistance)
+         { desiredSL=be; changeSL=true; reason="BREAK_EVEN"; }
+      }
+
+      // ATR trailing after a larger favorable move; do not widen the stop or violate broker distance.
+      if(favorable>=atr*InpTrailStartATR)
+      {
+         double trail=(type==OP_BUY?market-atr*InpTrailDistanceATR:market+atr*InpTrailDistanceATR);
+         if(type==OP_BUY)
+         {
+            trail=MathMin(trail,bid-minDistance);
+            if((desiredSL<=0 || trail>desiredSL+point) && trail<OrderOpenPrice()+favorable && trail>0)
+            { desiredSL=trail; changeSL=true; reason="ATR_TRAIL"; }
+         }
+         else
+         {
+            trail=MathMax(trail,ask+minDistance);
+            if((desiredSL<=0 || trail<desiredSL-point) && trail>ask && trail>0)
+            { desiredSL=trail; changeSL=true; reason="ATR_TRAIL"; }
+         }
+      }
+
+      // Extend TP only near the current target and only while closed-bar trend remains strong.
+      // The cap prevents unbounded target chasing; SL protection is independent.
+      if(OrderTakeProfit()>0 && favorable>=atr*InpTargetATR*InpExtendTargetTriggerFraction &&
+         TrendStillSupportsTrade(symbol,type))
+      {
+         double maxDist=atr*InpMaxTargetDistanceATR;
+         double candidate=(type==OP_BUY?OrderOpenPrice()+maxDist:OrderOpenPrice()-maxDist);
+         if(type==OP_BUY && OrderTakeProfit()<candidate-point && candidate-bid>=minDistance)
+         { desiredTP=candidate; changeTP=true; reason=reason+"|TP_EXTEND_TREND"; }
+         if(type==OP_SELL && OrderTakeProfit()>candidate+point && ask-candidate>=minDistance)
+         { desiredTP=candidate; changeTP=true; reason=reason+"|TP_EXTEND_TREND"; }
+      }
+
+      if(!changeSL && !changeTP) continue;
+      desiredSL=(desiredSL>0?NormalizeDouble(desiredSL,digits):0);
+      desiredTP=(desiredTP>0?NormalizeDouble(desiredTP,digits):0);
+      ResetLastError();
+      bool ok=OrderModify(OrderTicket(),OrderOpenPrice(),desiredSL,desiredTP,0,clrNONE);
+      if(ok)
+         Print("BITEY_SBT_ADAPTIVE_MANAGEMENT | symbol=",symbol," ticket=",OrderTicket(),
+               " side=",(type==OP_BUY?"BUY":"SELL")," action=",reason,
+               " favorableMove=",DoubleToString(favorable,digits),
+               " ATR=",DoubleToString(atr,digits),
+               " SL=",DoubleToString(desiredSL,digits)," TP=",DoubleToString(desiredTP,digits));
+      else
+         Print("BITEY_SBT_ADAPTIVE_MANAGEMENT_REJECT | symbol=",symbol," ticket=",OrderTicket(),
+               " action=",reason," error=",GetLastError(),
+               " SL=",DoubleToString(desiredSL,digits)," TP=",DoubleToString(desiredTP,digits));
+   }
+}
+
 int OnInit()
 {
    if(EffectiveCapital()<=0){Print("BITEY_SBT_INIT_REJECT | reason=ACCOUNT_CURRENCY_OR_CAPITAL | accountCurrency=",AccountCurrency());return INIT_FAILED;}
@@ -286,6 +396,7 @@ void OnTimer()
 {
    if(TimeCurrent()-g_lastScan<MathMax(5,InpScanIntervalSeconds))return;
    g_lastScan=TimeCurrent();
+   ManageAdaptiveStopsAndTargets();
    double dayNet=DailyNetUSD();
    if(dayNet<=-MathMin(10.0,MathAbs(InpDailyLossLimitUSD)))
       Print("BITEY_SBT_DAILY_GUARD | newEntriesBlocked=true dailyNetUSD=",DoubleToString(dayNet,2)," protectiveOrdersRemainManual");
