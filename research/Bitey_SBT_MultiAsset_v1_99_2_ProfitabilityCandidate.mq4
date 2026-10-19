@@ -52,8 +52,8 @@ input bool     InpCrossAssetRankingEnabled = true; // Rank discovered symbols us
 input int      InpCrossAssetTimeframe = PERIOD_H1; // Cross-asset ranking timeframe.
 input int      InpCrossAssetTopLogCount = 3; // Number of highest-ranked eligible symbols to report by default.
 input bool     InpCrossAssetAutoExecutionEnabled = true; // Operational default: cross-asset entries allowed only after all evidence, cost, quote, and risk gates pass.
-input double   InpCrossAssetMinTechnicalScore = 58.0; // Minimum technical ranking score; not proof of profitability.
-input int      InpCrossAssetMinDirectionalVotes = 4; // Minimum winning cross-asset proxy votes; training/holdout and symbol-scoped live evidence remain mandatory.
+input double   InpCrossAssetMinTechnicalScore = 48.0; // Adaptive technical ranking floor; current signal, local alignment, train/holdout, costs and risk gates remain mandatory.
+input int      InpCrossAssetMinDirectionalVotes = 2; // Adaptive quorum floor; a 2-1 cross vote is only a candidate when local direction aligns and train/holdout both pass.
 input int      InpCrossAssetMinHistorySamples = 12; // Minimum non-overlapping historical directional samples before an asset can be evidence-qualified.
 input double   InpCrossAssetMinHistoryWinRate = 0.42; // Historical proxy win-rate floor; not a guarantee.
 input double   InpCrossAssetMinHistoryAvgR = 0.02; // Cost-adjusted ATR-normalized return proxy floor; not actual trade R.
@@ -743,22 +743,27 @@ double CrossAssetTechnicalScore(string sym, int tf, string &direction, string &r
          " adx=",DoubleToString(adx,1)," momentumATR=",DoubleToString(momentum,3),
          " rsi=",DoubleToString(rsi,1)," fastSlowGapATR=",DoubleToString(fastGap,3),
          " | cross-symbol model-family proxies; directional history and holdout remain mandatory.");
-   if(adx<10.0)
-   { reason="CROSS_ASSET_ADX_BELOW_MINIMUM"; return 0.0; }
-   if(directional<InpCrossAssetMinDirectionalVotes)
-   { reason="CROSS_ASSET_DIRECTIONAL_VOTES_BELOW_MINIMUM"; return 0.0; }
+   // Adaptive consensus: permit a narrow plurality only when at least three
+   // families cast directional votes, the side is unambiguous, and local live
+   // consensus + train/holdout evidence independently confirm it downstream.
+   if(adx<12.0)
+   { reason="ADAPTIVE_CONSENSUS_ADX_BELOW_MINIMUM"; return 0.0; }
+   if(directional<3)
+   { reason="ADAPTIVE_CONSENSUS_TOO_FEW_DIRECTIONAL_FAMILIES"; return 0.0; }
    if(buy==sell)
-   { reason="CROSS_ASSET_DIRECTIONAL_VOTE_TIE"; return 0.0; }
+   { reason="ADAPTIVE_CONSENSUS_DIRECTIONAL_VOTE_TIE"; return 0.0; }
    if(winning<InpCrossAssetMinDirectionalVotes)
-   { reason="CROSS_ASSET_WINNING_SIDE_VOTES_BELOW_MINIMUM"; return 0.0; }
+   { reason="ADAPTIVE_CONSENSUS_WINNING_SIDE_BELOW_MINIMUM"; return 0.0; }
    direction=(buy>sell?"BUY":"SELL");
    double agreement=(double)winning/(double)MathMax(1,directional);
    double trendStrength=MathMin(1.0,MathAbs(fastGap));
    double momentumStrength=MathMin(1.0,MathAbs(momentum));
    double adxStrength=MathMin(1.0,adx/40.0);
-   double coverage=(double)directional/(double)CROSS_ASSET_MODEL_COUNT;
-   double score=100.0*(0.55*agreement+0.20*trendStrength+0.15*momentumStrength+0.10*adxStrength)*MathMin(1.0,0.65+0.35*coverage);
-   reason="SIXTEEN_MODEL_FAMILY_PROXY_CONSENSUS_NOT_EVIDENCE_VALIDATED";
+   // New strategy: regime-aware balanced score. Do not punish a valid signal
+   // merely because neutral model families did not vote; require downstream
+   // local-direction alignment and independent train/holdout evidence instead.
+   double score=100.0*(0.40*agreement+0.25*trendStrength+0.20*momentumStrength+0.15*adxStrength);
+   reason="ADAPTIVE_PLURALITY_CONSENSUS_PENDING_LOCAL_ALIGNMENT_AND_TRAIN_HOLDOUT";
    return score;
 }
 
