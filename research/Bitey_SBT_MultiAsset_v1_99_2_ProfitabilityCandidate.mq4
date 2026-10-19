@@ -759,7 +759,7 @@ double CrossAssetTechnicalScore(string sym, int tf, string &direction, string &r
    double trendStrength=MathMin(1.0,MathAbs(fastGap));
    double momentumStrength=MathMin(1.0,MathAbs(momentum));
    double adxStrength=MathMin(1.0,adx/40.0);
-   // New strategy: regime-aware balanced score. Do not punish a valid signal
+   // New strategy: adaptive balanced consensus score. Do not punish a valid signal
    // merely because neutral model families did not vote; require downstream
    // local-direction alignment and independent train/holdout evidence instead.
    double score=100.0*(0.40*agreement+0.25*trendStrength+0.20*momentumStrength+0.15*adxStrength);
