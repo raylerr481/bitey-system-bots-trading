@@ -107,22 +107,26 @@ bool HasAssetPosition(string symbol)
 
 string Canonical(string s)
 {
+   // Remove recognized broker suffixes BEFORE deleting punctuation.
+   // This preserves equivalence for symbols such as SOLUSDT and SOLUSDT.m.
+   StringToUpper(s);
+   string suffixes[]={".PRO",".RAW",".ECN",".HB",".M","_M",".P","_P"};
+   int n=StringLen(s);
+   for(int j=0;j<ArraySize(suffixes);j++)
+   {
+      int suffixLen=StringLen(suffixes[j]);
+      if(n>suffixLen && StringSubstr(s,n-suffixLen)==suffixes[j])
+      {
+         s=StringSubstr(s,0,n-suffixLen);
+         break;
+      }
+   }
    string out="";
    for(int i=0;i<StringLen(s);i++)
    {
       int c=StringGetCharacter(s,i);
-      if((c>=65&&c<=90)||(c>=97&&c<=122)||(c>=48&&c<=57))
-      {
-         if(c>=97&&c<=122)c-=32;
+      if((c>=65&&c<=90)||(c>=48&&c<=57))
          out+=StringFormat("%c",c);
-      }
-   }
-   // Strip common broker suffixes only when they follow a known base ticker.
-   string suffixes[]={".M",".PRO",".RAW",".HB","_M",".ECN"};
-   for(int j=0;j<ArraySize(suffixes);j++)
-   {
-      int p=StringFind(out,suffixes[j]);
-      if(p>0) { out=StringSubstr(out,0,p); break; }
    }
    return out;
 }
@@ -229,7 +233,7 @@ bool FreshQuote(string symbol)
 void LogDecision(string symbol,string decision,string reason,int direction,int votes,double trainWR,double trainR,int trainN,double holdWR,double holdR,int holdN)
 {
    if(!InpPrintDiagnostics)return;
-   Print("BITEY_SBT_1.99.2 | symbol=",symbol," decision=",decision," reason=",reason,
+   Print("BITEY_SBT_1.99.4 | symbol=",symbol," decision=",decision," reason=",reason,
          " direction=",direction," votes=",votes,
          " trainN=",trainN," trainWR=",DoubleToString(trainWR,3)," trainAvgR=",DoubleToString(trainR,3),
          " holdoutN=",holdN," holdoutWR=",DoubleToString(holdWR,3)," holdoutAvgR=",DoubleToString(holdR,3),
@@ -271,7 +275,7 @@ void ScanSymbol(string symbol)
    if(!IsTradeAllowed()){LogDecision(symbol,"REJECT","TERMINAL_TRADE_PERMISSION_OFF",direction,votes,tw,tr,tn,hw,hr,hn);return;}
    int type=(direction>0?OP_BUY:OP_SELL);
    ResetLastError();
-   int ticket=OrderSend(symbol,type,lots,price,InpSlippagePoints,sl,tp,"BiteySBT 1.99.3",InpMagic,0,clrNONE);
+   int ticket=OrderSend(symbol,type,lots,price,InpSlippagePoints,sl,tp,"BiteySBT 1.99.4",InpMagic,0,clrNONE);
    if(ticket<0){int err=GetLastError();LogDecision(symbol,"REJECT",StringFormat("ORDERSEND_ERROR_%d",err),direction,votes,tw,tr,tn,hw,hr,hn);return;}
    LogDecision(symbol,"OPENED",StringFormat("TICKET_%d",ticket),direction,votes,tw,tr,tn,hw,hr,hn);
 }
