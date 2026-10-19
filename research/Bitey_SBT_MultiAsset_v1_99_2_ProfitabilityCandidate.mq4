@@ -3,7 +3,7 @@
 #property description "Bitey SBT Multi-Asset v1.99.10 alias, cost and portfolio safety diagnostics - research candidate"
 
 // ============================================================================
- // BITEY SBT MULTI-ASSET v1.99.9 — RECONSTRUCTED PROFITABILITY CANDIDATE
+ // BITEY SBT MULTI-ASSET v1.99.10 — CORRECTED RESEARCH CANDIDATE
  // Reconstructed under the latest v1.99.9 research sequence using the repository's
  // complete reconstructed v1.98.2 base plus explicit evidence diagnostics. This is
  // not byte-for-byte recovery of the older 439-line candidate or terminal source.
@@ -1917,7 +1917,7 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
          " technicalScore=",DoubleToString(score,2)," aggregateRiskAfterUSD=",DoubleToString(openRisk+proposedRisk,2),
          " reason=ALL_CHECKED_GATES_PASSED");
    ResetLastError();
-   int ticket=OrderSend(sym,type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.75.0 "+expectedAssetKey,InpMagic,0,clrNONE);
+   int ticket=OrderSend(sym,type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.99.10 "+expectedAssetKey,InpMagic,0,clrNONE);
    if(ticket<0)
    {
       int err=GetLastError();
@@ -5199,8 +5199,31 @@ void AuditDetailedModelConditions(int model,int sh,int actualSignal)
    }
    else if(model==MODEL_MOMENTUM)
    {
-      AuditAdd(buy,"momentumATRThreshold",mom>=InpMomentumATRThreshold); AuditAdd(buy,"closeAboveSlowEMA",c>es); AuditAdd(buy,"continuationEnabled",InpMomentumTrendContinuation); AuditAdd(buy,"continuationADX",adx>=InpTrendADXMin); AuditAdd(buy,"continuationTrend",c>et&&ef>es&&c>es&&pdi>mdi); AuditAdd(buy,"continuationRSI",rsi<InpContinuationBuyRSIMax);
-      AuditAdd(sell,"momentumATRThreshold",mom<=-InpMomentumATRThreshold); AuditAdd(sell,"closeBelowSlowEMA",c<es); AuditAdd(sell,"continuationEnabled",InpMomentumTrendContinuation); AuditAdd(sell,"continuationADX",adx>=InpTrendADXMin); AuditAdd(sell,"continuationTrend",c<et&&ef<es&&c<es&&mdi>pdi); AuditAdd(sell,"continuationRSI",rsi>InpContinuationSellRSIMin);
+      // Momentum uses TWO alternative paths (OR), not a single chain of mandatory gates:
+      // (1) impulse: normalized momentum threshold + price on the correct side of slow EMA;
+      // (2) continuation: trend/ADX/DI/RSI alignment. Make the active path explicit in logs.
+      bool buyImpulse=(mom>=InpMomentumATRThreshold && c>es);
+      bool sellImpulse=(mom<=-InpMomentumATRThreshold && c<es);
+      bool buyContinuation=(InpMomentumTrendContinuation && adx>=InpTrendADXMin && c>et && ef>es && c>es && pdi>mdi && rsi<InpContinuationBuyRSIMax);
+      bool sellContinuation=(InpMomentumTrendContinuation && adx>=InpTrendADXMin && c<et && ef<es && c<es && mdi>pdi && rsi>InpContinuationSellRSIMin);
+      string buyPath=(buyImpulse?"IMPULSE":(buyContinuation?"TREND_CONTINUATION":"NONE"));
+      string sellPath=(sellImpulse?"IMPULSE":(sellContinuation?"TREND_CONTINUATION":"NONE"));
+      Print("MOMENTUM SIGNAL PATH AUDIT | buyPath=",buyPath," sellPath=",sellPath,
+            " | impulseRule=momentumATR_and_slowEMA",
+            " | continuationRule=enabled_and_ADX_and_trendEMA_and_fastSlowEMA_and_DI_and_RSI",
+            " | note=impulse_and_continuation_are_alternative_paths");
+      AuditAdd(buy,"impulseMomentumATRThreshold",mom>=InpMomentumATRThreshold);
+      AuditAdd(buy,"impulseCloseAboveSlowEMA",c>es);
+      AuditAdd(buy,"continuationEnabled",InpMomentumTrendContinuation);
+      AuditAdd(buy,"continuationADX",adx>=InpTrendADXMin);
+      AuditAdd(buy,"continuationTrend",c>et&&ef>es&&c>es&&pdi>mdi);
+      AuditAdd(buy,"continuationRSI",rsi<InpContinuationBuyRSIMax);
+      AuditAdd(sell,"impulseMomentumATRThreshold",mom<=-InpMomentumATRThreshold);
+      AuditAdd(sell,"impulseCloseBelowSlowEMA",c<es);
+      AuditAdd(sell,"continuationEnabled",InpMomentumTrendContinuation);
+      AuditAdd(sell,"continuationADX",adx>=InpTrendADXMin);
+      AuditAdd(sell,"continuationTrend",c<et&&ef<es&&c<es&&mdi>pdi);
+      AuditAdd(sell,"continuationRSI",rsi>InpContinuationSellRSIMin);
    }
    else if(model==MODEL_DONCHIAN){AuditAdd(buy,"closeAbovePriorHighPlusBuffer",c>priorHigh+buffer);AuditAdd(sell,"closeBelowPriorLowMinusBuffer",c<priorLow-buffer);}
    else if(model==MODEL_MEANREV){AuditAdd(buy,"ADXWeakTrend",adx<=InpMeanRevADXMax);AuditAdd(buy,"RSIAtBuyExtreme",rsi<=InpMeanRevRSIBuy);AuditAdd(sell,"ADXWeakTrend",adx<=InpMeanRevADXMax);AuditAdd(sell,"RSIAtSellExtreme",rsi>=InpMeanRevRSISell);}
@@ -5569,7 +5592,7 @@ void EvaluateEngine()
          " | evaluating 16 chart-local models with closed-bar data; the cross-asset ranking separately uses 16 model-family proxies; momentumThresholdATR=",DoubleToString(InpMomentumATRThreshold,2),
          " trendContinuation=",(InpMomentumTrendContinuation?"true":"false"),
          " donchianBufferATR=",DoubleToString(InpBreakoutBufferATR,2),".");
-   Print("BITEY SBT v1.99.9 MULTI-ASSET | governor=",GovernorStateName(g_governorState)," campaignNetUSD=",DoubleToString(g_campaignNetUSD,2)," requiredVotes=",requiredVotes," | ",Symbol()," TF=",Period()," BUY votes=",buyVotes," SELL votes=",sellVotes,
+   Print("BITEY SBT v1.99.10 MULTI-ASSET | governor=",GovernorStateName(g_governorState)," campaignNetUSD=",DoubleToString(g_campaignNetUSD,2)," requiredVotes=",requiredVotes," | ",Symbol()," TF=",Period()," BUY votes=",buyVotes," SELL votes=",sellVotes,
          " | TREND=",trend," MOMENTUM=",momentum," DONCHIAN=",donchian," MEANREV=",meanrev,
          " STRICT_RANGE=",strictRange," ATR_BREAKOUT=",atrBreakout," SESSION_BIAS=",sessionBias,
          " RSI_DIVERGENCE=",rsiDivergence," HTF_TREND=",htfTrend,
