@@ -3555,28 +3555,48 @@ void SyncClosedTrades()
 
 int ManageOpenTrades()
 {
+   // Multi-asset time exit: manage every open market order owned by this EA magic,
+   // regardless of which chart hosts the EA. Chart-local positions use chart TF;
+   // cross-asset positions use the configured cross-asset timeframe.
    int closedCount=0;
    for(int i=OrdersTotal()-1;i>=0;i--)
    {
       if(!OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) continue;
-      if(OrderSymbol()!=Symbol() || OrderMagicNumber()!=InpMagic) continue;
+      if(OrderMagicNumber()!=InpMagic) continue;
       int type=OrderType();
       if(type!=OP_BUY && type!=OP_SELL) continue;
-      int barsOpen=iBarShift(Symbol(),Period(),OrderOpenTime(),false);
-      if(barsOpen<0 || barsOpen<InpMaxHoldBars) continue;
-      RefreshRates();
-      double closePrice=NormalizeDouble(type==OP_BUY?Bid:Ask,Digits);
       int ticket=OrderTicket();
+      string sym=OrderSymbol();
+      int tf=(sym==Symbol()?Period():InpCrossAssetTimeframe);
+      int barsOpen=iBarShift(sym,tf,OrderOpenTime(),false);
+      if(barsOpen<0 || barsOpen<InpMaxHoldBars) continue;
+
+      double bid=MarketInfo(sym,MODE_BID);
+      double ask=MarketInfo(sym,MODE_ASK);
+      int digits=(int)MarketInfo(sym,MODE_DIGITS);
       double lots=OrderLots();
+      double closePrice=(type==OP_BUY?bid:ask);
+      if(bid<=0.0 || ask<bid || digits<0 || digits>10 || lots<=0.0)
+      {
+         Print("TIME EXIT BLOCKED | ticket=",ticket," symbol=",sym,
+               " reason=INVALID_SYMBOL_QUOTE_OR_LOTS barsOpen=",barsOpen,
+               " action=RETRY_ON_NEXT_SUPERVISION_PASS");
+         continue;
+      }
+      closePrice=NormalizeDouble(closePrice,digits);
       ResetLastError();
       if(OrderClose(ticket,lots,closePrice,InpSlippagePoints,clrNONE))
       {
          closedCount++;
-         Print("TIME EXIT | ticket=",ticket," direction=",(type==OP_BUY?"BUY":"SELL"),
+         Print("TIME EXIT | ticket=",ticket," symbol=",sym,
+               " timeframe=",tf," direction=",(type==OP_BUY?"BUY":"SELL"),
                " barsOpen=",barsOpen," maxHoldBars=",InpMaxHoldBars,
-               " closePrice=",DoubleToString(closePrice,Digits));
+               " closePrice=",DoubleToString(closePrice,digits),
+               " scope=ALL_EA_MAGIC_POSITIONS_NOT_CHART_ONLY");
       }
-      else Print("TIME EXIT FAILED | ticket=",ticket," barsOpen=",barsOpen," error=",GetLastError());
+      else Print("TIME EXIT FAILED | ticket=",ticket," symbol=",sym,
+                 " timeframe=",tf," barsOpen=",barsOpen," error=",GetLastError(),
+                 " action=RETRY_ON_NEXT_SUPERVISION_PASS");
    }
    return closedCount;
 }
