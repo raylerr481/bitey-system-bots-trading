@@ -3,7 +3,7 @@
 #property description "Bitey SBT Multi-Asset v1.99.9 reconstructed complete source with explicit evidence diagnostics - research candidate"
 
 // ============================================================================
- // BITEY SBT MULTI-ASSET v1.99.1 — OPERATIONAL RESEARCH CANDIDATE
+ // BITEY SBT MULTI-ASSET v1.99.9 — OPERATIONAL RESEARCH CANDIDATE
  // Derived from the repository's reconstructed v1.98.2 source; not an exact
  // recovery of any missing historical source. Production files are untouched.
  //
@@ -1231,7 +1231,7 @@ int OnInit()
             " | verify broker/terminal clock before relying on campaign P/L.");
       UpdateRiskGovernor();
    }
-   Print("BITEY SBT Multi-Asset Engine v1.99.1 initialized | Symbol=",Symbol(),
+   Print("BITEY SBT Multi-Asset Engine v1.99.9 initialized | Symbol=",Symbol(),
          " TF=",Period()," Mode=",(InpMode==OBSERVE_ONLY?"OBSERVE_ONLY":"AUTO_EXECUTION"),
          " OneShotTestMode=",(InpOneShotTestMode?"true":"false"),
          " OneShotSafetyNotice=",(InpOneShotTestMode?"ENABLED_ONE_ORDER_MAY_BE_REAL":"disabled"),
@@ -4803,7 +4803,7 @@ bool SendOrderUnlocked(int direction)
       return false;
    }
    ResetLastError();
-   int ticket=OrderSend(Symbol(),type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.99.1 "+expectedAssetKey,InpMagic,0,clrNONE);
+   int ticket=OrderSend(Symbol(),type,lots,price,InpSlippagePoints,sl,tp,"Bitey SBT v1.99.9 "+expectedAssetKey,InpMagic,0,clrNONE);
    if(ticket<0)
    {
       int sendError=GetLastError();
@@ -5456,7 +5456,7 @@ void EvaluateEngine()
          " | evaluating 16 chart-local models with closed-bar data; the cross-asset ranking separately uses 16 model-family proxies; momentumThresholdATR=",DoubleToString(InpMomentumATRThreshold,2),
          " trendContinuation=",(InpMomentumTrendContinuation?"true":"false"),
          " donchianBufferATR=",DoubleToString(InpBreakoutBufferATR,2),".");
-   Print("BITEY SBT v1.99.1 MULTI-ASSET | governor=",GovernorStateName(g_governorState)," campaignNetUSD=",DoubleToString(g_campaignNetUSD,2)," requiredVotes=",requiredVotes," | ",Symbol()," TF=",Period()," BUY votes=",buyVotes," SELL votes=",sellVotes,
+   Print("BITEY SBT v1.99.9 MULTI-ASSET | governor=",GovernorStateName(g_governorState)," campaignNetUSD=",DoubleToString(g_campaignNetUSD,2)," requiredVotes=",requiredVotes," | ",Symbol()," TF=",Period()," BUY votes=",buyVotes," SELL votes=",sellVotes,
          " | TREND=",trend," MOMENTUM=",momentum," DONCHIAN=",donchian," MEANREV=",meanrev,
          " STRICT_RANGE=",strictRange," ATR_BREAKOUT=",atrBreakout," SESSION_BIAS=",sessionBias,
          " RSI_DIVERGENCE=",rsiDivergence," HTF_TREND=",htfTrend,
@@ -5656,7 +5656,7 @@ void EvaluateEngine()
    // Evidence is attached to the execution attempt, not inferred later from a broker open message.
    RefreshRates();
    Print("TRADE EVIDENCE PACKET | schema=1 phase=PRE_ORDER source=CHART_LOCAL",
-         " eaVersion=1.991 symbol=",Symbol()," canonicalAsset=",CanonicalAssetKey(Symbol()),
+         " eaVersion=1.999 symbol=",Symbol()," canonicalAsset=",CanonicalAssetKey(Symbol()),
          " timeframe=",Period()," closedBarTime=",TimeToString(iTime(Symbol(),Period(),1),TIME_DATE|TIME_SECONDS),
          " decision=",(decision>0?"BUY":"SELL")," selectedModel=",bestStrategy,
          " expectedRScore=",DoubleToString(bestScore,6),
@@ -5692,7 +5692,7 @@ void EvaluateEngine()
          " persistedStatus=",EntryAttemptStatusName(g_lastEntryAttemptStatus),
          " retryPolicy=WAIT_NEXT_NEW_BAR_AND_FULL_REVALIDATION retryAllowed=false_for_current_bar");
    Print("TRADE EVIDENCE PACKET | schema=1 phase=POST_ORDER source=CHART_LOCAL",
-         " eaVersion=1.991 symbol=",Symbol()," canonicalAsset=",CanonicalAssetKey(Symbol()),
+         " eaVersion=1.999 symbol=",Symbol()," canonicalAsset=",CanonicalAssetKey(Symbol()),
          " timeframe=",Period()," closedBarTime=",TimeToString(iTime(Symbol(),Period(),1),TIME_DATE|TIME_SECONDS),
          " decision=",(decision>0?"BUY":"SELL")," selectedModel=",bestStrategy,
          " expectedRScore=",DoubleToString(bestScore,6),
