@@ -570,17 +570,16 @@ string CanonicalAssetKey(string sym)
    if(quotePos>1)
    {
       string base=StringSubstr(sym,0,quotePos);
-      string knownCryptoBases="|BTC|XBT|ETH|SOL|XRP|DOGE|AVAX|NEAR|ADA|DOT|LINK|LTC|BCH|BNB|TRX|TON|SHIB|ATOM|UNI|ETC|FIL|APT|ARB|OP|SUI|INJ|ICP|XLM|ALGO|HBAR|VET|MATIC|POL|AAVE|EOS|XTZ|FTM|RENDER|FET|TAO|PEPE|WIF|MANA|AXS|GRT|LRC|ZEC|DASH|IOTA|AR|";
+      // Keep fiat currency pairs distinct (e.g. EURUSD vs EURUSDT); normalize
+      // quote variants for crypto, metals, tokenized equities and other non-fiat bases.
+      string fiatBases="|EUR|GBP|AUD|NZD|CAD|CHF|JPY|CNY|CNH|HKD|SGD|INR|BRL|MXN|ZAR|TRY|SEK|NOK|DKK|PLN|HUF|CZK|THB|";
       string token="|"+base+"|";
-      bool knownCrypto=(StringFind(knownCryptoBases,token)>=0);
-      if(knownCrypto)
-      {
-         if(base=="BTC" || base=="XBT") return "BTCUSDT";
-         if(base=="SOL") return "SOLUSDT";
-         if(base=="NEAR") return "NEARUSD";
-         if(base=="ETH") return "ETHUSD";
-         return base+"USD";
-      }
+      if(StringFind(fiatBases,token)>=0) return sym;
+      if(base=="BTC" || base=="XBT") return "BTCUSDT";
+      if(base=="SOL") return "SOLUSDT";
+      if(base=="NEAR") return "NEARUSD";
+      if(base=="ETH") return "ETHUSD";
+      return base+"USD";
    }
 
    // Preserve unverified CFD/stock names as independent symbols rather than guessing aliases.
