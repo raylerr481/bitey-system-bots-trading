@@ -3,7 +3,7 @@
 #property description "Bitey SBT Multi-Asset v1.99.2 - observe-first research EA"
 
 enum EngineMode { OBSERVE_ONLY=0, AUTO_EXECUTION=1 };
-input EngineMode InpMode = OBSERVE_ONLY;
+input EngineMode InpMode = AUTO_EXECUTION; // Auto-entry enabled; MT4 terminal and broker permissions plus every code risk/evidence gate still apply.
 input int InpMagic = 10102027;
 input double InpOperatingCapitalUSD = 500.0;
 input double InpRiskPerTradeUSD = 1.25;
