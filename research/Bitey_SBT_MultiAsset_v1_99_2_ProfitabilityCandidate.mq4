@@ -1273,7 +1273,7 @@ int OnInit()
    Print("ENTRY ATTEMPT STATE RESTORE | attemptedBar=", (g_lastEntryAttemptBarTime>0?TimeToString(g_lastEntryAttemptBarTime,TIME_DATE|TIME_MINUTES):"none"),
          " status=",EntryAttemptStatusName(g_lastEntryAttemptStatus),
          " | persistence=terminal_global_variables account/magic/symbol/timeframe; full text result is session-local.");
-   if(InpCrossAssetMinDirectionalVotes<3 || InpCrossAssetMinDirectionalVotes>8 || InpStrictRangeLookback<3 || InpStrictRangeLookback>100 || InpStrictRangeADXMax<1 || InpStrictRangeADXMax>60 || InpStrictRangeEdgeATR<0.05 || InpStrictRangeEdgeATR>2.0 || InpStrictRangeEMAGapATR<0.05 || InpStrictRangeEMAGapATR>3.0 || InpStrictRangeBuyRSI<5 || InpStrictRangeBuyRSI>49 || InpStrictRangeSellRSI<51 || InpStrictRangeSellRSI>95) { Print("INVALID STRICT RANGE INPUTS"); return INIT_PARAMETERS_INCORRECT; }
+   if(InpCrossAssetMinDirectionalVotes<2 || InpCrossAssetMinDirectionalVotes>8 || InpStrictRangeLookback<3 || InpStrictRangeLookback>100 || InpStrictRangeADXMax<1 || InpStrictRangeADXMax>60 || InpStrictRangeEdgeATR<0.05 || InpStrictRangeEdgeATR>2.0 || InpStrictRangeEMAGapATR<0.05 || InpStrictRangeEMAGapATR>3.0 || InpStrictRangeBuyRSI<5 || InpStrictRangeBuyRSI>49 || InpStrictRangeSellRSI<51 || InpStrictRangeSellRSI>95) { Print("INVALID STRICT RANGE INPUTS"); return INIT_PARAMETERS_INCORRECT; }
    if(!IsAllowedMultiAssetSymbol())
    {
       Print("SYMBOL GATE | chart symbol is not in configured multi-asset allowlist ",InpAllowedSymbols,". Current chart=",Symbol(),". No trading.");
