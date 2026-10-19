@@ -409,7 +409,7 @@ int OnInit()
          " portfolioRiskCapUSD=",DoubleToString(MathMin(8.75,InpPortfolioRiskCapUSD),2)," maxPositions=",MathMin(7,InpMaxOpenTrades),
          " accountType=",(demoAccount?"DEMO_USING_REAL_RULES":"REAL"),
          " demoRealRuleParity=ENFORCED",
-         " fixedCapitalNotAccountBalance=true adaptiveSLTP=MANDATORY, breakEvenSpreadBuffer=ON,
+         " fixedCapitalNotAccountBalance=true adaptiveSLTP=MANDATORY breakEvenSpreadBuffer=ON",
          " evidenceWindows=720_train_240_holdout note=research_candidate_not_backtested_or_compiled");
    return INIT_SUCCEEDED;
 }
