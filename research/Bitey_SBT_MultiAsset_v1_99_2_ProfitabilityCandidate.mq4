@@ -1,6 +1,6 @@
 #property strict
-#property version   "1.992"
-#property description "Bitey SBT Multi-Asset v1.99.2 - observe-first research EA"
+#property version   "1.993"
+#property description "Bitey SBT Multi-Asset v1.99.3 - adaptive SLTP research EA"
 
 enum EngineMode { OBSERVE_ONLY=0, AUTO_EXECUTION=1 };
 input EngineMode InpMode = AUTO_EXECUTION; // Auto-entry enabled; MT4 terminal and broker permissions plus every code risk/evidence gate still apply.
@@ -271,7 +271,7 @@ void ScanSymbol(string symbol)
    if(!IsTradeAllowed()){LogDecision(symbol,"REJECT","TERMINAL_TRADE_PERMISSION_OFF",direction,votes,tw,tr,tn,hw,hr,hn);return;}
    int type=(direction>0?OP_BUY:OP_SELL);
    ResetLastError();
-   int ticket=OrderSend(symbol,type,lots,price,InpSlippagePoints,sl,tp,"BiteySBT 1.99.2",InpMagic,0,clrNONE);
+   int ticket=OrderSend(symbol,type,lots,price,InpSlippagePoints,sl,tp,"BiteySBT 1.99.3",InpMagic,0,clrNONE);
    if(ticket<0){int err=GetLastError();LogDecision(symbol,"REJECT",StringFormat("ORDERSEND_ERROR_%d",err),direction,votes,tw,tr,tn,hw,hr,hn);return;}
    LogDecision(symbol,"OPENED",StringFormat("TICKET_%d",ticket),direction,votes,tw,tr,tn,hw,hr,hn);
 }
@@ -383,7 +383,7 @@ int OnInit()
 {
    if(EffectiveCapital()<=0){Print("BITEY_SBT_INIT_REJECT | reason=ACCOUNT_CURRENCY_OR_CAPITAL | accountCurrency=",AccountCurrency());return INIT_FAILED;}
    EventSetTimer(MathMax(5,InpScanIntervalSeconds));
-   Print("BITEY_SBT_1.99.2_INIT | mode=",(InpMode==OBSERVE_ONLY?"OBSERVE_ONLY":"AUTO_EXECUTION"),
+   Print("BITEY_SBT_1.99.3_INIT | mode=",(InpMode==OBSERVE_ONLY?"OBSERVE_ONLY":"AUTO_EXECUTION"),
          " strategicCapitalUSD=",DoubleToString(EffectiveCapital(),2)," perTradeRiskCapUSD=",DoubleToString(MathMin(1.25,InpHardRiskCapUSD),2),
          " portfolioRiskCapUSD=",DoubleToString(MathMin(8.75,InpPortfolioRiskCapUSD),2)," maxPositions=",MathMin(7,InpMaxOpenTrades),
          " note=research_candidate_not_backtested");
