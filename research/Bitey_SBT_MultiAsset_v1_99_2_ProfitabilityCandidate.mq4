@@ -1004,12 +1004,13 @@ void LogCrossAssetRanking()
       bool histPass=false;
       string localDir="NONE"; int localVotes=0;
       bool localLivePass=false;
+      bool localDirectionAligned=false; // keep alignment result available for ranking/audit below
       if(basic)
       {
          // Run the 16 LOCAL model families for each symbol in the scanner, not just the chart symbol.
          localLivePass=SymbolLocalLiveConsensus(sym,tf,localDir,localVotes);
          score=CrossAssetTechnicalScore(sym,tf,dir,why,b);
-         bool localDirectionAligned=(localLivePass && localDir==dir);
+         localDirectionAligned=(localLivePass && localDir==dir);
          if(score>0.0 && localDirectionAligned)
             histPass=CrossAssetHistoricalEvidence(sym,tf,dir,histN,histWin,histAvgR,histReason,holdoutN,holdoutWin,holdoutAvgR);
          else if(score<=0.0)
