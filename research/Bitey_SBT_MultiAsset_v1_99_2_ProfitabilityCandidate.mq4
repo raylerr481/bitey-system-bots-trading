@@ -208,6 +208,18 @@ bool EvaluateEvidence(string symbol,int direction,double &trainWR,double &trainA
           holdN>=InpMinHoldoutN && holdWR>=InpMinHoldoutWR && holdAvgR>InpMinHoldoutAvgR;
 }
 
+string EvidenceFailureReason(int trainN,double trainWR,double trainAvgR,int holdN,double holdWR,double holdAvgR)
+{
+   // Report the first failed mandatory gate in a stable, actionable order.
+   if(trainN<InpMinTrainN) return "TRAIN_SAMPLE_INSUFFICIENT";
+   if(trainWR<InpMinTrainWR) return "TRAIN_WINRATE_BELOW_MIN";
+   if(trainAvgR<=InpMinTrainAvgR) return "TRAIN_EXPECTANCY_BELOW_MIN";
+   if(holdN<InpMinHoldoutN) return "HOLDOUT_SAMPLE_INSUFFICIENT";
+   if(holdWR<InpMinHoldoutWR) return "HOLDOUT_WINRATE_BELOW_MIN";
+   if(holdAvgR<=InpMinHoldoutAvgR) return "HOLDOUT_EXPECTANCY_NOT_POSITIVE";
+   return "EVIDENCE_PASS";
+}
+
 double LotForRisk(string symbol,double stopDistance,double riskUSD)
 {
    double tickValue=MarketInfo(symbol,MODE_TICKVALUE);
@@ -252,7 +264,7 @@ void ScanSymbol(string symbol)
    int direction=0,votes=ModelVotes(symbol,1,direction);
    double tw=0,tr=0,hw=0,hr=0;int tn=0,hn=0;
    bool pass=EvaluateEvidence(symbol,direction,tw,tr,tn,hw,hr,hn);
-   if(!pass){LogDecision(symbol,"REJECT","TRAIN_HOLDOUT_EVIDENCE_FAILED",direction,votes,tw,tr,tn,hw,hr,hn);return;}
+   if(!pass){LogDecision(symbol,"REJECT",EvidenceFailureReason(tn,tw,tr,hn,hw,hr),direction,votes,tw,tr,tn,hw,hr,hn);return;}
    if(votes<InpMinModelVotes){LogDecision(symbol,"REJECT","MODEL_CONSENSUS",direction,votes,tw,tr,tn,hw,hr,hn);return;}
    if(HasAssetPosition(symbol)){LogDecision(symbol,"SKIP","ONE_POSITION_PER_CANONICAL_ASSET",direction,votes,tw,tr,tn,hw,hr,hn);return;}
    if(CountOpen()>=MathMin(7,InpMaxOpenTrades)){LogDecision(symbol,"REJECT","MAX_OPEN_POSITIONS",direction,votes,tw,tr,tn,hw,hr,hn);return;}
