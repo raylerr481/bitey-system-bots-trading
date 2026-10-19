@@ -554,7 +554,14 @@ string CanonicalAssetKey(string sym)
    for(int fp=0;fp<fixedCount;fp++)
    {
       string pair=fixedParts[fp];
-      if(pair!="" && StringFind(sym,pair)==0) return pair;
+      if(pair!="" && StringFind(sym,pair)==0)
+      {
+         string remainder=StringSubstr(sym,StringLen(pair));
+         // EURUSDT/EURUSDC must not be mistaken for EURUSD plus a broker suffix.
+         if(StringLen(remainder)>0 &&
+            (StringSubstr(remainder,0,1)=="T" || StringSubstr(remainder,0,1)=="C")) continue;
+         return pair;
+      }
    }
 
    // Normalize USD, USDT and USDC quote variants to one economic asset key.
