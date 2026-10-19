@@ -1,6 +1,6 @@
 #property strict
-#property version   "1.995"
-#property description "Bitey SBT Multi-Asset v1.99.5 - evidence diagnostics and HTF lookahead fix; research candidate"
+#property version   "1.996"
+#property description "Bitey SBT Multi-Asset v1.99.6 - expanded chronological evidence windows; research candidate"
 
 enum EngineMode { OBSERVE_ONLY=0, AUTO_EXECUTION=1 };
 input EngineMode InpMode = AUTO_EXECUTION; // Auto-entry enabled; MT4 terminal and broker permissions plus every code risk/evidence gate still apply.
@@ -25,8 +25,8 @@ input double InpTrailDistanceATR = 1.2;
 input double InpExtendTargetTriggerFraction = 0.80;
 input double InpMaxTargetDistanceATR = 4.0;
 input double InpStrongTrendADX = 22.0;
-input int InpTrainBars = 120;
-input int InpHoldoutBars = 30;
+input int InpTrainBars = 360;
+input int InpHoldoutBars = 120;
 input int InpHorizonBars = 3;
 input int InpMinTrainN = 12;
 input double InpMinTrainWR = 0.42;
@@ -248,7 +248,7 @@ bool FreshQuote(string symbol)
 void LogDecision(string symbol,string decision,string reason,int direction,int votes,double trainWR,double trainR,int trainN,double holdWR,double holdR,int holdN)
 {
    if(!InpPrintDiagnostics)return;
-   Print("BITEY_SBT_1.99.5 | symbol=",symbol," decision=",decision," reason=",reason,
+   Print("BITEY_SBT_1.99.6 | symbol=",symbol," decision=",decision," reason=",reason,
          " direction=",direction," votes=",votes,
          " trainN=",trainN," trainWR=",DoubleToString(trainWR,3)," trainAvgR=",DoubleToString(trainR,3),
          " holdoutN=",holdN," holdoutWR=",DoubleToString(holdWR,3)," holdoutAvgR=",DoubleToString(holdR,3),
@@ -290,7 +290,7 @@ void ScanSymbol(string symbol)
    if(!IsTradeAllowed()){LogDecision(symbol,"REJECT","TERMINAL_TRADE_PERMISSION_OFF",direction,votes,tw,tr,tn,hw,hr,hn);return;}
    int type=(direction>0?OP_BUY:OP_SELL);
    ResetLastError();
-   int ticket=OrderSend(symbol,type,lots,price,InpSlippagePoints,sl,tp,"BiteySBT 1.99.5",InpMagic,0,clrNONE);
+   int ticket=OrderSend(symbol,type,lots,price,InpSlippagePoints,sl,tp,"BiteySBT 1.99.6",InpMagic,0,clrNONE);
    if(ticket<0){int err=GetLastError();LogDecision(symbol,"REJECT",StringFormat("ORDERSEND_ERROR_%d",err),direction,votes,tw,tr,tn,hw,hr,hn);return;}
    LogDecision(symbol,"OPENED",StringFormat("TICKET_%d",ticket),direction,votes,tw,tr,tn,hw,hr,hn);
 }
@@ -404,13 +404,13 @@ int OnInit()
    bool demoAccount=IsDemo();
    if(InpMode!=AUTO_EXECUTION){Print("BITEY_SBT_INIT_REJECT | reason=AUTO_EXECUTION_REQUIRED_FOR_LIVE_PARITY_TEST | mode=OBSERVE_ONLY");return INIT_FAILED;}
    EventSetTimer(MathMax(5,InpScanIntervalSeconds));
-   Print("BITEY_SBT_1.99.5_INIT | mode=",(InpMode==OBSERVE_ONLY?"OBSERVE_ONLY":"AUTO_EXECUTION"),
+   Print("BITEY_SBT_1.99.6_INIT | mode=",(InpMode==OBSERVE_ONLY?"OBSERVE_ONLY":"AUTO_EXECUTION"),
          " strategicCapitalUSD=",DoubleToString(EffectiveCapital(),2)," perTradeRiskCapUSD=",DoubleToString(MathMin(1.25,InpHardRiskCapUSD),2),
          " portfolioRiskCapUSD=",DoubleToString(MathMin(8.75,InpPortfolioRiskCapUSD),2)," maxPositions=",MathMin(7,InpMaxOpenTrades),
          " accountType=",(demoAccount?"DEMO_USING_REAL_RULES":"REAL"),
          " demoRealRuleParity=ENFORCED",
          " fixedCapitalNotAccountBalance=true adaptiveSLTP=",(InpEnableAdaptiveManagement?"ON":"OFF"),
-         " note=research_candidate_not_backtested_or_compiled");
+         " evidenceWindows=360_train_120_holdout note=research_candidate_not_backtested_or_compiled");
    return INIT_SUCCEEDED;
 }
 
