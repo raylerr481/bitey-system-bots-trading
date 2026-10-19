@@ -1081,6 +1081,16 @@ void LogCrossAssetRanking()
             " evidenceType=COST_ADJUSTED_ATR_NORMALIZED_HISTORICAL_PROXY_NOT_LIVE_FORWARD_RESULTS",
             " execution=RANKED_ONLY_UNTIL_EVIDENCE_AND_ORDER_GATES_PASS");
       double priority=(score>0 && histPass?CrossAssetOpportunityPriority(score,histWin,histAvgR,holdoutWin,holdoutAvgR):-1.0);
+      // Ranking means technical + historical-proxy qualification only; it does NOT approve an order.
+      // Live execution must still recheck quotes, spread, costs, duplicate assets, portfolio limits and stop risk.
+      Print("MULTI-ASSET CANDIDATE STATUS | symbol=",sym," direction=",dir,
+            " technicalScore=",DoubleToString(score,2),
+            " rankingStatus=",(score>0 && histPass?"RANKED":"NOT_RANKED"),
+            " evidenceStatus=",(histPass?"TRAIN_HOLDOUT_PASS":"TRAIN_HOLDOUT_REJECT"),
+            " evidenceReason=",histReason,
+            " executionStatus=NOT_APPROVED_BY_RANKING",
+            " executionRequiresFreshLiveRiskAndBrokerGates=true",
+            " evidenceType=HISTORICAL_BAR_PROXY_NOT_REAL_TRADES");
       if(score>0 && histPass && count<100)
       {
          int pos=count;
@@ -1106,8 +1116,9 @@ void LogCrossAssetRanking()
    string top=""; int n=MathMin(MathMin(InpCrossAssetTopLogCount,7),count);
    for(int j=0;j<n;j++) { if(top!="") top+=";"; top+=g_crossAssetRankNames[j]+":"+g_crossAssetRankDirs[j]+":T"+DoubleToString(g_crossAssetRankScores[j],1)+"/P"+DoubleToString(g_crossAssetRankPriority[j],1)+"/n"+IntegerToString(g_crossAssetRankSamples[j])+"/R"+DoubleToString(g_crossAssetRankAvgR[j],2)+"/ho"+IntegerToString(g_crossAssetRankHoldoutSamples[j])+"/hoR"+DoubleToString(g_crossAssetRankHoldoutAvgR[j],2); }
    if(top!="" && top!=g_lastCrossAssetRankingSignature)
-      Print("MULTI-ASSET RANKING SUMMARY | timeframe=",tf," rankedCandidates=",count," top=",top,
-            " | candidates pass directional historical proxy thresholds; proxy is not a true forward test and every order is revalidated by symbol-specific execution/risk gates");
+      Print("MULTI-ASSET RANKING SUMMARY | timeframe=",tf," evidenceQualifiedRankedCandidates=",count," top=",top,
+            " | rankingStatus=TECHNICAL_AND_TRAIN_HOLDOUT_PROXY_ONLY executionStatus=NOT_IMPLIED_BY_RANKING",
+            " | ranked candidates pass configured directional historical-bar proxy thresholds, not a true forward test; each order must separately pass current signal, quote, spread, costs, duplicate-asset, portfolio and broker/risk gates");
    g_lastCrossAssetRankingSignature=top;
 }
 
