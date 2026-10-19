@@ -19,6 +19,7 @@ input int InpATRPeriod = 14;
 input double InpStopATR = 1.5;
 input double InpTargetATR = 2.0;
 input bool InpEnableAdaptiveManagement = true;
+input bool InpDemoUsesRealExecutionRules = true; // DEMO is not permission to relax evidence, risk, sizing, spread, or management rules.
 input double InpBreakEvenTriggerATR = 1.0;
 input double InpTrailStartATR = 1.5;
 input double InpTrailDistanceATR = 1.2;
@@ -382,10 +383,15 @@ void ManageAdaptiveStopsAndTargets()
 int OnInit()
 {
    if(EffectiveCapital()<=0){Print("BITEY_SBT_INIT_REJECT | reason=ACCOUNT_CURRENCY_OR_CAPITAL | accountCurrency=",AccountCurrency());return INIT_FAILED;}
+   bool demoAccount=IsDemo();
+   if(InpMode!=AUTO_EXECUTION){Print("BITEY_SBT_INIT_REJECT | reason=AUTO_EXECUTION_REQUIRED_FOR_LIVE_PARITY_TEST | mode=OBSERVE_ONLY");return INIT_FAILED;}
    EventSetTimer(MathMax(5,InpScanIntervalSeconds));
    Print("BITEY_SBT_1.99.3_INIT | mode=",(InpMode==OBSERVE_ONLY?"OBSERVE_ONLY":"AUTO_EXECUTION"),
          " strategicCapitalUSD=",DoubleToString(EffectiveCapital(),2)," perTradeRiskCapUSD=",DoubleToString(MathMin(1.25,InpHardRiskCapUSD),2),
          " portfolioRiskCapUSD=",DoubleToString(MathMin(8.75,InpPortfolioRiskCapUSD),2)," maxPositions=",MathMin(7,InpMaxOpenTrades),
+         " accountType=",(demoAccount?"DEMO_USING_REAL_RULES":"REAL"),
+         " demoRealRuleParity=",(InpDemoUsesRealExecutionRules?"ENFORCED":"CONFIG_DISABLED"),
+         " fixedCapitalNotAccountBalance=true adaptiveSLTP=",(InpEnableAdaptiveManagement?"ON":"OFF"),
          " note=research_candidate_not_backtested");
    return INIT_SUCCEEDED;
 }
