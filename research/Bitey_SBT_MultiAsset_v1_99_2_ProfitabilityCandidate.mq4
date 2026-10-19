@@ -251,7 +251,8 @@ void ScanSymbol(string symbol)
    double openRisk=PositionRiskUSD();
    if(riskCap<=0||openRisk+riskCap>MathMin(8.75,InpPortfolioRiskCapUSD)){LogDecision(symbol,"REJECT","PORTFOLIO_RISK_CAP",direction,votes,tw,tr,tn,hw,hr,hn);return;}
    double atr=iATR(symbol,InpTimeframe,InpATRPeriod,1);
-   double point=MarketInfo(symbol,MODE_POINT),digits=MarketInfo(symbol,MODE_DIGITS);
+   double point=MarketInfo(symbol,MODE_POINT);
+    int digits=(int)MarketInfo(symbol,MODE_DIGITS);
    if(atr<=0||point<=0){LogDecision(symbol,"REJECT","INVALID_ATR_OR_POINT",direction,votes,tw,tr,tn,hw,hr,hn);return;}
    double stopDist=MathMax(atr*InpStopATR,MarketInfo(symbol,MODE_STOPLEVEL)*point);
    double lots=LotForRisk(symbol,stopDist,riskCap);
