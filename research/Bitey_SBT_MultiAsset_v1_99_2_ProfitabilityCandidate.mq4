@@ -2574,45 +2574,56 @@ void ManageAdaptiveSLTP()
       double newSL=oldSL, newTP=oldTP;
       string slReason="UNCHANGED", tpReason="UNCHANGED";
 
-      // Cost-aware net break-even uses tick value/size plus configured round-turn commission
-      // and conservative swap estimate. Unknown metadata fails closed; entry price alone is not
-      // assumed to be net break-even.
+      // Prefer a monetary net break-even buffer when broker tick data and cost inputs are known.
+      // If commission/swap are unknown, do NOT disable dynamic SL/TP: retain ATR-based profit
+      // locking and use a price buffer for observed spread/slippage, while explicitly logging
+      // that net profitability cannot be guaranteed until broker costs are configured.
       double tickSize=MarketInfo(sym,MODE_TICKSIZE);
       double tickValue=MarketInfo(sym,MODE_TICKVALUE);
       double lots=OrderLots();
-      if(tickSize<=0.0 || tickValue<=0.0 || lots<=0.0 ||
-         InpRoundTurnCommissionPerLotUSD<0.0 || InpExpectedSwapCostPerLotUSD<0.0)
+      double pointSize=MathMax(0.0,MarketInfo(sym,MODE_POINT));
+      int spreadPoints=(int)MarketInfo(sym,MODE_SPREAD);
+      double spreadSlippageDistance=(MathMax(0,spreadPoints)+MathMax(0,InpSlippagePoints))*pointSize;
+      double minimumTickBuffer=(tickSize>0.0?tickSize:pointSize);
+      bool tickValueKnown=(tickSize>0.0 && tickValue>0.0 && lots>0.0);
+      bool configuredCostsKnown=(InpRoundTurnCommissionPerLotUSD>=0.0 && InpExpectedSwapCostPerLotUSD>=0.0);
+      double netBreakEvenDistance=spreadSlippageDistance+minimumTickBuffer;
+      if(tickValueKnown && configuredCostsKnown)
       {
-         Print("SLTP NET BREAK-EVEN BLOCKED | ticket=",ticket," symbol=",sym,
-               " reason=UNKNOWN_TICK_OR_COST_METADATA",
-               " tickSize=",DoubleToString(tickSize,8)," tickValueUSD=",DoubleToString(tickValue,6),
+         double valuePerPriceUnit=(tickValue/tickSize)*lots;
+         double estimatedCostsUSD=lots*(InpRoundTurnCommissionPerLotUSD+InpExpectedSwapCostPerLotUSD);
+         if(valuePerPriceUnit>0.0 && estimatedCostsUSD>=0.0)
+            netBreakEvenDistance+=(estimatedCostsUSD/valuePerPriceUnit);
+         else configuredCostsKnown=false;
+      }
+      if(!tickValueKnown || !configuredCostsKnown)
+      {
+         string costDiagKey=StringFormat("BiteySLTPCostUncertain_%d",ticket);
+         double lastCostDiag=(GlobalVariableCheck(costDiagKey)?GlobalVariableGet(costDiagKey):0.0);
+         if(now-(datetime)lastCostDiag>=60 || lastCostDiag<=0)
+         {
+            Print("SLTP NET BREAK-EVEN COST UNCERTAINTY | ticket=",ticket," symbol=",sym,
+               " tickSize=",DoubleToString(tickSize,8)," tickValueAccountCurrency=",DoubleToString(tickValue,6),
                " lots=",DoubleToString(lots,4),
-               " commissionInputUSDPerLot=",DoubleToString(InpRoundTurnCommissionPerLotUSD,4),
-               " swapInputUSDPerLot=",DoubleToString(InpExpectedSwapCostPerLotUSD,4),
-               " action=KEEP_EXISTING_SLTP_NO_UNVERIFIED_PROFIT_LOCK");
-         continue;
+               " commissionInputPerLot=",DoubleToString(InpRoundTurnCommissionPerLotUSD,4),
+               " swapInputPerLot=",DoubleToString(InpExpectedSwapCostPerLotUSD,4),
+               " spreadSlippageBufferPrice=",DoubleToString(spreadSlippageDistance,(int)MarketInfo(sym,MODE_DIGITS)),
+               " action=CONTINUE_ATR_PROFIT_LOCK_AND_TP_EXTENSION",
+               " warning=COMMISSION_OR_SWAP_MAY_REDUCE_NET_PROFIT");
+            GlobalVariableSet(costDiagKey,(double)now);
+         }
       }
-      double valuePerPriceUnit=(tickValue/tickSize)*lots;
-      if(valuePerPriceUnit<=0.0)
-      {
-         Print("SLTP NET BREAK-EVEN BLOCKED | ticket=",ticket," symbol=",sym,
-               " reason=INVALID_USD_VALUE_PER_PRICE_UNIT action=KEEP_EXISTING_SLTP");
-         continue;
-      }
-      double estimatedCostsUSD=lots*(InpRoundTurnCommissionPerLotUSD+InpExpectedSwapCostPerLotUSD);
-      if(estimatedCostsUSD<0.0) estimatedCostsUSD=0.0;
-      double netBreakEvenDistance=(estimatedCostsUSD/valuePerPriceUnit)+tickSize;
       double netBreakEven=(type==OP_BUY?open+netBreakEvenDistance:open-netBreakEvenDistance);
       if(favorable>=InpBreakEvenTriggerATR*atr || floatingNet>InpProfitSLTPActivationUSD)
       {
          double be=(type==OP_BUY?MathMax(netBreakEven,open+InpBreakEvenLockATR*atr):MathMin(netBreakEven,open-InpBreakEvenLockATR*atr));
          if(type==OP_BUY)
          {
-            if(newSL<=0 || be>newSL+InpSLTPMinChangeATR*atr) { newSL=be; slReason="COST_AWARE_NET_BREAK_EVEN_OR_PROFIT_LOCK"; }
+            if(newSL<=0 || be>newSL+InpSLTPMinChangeATR*atr) { newSL=be; slReason="PROFIT_LOCK_WITH_COST_BUFFER"; }
          }
          else
          {
-            if(newSL<=0 || be<newSL-InpSLTPMinChangeATR*atr) { newSL=be; slReason="COST_AWARE_NET_BREAK_EVEN_OR_PROFIT_LOCK"; }
+            if(newSL<=0 || be<newSL-InpSLTPMinChangeATR*atr) { newSL=be; slReason="PROFIT_LOCK_WITH_COST_BUFFER"; }
          }
       }
       if(favorable>=InpTrailTriggerATR*atr)
