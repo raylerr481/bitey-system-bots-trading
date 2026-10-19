@@ -60,7 +60,7 @@ input int      InpCrossAssetMinHoldoutSamples = 6; // Minimum recent chronologic
 input double   InpCrossAssetMinHoldoutWinRate = 0.40; // Holdout proxy win-rate floor.
 input double   InpCrossAssetMinHoldoutAvgR = 0.00; // Holdout proxy average net R must be positive.
 input bool     InpAllowTechnicalOnlyCrossAssetExecution = true; // Legacy-compatible execution switch; train AND holdout evidence are still mandatory; technical-only candidates are never ranked for execution.
-input int      InpCrossAssetMaxCryptoPositions = 3; // Crypto positions are also bounded by the three-position portfolio cap.
+input int      InpCrossAssetMaxCryptoPositions = 7; // Up to seven distinct canonical assets; per-position and aggregate risk gates remain mandatory.
 input int      InpCrossAssetMaxQuoteAgeSeconds = 120; // Reject stale cross-symbol quotes.
 input bool     InpAutoAllowDetectedCryptoOnChart = false; // Legacy compatibility only; InpAllowedSymbols and execution gates control eligibility.
 input double   InpPortfolioOpenRiskCapUSD = 8.75; // Seven positions x USD1.25 maximum, further bounded by actual headroom.
@@ -542,21 +542,50 @@ void FinalizeEvidence(DirectionEvidence &e)
 string CanonicalAssetKey(string sym)
 {
    StringToUpper(sym);
-   // Normalize known aliases; every other Market Watch instrument uses its normalized broker symbol as its own canonical key.
+   StringReplace(sym," ","");
+   // Remove broker-specific leading prefixes before canonicalization.
    if(StringLen(sym)>=2 && StringSubstr(sym,0,2)=="M.") sym=StringSubstr(sym,2);
    if(StringLen(sym)>=1 && StringSubstr(sym,0,1)=="#") sym=StringSubstr(sym,1);
-   if(StringFind(sym,"EURUSD")==0) return "EURUSD";
-   if(StringFind(sym,"USDJPY")==0) return "USDJPY";
-   if(StringFind(sym,"XAUUSD")==0) return "XAUUSD";
-   if(StringFind(sym,"SOLUSDT")==0 || StringFind(sym,"SOLUSD")==0) return "SOLUSDT";
-   if(StringFind(sym,"NEARUSDT")==0 || StringFind(sym,"NEARUSD")==0) return "NEARUSD";
-   if(StringFind(sym,"BTCUSDT")==0 || StringFind(sym,"BTCUSD")==0 || StringFind(sym,"XBTUSD")==0) return "BTCUSDT";
-   if(StringFind(sym,"ETHUSDT")==0 || StringFind(sym,"ETHUSD")==0) return "ETHUSD";
-   // No hard-coded asset-count limit: allow any non-empty normalized Market Watch symbol.
-   // Known aliases above remain grouped; other broker symbols are keyed independently and still face all live gates.
+
+   // Preserve common FX pairs and metals as distinct instruments.
+   string fixedPairs="|EURUSD|GBPUSD|AUDUSD|NZDUSD|USDCAD|USDCHF|USDJPY|EURJPY|GBPJPY|EURGBP|EURCHF|GBPCHF|AUDJPY|CADJPY|CHFJPY|XAUUSD|XAGUSD|";
+   string fixedParts[];
+   int fixedCount=StringSplit(fixedPairs,'|',fixedParts);
+   for(int fp=0;fp<fixedCount;fp++)
+   {
+      string pair=fixedParts[fp];
+      if(pair!="" && StringFind(sym,pair)==0) return pair;
+   }
+
+   // Normalize USD, USDT and USDC quote variants to one economic asset key.
+   // Broker suffixes such as .m, .p, .hb or trailing letters do not create a new asset.
+   int posUSDT=StringFind(sym,"USDT");
+   int posUSDC=StringFind(sym,"USDC");
+   int posUSD=StringFind(sym,"USD");
+   int quotePos=-1;
+   if(posUSDT>0) quotePos=posUSDT;
+   if(posUSDC>0 && (quotePos<0 || posUSDC<quotePos)) quotePos=posUSDC;
+   if(posUSD>0 && (quotePos<0 || posUSD<quotePos)) quotePos=posUSD;
+
+   if(quotePos>1)
+   {
+      string base=StringSubstr(sym,0,quotePos);
+      string knownCryptoBases="|BTC|XBT|ETH|SOL|XRP|DOGE|AVAX|NEAR|ADA|DOT|LINK|LTC|BCH|BNB|TRX|TON|SHIB|ATOM|UNI|ETC|FIL|APT|ARB|OP|SUI|INJ|ICP|XLM|ALGO|HBAR|VET|MATIC|POL|AAVE|EOS|XTZ|FTM|RENDER|FET|TAO|PEPE|WIF|MANA|AXS|GRT|LRC|ZEC|DASH|IOTA|AR|";
+      string token="|"+base+"|";
+      bool knownCrypto=(StringFind(knownCryptoBases,token)>=0);
+      if(knownCrypto)
+      {
+         if(base=="BTC" || base=="XBT") return "BTCUSDT";
+         if(base=="SOL") return "SOLUSDT";
+         if(base=="NEAR") return "NEARUSD";
+         if(base=="ETH") return "ETHUSD";
+         return base+"USD";
+      }
+   }
+
+   // Preserve unverified CFD/stock names as independent symbols rather than guessing aliases.
    return sym;
 }
-
 // Fail closed unless the requested broker symbol resolves to one approved canonical asset
 // and has a live, internally consistent quote/specification. This guard does not rename symbols.
 bool ValidateExecutionAssetSymbol(string sym,string expectedCanonical,string &reason)
@@ -1099,7 +1128,15 @@ void ScanMarketWatchAssets(bool forceLog)
       bool configured=SymbolIsInConfiguredAllowlist(sym);
       if(!configured) continue; // "*" scans all visible instruments; an explicit list remains restrictive.
       string key=CanonicalAssetKey(sym);
-      if(key=="" || sym!=PreferredSymbolForAsset(key,InpCrossAssetTimeframe,requiredBars)) continue; // collapse USD/USDT and broker-suffix aliases
+      if(key=="") continue;
+      string preferredSymbol=PreferredSymbolForAsset(key,InpCrossAssetTimeframe,requiredBars);
+      if(sym!=preferredSymbol)
+      {
+         if(forceLog) Print("CANONICAL ALIAS COLLAPSE AUDIT | symbol=",sym," canonicalAsset=",key,
+            " preferredSymbol=",preferredSymbol," action=NO_INDEPENDENT_RANK_OR_ORDER",
+            " policy=ONE_POSITION_AND_ONE_HISTORICAL_SOURCE_PER_CANONICAL_ASSET");
+         continue;
+      } // quote variants and broker suffixes share one candidate slot
       bool crypto=LooksLikeCryptoSymbol(sym);
       if(crypto) cryptoFound++;
       double bid=MarketInfo(sym,MODE_BID), ask=MarketInfo(sym,MODE_ASK);
@@ -1137,7 +1174,10 @@ void ScanMarketWatchAssets(bool forceLog)
                " bars=",bars," requiredBars=",requiredBars,
                " spreadCeiling=",spreadCeiling," spreadOK=",(spreadOK?"true":"false"),
                " tradeAllowed=",(tradeAllowed?"true":"false"),
-               " tickValue=",DoubleToString(tickValue,6)," tickSize=",DoubleToString(tickSize,6),
+               " pointSize=",DoubleToString(point,(int)MarketInfo(sym,MODE_DIGITS)),
+               " tickValue=",DoubleToString(tickValue,6)," tickSize=",DoubleToString(tickSize,8),
+               " spreadCostPrice=",DoubleToString(MathMax(0,spread)*point,(int)MarketInfo(sym,MODE_DIGITS)),
+               " spreadCostUSDPerLot=",(tickValue>0.0 && tickSize>0.0?DoubleToString((MathMax(0,spread)*point/tickSize)*tickValue,4):"UNKNOWN"),
                " | execution=",(scanEligible?"eligible only if an EA instance runs on this chart and all live signal/risk gates pass":"not authorized by discovery"));
          if(scanEligible)
          {
@@ -1278,7 +1318,8 @@ int OnInit()
          " aggregateRiskCapUSD=",DoubleToString(EffectivePortfolioRiskCapUSD(),2));
    Print("THREE CANDLE SLTP CONFIG | enabled=",(InpAdaptiveSLTPEnabled?"true":"false"),
          " timeframe=",(InpAdaptiveSLTPTimeframe==PERIOD_CURRENT?Period():(int)InpAdaptiveSLTPTimeframe),
-         " requiredClosedCandles=3 direction=POSITION_ALIGNED netProfitThresholdUSD=",DoubleToString(InpAdaptiveSLTPMinNetProfitUSD,2));
+         " requiredClosedCandles=3 direction=POSITION_ALIGNED netProfitThresholdUSD=",DoubleToString(InpProfitSLTPActivationUSD,2),
+         " profitSustainSeconds=",InpProfitSLTPSustainSeconds," slMonotonic=true tpExtendsOnlyWhenFavorableTrendConfirmed=true");
    Print("GOVERNOR CONFIG | State=",GovernorStateName(g_governorState),
          " CampaignNetUSD=",DoubleToString(g_campaignNetUSD,2),
          " EffectiveDailyLossUSD=",DoubleToString(EffectiveDailyLossLimitUSD(),2),
@@ -2354,8 +2395,6 @@ void EnforceOpenPositionRiskCapAdaptive()
          " result=",(confirmed?"CAP_ENFORCED_READBACK_CONFIRMED":"CRITICAL_CAP_NOT_CONFIRMED"));
       if(!confirmed && (readRisk<0.0 || readRisk>capUSD+0.02))
          EmergencyCloseRiskCapBreach(ticket,sym,type,lots,(readRisk>=0.0?readRisk:oldRisk),"SL_MODIFY_FAILED_OR_UNCONFIRMED");
-       if(!confirmed && (readRisk<0.0 || readRisk>capUSD+0.02))
-          EmergencyCloseRiskCapBreach(ticket,sym,type,lots,(readRisk>=0.0?readRisk:oldRisk),"SL_MODIFY_FAILED_OR_UNCONFIRMED");
    }
 }
 
