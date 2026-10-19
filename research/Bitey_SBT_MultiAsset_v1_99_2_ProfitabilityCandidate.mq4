@@ -53,6 +53,7 @@ input int      InpCrossAssetTimeframe = PERIOD_H1; // Cross-asset ranking timefr
 input int      InpCrossAssetTopLogCount = 3; // Number of highest-ranked eligible symbols to report by default.
 input bool     InpCrossAssetAutoExecutionEnabled = true; // Operational default: cross-asset entries allowed only after all evidence, cost, quote, and risk gates pass.
 input double   InpCrossAssetMinTechnicalScore = 58.0; // Minimum technical ranking score; not proof of profitability.
+input int      InpCrossAssetMinDirectionalVotes = 4; // Minimum winning cross-asset proxy votes; training/holdout and symbol-scoped live evidence remain mandatory.
 input int      InpCrossAssetMinHistorySamples = 12; // Minimum non-overlapping historical directional samples before an asset can be evidence-qualified.
 input double   InpCrossAssetMinHistoryWinRate = 0.42; // Historical proxy win-rate floor; not a guarantee.
 input double   InpCrossAssetMinHistoryAvgR = 0.02; // Cost-adjusted ATR-normalized return proxy floor; not actual trade R.
@@ -738,11 +739,18 @@ double CrossAssetTechnicalScore(string sym, int tf, string &direction, string &r
    int directional=buy+sell, winning=MathMax(buy,sell);
    Print("CROSS-ASSET 16-MODEL ENSEMBLE | symbol=",sym," timeframe=",tf,
          " modelFamilies=16 buyVotes=",buy," sellVotes=",sell," directionalVotes=",directional,
+         " requiredWinningVotes=",InpCrossAssetMinDirectionalVotes,
          " adx=",DoubleToString(adx,1)," momentumATR=",DoubleToString(momentum,3),
          " rsi=",DoubleToString(rsi,1)," fastSlowGapATR=",DoubleToString(fastGap,3),
          " | cross-symbol model-family proxies; directional history and holdout remain mandatory.");
-   if(adx<10.0 || directional<5 || buy==sell || winning<5)
-   { reason="SIXTEEN_MODEL_ENSEMBLE_NO_CLEAR_CONSENSUS"; return 0.0; }
+   if(adx<10.0)
+   { reason="CROSS_ASSET_ADX_BELOW_MINIMUM"; return 0.0; }
+   if(directional<InpCrossAssetMinDirectionalVotes)
+   { reason="CROSS_ASSET_DIRECTIONAL_VOTES_BELOW_MINIMUM"; return 0.0; }
+   if(buy==sell)
+   { reason="CROSS_ASSET_DIRECTIONAL_VOTE_TIE"; return 0.0; }
+   if(winning<InpCrossAssetMinDirectionalVotes)
+   { reason="CROSS_ASSET_WINNING_SIDE_VOTES_BELOW_MINIMUM"; return 0.0; }
    direction=(buy>sell?"BUY":"SELL");
    double agreement=(double)winning/(double)MathMax(1,directional);
    double trendStrength=MathMin(1.0,MathAbs(fastGap));
@@ -881,7 +889,7 @@ bool CrossAssetHistoricalEvidence(string sym,int tf,string candidateDirection,in
       double lower=iBands(sym,tf,20,2.0,0,PRICE_CLOSE,MODE_LOWER,shift+1);
       if(upper>0.0 && c>upper && c>o) buy++; else if(lower>0.0 && c<lower && c<o) sell++;
       int directionalVotes=buy+sell;
-      if(adx<10.0 || directionalVotes<5 || buy==sell || MathMax(buy,sell)<5) continue;
+      if(adx<10.0 || directionalVotes<InpCrossAssetMinDirectionalVotes || buy==sell || MathMax(buy,sell)<InpCrossAssetMinDirectionalVotes) continue;
       int historicalDir=(buy>sell?1:-1);
       if(historicalDir!=targetDir) continue;
       double futureClose=iClose(sym,tf,shift-horizon);
@@ -985,7 +993,7 @@ void LogCrossAssetRanking()
       datetime qt=(datetime)MarketInfo(sym,MODE_TIME); int age=(qt>0?(int)(TimeCurrent()-qt):999999);
       int spr=(int)MarketInfo(sym,MODE_SPREAD), bars=iBars(sym,tf); string dir,why; int b;
       int ceiling=CrossAssetSpreadCeilingFor(sym);
-      bool basic=(bid>0 && ask>=bid && age>=0 && age<=120 && point>0 && MarketInfo(sym,MODE_TRADEALLOWED)!=0 && spr>=0 && spr<=ceiling);
+      bool basic=(bid>0 && ask>=bid && age>=0 && age<=InpCrossAssetMaxQuoteAgeSeconds && point>0 && MarketInfo(sym,MODE_TRADEALLOWED)!=0 && spr>=0 && spr<=ceiling);
       double score=-1.0; int histN=0; double histWin=0.0,histAvgR=-999.0; string histReason="NOT_EVALUATED";
       int holdoutN=0; double holdoutWin=0.0,holdoutAvgR=-999.0;
       bool histPass=false;
@@ -1009,7 +1017,7 @@ void LogCrossAssetRanking()
             " directionAligned=",(localDirectionAligned?"true":"false"),
             " decision=",(localDirectionAligned?"CONTINUE_TO_TRAIN_HOLDOUT_GATE":"REJECT_CANDIDATE"));
       }
-      else { dir="NONE"; why=(age<0 || age>120 ? "STALE_QUOTE" : (spr>ceiling ? "SPREAD_GATE" : "QUOTE_OR_TRADE_PERMISSION_GATE")); }
+      else { dir="NONE"; why=(age<0 || age>InpCrossAssetMaxQuoteAgeSeconds ? "STALE_QUOTE" : (spr>ceiling ? "SPREAD_GATE" : "QUOTE_OR_TRADE_PERMISSION_GATE")); }
       // Reconstruct both directional evidence sets independently on every valid symbol scan.
       // This is an evidence audit only: it never fabricates a live signal or authorizes an order.
       int buyN=0,buyHoldoutN=0;
@@ -1260,7 +1268,7 @@ int OnInit()
    Print("ENTRY ATTEMPT STATE RESTORE | attemptedBar=", (g_lastEntryAttemptBarTime>0?TimeToString(g_lastEntryAttemptBarTime,TIME_DATE|TIME_MINUTES):"none"),
          " status=",EntryAttemptStatusName(g_lastEntryAttemptStatus),
          " | persistence=terminal_global_variables account/magic/symbol/timeframe; full text result is session-local.");
-   if(InpStrictRangeLookback<3 || InpStrictRangeLookback>100 || InpStrictRangeADXMax<1 || InpStrictRangeADXMax>60 || InpStrictRangeEdgeATR<0.05 || InpStrictRangeEdgeATR>2.0 || InpStrictRangeEMAGapATR<0.05 || InpStrictRangeEMAGapATR>3.0 || InpStrictRangeBuyRSI<5 || InpStrictRangeBuyRSI>49 || InpStrictRangeSellRSI<51 || InpStrictRangeSellRSI>95) { Print("INVALID STRICT RANGE INPUTS"); return INIT_PARAMETERS_INCORRECT; }
+   if(InpCrossAssetMinDirectionalVotes<3 || InpCrossAssetMinDirectionalVotes>8 || InpStrictRangeLookback<3 || InpStrictRangeLookback>100 || InpStrictRangeADXMax<1 || InpStrictRangeADXMax>60 || InpStrictRangeEdgeATR<0.05 || InpStrictRangeEdgeATR>2.0 || InpStrictRangeEMAGapATR<0.05 || InpStrictRangeEMAGapATR>3.0 || InpStrictRangeBuyRSI<5 || InpStrictRangeBuyRSI>49 || InpStrictRangeSellRSI<51 || InpStrictRangeSellRSI>95) { Print("INVALID STRICT RANGE INPUTS"); return INIT_PARAMETERS_INCORRECT; }
    if(!IsAllowedMultiAssetSymbol())
    {
       Print("SYMBOL GATE | chart symbol is not in configured multi-asset allowlist ",InpAllowedSymbols,". Current chart=",Symbol(),". No trading.");
