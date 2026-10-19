@@ -1,6 +1,6 @@
 #property strict
 #property version   "1.999"
-#property description "Bitey SBT Multi-Asset v1.99.9 complete reconstruction of ProfitabilityCandidate - research candidate"
+#property description "Bitey SBT Multi-Asset v1.99.10 alias, cost and portfolio safety diagnostics - research candidate"
 
 // ============================================================================
  // BITEY SBT MULTI-ASSET v1.99.9 — RECONSTRUCTED PROFITABILITY CANDIDATE
@@ -1076,7 +1076,7 @@ bool LooksLikeCryptoSymbol(string symbolName)
 {
    string u=symbolName;
    StringToUpper(u);
-   string tokens="|BTC|XBT|ETH|SOL|XRP|DOGE|AVAX|NEAR|ADA|DOT|LINK|LTC|BCH|BNB|TRX|TON|SHIB|ATOM|UNI|ETC|FIL|APT|ARB|OP|SUI|INJ|ICP|XLM|ALGO|HBAR|VET|MATIC|POL|AAVE|EOS|XTZ|FTM|RENDER|FET|TAO|PEPE|WIF|";
+   string tokens="|BTC|XBT|ETH|SOL|XRP|DOGE|AVAX|NEAR|ADA|DOT|LINK|LTC|BCH|BNB|TRX|TON|SHIB|ATOM|UNI|ETC|FIL|APT|ARB|OP|SUI|INJ|ICP|XLM|ALGO|HBAR|VET|MATIC|POL|AAVE|EOS|XTZ|FTM|RENDER|FET|TAO|PEPE|WIF|MANA|AXS|GRT|LRC|ZEC|DASH|IOTA|AR|";
    string parts[];
    int n=StringSplit(tokens,'|',parts);
    for(int i=0;i<n;i++)
@@ -1177,7 +1177,7 @@ void ScanMarketWatchAssets(bool forceLog)
                " pointSize=",DoubleToString(point,(int)MarketInfo(sym,MODE_DIGITS)),
                " tickValue=",DoubleToString(tickValue,6)," tickSize=",DoubleToString(tickSize,8),
                " spreadCostPrice=",DoubleToString(MathMax(0,spread)*point,(int)MarketInfo(sym,MODE_DIGITS)),
-               " spreadCostUSDPerLot=",(tickValue>0.0 && tickSize>0.0?DoubleToString((MathMax(0,spread)*point/tickSize)*tickValue,4):"UNKNOWN"),
+               " spreadCostAccountCurrencyPerLot=",(tickValue>0.0 && tickSize>0.0?DoubleToString((MathMax(0,spread)*point/tickSize)*tickValue,4):"UNKNOWN"),
                " | execution=",(scanEligible?"eligible only if an EA instance runs on this chart and all live signal/risk gates pass":"not authorized by discovery"));
          if(scanEligible)
          {
