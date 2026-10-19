@@ -904,13 +904,24 @@ bool CrossAssetHistoricalEvidence(string sym,int tf,string candidateDirection,in
       lastAcceptedShift=shift;
    }
    samplesOut=trainSamples;
-   if(samplesOut<=0) { reasonOut="NO_MATCHING_TRAINING_DIRECTIONAL_SAMPLES"; return false; }
-   winRateOut=(double)wins/(double)samplesOut;
-   avgROut=sumR/(double)samplesOut;
+   // Publish both partitions before any early return. Previously, zero training
+   // samples caused an early return that discarded holdout metrics already collected.
+   if(samplesOut>0)
+   {
+      winRateOut=(double)wins/(double)samplesOut;
+      avgROut=sumR/(double)samplesOut;
+   }
    if(holdoutSamplesOut>0)
    {
       holdoutWinRateOut=(double)holdoutWins/(double)holdoutSamplesOut;
       holdoutAvgROut=holdoutSumR/(double)holdoutSamplesOut;
+   }
+   if(samplesOut<=0)
+   {
+      reasonOut=(holdoutSamplesOut>0
+         ? "NO_TRAIN_SAMPLES_HOLDOUT_PRESENT"
+         : "NO_MATCHING_TRAIN_OR_HOLDOUT_DIRECTIONAL_SAMPLES");
+      return false;
    }
    bool trainNPass=(samplesOut>=InpCrossAssetMinHistorySamples);
    bool trainWRPass=(winRateOut>=InpCrossAssetMinHistoryWinRate);
@@ -988,8 +999,10 @@ void LogCrossAssetRanking()
          bool localDirectionAligned=(localLivePass && localDir==dir);
          if(score>0.0 && localDirectionAligned)
             histPass=CrossAssetHistoricalEvidence(sym,tf,dir,histN,histWin,histAvgR,histReason,holdoutN,holdoutWin,holdoutAvgR);
-         else if(score>0.0)
-            histReason="LOCAL_16_MODEL_SYMBOL_SIGNAL_MISMATCH_OR_NO_CONSENSUS";
+         else if(score<=0.0)
+            histReason="NOT_EVALUATED_CROSS_ASSET_CONSENSUS_FAILED:"+why;
+         else
+            histReason="NOT_EVALUATED_LOCAL_DIRECTION_MISMATCH local="+localDir+" crossAsset="+dir;
          Print("LOCAL MODEL PER-SYMBOL SCAN | symbol=",sym," timeframe=",tf,
             " localDirection=",localDir," localVotes=",localVotes," requiredVotes=",RequiredModelVotes(),
             " crossAssetDirection=",dir," localConsensus=",(localLivePass?"PASS":"REJECT"),
@@ -1046,9 +1059,11 @@ void LogCrossAssetRanking()
             " historyWinRate=",DoubleToString(histWin,3)," historyAvgRProxy=",DoubleToString(histAvgR,3),
             " holdoutSamples=",holdoutN," holdoutWinRate=",DoubleToString(holdoutWin,3)," holdoutAvgRProxy=",DoubleToString(holdoutAvgR,3),
             " holdoutRequiredSamples=",InpCrossAssetMinHoldoutSamples," historyQualified=",(histPass?"true":"false")," historyReason=",histReason,
+            " historyStage=",(score<=0.0?"NOT_RUN_TECHNICAL_CONSENSUS":(!localDirectionAligned?"NOT_RUN_DIRECTION_MISMATCH":(histPass?"PASSED":"RUN_REJECTED"))),
+            " bidirectionalHistoryAudit=SEE_SEPARATE_FEASIBILITY_LINE",
             " bars=",bars," requiredBars=",need,
             " quoteAgeSeconds=",age," spreadPoints=",spr," spreadCeiling=",ceiling,
-            " decision=",(score>0 && histPass?"HISTORY_QUALIFIED_RANKED_CANDIDATE":(score>0?"TECHNICAL_ONLY_HISTORY_REJECTED":"REJECT_OR_NO_SIGNAL"))," reason=",why,
+            " decision=",(score>0 && localDirectionAligned && histPass?"HISTORY_QUALIFIED_RANKED_CANDIDATE":(score>0?"TECHNICAL_OR_ALIGNMENT_REJECTED":"REJECT_OR_NO_SIGNAL"))," reason=",why,
             " evidenceType=COST_ADJUSTED_ATR_NORMALIZED_HISTORICAL_PROXY_NOT_LIVE_FORWARD_RESULTS",
             " execution=RANKED_ONLY_UNTIL_EVIDENCE_AND_ORDER_GATES_PASS");
       double priority=(score>0 && histPass?CrossAssetOpportunityPriority(score,histWin,histAvgR,holdoutWin,holdoutAvgR):-1.0);
@@ -5778,10 +5793,3 @@ void EvaluateEngine()
          " openRiskAfterUSD=",DoubleToString(PortfolioOpenRiskUSD(),4),
          " portfolioRiskCapUSD=",DoubleToString(EffectivePortfolioRiskCapUSD(),4),
          " dailyNetUSD=",DoubleToString(TodayNetProfit(),4),
-         " evidenceJSON=",modelsJson,
-         " nextAction=",(orderOpened?"VERIFY_TICKET_READBACK_AND_POSITION_INVENTORY":"RETAIN_REJECTION_REASON_NO_BLIND_RETRY"));
-   if(orderOpened) AuditExistingPositionSupervision("POST_CHART_LOCAL_ENTRY");
-   SendSbtSnapshot(decision,decisionText,buyVotes,sellVotes,trend,momentum,donchian,meanrev,strictRange,
-                   modelsJson,bestStrategy,bestScore,close1,emaFast1,emaSlow1,emaTrend1,rsi1,adx1,atr1,
-                   true,"OK",g_lastExecutionResult);
-}
