@@ -75,7 +75,7 @@ input int      InpPersistentLossMinutes = 15; // Persistent negative result step
 input int      InpSevereLossMinutes = 60; // Long-running loss reduces risk to the configured USD0.35 level.
 input double   InpProfitActivationThresholdUSD = 0.50; // Portfolio net P/L must exceed this value to start profit persistence timer.
 input int      InpProfitSustainMinutes = 60; // Positive net portfolio result must persist this long before any bounded adaptive sizing adjustment; hard cap remains USD1.25.
-input double   InpProfitRiskStepUSD = 5.00; // Each additional USD5 of campaign net profit advances the risk budget by USD1.
+input double   InpProfitRiskStepUSD = 5.00; // Legacy compatibility input; profit never raises risk above the USD1.25 hard cap.
 input double   InpAdaptiveRiskMaximumUSD = 1.25; // Adaptive per-position ceiling remains USD1.25.
 input double   InpMaxRiskPerTradeCapitalPct = 0.25; // USD1.25 is 0.25% of fixed USD500.
 input int      InpMaxSpreadSOLPoints = 100;
@@ -222,25 +222,25 @@ double EffectiveRiskBudgetUSD()
       if(net<=-MathAbs(InpSeverePortfolioLossTriggerUSD) || lossMinutes>=InpSevereLossMinutes)
       {
          risk=InpLossRiskSevereUSD;
-         state="LOSS_SEVERE_1USD";
+         state="LOSS_SEVERE_REDUCED_RISK";
          stateCode=1;
       }
       else if(lossMinutes>=InpPersistentLossMinutes)
       {
          risk=InpLossRiskPersistentUSD;
-         state="LOSS_PERSISTENT_2USD";
+         state="LOSS_PERSISTENT_REDUCED_RISK";
          stateCode=2;
       }
       else if(lossMinutes>=InpLossConfirmMinutes)
       {
          risk=InpLossRiskConfirmedUSD;
-         state="LOSS_CONFIRMED_3USD";
+         state="LOSS_CONFIRMED_BASELINE_CAP";
          stateCode=3;
       }
       else
       {
          risk=InpLossRiskConfirmedUSD;
-         state="LOSS_CONFIRMATION_PENDING_CONSERVATIVE_3USD";
+         state="LOSS_CONFIRMATION_PENDING_CONSERVATIVE_CAP";
          stateCode=4;
       }
    }
@@ -255,12 +255,11 @@ double EffectiveRiskBudgetUSD()
       int profitMinutes=(int)MathMax(0,(now-(datetime)profitSince)/60);
       if(profitMinutes>=MathMax(1,InpProfitSustainMinutes))
       {
-         double excessProfit=MathMax(0.0,net-MathMax(0.0,InpProfitActivationThresholdUSD));
-         int profitSteps=(InpProfitRiskStepUSD>0.0?(int)MathFloor(excessProfit/InpProfitRiskStepUSD):0);
-         risk=5.0+profitSteps;
-         risk=MathMin(risk,MathMax(InpRiskPerTradeUSD,InpAdaptiveRiskMaximumUSD));
-         state="SUSTAINED_PROFIT_RISK_"+DoubleToString(risk,0)+"USD";
-         stateCode=10+(int)MathRound(risk);
+         // Profit persistence may restore the configured baseline, but never increases risk.
+         // The USD1.25 hard cap remains absolute regardless of campaign profit.
+         risk=MathMin(InpRiskPerTradeUSD,InpAdaptiveRiskMaximumUSD);
+         state="SUSTAINED_PROFIT_BASELINE_CAPPED";
+         stateCode=10;
       }
       else
       {
