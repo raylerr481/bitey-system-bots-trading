@@ -1,6 +1,6 @@
 #property strict
-#property version   "1.997"
-#property description "Bitey SBT Multi-Asset v1.99.7 - broader evidence window and explicit holdout diagnostics; research candidate"
+#property version   "1.998"
+#property description "Bitey SBT Multi-Asset v1.99.8 - broader evidence window and explicit holdout diagnostics; research candidate"
 
 enum EngineMode { OBSERVE_ONLY=0, AUTO_EXECUTION=1 };
 input EngineMode InpMode = AUTO_EXECUTION; // Auto-entry enabled; MT4 terminal and broker permissions plus every code risk/evidence gate still apply.
@@ -18,7 +18,6 @@ input ENUM_TIMEFRAMES InpTimeframe = PERIOD_H1;
 input int InpATRPeriod = 14;
 input double InpStopATR = 1.5;
 input double InpTargetATR = 2.0;
-input bool InpEnableAdaptiveManagement = true;
 input double InpBreakEvenTriggerATR = 1.0;
 input double InpTrailStartATR = 1.5;
 input double InpTrailDistanceATR = 1.2;
@@ -248,7 +247,7 @@ bool FreshQuote(string symbol)
 void LogDecision(string symbol,string decision,string reason,int direction,int votes,double trainWR,double trainR,int trainN,double holdWR,double holdR,int holdN)
 {
    if(!InpPrintDiagnostics)return;
-   Print("BITEY_SBT_1.99.7 | symbol=",symbol," decision=",decision," reason=",reason,
+   Print("BITEY_SBT_1.99.8 | symbol=",symbol," decision=",decision," reason=",reason,
          " direction=",direction," votes=",votes,
          " trainN=",trainN," trainWR=",DoubleToString(trainWR,3)," trainAvgR=",DoubleToString(trainR,3),
          " holdoutN=",holdN," holdoutWR=",DoubleToString(holdWR,3)," holdoutAvgR=",DoubleToString(holdR,3),
@@ -290,7 +289,7 @@ void ScanSymbol(string symbol)
    if(!IsTradeAllowed()){LogDecision(symbol,"REJECT","TERMINAL_TRADE_PERMISSION_OFF",direction,votes,tw,tr,tn,hw,hr,hn);return;}
    int type=(direction>0?OP_BUY:OP_SELL);
    ResetLastError();
-   int ticket=OrderSend(symbol,type,lots,price,InpSlippagePoints,sl,tp,"BiteySBT 1.99.7",InpMagic,0,clrNONE);
+   int ticket=OrderSend(symbol,type,lots,price,InpSlippagePoints,sl,tp,"BiteySBT 1.99.8",InpMagic,0,clrNONE);
    if(ticket<0){int err=GetLastError();LogDecision(symbol,"REJECT",StringFormat("ORDERSEND_ERROR_%d",err),direction,votes,tw,tr,tn,hw,hr,hn);return;}
    LogDecision(symbol,"OPENED",StringFormat("TICKET_%d",ticket),direction,votes,tw,tr,tn,hw,hr,hn);
 }
@@ -310,7 +309,6 @@ bool TrendStillSupportsTrade(string symbol,int type)
 
 void ManageAdaptiveStopsAndTargets()
 {
-   if(!InpEnableAdaptiveManagement) return;
    for(int i=OrdersTotal()-1;i>=0;i--)
    {
       if(!OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) continue;
@@ -337,12 +335,14 @@ void ManageAdaptiveStopsAndTargets()
       bool changeSL=false,changeTP=false;
       string reason="";
 
-      // Break-even after favorable movement; the SL is only tightened, never loosened.
+      // MANDATORY profit-protection rule: break-even includes current spread plus one point.
+      // Commission/swap can still affect net P/L; the SL is only tightened, never loosened.
       if(favorable>=atr*InpBreakEvenTriggerATR)
       {
+         double costBuffer=MarketInfo(symbol,MODE_SPREAD)*point+point;
          double be=OrderOpenPrice();
-         if(type==OP_BUY) be+=point;
-         else be-=point;
+         if(type==OP_BUY) be+=costBuffer;
+         else be-=costBuffer;
          if(type==OP_BUY && (desiredSL<=0 || be>desiredSL+point) && market-be>=minDistance)
          { desiredSL=be; changeSL=true; reason="BREAK_EVEN"; }
          if(type==OP_SELL && (desiredSL<=0 || be<desiredSL-point) && be-market>=minDistance)
@@ -404,12 +404,12 @@ int OnInit()
    bool demoAccount=IsDemo();
    if(InpMode!=AUTO_EXECUTION){Print("BITEY_SBT_INIT_REJECT | reason=AUTO_EXECUTION_REQUIRED_FOR_LIVE_PARITY_TEST | mode=OBSERVE_ONLY");return INIT_FAILED;}
    EventSetTimer(MathMax(5,InpScanIntervalSeconds));
-   Print("BITEY_SBT_1.99.7_INIT | mode=",(InpMode==OBSERVE_ONLY?"OBSERVE_ONLY":"AUTO_EXECUTION"),
+   Print("BITEY_SBT_1.99.8_INIT | mode=",(InpMode==OBSERVE_ONLY?"OBSERVE_ONLY":"AUTO_EXECUTION"),
          " strategicCapitalUSD=",DoubleToString(EffectiveCapital(),2)," perTradeRiskCapUSD=",DoubleToString(MathMin(1.25,InpHardRiskCapUSD),2),
          " portfolioRiskCapUSD=",DoubleToString(MathMin(8.75,InpPortfolioRiskCapUSD),2)," maxPositions=",MathMin(7,InpMaxOpenTrades),
          " accountType=",(demoAccount?"DEMO_USING_REAL_RULES":"REAL"),
          " demoRealRuleParity=ENFORCED",
-         " fixedCapitalNotAccountBalance=true adaptiveSLTP=",(InpEnableAdaptiveManagement?"ON":"OFF"),
+         " fixedCapitalNotAccountBalance=true adaptiveSLTP=MANDATORY, breakEvenSpreadBuffer=ON,
          " evidenceWindows=720_train_240_holdout note=research_candidate_not_backtested_or_compiled");
    return INIT_SUCCEEDED;
 }
