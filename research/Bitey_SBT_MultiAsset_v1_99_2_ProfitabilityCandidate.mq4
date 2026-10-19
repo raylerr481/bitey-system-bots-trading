@@ -5793,3 +5793,10 @@ void EvaluateEngine()
          " openRiskAfterUSD=",DoubleToString(PortfolioOpenRiskUSD(),4),
          " portfolioRiskCapUSD=",DoubleToString(EffectivePortfolioRiskCapUSD(),4),
          " dailyNetUSD=",DoubleToString(TodayNetProfit(),4),
+         " evidenceJSON=",modelsJson,
+         " nextAction=",(orderOpened?"VERIFY_TICKET_READBACK_AND_POSITION_INVENTORY":"RETAIN_REJECTION_REASON_NO_BLIND_RETRY"));
+   if(orderOpened) AuditExistingPositionSupervision("POST_CHART_LOCAL_ENTRY");
+   SendSbtSnapshot(decision,decisionText,buyVotes,sellVotes,trend,momentum,donchian,meanrev,strictRange,
+                   modelsJson,bestStrategy,bestScore,close1,emaFast1,emaSlow1,emaTrend1,rsi1,adx1,atr1,
+                   true,"OK",g_lastExecutionResult);
+}
