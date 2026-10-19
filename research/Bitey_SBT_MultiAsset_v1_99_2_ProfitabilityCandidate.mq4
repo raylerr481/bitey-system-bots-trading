@@ -1180,7 +1180,7 @@ void ScanMarketWatchAssets(bool forceLog)
       int bars=iBars(sym,InpCrossAssetTimeframe);
       datetime quoteTime=(datetime)MarketInfo(sym,MODE_TIME);
       int quoteAge=(quoteTime>0?(int)(TimeCurrent()-quoteTime):999999);
-      bool quoteActive=(bid>0.0 && ask>=bid && quoteAge>=0 && quoteAge<=120);
+      bool quoteActive=(bid>0.0 && ask>=bid && quoteAge>=0 && quoteAge<=InpCrossAssetMaxQuoteAgeSeconds);
       bool specsValid=(point>0.0 && tickValue>0.0 && tickSize>0.0);
       bool tradeAllowed=(MarketInfo(sym,MODE_TRADEALLOWED)!=0);
       bool enoughBars=(bars>=requiredBars);
@@ -1329,7 +1329,14 @@ int OnInit()
          " AllowedSymbols=",InpAllowedSymbols," MarketWatchScanner=",(InpMarketWatchScannerEnabled?"enabled":"disabled"),
          " AutoAllowCryptoOnChart=",(InpAutoAllowDetectedCryptoOnChart?"true":"false"),
          " OtherCryptoSpreadCeiling=",InpMaxSpreadOtherCryptoPoints,
-         " ScannerExecutionScope=PER_SYMBOL_TRAIN_AND_HOLDOUT_PROXY_AUDIT_ONLY");
+         " ScannerExecutionScope=",(InpCrossAssetAutoExecutionEnabled?"RANKING_AND_GUARDED_CROSS_ASSET_EXECUTION":"RANKING_ONLY"),
+         " CrossAssetMinWinningVotes=",InpCrossAssetMinDirectionalVotes,
+         " HistoricalTrainHoldoutGates=MANDATORY");
+   if(InpRoundTurnCommissionPerLotUSD<0.0 || InpExpectedSwapCostPerLotUSD<0.0)
+      Print("EXECUTION COST CONFIG WARNING | commissionPerLotUSD=",DoubleToString(InpRoundTurnCommissionPerLotUSD,4),
+            " expectedSwapPerLotUSD=",DoubleToString(InpExpectedSwapCostPerLotUSD,4),
+            " reason=UNKNOWN_COSTS_BLOCK_NEW_ENTRIES_AT_GLOBAL_EXPECTANCY_GATE",
+            " action=SET_ACTUAL_CONSERVATIVE_BROKER_COSTS_IN_EA_INPUTS; do_not_assume_zero");
    Print("SEVEN-ASSET PORTFOLIO CAPACITY | campaignNetUSD=",DoubleToString(g_campaignNetUSD,2),
           " activeSlots=",EffectiveMaxOpenTrades(),"/7",
           " slotPolicy=UP_TO_SEVEN_BEST_QUALIFIED_DISTINCT_ASSETS_FROM_MARKET_WATCH;PER_POSITION_AND_AGGREGATE_RISK_GOVERNORS_REMAIN_ACTIVE",
@@ -1443,7 +1450,7 @@ string PreferredSymbolForAsset(string key,int tf,int requiredBars)
       int spread=(int)MarketInfo(sym,MODE_SPREAD);
       datetime qt=(datetime)MarketInfo(sym,MODE_TIME);
       int age=(qt>0?(int)(TimeCurrent()-qt):999999);
-      bool fresh=(bid>0.0 && ask>=bid && age>=0 && age<=120);
+      bool fresh=(bid>0.0 && ask>=bid && age>=0 && age<=InpCrossAssetMaxQuoteAgeSeconds);
       bool tradeable=(MarketInfo(sym,MODE_TRADEALLOWED)!=0);
       bool enough=(iBars(sym,tf)>=requiredBars);
       bool specs=(point>0.0 && tickValue>0.0 && tickSize>0.0);
