@@ -711,6 +711,19 @@ double CrossAssetTechnicalScore(string sym, int tf, string &direction, string &r
    return score;
 }
 
+string CrossAssetEvidenceFailureCode(int trainN,double trainWR,double trainAvgR,int holdN,double holdWR,double holdAvgR,string detail)
+{
+   if(trainN<InpCrossAssetMinHistorySamples)
+      return (StringFind(detail,"INSUFFICIENT_BARS")>=0 ? "INSUFFICIENT_TRAIN_HOLDOUT_HISTORY" : "TRAIN_SAMPLE_INSUFFICIENT");
+   if(trainWR<InpCrossAssetMinHistoryWinRate) return "TRAIN_WINRATE_BELOW_MIN";
+   if(trainAvgR<=InpCrossAssetMinHistoryAvgR) return "TRAIN_EXPECTANCY_BELOW_MIN";
+   if(holdN<InpCrossAssetMinHoldoutSamples) return "HOLDOUT_SAMPLE_INSUFFICIENT";
+   if(holdWR<InpCrossAssetMinHoldoutWinRate) return "HOLDOUT_WINRATE_BELOW_MIN";
+   if(holdAvgR<=InpCrossAssetMinHoldoutAvgR) return "HOLDOUT_EXPECTANCY_NOT_POSITIVE";
+   if(StringFind(detail,"NO_MATCHING")>=0) return "NO_MATCHING_DIRECTIONAL_SAMPLES";
+   return "TRAIN_HOLDOUT_EVIDENCE_FAILED";
+}
+
 // Per-symbol directional historical bar study using the same 16 model-family proxy votes
 // as the live cross-asset candidate selector. Uses non-overlapping closed-bar samples,
 // fixed 1.5 ATR normalization and a current-spread cost proxy. It remains a HISTORICAL_PROXY:
@@ -1633,7 +1646,7 @@ bool CrossAssetSendRankedOrder(string sym, string dir, double score)
       n<InpCrossAssetMinHistorySamples || wr<InpCrossAssetMinHistoryWinRate || avgR<=InpCrossAssetMinHistoryAvgR ||
       hn<InpCrossAssetMinHoldoutSamples || hwr<InpCrossAssetMinHoldoutWinRate || havgR<=InpCrossAssetMinHoldoutAvgR)
    {
-      Print("CROSS-ASSET EXECUTION BLOCK | symbol=",sym," direction=",dir," reason=HISTORICAL_TRAIN_OR_HOLDOUT_GATE",
+      Print("CROSS-ASSET EXECUTION BLOCK | symbol=",sym," direction=",dir," reason=",CrossAssetEvidenceFailureCode(n,wr,avgR,hn,hwr,havgR,histReason),
             " trainN=",n," winRate=",DoubleToString(wr,3)," avgRProxy=",DoubleToString(avgR,3),
             " holdoutN=",hn," holdoutWinRate=",DoubleToString(hwr,3)," holdoutAvgRProxy=",DoubleToString(havgR,3),
             " detail=",histReason," | no order sent.");
