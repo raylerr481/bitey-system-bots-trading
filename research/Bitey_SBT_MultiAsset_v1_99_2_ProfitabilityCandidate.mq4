@@ -605,14 +605,20 @@ bool ValidateExecutionAssetSymbol(string sym,string expectedCanonical,string &re
 bool IsAllowedMultiAssetSymbol()
 {
    string key=CanonicalAssetKey(Symbol());
+   if(key=="") return false;
    string list=InpAllowedSymbols;
    StringToUpper(list);
    StringReplace(list," ","");
-   string padded=","+list+",";
-   if(key!="" && (list=="*" || StringFind(padded,","+key+",")>=0)) return true;
+   if(list=="*") return true;
+   string entries[];
+   int entryCount=StringSplit(list,',',entries);
+   for(int i=0;i<entryCount;i++)
+   {
+      if(entries[i]=="") continue;
+      if(CanonicalAssetKey(entries[i])==key) return true;
+   }
    return false;
 }
-
 int MaxSpreadForCurrentSymbol()
 {
    string key=CanonicalAssetKey(Symbol());
@@ -1096,16 +1102,16 @@ bool SymbolIsInConfiguredAllowlist(string symbolName)
    string list=InpAllowedSymbols;
    StringToUpper(list);
    StringReplace(list," ","");
-   // Canonical keys allow SOLUSD/SOLUSDT, NEARUSD/NEARUSDT, BTCUSD/BTCUSDT and ETHUSD/ETHUSDT aliases.
-   string padded=","+list+",";
-   if(list=="*" || StringFind(padded,","+key+",")>=0) return true;
-   if(key=="SOLUSDT" && (StringFind(padded,",SOLUSD,")>=0 || StringFind(padded,",SOLUSDT,")>=0)) return true;
-   if(key=="NEARUSD" && (StringFind(padded,",NEARUSDT,")>=0 || StringFind(padded,",NEARUSD,")>=0)) return true;
-   if(key=="BTCUSDT" && (StringFind(padded,",BTCUSD,")>=0 || StringFind(padded,",BTCUSDT,")>=0)) return true;
-   if(key=="ETHUSD" && (StringFind(padded,",ETHUSDT,")>=0 || StringFind(padded,",ETHUSD,")>=0)) return true;
+   if(list=="*") return true;
+   string entries[];
+   int entryCount=StringSplit(list,',',entries);
+   for(int i=0;i<entryCount;i++)
+   {
+      if(entries[i]=="") continue;
+      if(CanonicalAssetKey(entries[i])==key) return true;
+   }
    return false;
 }
-
 void ScanMarketWatchAssets(bool forceLog)
 {
    if(!InpMarketWatchScannerEnabled) return;
