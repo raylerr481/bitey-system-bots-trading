@@ -243,10 +243,10 @@ double EffectiveRiskBudgetUSD()
 input int      InpATRPeriod = 14;
 input double   InpStopATR = 1.30;
 input double   InpTargetATR = 2.60;
-// Adaptive exit management (v1.59: three-candle, profit-only adaptive SL/TP)
+// Adaptive exit management (v1.59: one-candle, profit-only adaptive SL/TP)
 input bool     InpAdaptiveSLTPEnabled = true;
 input double   InpAdaptiveSLTPMinNetProfitUSD = 0.05; // Do not adapt SL/TP unless floating net P/L (profit+swap+commission) exceeds this USD threshold.
-input ENUM_TIMEFRAMES InpAdaptiveSLTPTimeframe = PERIOD_H1; // Timeframe used to confirm three consecutive favorable closed candles on every managed asset.
+input ENUM_TIMEFRAMES InpAdaptiveSLTPTimeframe = PERIOD_H1; // Timeframe used to confirm one favorable closed candle on every managed asset.
 input double   InpBreakEvenTriggerATR = 0.80; // Start profit lock after favorable move reaches this ATR multiple.
 input double   InpBreakEvenLockATR = 0.10; // Lock a small price-distance gain beyond entry; costs/slippage still apply.
 input double   InpTrailTriggerATR = 1.20; // Begin ATR trailing after a larger favorable move.
@@ -1089,7 +1089,7 @@ int OnInit()
          " aggregateRiskCapUSD=",DoubleToString(InpPortfolioOpenRiskCapUSD,2));
    Print("THREE CANDLE SLTP CONFIG | enabled=",(InpAdaptiveSLTPEnabled?"true":"false"),
          " timeframe=",(InpAdaptiveSLTPTimeframe==PERIOD_CURRENT?Period():(int)InpAdaptiveSLTPTimeframe),
-         " requiredClosedCandles=3 direction=POSITION_ALIGNED netProfitThresholdUSD=",DoubleToString(InpAdaptiveSLTPMinNetProfitUSD,2));
+         " requiredClosedCandles=1 direction=POSITION_ALIGNED netProfitThresholdUSD=",DoubleToString(InpAdaptiveSLTPMinNetProfitUSD,2));
    Print("GOVERNOR CONFIG | State=",GovernorStateName(g_governorState),
          " CampaignNetUSD=",DoubleToString(g_campaignNetUSD,2),
          " EffectiveDailyLossUSD=",DoubleToString(EffectiveDailyLossLimitUSD(),2),
@@ -1691,26 +1691,20 @@ void ExecuteCrossAssetRankedCandidates()
             " | no candidate passed all current live execution and portfolio-risk gates; no order forced. See CROSS-ASSET EVIDENCE GATE AUDIT for per-threshold failures; evidence is historical bar proxy, not actual closed-trade outcomes.");
 }
 
-bool ThreeClosedCandlesConfirmFavorableMove(string sym,int timeframe,int orderType)
+bool OneClosedCandleConfirmsFavorableMove(string sym,int timeframe,int orderType)
 {
-   if(iBars(sym,timeframe)<5) return false;
-   for(int shift=1;shift<=3;shift++)
-   {
-      double o=iOpen(sym,timeframe,shift);
-      double c=iClose(sym,timeframe,shift);
-      double previousClose=iClose(sym,timeframe,shift+1);
-      if(o<=0.0 || c<=0.0 || previousClose<=0.0) return false;
-      if(orderType==OP_BUY)
-      {
-         if(c<=o || c<=previousClose) return false; // Three bullish candles with progressively higher closes.
-      }
-      else if(orderType==OP_SELL)
-      {
-         if(c>=o || c>=previousClose) return false; // Three bearish candles with progressively lower closes.
-      }
-      else return false;
-   }
-   return true;
+   // A single fully closed candle must align with the position and close beyond
+   // the prior candle close. This only permits evaluating protection; it is not
+   // an entry signal and does not guarantee continuation.
+   if(iBars(sym,timeframe)<3) return false;
+   int shift=1;
+   double o=iOpen(sym,timeframe,shift);
+   double c=iClose(sym,timeframe,shift);
+   double previousClose=iClose(sym,timeframe,shift+1);
+   if(o<=0.0 || c<=0.0 || previousClose<=0.0) return false;
+   if(orderType==OP_BUY) return (c>o && c>previousClose);
+   if(orderType==OP_SELL) return (c<o && c<previousClose);
+   return false;
 }
 
 // Manage every open symbol for this EA magic, not only the chart symbol.
@@ -1747,14 +1741,14 @@ void ManageAdaptiveSLTP()
          }
          continue;
       }
-      if(!ThreeClosedCandlesConfirmFavorableMove(sym,tf,type))
+      if(!OneClosedCandleConfirmsFavorableMove(sym,tf,type))
       {
          string candleGateKey=StringFormat("BiteySLTP3CandleGate_%d",ticket);
          double lastCandleGate=(GlobalVariableCheck(candleGateKey)?GlobalVariableGet(candleGateKey):0.0);
          if(now-(datetime)lastCandleGate>=60 || lastCandleGate<=0)
          {
             Print("SLTP MODIFY DEFERRED | ticket=",ticket," symbol=",sym,
-                  " reason=THREE_CLOSED_FAVORABLE_CANDLES_NOT_CONFIRMED",
+                  " reason=ONE_CLOSED_FAVORABLE_CANDLE_NOT_CONFIRMED",
                   " side=",(type==OP_BUY?"BUY":"SELL")," timeframe=",tf,
                   " floatingNetUSD=",DoubleToString(floatingNet,2),
                   " action=KEEP_EXISTING_SLTP");
@@ -1865,8 +1859,8 @@ void ManageAdaptiveSLTP()
       }
 
       // Enforce at most one successful adaptive SL/TP modification per ticket per newly closed
-      // management-timeframe candle. The three-candle pattern remains true across many ticks;
-      // without this bar guard the same three candles could trigger repeated modifications.
+      // management-timeframe candle. The one-candle pattern remains true across many ticks;
+      // without this bar guard the same one candles could trigger repeated modifications.
       datetime lastClosedBar=iTime(sym,tf,1);
       if(lastClosedBar<=0)
       {
