@@ -1,0 +1,8 @@
+{
+  "mt4_common_files": "%APPDATA%/MetaQuotes/Terminal/Common/Files",
+  "mt4_terminal_exe": "C:/Program Files/MetaTrader 4/terminal.exe",
+  "metaeditor_exe": "C:/Program Files/MetaTrader 4/metaeditor.exe",
+  "experts_dir": "C:/Users/YOUR_USER/AppData/Roaming/MetaQuotes/Terminal/YOUR_TERMINAL_ID/MQL4/Experts",
+  "tester_reports_dir": "C:/Users/YOUR_USER/AppData/Roaming/MetaQuotes/Tester",
+  "read_only": true
+}

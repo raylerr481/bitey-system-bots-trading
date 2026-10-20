@@ -1,0 +1,381 @@
+//+------------------------------------------------------------------+
+//|          EA_Multidireccional_Avanzado_Mensual_v3.2.mq4           |
+//|        Versión equilibrada - Más operaciones + mejor filtro      |
+//|                                  Copyright 2026, Trading Expert  |
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2026, Trading Expert"
+#property version   "3.20"
+#property strict
+
+enum ENUM_TRADE_DIRECTION { TRADE_DIR_BOTH=0, TRADE_DIR_BUY=1, TRADE_DIR_SELL=2 };
+enum ENUM_RISK_MODE      { RISK_MODE_PERCENT=0, RISK_MODE_FIXED=1 };
+
+//--- Gestión de Riesgo
+input group "=== GESTIÓN DE RIESGO =="
+input ENUM_RISK_MODE InpRiskMode     = RISK_MODE_PERCENT;
+input double         InpRiskPercent  = 1.0;
+input double         InpFixedLot     = 0.10;
+input double         InpMaxRiskLots  = 2.5;
+input int            InpMaxTrades    = 4;
+input int            InpSlippage     = 5;
+
+//--- Filtro de Spread
+input group "=== FILTRO DE SPREAD =="
+input bool           InpUseSpreadFilter = false;
+input int            InpMaxSpreadPts    = 80;
+
+//--- Estrategia (equilibrada)
+input group "=== ESTRATEGIA =="
+input ENUM_TRADE_DIRECTION InpTradeDir = TRADE_DIR_BOTH;
+input int    InpFastEMAPeriod  = 5;
+input int    InpSlowEMAPeriod  = 13;
+input int    InpMinEMADistPts  = 3;
+input int    InpRSIPeriod      = 14;
+input double InpRSISellLevel   = 70.0;
+input double InpRSIBuyLevel    = 30.0;
+input bool   InpUseSmartTrend  = true;               // Activado
+input int    InpMacroEMAPeriod = 200;
+input bool   InpUseADXFilter   = true;
+input int    InpADXPeriod      = 14;
+input double InpADXMinLevel    = 16.0;               // Más suave que v3.1
+
+//--- Salidas y Protección
+input group "=== SALIDAS Y PROTECCIÓN =="
+input int    InpATRPeriod      = 14;
+input double InpStopLossMult   = 1.7;
+input double InpTakeProfitMult = 2.8;
+input bool   InpUseTrailing    = true;
+input double InpTrailStartMult = 1.1;
+input double InpTrailDistMult  = 0.85;
+input bool   InpUseGiveback    = true;
+input double InpGivebackMult   = 0.6;
+
+input bool   InpUseBreakEven     = true;
+input double InpBEStartMult      = 0.8;
+input double InpBEProfitMult     = 0.12;
+
+input bool   InpUsePartialClose  = true;
+input double InpPartialStartMult = 1.2;
+input double InpPartialPercent   = 50.0;
+
+//--- Horario
+input group "=== HORARIO =="
+input bool InpUseTimeFilter = true;
+input int  InpStartHour     = 6;
+input int  InpEndHour       = 22;
+input bool InpCloseOnFriday = true;
+input int  InpFridayCloseH  = 20;
+
+//--- Identificación
+input group "=== IDENTIFICACIÓN =="
+input int InpMagicNumber = 8882072;
+
+datetime g_last_bar_time = 0;
+int      g_digits = 0;
+double   g_point = 0.0, g_adjusted_point = 0.0;
+int      g_stops_level = 0;
+
+//+------------------------------------------------------------------+
+int OnInit()
+{
+   if(InpFastEMAPeriod >= InpSlowEMAPeriod) return(INIT_PARAMETERS_INCORRECT);
+
+   g_digits = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
+   g_point  = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+   g_adjusted_point = (g_digits == 3 || g_digits == 5) ? g_point * 10.0 : g_point;
+   g_stops_level = (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL);
+
+   Print("EA Mensual v3.20 (Equilibrada) iniciado");
+   return(INIT_SUCCEEDED);
+}
+
+void OnDeinit(const int reason) { CleanupVariables(); }
+
+void OnTick()
+{
+   CheckFridayClose();
+   ManageOpenPositions();
+
+   if(!IsNewBar()) return;
+   if(!CheckMarketConditions()) return;
+
+   ExecuteStrategy();
+}
+
+bool IsNewBar()
+{
+   datetime t = iTime(_Symbol, _Period, 0);
+   if(t == 0) return false;
+   if(t != g_last_bar_time) { g_last_bar_time = t; return true; }
+   return false;
+}
+
+bool CheckMarketConditions()
+{
+   if(InpUseSpreadFilter)
+   {
+      if((int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD) > InpMaxSpreadPts) return false;
+   }
+   if(InpUseTimeFilter)
+   {
+      MqlDateTime dt; TimeToStruct(TimeCurrent(), dt);
+      if(dt.hour < InpStartHour || dt.hour >= InpEndHour) return false;
+   }
+   if(CountOpenTrades() >= InpMaxTrades) return false;
+   return true;
+}
+
+int CountOpenTrades()
+{
+   int c = 0;
+   for(int i = OrdersTotal()-1; i >= 0; i--)
+      if(OrderSelect(i, SELECT_BY_POS, MODE_TRADES))
+         if(OrderSymbol() == _Symbol && OrderMagicNumber() == InpMagicNumber) c++;
+   return c;
+}
+
+void ExecuteStrategy()
+{
+   double ema_f1 = iMA(_Symbol,_Period,InpFastEMAPeriod,0,MODE_EMA,PRICE_CLOSE,1);
+   double ema_f2 = iMA(_Symbol,_Period,InpFastEMAPeriod,0,MODE_EMA,PRICE_CLOSE,2);
+   double ema_s1 = iMA(_Symbol,_Period,InpSlowEMAPeriod,0,MODE_EMA,PRICE_CLOSE,1);
+   double ema_s2 = iMA(_Symbol,_Period,InpSlowEMAPeriod,0,MODE_EMA,PRICE_CLOSE,2);
+   double rsi    = iRSI(_Symbol,_Period,InpRSIPeriod,PRICE_CLOSE,1);
+   double atr    = iATR(_Symbol,_Period,InpATRPeriod,1);
+   if(atr <= 0) return;
+
+   bool macro_bull = true, macro_bear = true;
+   if(InpUseSmartTrend)
+   {
+      double ema200 = iMA(_Symbol,_Period,InpMacroEMAPeriod,0,MODE_EMA,PRICE_CLOSE,1);
+      macro_bull = (Close[1] > ema200);
+      macro_bear = (Close[1] < ema200);
+   }
+
+   bool adx_ok = true;
+   if(InpUseADXFilter)
+      adx_ok = (iADX(_Symbol,_Period,InpADXPeriod,PRICE_CLOSE,MODE_MAIN,1) >= InpADXMinLevel);
+
+   double min_dist = InpMinEMADistPts * g_adjusted_point;
+
+   bool buy_signal = (ema_f2 <= ema_s2 && ema_f1 > ema_s1 && (ema_f1 - ema_s1) >= min_dist) &&
+                     (rsi < InpRSISellLevel) && macro_bull && adx_ok;
+
+   bool sell_signal = (ema_f2 >= ema_s2 && ema_f1 < ema_s1 && (ema_s1 - ema_f1) >= min_dist) &&
+                      (rsi > InpRSIBuyLevel) && macro_bear && adx_ok;
+
+   if(buy_signal && (InpTradeDir == TRADE_DIR_BOTH || InpTradeDir == TRADE_DIR_BUY))
+      OpenMarketOrder(OP_BUY, atr);
+
+   if(sell_signal && (InpTradeDir == TRADE_DIR_BOTH || InpTradeDir == TRADE_DIR_SELL))
+      OpenMarketOrder(OP_SELL, atr);
+}
+
+void OpenMarketOrder(int type, double atr)
+{
+   double lot = CalculateLotSize(atr);
+   if(lot <= 0) return;
+   if(AccountFreeMarginCheck(_Symbol, type, lot) <= 0) return;
+
+   int ticket = -1, retries = 3;
+   while(retries > 0 && !IsStopped())
+   {
+      RefreshRates();
+      double price = (type == OP_BUY) ? Ask : Bid;
+
+      double sl = (type == OP_BUY)
+                  ? NormalizeDouble(price - atr * InpStopLossMult, g_digits)
+                  : NormalizeDouble(price + atr * InpStopLossMult, g_digits);
+
+      double tp = (type == OP_BUY)
+                  ? NormalizeDouble(price + atr * InpTakeProfitMult, g_digits)
+                  : NormalizeDouble(price - atr * InpTakeProfitMult, g_digits);
+
+      if(!IsValidStopDistance(price, sl, type)) return;
+
+      ticket = OrderSend(_Symbol, type, lot, price, InpSlippage, sl, tp,
+                         "EA Mensual v3.20", InpMagicNumber, 0,
+                         (type == OP_BUY) ? clrDodgerBlue : clrTomato);
+
+      if(ticket > 0)
+      {
+         GlobalVariableSet("EA_Peak_" + IntegerToString(ticket), 0.0);
+         GlobalVariableSet("EA_Partial_" + IntegerToString(ticket), 0);
+         GlobalVariableSet("EA_BE_" + IntegerToString(ticket), 0);
+         break;
+      }
+      Sleep(500);
+      retries--;
+   }
+}
+
+double CalculateLotSize(double atr)
+{
+   if(InpRiskMode == RISK_MODE_FIXED) return NormalizeLot(InpFixedLot);
+
+   double risk = AccountBalance() * InpRiskPercent / 100.0;
+   double sl_dist = atr * InpStopLossMult;
+   double tick_val = MarketInfo(_Symbol, MODE_TICKVALUE);
+   double tick_size = MarketInfo(_Symbol, MODE_TICKSIZE);
+   if(tick_val <= 0 || tick_size <= 0 || sl_dist <= 0) return NormalizeLot(MarketInfo(_Symbol, MODE_MINLOT));
+
+   double lots = risk / ((sl_dist / tick_size) * tick_val);
+   if(lots > InpMaxRiskLots) lots = InpMaxRiskLots;
+   return NormalizeLot(lots);
+}
+
+double NormalizeLot(double lots)
+{
+   double minl = MarketInfo(_Symbol, MODE_MINLOT);
+   double maxl = MarketInfo(_Symbol, MODE_MAXLOT);
+   double step = MarketInfo(_Symbol, MODE_LOTSTEP);
+   if(step <= 0) step = 0.01;
+   lots = MathFloor(lots / step) * step;
+   lots = NormalizeDouble(lots, 2);
+   if(lots < minl) lots = minl;
+   if(lots > maxl) lots = maxl;
+   return lots;
+}
+
+bool IsValidStopDistance(double price, double sl, int type)
+{
+   double min_dist = MathMax(g_stops_level * g_point, g_adjusted_point * 3);
+   return (type == OP_BUY) ? (price - sl) >= min_dist : (sl - price) >= min_dist;
+}
+
+void ManageOpenPositions()
+{
+   double atr = iATR(_Symbol, _Period, InpATRPeriod, 0);
+   if(atr <= 0) return;
+
+   for(int i = OrdersTotal()-1; i >= 0; i--)
+   {
+      if(!OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) continue;
+      if(OrderSymbol() != _Symbol || OrderMagicNumber() != InpMagicNumber) continue;
+
+      int ticket = OrderTicket();
+      int type   = OrderType();
+      double open_price = OrderOpenPrice();
+      double current_sl = OrderStopLoss();
+      double current_tp = OrderTakeProfit();
+      double lots = OrderLots();
+      double profit_price = (type == OP_BUY) ? (Bid - open_price) : (open_price - Ask);
+
+      // Cierre Parcial
+      if(InpUsePartialClose)
+      {
+         string gv = "EA_Partial_" + IntegerToString(ticket);
+         if((!GlobalVariableCheck(gv) || GlobalVariableGet(gv) == 0) && profit_price >= atr * InpPartialStartMult)
+         {
+            double close_lots = NormalizeLot(lots * InpPartialPercent / 100.0);
+            if(close_lots >= MarketInfo(_Symbol, MODE_MINLOT) && close_lots < lots)
+            {
+               if(OrderClose(ticket, close_lots, (type==OP_BUY)?Bid:Ask, InpSlippage, clrYellow))
+                  GlobalVariableSet(gv, 1);
+            }
+         }
+      }
+
+      // Break-even
+      if(InpUseBreakEven)
+      {
+         string gv = "EA_BE_" + IntegerToString(ticket);
+         if((!GlobalVariableCheck(gv) || GlobalVariableGet(gv) == 0) && profit_price >= atr * InpBEStartMult)
+         {
+            double new_sl = (type == OP_BUY)
+                            ? NormalizeDouble(open_price + atr * InpBEProfitMult, g_digits)
+                            : NormalizeDouble(open_price - atr * InpBEProfitMult, g_digits);
+
+            bool improve = (type == OP_BUY && (new_sl > current_sl || current_sl == 0)) ||
+                           (type == OP_SELL && (new_sl < current_sl || current_sl == 0));
+
+            if(improve && IsValidStopDistance((type==OP_BUY)?Bid:Ask, new_sl, type))
+            {
+               if(OrderModify(ticket, open_price, new_sl, current_tp, 0, clrAqua))
+                  GlobalVariableSet(gv, 1);
+            }
+         }
+      }
+
+      // Trailing
+      if(InpUseTrailing && profit_price >= atr * InpTrailStartMult)
+      {
+         double new_sl = (type == OP_BUY)
+                         ? NormalizeDouble(Bid - atr * InpTrailDistMult, g_digits)
+                         : NormalizeDouble(Ask + atr * InpTrailDistMult, g_digits);
+
+         bool improve = (type == OP_BUY && (new_sl > current_sl + g_adjusted_point || current_sl == 0)) ||
+                        (type == OP_SELL && (new_sl < current_sl - g_adjusted_point || current_sl == 0));
+
+         if(improve && IsValidStopDistance((type==OP_BUY)?Bid:Ask, new_sl, type))
+            OrderModify(ticket, open_price, new_sl, current_tp, 0, clrNONE);
+      }
+
+      // Give-back
+      if(InpUseGiveback)
+         CheckGiveback(ticket, type, open_price, atr);
+   }
+}
+
+void CheckGiveback(int ticket, int type, double open_price, double atr)
+{
+   string gv = "EA_Peak_" + IntegerToString(ticket);
+   double profit = (type == OP_BUY) ? (Bid - open_price) : (open_price - Ask);
+   double peak = GlobalVariableCheck(gv) ? GlobalVariableGet(gv) : 0.0;
+
+   if(profit > peak) { GlobalVariableSet(gv, profit); peak = profit; }
+
+   if(peak > atr * 1.4 && (peak - profit) >= atr * InpGivebackMult)
+   {
+      if(OrderClose(ticket, OrderLots(), (type==OP_BUY)?Bid:Ask, InpSlippage, clrOrange))
+      {
+         GlobalVariableDel(gv);
+         string g1 = "EA_Partial_" + IntegerToString(ticket);
+         string g2 = "EA_BE_" + IntegerToString(ticket);
+         if(GlobalVariableCheck(g1)) GlobalVariableDel(g1);
+         if(GlobalVariableCheck(g2)) GlobalVariableDel(g2);
+      }
+   }
+}
+
+void CheckFridayClose()
+{
+   if(!InpCloseOnFriday) return;
+   MqlDateTime dt; TimeToStruct(TimeCurrent(), dt);
+   if(dt.day_of_week == 5 && dt.hour >= InpFridayCloseH)
+   {
+      for(int i = OrdersTotal()-1; i >= 0; i--)
+      {
+         if(!OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) continue;
+         if(OrderSymbol() != _Symbol || OrderMagicNumber() != InpMagicNumber) continue;
+
+         if(OrderClose(OrderTicket(), OrderLots(), (OrderType()==OP_BUY)?Bid:Ask, InpSlippage+2, clrGray))
+         {
+            int t = OrderTicket();
+            string g1 = "EA_Peak_" + IntegerToString(t);
+            string g2 = "EA_Partial_" + IntegerToString(t);
+            string g3 = "EA_BE_" + IntegerToString(t);
+            if(GlobalVariableCheck(g1)) GlobalVariableDel(g1);
+            if(GlobalVariableCheck(g2)) GlobalVariableDel(g2);
+            if(GlobalVariableCheck(g3)) GlobalVariableDel(g3);
+         }
+      }
+   }
+}
+
+void CleanupVariables()
+{
+   for(int i = GlobalVariablesTotal()-1; i >= 0; i--)
+   {
+      string name = GlobalVariableName(i);
+      if(StringFind(name, "EA_Peak_") == 0 || StringFind(name, "EA_Partial_") == 0 || StringFind(name, "EA_BE_") == 0)
+      {
+         int ticket = (int)StringToInteger(StringSubstr(name, StringFind(name, "_")+1));
+         bool found = false;
+         for(int j = OrdersTotal()-1; j >= 0; j--)
+            if(OrderSelect(j, SELECT_BY_POS, MODE_TRADES) && OrderTicket() == ticket) { found = true; break; }
+         if(!found) GlobalVariableDel(name);
+      }
+   }
+}
+//+------------------------------------------------------------------+
