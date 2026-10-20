@@ -1860,7 +1860,7 @@ void ManageAdaptiveSLTP()
 
       // Enforce at most one successful adaptive SL/TP modification per ticket per newly closed
       // management-timeframe candle. The one-candle pattern remains true across many ticks;
-      // without this bar guard the same three candles could trigger repeated modifications.
+      // without this bar guard the same closed candle could trigger repeated modifications.
       datetime lastClosedBar=iTime(sym,tf,1);
       if(lastClosedBar<=0)
       {
