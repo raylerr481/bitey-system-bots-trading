@@ -325,8 +325,8 @@ input double   InpStopATR = 1.30;
 input double   InpTargetATR = 2.60;
 // Adaptive exit management (v1.59: three-candle, profit-only adaptive SL/TP)
 input bool     InpAdaptiveSLTPEnabled = true;
-input double   InpAdaptiveSLTPMinNetProfitUSD = 0.05; // Legacy compatibility only; v1.78 uses the sustained USD5 activation gate below.
-input double   InpProfitSLTPActivationUSD = 0.50; // Adaptive SL/TP begins only when net floating profit exceeds USD0.50.
+input double   InpAdaptiveSLTPMinNetProfitUSD = 0.05; // Legacy compatibility input; v1.99.13 uses the spread-aware threshold below.
+input double   InpProfitSLTPActivationUSD = 0.50; // Baseline activation floor; live spread and configured costs can raise the per-ticket threshold.
 input int      InpProfitSLTPSustainSeconds = 30; // Effective spread-aware net-profit threshold must persist for 30 seconds.
 input double   InpSLTPSpreadCostMultiplier = 1.50; // Require net floating profit to cover at least 1.5x estimated live spread + configured round-turn commission/swap before adaptive SL/TP.
 input ENUM_TIMEFRAMES InpAdaptiveSLTPTimeframe = PERIOD_H1; // Timeframe used to confirm three consecutive favorable closed candles on every managed asset.
