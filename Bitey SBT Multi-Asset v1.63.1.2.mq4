@@ -1929,7 +1929,7 @@ void ManageAdaptiveSLTP()
             " open=",DoubleToString(open,digits)," bid=",DoubleToString(bid,digits)," ask=",DoubleToString(ask,digits),
             " favorableDistance=",DoubleToString(favorable,digits)," ATR=",DoubleToString(atr,digits),
             " floatingNetUSD=",DoubleToString(floatingNet,2),
-            " threeClosedCandlesConfirmed=true timeframe=",tf,
+            " oneClosedCandleConfirmed=true timeframe=",tf,
             " profitGateUSD>",DoubleToString(InpAdaptiveSLTPMinNetProfitUSD,2),
             " oldSL=",DoubleToString(oldSL,digits)," requestedSL=",DoubleToString(newSL,digits)," slReason=",slReason,
             " oldTP=",DoubleToString(oldTP,digits)," requestedTP=",DoubleToString(newTP,digits)," tpReason=",tpReason,
