@@ -6,7 +6,7 @@
 // v1.62: carries forward the broker symbol-to-canonical-asset validation immediately before each OrderSend; order comments identify the canonical asset.
 // v1.60: rate-limits successful adaptive SL/TP changes to at most one per ticket per newly closed management-timeframe candle.
 // v1.51.5: separates training from chronological holdout metrics, logs threshold failures, verifies opened-order SL/TP by readback, and audits managed positions.
-// v1.51.7: supervises all symbols sharing this magic, per-ticket cooldown, and rate-limited idle-decision audit. v1.51.9 blocks same-direction stacking in the chart execution path so one canonical asset can hold at most one live position. v1.57.0 added the strict net-profit gate. v1.58.0 adds the configurable loss/profit USD risk ladder; v1.58.1 corrects virtual capital so it remains fixed at USD500 independently of account equity and requires three favorable closed candles before adaptive SL/TP changes. Reconstructed from v1.49.7 + available diagnostics; not an exact patch of missing v1.51.4.
+// v1.51.7: supervises all symbols sharing this magic, per-ticket cooldown, and rate-limited idle-decision audit. v1.51.9 blocks same-direction stacking in the chart execution path so one canonical asset can hold at most one live position. v1.57.0 added the strict net-profit gate. v1.58.0 adds the configurable loss/profit USD risk ladder; v1.58.1 corrects virtual capital so it remains fixed at USD500 independently of account equity and requires one favorable closed candle before adaptive SL/TP changes. Reconstructed from v1.49.7 + available diagnostics; not an exact patch of missing v1.51.4.
 // IMPORTANT
 // - AUTO_EXECUTION is the default; account classification is reported but never gates orders.
 // - The EA uses a fixed virtual strategy allocation of USD 500, not the whole account balance.
@@ -1024,7 +1024,7 @@ int OnInit()
       InpProfitFlexThresholdUSD<=0 || InpProfitProtectThresholdUSD<=0 ||
       InpProfitFlexThresholdUSD>=InpProfitProtectThresholdUSD)
    {
-      Print("BITEY SBT v1.58.1 INIT ERROR: invalid risk or lookback inputs.");
+      Print("BITEY SBT v1.63.1.2 INIT ERROR: invalid risk or lookback inputs.");
       return(INIT_PARAMETERS_INCORRECT);
    }
    g_lastBarTime=0;
@@ -4373,7 +4373,7 @@ void EvaluateEngine()
          " | evaluating 14 chart-local models with closed-bar data; the cross-asset ranking separately uses 16 model-family proxies; momentumThresholdATR=",DoubleToString(InpMomentumATRThreshold,2),
          " trendContinuation=",(InpMomentumTrendContinuation?"true":"false"),
          " donchianBufferATR=",DoubleToString(InpBreakoutBufferATR,2),".");
-   Print("BITEY SBT v1.58.1 MULTI-ASSET | governor=",GovernorStateName(g_governorState)," campaignNetUSD=",DoubleToString(g_campaignNetUSD,2)," requiredVotes=",requiredVotes," | ",Symbol()," TF=",Period()," BUY votes=",buyVotes," SELL votes=",sellVotes,
+   Print("BITEY SBT v1.63.1.2 MULTI-ASSET | governor=",GovernorStateName(g_governorState)," campaignNetUSD=",DoubleToString(g_campaignNetUSD,2)," requiredVotes=",requiredVotes," | ",Symbol()," TF=",Period()," BUY votes=",buyVotes," SELL votes=",sellVotes,
          " | TREND=",trend," MOMENTUM=",momentum," DONCHIAN=",donchian," MEANREV=",meanrev,
          " STRICT_RANGE=",strictRange," ATR_BREAKOUT=",atrBreakout," SESSION_BIAS=",sessionBias,
          " RSI_DIVERGENCE=",rsiDivergence," HTF_TREND=",htfTrend,
