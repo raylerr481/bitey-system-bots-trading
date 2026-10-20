@@ -5,7 +5,7 @@ const json = (data, status = 200) => new Response(JSON.stringify(data), {
     "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
     "access-control-allow-origin": "*",
     "access-control-allow-methods": "GET, OPTIONS",
-    "access-control-allow-headers": "content-type"
+    "access-control-allow-headers": "content-type, authorization"
   }
 });
 
@@ -14,7 +14,6 @@ function configuredBase(env) {
   if (!raw) return { error: "hummingbot_not_configured" };
   let url;
   try { url = new URL(raw); } catch { return { error: "invalid_hummingbot_api_url" }; }
-  // Cloudflare Worker should connect to a private HTTPS/Tailscale endpoint, never a public plaintext API.
   if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash) {
     return { error: "hummingbot_api_url_must_be_https_without_embedded_credentials" };
   }
