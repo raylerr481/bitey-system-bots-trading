@@ -1062,7 +1062,7 @@ int OnInit()
             " | verify broker/terminal clock before relying on campaign P/L.");
       UpdateRiskGovernor();
    }
-   Print("BITEY SBT Multi-Asset Engine v1.58.1 initialized | Symbol=",Symbol(),
+   Print("BITEY SBT Multi-Asset Engine v1.63.1.2 initialized | Symbol=",Symbol(),
          " TF=",Period()," Mode=",(InpMode==OBSERVE_ONLY?"OBSERVE_ONLY":"AUTO_EXECUTION"),
          " OneShotTestMode=",(InpOneShotTestMode?"true":"false"),
          " OneShotSafetyNotice=",(InpOneShotTestMode?"ENABLED_ONE_ORDER_MAY_BE_REAL":"disabled"),
@@ -1743,7 +1743,7 @@ void ManageAdaptiveSLTP()
       }
       if(!OneClosedCandleConfirmsFavorableMove(sym,tf,type))
       {
-         string candleGateKey=StringFormat("BiteySLTP3CandleGate_%d",ticket);
+         string candleGateKey=StringFormat("BiteySLTP1CandleGate_%d",ticket);
          double lastCandleGate=(GlobalVariableCheck(candleGateKey)?GlobalVariableGet(candleGateKey):0.0);
          if(now-(datetime)lastCandleGate>=60 || lastCandleGate<=0)
          {
