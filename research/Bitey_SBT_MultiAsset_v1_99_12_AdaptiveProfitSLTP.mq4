@@ -3276,7 +3276,7 @@ void SendSbtSnapshot(int decision,string decisionText,int buyVotes,int sellVotes
    body+="\"best_strategy\":\""+JsonEscape(bestStrategy)+"\",";
    body+="\"best_score\":"+DoubleToString(bestScore,6)+",";
    body+="\"metrics\":{";
-   body+="\"engine_version\":\"1.64.0\",";
+   body+="\"engine_version\":\"1.99.12\",";
    body+="\"magic\":"+IntegerToString(InpMagic)+",";
    body+="\"decision\":\""+JsonEscape(decisionText)+"\",";
    body+="\"provisional_evidence\":"+JsonBool(g_currentProvisionalEntry)+",";
@@ -3488,7 +3488,7 @@ bool SendClosedTradeReport(int historyIndex)
    body+="\"metadata\":{";
    body+="\"report_family\":\"BITEY_SBT_LIBRARY\",";
    body+="\"learning_scope\":\"shared_bitey_ia_sbt\",";
-   body+="\"source_version\":\"1.64.0\",";
+   body+="\"source_version\":\"1.99.12\",";
    body+="\"q_learning\":{";
    body+="\"algorithm\":\"Q_LEARNING\",";
    body+="\"policy_key\":\"bitey_shared_trading_q_v1\",";
@@ -5822,7 +5822,7 @@ void EvaluateEngine()
    // Evidence is attached to the execution attempt, not inferred later from a broker open message.
    RefreshRates();
    Print("TRADE EVIDENCE PACKET | schema=1 phase=PRE_ORDER source=CHART_LOCAL",
-         " eaVersion=1.99.11 symbol=",Symbol()," canonicalAsset=",CanonicalAssetKey(Symbol()),
+         " eaVersion=1.99.12 symbol=",Symbol()," canonicalAsset=",CanonicalAssetKey(Symbol()),
          " timeframe=",Period()," closedBarTime=",TimeToString(iTime(Symbol(),Period(),1),TIME_DATE|TIME_SECONDS),
          " decision=",(decision>0?"BUY":"SELL")," selectedModel=",bestStrategy,
          " expectedRScore=",DoubleToString(bestScore,6),
@@ -5858,7 +5858,7 @@ void EvaluateEngine()
          " persistedStatus=",EntryAttemptStatusName(g_lastEntryAttemptStatus),
          " retryPolicy=WAIT_NEXT_NEW_BAR_AND_FULL_REVALIDATION retryAllowed=false_for_current_bar");
    Print("TRADE EVIDENCE PACKET | schema=1 phase=POST_ORDER source=CHART_LOCAL",
-         " eaVersion=1.99.11 symbol=",Symbol()," canonicalAsset=",CanonicalAssetKey(Symbol()),
+         " eaVersion=1.99.12 symbol=",Symbol()," canonicalAsset=",CanonicalAssetKey(Symbol()),
          " timeframe=",Period()," closedBarTime=",TimeToString(iTime(Symbol(),Period(),1),TIME_DATE|TIME_SECONDS),
          " decision=",(decision>0?"BUY":"SELL")," selectedModel=",bestStrategy,
          " expectedRScore=",DoubleToString(bestScore,6),
