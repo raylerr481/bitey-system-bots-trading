@@ -91,6 +91,11 @@ export async function handleHummingbotProxy(request, env, pathname) {
   }
 
   if (pathname === "/api/v1/hummingbot/status") {
+    const bridgeToken = String(env.HUMMINGBOT_BRIDGE_TOKEN || "");
+    const supplied = String(request.headers.get("authorization") || "");
+    if (!bridgeToken || supplied !== "Bearer " + bridgeToken) {
+      return json({ ok: false, error: "unauthorized", execution_enabled: false }, 401);
+    }
     const result = await requestHummingbot(env, "/bot-orchestration/status", true);
     return json({
       ok: result.ok,
