@@ -1087,7 +1087,7 @@ int OnInit()
          " profitActivationUSD=",DoubleToString(InpProfitActivationThresholdUSD,2)," profitSustainMinutes=",InpProfitSustainMinutes,
          " profitStepUSD=",DoubleToString(InpProfitRiskStepUSD,2)," maxRiskUSD=",DoubleToString(InpAdaptiveRiskMaximumUSD,2)," maxRiskCapitalPct=",DoubleToString(InpMaxRiskPerTradeCapitalPct,2),
          " aggregateRiskCapUSD=",DoubleToString(InpPortfolioOpenRiskCapUSD,2));
-   Print("THREE CANDLE SLTP CONFIG | enabled=",(InpAdaptiveSLTPEnabled?"true":"false"),
+   Print("ONE CANDLE SLTP CONFIG | enabled=",(InpAdaptiveSLTPEnabled?"true":"false"),
          " timeframe=",(InpAdaptiveSLTPTimeframe==PERIOD_CURRENT?Period():(int)InpAdaptiveSLTPTimeframe),
          " requiredClosedCandles=1 direction=POSITION_ALIGNED netProfitThresholdUSD=",DoubleToString(InpAdaptiveSLTPMinNetProfitUSD,2));
    Print("GOVERNOR CONFIG | State=",GovernorStateName(g_governorState),
