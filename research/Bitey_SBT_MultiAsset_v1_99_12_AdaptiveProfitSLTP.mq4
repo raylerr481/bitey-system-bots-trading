@@ -326,8 +326,8 @@ input double   InpTargetATR = 2.60;
 // Adaptive exit management (v1.59: three-candle, profit-only adaptive SL/TP)
 input bool     InpAdaptiveSLTPEnabled = true;
 input double   InpAdaptiveSLTPMinNetProfitUSD = 0.05; // Legacy compatibility only; v1.78 uses the sustained USD5 activation gate below.
-input double   InpProfitSLTPActivationUSD = 0.50; // Adaptive SL/TP begins only when net floating profit exceeds USD5.
-input int      InpProfitSLTPSustainSeconds = 30; // Net profit must remain above USD5 continuously for at least two minutes before adaptive changes.
+input double   InpProfitSLTPActivationUSD = 0.50; // Adaptive SL/TP begins only when net floating profit exceeds USD0.50.
+input int      InpProfitSLTPSustainSeconds = 30; // Net profit must remain above USD0.50 continuously for at least 30 seconds before adaptive changes.
 input ENUM_TIMEFRAMES InpAdaptiveSLTPTimeframe = PERIOD_H1; // Timeframe used to confirm three consecutive favorable closed candles on every managed asset.
 input double   InpBreakEvenTriggerATR = 0.60; // Start profit lock after favorable move reaches this ATR multiple.
 input double   InpBreakEvenLockATR = 0.08; // Lock a small price-distance gain beyond entry; costs/slippage still apply.
@@ -1293,7 +1293,7 @@ int OnInit()
    if(InpOperatingCapitalUSD<=0 || InpRiskPerTradeUSD<=0 || InpHardRiskCapUSD<=0 || EffectivePortfolioRiskCapUSD()<=0 || InpMaxOpenTrades<1 || InpMaxOpenTrades>7 || InpMaxPositionsPerAsset!=1 || InpCrossAssetMaxCryptoPositions<1 || InpSbtTelemetryTimeoutMs<250 ||
       InpLossRiskConfirmedUSD<=0 || InpLossRiskPersistentUSD<=0 || InpLossRiskSevereUSD<=0 || InpSeverePortfolioLossTriggerUSD<=0 || InpLossConfirmMinutes<1 || InpPersistentLossMinutes<InpLossConfirmMinutes || InpSevereLossMinutes<InpPersistentLossMinutes || InpProfitActivationThresholdUSD<0 || InpProfitSustainMinutes<1 || InpProfitRiskStepUSD<=0 || InpAdaptiveRiskMaximumUSD<=0 || InpAdaptiveRiskMaximumUSD>25.00 || InpHardRiskCapUSD>25.00 || InpRiskPerTradeUSD>25.00 || InpMaxRiskPerTradeCapitalPct<=0 || InpMaxRiskPerTradeCapitalPct>5.00 || InpEmergencyFloatingLossUSD<=0 ||
       InpATRPeriod<2 || InpForwardHorizonBars<1 || InpEvidenceLookbackBars<30 ||
-      InpBreakEvenTriggerATR<=0 || InpBreakEvenLockATR<0 || InpTrailTriggerATR<=0 || InpTrailDistanceATR<=0 || InpTPExtendTriggerATR<=0 || InpTPExtendDistanceATR<=0 || InpAdaptiveSLTPMinNetProfitUSD<0 || InpProfitSLTPActivationUSD<0 || InpProfitSLTPSustainSeconds<120 || InpSLTPMinChangeATR<=0 || InpSLTPModifyCooldownSeconds<1 ||
+      InpBreakEvenTriggerATR<=0 || InpBreakEvenLockATR<0 || InpTrailTriggerATR<=0 || InpTrailDistanceATR<=0 || InpTPExtendTriggerATR<=0 || InpTPExtendDistanceATR<=0 || InpAdaptiveSLTPMinNetProfitUSD<0 || InpProfitSLTPActivationUSD<0 || InpProfitSLTPSustainSeconds<30 || InpSLTPMinChangeATR<=0 || InpSLTPModifyCooldownSeconds<1 ||
       InpPullbackMaxGapATR<0 || InpBreakoutBufferATR<0 || InpStopATR<=0 || InpTargetATR<=0 ||
       InpMinModelVotes<1 || InpMinModelVotes>MODEL_COUNT || InpCampaignLossStopUSD<=0 || InpStrictLossThresholdUSD<=0 ||
       InpProfitFlexThresholdUSD<=0 || InpProfitProtectThresholdUSD<=0 ||
@@ -2583,7 +2583,7 @@ void ManageAdaptiveSLTP()
          }
          continue;
       }
-      // Adaptive changes require sustained net profit > USD5 for at least two minutes AND
+      // Adaptive changes require sustained net profit > USD0.50 for at least 30 seconds AND
       // three favorable fully closed management candles. No profit-threshold close occurs.
       bool favorableCandlesConfirmed=ThreeClosedCandlesConfirmFavorableMove(sym,tf,type);
       if(!favorableCandlesConfirmed)
