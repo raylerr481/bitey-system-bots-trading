@@ -1,4 +1,5 @@
 import { handleMt4Proxy } from './mt4-proxy.js';
+import { handleHummingbotProxy } from './hummingbot-bridge.js';
 
 const json = (data, status = 200, extra = {}) => new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store, no-cache, must-revalidate, max-age=0', 'access-control-allow-origin': '*', ...extra } });
 
@@ -52,6 +53,10 @@ export default {
 
     if (url.pathname.startsWith('/api/v1/mt4/')) {
       return handleMt4Proxy(request, env, url.pathname);
+    }
+
+    if (url.pathname.startsWith('/api/v1/hummingbot/')) {
+      return handleHummingbotProxy(request, env, url.pathname);
     }
 
     if (url.pathname === '/health') return json({ service: 'bitey-system-bots-trading', status: 'ok', mode: 'research-demo', live: false, virtual_money: true, broker_orders: 0, mt4_telemetry_proxy: true, web_build: BUILD });
