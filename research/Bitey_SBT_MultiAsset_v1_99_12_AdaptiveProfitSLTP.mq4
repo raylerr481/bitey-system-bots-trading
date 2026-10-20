@@ -2461,14 +2461,13 @@ void EnforceOpenPositionRiskCapAdaptive()
 // Do not adapt SL/TP until net P/L clears the configured minimum; this prevents reacting to
 // a nominal price move that has not covered known transaction costs. Existing broker SL/TP
 // remain untouched below the threshold. SL is monotonic; TP only extends favorably.
-// v1.76.0 GLOBAL CLOSE-ON-NEGATIVE RULE (BUY and SELL).
+// GLOBAL LOSS-THRESHOLD CLOSE ATTEMPT (BUY and SELL; legacy function name retained).
 // Applies to open market orders owned by this EA's InpMagic across all symbols.
-// Net floating P/L includes OrderProfit + swap + commission, matching the economic
-// net result rather than price-only movement. Any value strictly below zero triggers
-// a market-close attempt. A detected negative position suppresses new entries for
-// this processing pass, including when the close succeeds; failed closes are retried
-// on the next tick/timer pass. Broker execution, slippage and gaps prevent a zero-loss
-// fill guarantee.
+// Net floating P/L includes OrderProfit + swap + commission. A close is attempted only
+// when net floating P/L <= -abs(InpEmergencyFloatingLossUSD), default USD1.25.
+// A triggered position suppresses new entries for this processing pass, even if the
+// close succeeds; failed closes are retried on the next tick/timer pass. Broker
+// execution, slippage and gaps prevent this threshold from guaranteeing a maximum loss.
 bool EnforceNonNegativeFloatingProfitClose()
 {
    bool safeToEvaluateEntries=true;
