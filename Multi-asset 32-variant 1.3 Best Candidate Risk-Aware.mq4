@@ -35,7 +35,7 @@ input int InpMinBars = 250;
 input bool InpAllowBuy = true;
 input bool InpAllowSell = true;
 input bool InpOnePositionPerSymbol = true;
-input bool InpEnableTrading = false; // Enable only after compilation and demo validation
+input bool InpEnableTrading = true; // Auto-trading enabled; retain all signal, broker and risk gates
 input bool InpLogVotes = true;
 
 #define MODEL_COUNT 32
