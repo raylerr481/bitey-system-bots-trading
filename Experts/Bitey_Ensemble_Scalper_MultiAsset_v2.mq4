@@ -95,6 +95,15 @@ void EvaluateSymbol(string sym)
    double bid=MarketInfo(sym,MODE_BID), ask=MarketInfo(sym,MODE_ASK);
    double point=MarketInfo(sym,MODE_POINT);
    if(bid<=0 || ask<=0 || point<=0) { LogReject(sym,"INVALID_QUOTES_OR_POINT"); return; }
+   // Risk inputs are denominated in USD. Do not compare them to tick values
+   // expressed in a different account currency without a validated FX conversion.
+   if(AccountCurrency()!="USD")
+   {
+      Print("SYMBOL_REJECT | symbol=",sym," | reason=ACCOUNT_CURRENCY_NOT_USD_RISK_CONVERSION_UNSUPPORTED",
+            " | accountCurrency=",AccountCurrency(),
+            " | referenceCapitalUSD=",DoubleToString(InpReferenceCapitalUSD,2));
+      return;
+   }
    double spread=(ask-bid)/point;
    if(spread>InpMaxSpreadPoints) { LogReject(sym,"SPREAD_LIMIT"); return; }
    if(InpOnePositionPerSymbol && HasPositionForSymbol(sym)) { LogReject(sym,"POSITION_ALREADY_OPEN"); return; }
