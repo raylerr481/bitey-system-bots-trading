@@ -293,7 +293,8 @@ void ManageOpenPositions()
       double bid=MarketInfo(sym,MODE_BID), ask=MarketInfo(sym,MODE_ASK);
       double mark=(OrderType()==OP_BUY?bid:ask);
       if(mark<=0) continue;
-      double initialRisk=MathAbs(OrderOpenPrice()-OrderStopLoss());
+      // Reconstruct initial R from the unchanged target so trailing the SL does not shrink R.
+      double initialRisk=(OrderTakeProfit()>0 ? MathAbs(OrderTakeProfit()-OrderOpenPrice())/TakeProfitRMultiple : 0.0);
       if(initialRisk<=0) continue;
       double favorable=(OrderType()==OP_BUY?mark-OrderOpenPrice():OrderOpenPrice()-mark);
       double newSL=OrderStopLoss();
