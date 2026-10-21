@@ -137,7 +137,28 @@ void EvaluateSymbol(string sym)
    if(lots<=0) { LogReject(sym,"RISK_OR_LOT_CALCULATION_FAILED"); return; }
    double risk=EstimateRiskUSD(sym,lots,stopDist);
    double maxRisk=InpReferenceCapitalUSD*InpMaxAggregateRiskPct/100.0;
-   if(CurrentPlannedRiskUSD()+risk>maxRisk+0.01) { LogReject(sym,"AGGREGATE_RISK_CAP"); return; }
+   double currentRisk=CurrentPlannedRiskUSD();
+   double remainingRisk=maxRisk-currentRisk;
+   Print("RISK_BUDGET_AUDIT | symbol=",sym,
+         " | accountCurrency=",AccountCurrency(),
+         " | referenceCapitalUSD=",DoubleToString(InpReferenceCapitalUSD,2),
+         " | riskPerTradeBudget=",DoubleToString(InpReferenceCapitalUSD*InpRiskPctPerTrade/100.0,2),
+         " | candidateRiskTickValueCurrency=",DoubleToString(risk,2),
+         " | currentOpenRiskTickValueCurrency=",DoubleToString(currentRisk,2),
+         " | aggregateCap=",DoubleToString(maxRisk,2),
+         " | remainingBeforeCandidate=",DoubleToString(remainingRisk,2),
+         " | projectedTotal=",DoubleToString(currentRisk+risk,2));
+   if(currentRisk+risk>maxRisk+0.01)
+   {
+      Print("RISK_BUDGET_REJECT_DETAIL | symbol=",sym,
+         " | reason=AGGREGATE_RISK_CAP",
+         " | currentRisk=",DoubleToString(currentRisk,2),
+         " | candidateRisk=",DoubleToString(risk,2),
+         " | cap=",DoubleToString(maxRisk,2),
+         " | excess=",DoubleToString(currentRisk+risk-maxRisk,2),
+         " | accountCurrency=",AccountCurrency());
+      LogReject(sym,"AGGREGATE_RISK_CAP"); return;
+   }
 
    if(!InpEnableTrading)
    {
@@ -344,8 +365,22 @@ double CurrentPlannedRiskUSD()
    {
       if(!OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) continue;
       if(OrderMagicNumber()!=InpMagic || (OrderType()!=OP_BUY && OrderType()!=OP_SELL)) continue;
-      if(OrderStopLoss()<=0) return(InpReferenceCapitalUSD); // fail closed if risk unknown
-      total+=EstimateRiskUSD(OrderSymbol(),OrderLots(),MathAbs(OrderOpenPrice()-OrderStopLoss()));
+      if(OrderStopLoss()<=0)
+      {
+         Print("OPEN_RISK_AUDIT | ticket=",OrderTicket()," | symbol=",OrderSymbol(),
+            " | lots=",DoubleToString(OrderLots(),4)," | reason=OPEN_POSITION_WITHOUT_SL",
+            " | failClosedRisk=",DoubleToString(InpReferenceCapitalUSD,2));
+         return(InpReferenceCapitalUSD); // fail closed if risk unknown
+      }
+      double positionRisk=EstimateRiskUSD(OrderSymbol(),OrderLots(),MathAbs(OrderOpenPrice()-OrderStopLoss()));
+      Print("OPEN_RISK_AUDIT | ticket=",OrderTicket()," | symbol=",OrderSymbol(),
+         " | lots=",DoubleToString(OrderLots(),4)," | openPrice=",DoubleToString(OrderOpenPrice(),8),
+         " | stopLoss=",DoubleToString(OrderStopLoss(),8)," | stopDistance=",DoubleToString(MathAbs(OrderOpenPrice()-OrderStopLoss()),8),
+         " | tickValue=",DoubleToString(MarketInfo(OrderSymbol(),MODE_TICKVALUE),8),
+         " | tickSize=",DoubleToString(MarketInfo(OrderSymbol(),MODE_TICKSIZE),8),
+         " | estimatedRiskTickValueCurrency=",DoubleToString(positionRisk,2),
+         " | accountCurrency=",AccountCurrency());
+      total+=positionRisk;
    }
    return(total);
 }
@@ -355,12 +390,38 @@ double LotsForRisk(string sym,double stopDist)
    double riskMoney=InpReferenceCapitalUSD*InpRiskPctPerTrade/100.0;
    double tv=MarketInfo(sym,MODE_TICKVALUE),ts=MarketInfo(sym,MODE_TICKSIZE);
    double minLot=MarketInfo(sym,MODE_MINLOT),maxLot=MarketInfo(sym,MODE_MAXLOT),step=MarketInfo(sym,MODE_LOTSTEP);
-   if(riskMoney<=0 || tv<=0 || ts<=0 || stopDist<=0 || minLot<=0 || maxLot<minLot || step<=0) return(0);
+   if(riskMoney<=0 || tv<=0 || ts<=0 || stopDist<=0 || minLot<=0 || maxLot<minLot || step<=0)
+   {
+      Print("LOT_CALC_AUDIT | symbol=",sym," | reason=INVALID_BROKER_SPEC",
+         " | riskBudget=",DoubleToString(riskMoney,2)," | tickValue=",DoubleToString(tv,8),
+         " | tickSize=",DoubleToString(ts,8)," | stopDistance=",DoubleToString(stopDist,8),
+         " | minLot=",DoubleToString(minLot,4)," | maxLot=",DoubleToString(maxLot,4),
+         " | lotStep=",DoubleToString(step,4)," | accountCurrency=",AccountCurrency());
+      return(0);
+   }
    double lossPerLot=(stopDist/ts)*tv;
-   if(lossPerLot<=0) return(0);
-   double lots=MathFloor((riskMoney/lossPerLot)/step+1e-9)*step;
+   if(lossPerLot<=0)
+   {
+      Print("LOT_CALC_AUDIT | symbol=",sym," | reason=NONPOSITIVE_LOSS_PER_LOT",
+         " | lossPerLot=",DoubleToString(lossPerLot,8)," | stopDistance=",DoubleToString(stopDist,8),
+         " | tickValue=",DoubleToString(tv,8)," | tickSize=",DoubleToString(ts,8));
+      return(0);
+   }
+   double rawLots=(riskMoney/lossPerLot);
+   double lots=MathFloor(rawLots/step+1e-9)*step;
    lots=NormalizeDouble(lots,LotDigits(step));
-   if(lots<minLot || lots>maxLot || EstimateRiskUSD(sym,lots,stopDist)>riskMoney+0.02) return(0);
+   double estimatedRisk=(lots>0?EstimateRiskUSD(sym,lots,stopDist):0);
+   if(lots<minLot || lots>maxLot || estimatedRisk>riskMoney+0.02)
+   {
+      Print("LOT_CALC_AUDIT | symbol=",sym," | reason=LOT_OUTSIDE_RISK_BUDGET",
+         " | accountCurrency=",AccountCurrency()," | riskBudget=",DoubleToString(riskMoney,2),
+         " | stopDistance=",DoubleToString(stopDist,8)," | tickValue=",DoubleToString(tv,8),
+         " | tickSize=",DoubleToString(ts,8)," | lossPerLot=",DoubleToString(lossPerLot,8),
+         " | rawLots=",DoubleToString(rawLots,6)," | calculatedLots=",DoubleToString(lots,4),
+         " | minLot=",DoubleToString(minLot,4)," | maxLot=",DoubleToString(maxLot,4),
+         " | lotStep=",DoubleToString(step,4)," | estimatedRisk=",DoubleToString(estimatedRisk,2));
+      return(0);
+   }
    return(lots);
 }
 
