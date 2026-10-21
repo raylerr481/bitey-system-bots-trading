@@ -17,10 +17,10 @@ This is a new, independent MQL4 Expert Advisor inspired by the classic Turtle tr
 - Reference capital: USD 500.
 - Planned risk budget: USD 1.25 per trade, estimated from broker tick metadata and stop distance.
 - Daily loss threshold: USD 10; blocks new entries and does not guarantee forced liquidation.
-- EnableTrading=false by default.
-- Commission and expected swap inputs default to unknown (-1); new entries are blocked until you set verified non-negative values. These estimates are included in the lot-size risk budget.
+- Version 1.01 defaults to EnableTrading=true so it can attempt entries once all signal, quote, spread, cost-input, margin, and risk checks pass. Set it to false to disable trading immediately. Test on demo first; do not assume it is profitable or production-validated.
+- Commission and expected swap inputs default to 0 so the EA can run without account-type gating; zero means the cost may be unknown and excluded from estimated risk. A warning is logged. Configure actual broker costs before interpreting results; unmodeled costs can make actual risk exceed the estimate.
 - If the broker's minimum lot would exceed the planned risk budget, the EA rejects the trade.
-- Requires USD account currency by default; spread, quote freshness, margin, and broker metadata checks are applied.
+- Demo/live account type is not used as a trading gate, and USD account currency is not required by default. Risk sizing still uses USD-denominated assumptions and broker tick metadata; non-USD accounts or non-USD quote currencies require extra verification. Spread, quote freshness, margin, and broker metadata checks remain active.
 - The EA only manages its own magic-number positions. Stop loss and daily threshold are estimates/guards, not guaranteed maximum losses.
 
 ## Required validation before enabling
@@ -29,6 +29,6 @@ This is a new, independent MQL4 Expert Advisor inspired by the classic Turtle tr
 3. Backtest with realistic variable spread, commission, swap, and slippage. Record net profit, profit factor, maximum equity drawdown, trade count, expectancy, average win/loss, and costs.
 4. Keep chronological out-of-sample data untouched during tuning; compare 20/10 and 55/20 channels without selecting based only on the best in-sample result.
 5. Forward-test on demo and reconcile the logged estimated risk with actual broker fills and stop distances.
-6. Keep EnableTrading=false until compilation, backtest, and demo-forward gates are passed.
+6. Run first on demo and review order logs. For safety, set EnableTrading=false until compilation, backtest, and demo-forward gates are passed; the current version defaults to enabled to satisfy the request for observable execution, so verify the account and terminal before attaching it.
 
 A successful compile or positive backtest does not establish future profitability. Gap risk, slippage, execution failures, or inaccurate broker metadata can cause realized losses to exceed the estimate.
