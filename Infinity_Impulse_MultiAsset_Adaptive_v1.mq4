@@ -4,7 +4,7 @@
 //| Original XAUUSD source preserved; this is a separate candidate.   |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.10"
+#property version   "1.11"
 #property description "MarketWatch multi-asset impulse EA with ATR/spread-adaptive risk sizing"
 
 input double InpRiskPercent       = 0.50;   // Risk budget per trade (% of balance)
@@ -77,13 +77,22 @@ void ProcessSymbol(string symbol)
    double ask = MarketInfo(symbol, MODE_ASK);
    double bid = MarketInfo(symbol, MODE_BID);
    double tickSizeRaw = MarketInfo(symbol, MODE_TICKSIZE);
-   // Brokers may expose MODE_TICKSIZE as price units or as points; normalize defensively.
-   double tickSize = (tickSizeRaw > 0 && tickSizeRaw <= point) ? tickSizeRaw : tickSizeRaw * point;
    double tickValue = MarketInfo(symbol, MODE_TICKVALUE);
+   // MT4 defines MODE_TICKSIZE in points. Convert points to the symbol's price units.
+   // Validate point first; do not guess the unit from tickSizeRaw's magnitude.
+   double tickSize = 0.0;
+   if(point > 0.0 && tickSizeRaw > 0.0) tickSize = tickSizeRaw * point;
    double atr = iATR(symbol, InpTimeframe, InpATRPeriod, 1);
-   if(point <= 0 || ask <= 0 || bid <= 0 || tickSize <= 0 || tickValue <= 0 || atr <= 0)
+   if(point <= 0 || ask <= 0 || bid <= 0 || tickSizeRaw <= 0 || tickSize <= 0 || tickValue <= 0 || atr <= 0)
    {
-      Print("SYMBOL_REJECT | symbol=",symbol," reason=INVALID_MARKET_METADATA");
+      Print("SYMBOL_REJECT | symbol=",symbol," reason=INVALID_MARKET_METADATA",
+            " point=",DoubleToString(point,8),
+            " digits=",digits,
+            " tickSizeRaw=",DoubleToString(tickSizeRaw,8),
+            " tickSizePrice=",DoubleToString(tickSize,10),
+            " tickValue=",DoubleToString(tickValue,8),
+            " minLot=",DoubleToString(MarketInfo(symbol,MODE_MINLOT),4),
+            " lotStep=",DoubleToString(MarketInfo(symbol,MODE_LOTSTEP),4));
       return;
    }
 
@@ -129,7 +138,18 @@ void ProcessSymbol(string symbol)
       Print("SYMBOL_REJECT | symbol=",symbol," reason=MINIMUM_LOT_EXCEEDS_RISK_BUDGET",
             " riskBudget=",DoubleToString(riskMoney,2),
             " estimatedMinLotRisk=",DoubleToString(lossPerLot*minLot,2),
-            " spreadPrice=",DoubleToString(spreadPrice,digits));
+            " spreadPrice=",DoubleToString(spreadPrice,digits),
+            " point=",DoubleToString(point,8),
+            " digits=",digits,
+            " tickSizeRawPoints=",DoubleToString(tickSizeRaw,8),
+            " tickSizePrice=",DoubleToString(tickSize,10),
+            " tickValue=",DoubleToString(tickValue,8),
+            " minLot=",DoubleToString(minLot,4),
+            " lotStep=",DoubleToString(lotStep,4),
+            " slDistance=",DoubleToString(slDistance,digits),
+            " riskDistance=",DoubleToString(riskDistance,digits),
+            " lossPerLot=",DoubleToString(lossPerLot,4),
+            " rawLots=",DoubleToString(rawLots,6));
       return;
    }
    if(lots > maxLot) lots = maxLot;
