@@ -149,11 +149,11 @@ void ScoreEnsemble(string sym,int &buyVotes,int &sellVotes)
    buyVotes=0; sellVotes=0;
    double c1=iClose(sym,InpSignalTF,1),c2=iClose(sym,InpSignalTF,2);
    if(c1<=0 || c2<=0) return;
-   int periods[8]={5,8,10,13,21,34,50,89};
+   int periods[9]={5,8,10,13,21,34,50,89,144};
    for(int i=0;i<8;i++)
    {
       double fast=iMA(sym,InpSignalTF,periods[i],0,MODE_EMA,PRICE_CLOSE,1);
-      double slow=iMA(sym,InpSignalTF,periods[MathMin(i+1,7)],0,MODE_EMA,PRICE_CLOSE,1);
+      double slow=iMA(sym,InpSignalTF,periods[i+1],0,MODE_EMA,PRICE_CLOSE,1);
       Vote(fast>slow && c1>fast,fast<slow && c1<fast,buyVotes,sellVotes);
    }
    int rp[8]={5,7,9,11,14,18,21,28};
