@@ -1,6 +1,6 @@
 # Bitey Ensemble Scalper Multi-Asset v1
 
-**Status: prototype; not yet compiled or performance-validated. Trading is disabled by default.**
+**Status: prototype; not yet compiled or performance-validated. Order execution is enabled by default in the source per user request; do not attach to a live account before validation.**
 
 EA source: Experts/Bitey_Ensemble_Scalper_MultiAsset_v1.mq4
 
@@ -11,7 +11,7 @@ EA source: Experts/Bitey_Ensemble_Scalper_MultiAsset_v1.mq4
 - USD 500 reference capital, 1% initial planned risk (USD 5), 2% aggregate planned-risk cap, maximum 3 open positions, one position per symbol.
 - ATR-based initial stop and reward/risk target.
 - Lot calculation fails closed when tick/lot metadata is missing or minimum lot exceeds planned risk.
-- InpEnableTrading=false by default; emits dry-run candidates until explicitly enabled.
+- `InpEnableTrading=true` by default per user request: qualifying signals can submit orders. Set it to `false` for dry-run validation before testing enabled execution in demo.
 
 ## Limitations and safety
 1. The 32 votes are parameter variants, not 32 independent models; predictive value is unknown.
