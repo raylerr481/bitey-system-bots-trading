@@ -7,7 +7,7 @@ EA source: Experts/Bitey_Ensemble_Scalper_MultiAsset_v1.mq4
 ## Design
 - Scans comma-separated symbols or symbols visible in Market Watch from one EA instance.
 - 32 parameter variants across EMA trend, RSI momentum, closed-bar breakout, and Bollinger re-entry.
-- BUY and SELL; entry requires minimum vote count and vote margin.
+- BUY and SELL; entry requires at least 8 active directional votes, at least 70% of active votes on the winning side, and a minimum vote margin of 4. These are initial test thresholds, not validated predictive thresholds.
 - USD 500 reference capital, 1% initial planned risk (USD 5), 2% aggregate planned-risk cap, maximum 3 open positions, one position per symbol.
 - ATR-based initial stop and reward/risk target.
 - Lot calculation fails closed when tick/lot metadata is missing or minimum lot exceeds planned risk.
@@ -27,7 +27,7 @@ EA source: Experts/Bitey_Ensemble_Scalper_MultiAsset_v1.mq4
 2. Confirm symbol names/suffixes and Market Watch coverage.
 3. Backtest with realistic ticks, variable spread, commissions, swaps and slippage.
 4. Perform walk-forward/out-of-sample testing and compare to a simpler baseline.
-5. Start in demo with trading disabled; inspect ENSEMBLE_AUDIT, DRY_RUN_CANDIDATE and SYMBOL_REJECT logs.
-6. Enable trading only after independent review; monitor execution and begin at low risk.
+5. Start in demo with `InpEnableTrading=false` first; inspect ENSEMBLE_AUDIT, DRY_RUN_CANDIDATE and SYMBOL_REJECT logs, then test enabled execution in demo.
+6. Only after compile, out-of-sample and demo checks pass, consider a real account; monitor execution closely and begin at low risk.
 
 Research software only; not financial advice or a guarantee of returns.
