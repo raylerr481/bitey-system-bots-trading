@@ -117,6 +117,11 @@ void OnTick()
       Print("ENTRY_BLOCKED | reason=STALE_OR_INVALID_QUOTE | quoteAgeSeconds=", quoteAge);
       return;
    }
+   if(RoundTurnCommissionPerLotUSD < 0.0 || ExpectedSwapCostPerLotUSD < 0.0)
+   {
+      Print("ENTRY_BLOCKED | reason=UNKNOWN_COMMISSION_OR_SWAP_COST | set verified non-negative costs before testing");
+      return;
+   }
    double dailyNet = TodayNetForMagic();
    if(dailyNet <= -DailyLossLimitUSD)
    {
@@ -217,13 +222,15 @@ void PlaceBreakoutOrder(int type, double atr, double close1, double entryHigh, d
    }
 
    double lossPerLot=(actualStopDistance/tickSizePrice)*tickValue;
-   if(lossPerLot<=0) return;
-   double rawLots=RiskBudgetUSD/lossPerLot;
+   double estimatedCostsPerLot=RoundTurnCommissionPerLotUSD+ExpectedSwapCostPerLotUSD;
+   double totalRiskPerLot=lossPerLot+estimatedCostsPerLot;
+   if(lossPerLot<=0 || totalRiskPerLot<=0) return;
+   double rawLots=RiskBudgetUSD/totalRiskPerLot;
    if(rawLots<minLot)
    {
       Print("ENTRY_BLOCKED | reason=MINIMUM_LOT_EXCEEDS_RISK_BUDGET | riskBudgetUSD=",
             DoubleToString(RiskBudgetUSD,2), " estimatedMinLotRiskUSD=",
-            DoubleToString(lossPerLot*minLot,2), " minLot=", DoubleToString(minLot,4));
+            DoubleToString(totalRiskPerLot*minLot,2), " minLot=", DoubleToString(minLot,4));
       return;
    }
    double lots=MathFloor(rawLots/lotStep+1e-8)*lotStep;
@@ -234,7 +241,7 @@ void PlaceBreakoutOrder(int type, double atr, double close1, double entryHigh, d
    else if(lotStep<0.01) lotDigits=3;
    lots=NormalizeDouble(lots,lotDigits);
    if(lots<minLot) return;
-   double estimatedRisk=(actualStopDistance/tickSizePrice)*tickValue*lots;
+   double estimatedRisk=totalRiskPerLot*lots;
    if(estimatedRisk>RiskBudgetUSD+0.01)
    {
       Print("ENTRY_BLOCKED | reason=ESTIMATED_RISK_OVER_BUDGET | estimatedRiskUSD=",
@@ -264,7 +271,9 @@ void PlaceBreakoutOrder(int type, double atr, double close1, double entryHigh, d
          " lots=",DoubleToString(lots,lotDigits),
          " referenceCapitalUSD=",DoubleToString(ReferenceCapitalUSD,2),
          " riskBudgetUSD=",DoubleToString(RiskBudgetUSD,2),
-         " estimatedStopRiskUSD=",DoubleToString(estimatedRisk,2),
+         " estimatedStopRiskAndCostsUSD=",DoubleToString(estimatedRisk,2),
+         " commissionPerLotUSD=",DoubleToString(RoundTurnCommissionPerLotUSD,2),
+         " expectedSwapPerLotUSD=",DoubleToString(ExpectedSwapCostPerLotUSD,2),
          " entry=",DoubleToString(entry,digits)," SL=",DoubleToString(sl,digits),
          " TP=NONE exit=DONCHIAN_CHANNEL",
          " atr=",DoubleToString(atr,digits+2),
