@@ -56,6 +56,7 @@ int OnInit()
 
 void OnTick()
 {
+   if(InpEnableAdaptiveExits) ManageAdaptiveExits();
    for(int i=0;i<g_symbolCount;i++)
    {
       string sym=g_symbols[i];
