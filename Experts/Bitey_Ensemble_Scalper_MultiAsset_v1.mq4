@@ -63,7 +63,8 @@ void ParseSymbols()
 {
    g_symbolCount=0;
    string csv=InpSymbolsCSV;
-   if(StringLen(StringTrimLeft(StringTrimRight(csv)))==0)
+   StringTrimLeft(csv); StringTrimRight(csv);
+   if(StringLen(csv)==0)
    {
       int total=SymbolsTotal(true);
       for(int i=0;i<total && g_symbolCount<MAX_SYMBOLS;i++)
@@ -78,7 +79,7 @@ void ParseSymbols()
       int p=StringFind(csv,","); string s;
       if(p<0) { s=csv; csv=""; }
       else { s=StringSubstr(csv,0,p); csv=StringSubstr(csv,p+1); }
-      s=StringTrimLeft(StringTrimRight(s));
+      StringTrimLeft(s); StringTrimRight(s);
       if(StringLen(s)>0) g_symbols[g_symbolCount++]=s;
    }
 }
