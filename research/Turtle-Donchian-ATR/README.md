@@ -18,6 +18,7 @@ This is a new, independent MQL4 Expert Advisor inspired by the classic Turtle tr
 - Planned risk budget: USD 1.25 per trade, estimated from broker tick metadata and stop distance.
 - Daily loss threshold: USD 10; blocks new entries and does not guarantee forced liquidation.
 - EnableTrading=false by default.
+- Commission and expected swap inputs default to unknown (-1); new entries are blocked until you set verified non-negative values. These estimates are included in the lot-size risk budget.
 - If the broker's minimum lot would exceed the planned risk budget, the EA rejects the trade.
 - Requires USD account currency by default; spread, quote freshness, margin, and broker metadata checks are applied.
 - The EA only manages its own magic-number positions. Stop loss and daily threshold are estimates/guards, not guaranteed maximum losses.
