@@ -5,8 +5,8 @@
 //| No martingale, grid, averaging down, or forced minimum lot.       |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.00"
-#property description "Donchian breakout with ATR stop and fixed USD risk; research build, trading disabled by default."
+#property version   "1.01"
+#property description "Donchian breakout with ATR stop and fixed USD reference risk; demo/live account type is not a gate."
 
 input double ReferenceCapitalUSD       = 500.00;
 input double RiskBudgetUSD             = 1.25;
@@ -18,13 +18,13 @@ input int    EntryChannelBars          = 20;
 input int    ExitChannelBars           = 10;
 input int    ATRPeriod                 = 20;
 input double StopATRMultiple           = 2.0;
-input double RoundTurnCommissionPerLotUSD = -1.00; // Verified round-turn commission per 1.00 lot; negative blocks entries
-input double ExpectedSwapCostPerLotUSD    = -1.00; // Estimated total holding swap cost per 1.00 lot; negative blocks entries
+input double RoundTurnCommissionPerLotUSD = 0.00; // Set broker round-turn commission per 1.00 lot; 0 means unknown/not included
+input double ExpectedSwapCostPerLotUSD    = 0.00; // Set estimated holding swap per 1.00 lot; 0 means unknown/not included
 input int    MaxSpreadPoints           = 80;
 input int    MaxQuoteAgeSeconds        = 120;
 input int    SlippagePoints             = 5;
-input bool   RequireUSDAccount         = true;
-input bool   EnableTrading             = false;
+input bool   RequireUSDAccount         = false;
+input bool   EnableTrading             = true;
 input string OrderCommentText          = "Bitey Turtle Donchian ATR";
 
 datetime g_lastSignalBar = 0;
@@ -45,7 +45,7 @@ int OnInit()
       Print("SAFETY_BLOCK | reason=ACCOUNT_CURRENCY_NOT_USD | currency=", AccountCurrency());
       return(INIT_FAILED);
    }
-   Print("BITEY_TURTLE_INIT | version=1.00 | mode=",
+   Print("BITEY_TURTLE_INIT | version=1.01 | mode=",
          (EnableTrading ? "ENABLED" : "SAFE_DISABLED"),
          " | strategy=DONCHIAN_BREAKOUT_ATR | capitalUSD=", DoubleToString(ReferenceCapitalUSD,2),
          " | riskBudgetUSD=", DoubleToString(RiskBudgetUSD,2),
@@ -121,9 +121,11 @@ void OnTick()
    }
    if(RoundTurnCommissionPerLotUSD < 0.0 || ExpectedSwapCostPerLotUSD < 0.0)
    {
-      Print("ENTRY_BLOCKED | reason=UNKNOWN_COMMISSION_OR_SWAP_COST | set verified non-negative costs before testing");
+      Print("ENTRY_BLOCKED | reason=INVALID_COMMISSION_OR_SWAP_INPUT | costs must be zero or positive");
       return;
    }
+   if(RoundTurnCommissionPerLotUSD == 0.0 || ExpectedSwapCostPerLotUSD == 0.0)
+      Print("COST_WARNING | commission/swap input is zero and may be unknown; risk estimate may understate actual loss.");
    double dailyNet = TodayNetForMagic();
    if(dailyNet <= -DailyLossLimitUSD)
    {
