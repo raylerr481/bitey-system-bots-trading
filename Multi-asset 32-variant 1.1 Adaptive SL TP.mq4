@@ -133,16 +133,29 @@ void EvaluateSymbol(string sym)
    int digits=(int)MarketInfo(sym,MODE_DIGITS);
    double sl=NormalizeDouble(cmd==OP_BUY?entry-stopDist:entry+stopDist,digits);
    double tp=NormalizeDouble(cmd==OP_BUY?entry+stopDist*InpRewardRisk:entry-stopDist*InpRewardRisk,digits);
-   double lots=LotsForRisk(sym,stopDist);
-   if(lots<=0) { LogReject(sym,"RISK_OR_LOT_CALCULATION_FAILED"); return; }
-   double risk=EstimateRiskUSD(sym,lots,stopDist);
    double maxRisk=InpReferenceCapitalUSD*InpMaxAggregateRiskPct/100.0;
    double currentRisk=CurrentPlannedRiskUSD();
    double remainingRisk=maxRisk-currentRisk;
+   double perTradeBudget=InpReferenceCapitalUSD*InpRiskPctPerTrade/100.0;
+   if(remainingRisk<=0.01)
+   {
+      Print("RISK_BUDGET_REJECT_DETAIL | symbol=",sym,
+         " | reason=NO_AGGREGATE_RISK_REMAINING",
+         " | currentRisk=",DoubleToString(currentRisk,2),
+         " | cap=",DoubleToString(maxRisk,2),
+         " | remaining=",DoubleToString(remainingRisk,2),
+         " | accountCurrency=",AccountCurrency());
+      LogReject(sym,"AGGREGATE_RISK_CAP"); return;
+   }
+   double effectiveRiskBudget=MathMin(perTradeBudget,remainingRisk);
+   double lots=LotsForRisk(sym,stopDist,effectiveRiskBudget);
+   if(lots<=0) { LogReject(sym,"RISK_OR_LOT_CALCULATION_FAILED"); return; }
+   double risk=EstimateRiskUSD(sym,lots,stopDist);
    Print("RISK_BUDGET_AUDIT | symbol=",sym,
          " | accountCurrency=",AccountCurrency(),
          " | referenceCapitalUSD=",DoubleToString(InpReferenceCapitalUSD,2),
-         " | riskPerTradeBudget=",DoubleToString(InpReferenceCapitalUSD*InpRiskPctPerTrade/100.0,2),
+         " | riskPerTradeBudget=",DoubleToString(perTradeBudget,2),
+         " | effectiveRiskBudget=",DoubleToString(effectiveRiskBudget,2),
          " | candidateRiskTickValueCurrency=",DoubleToString(risk,2),
          " | currentOpenRiskTickValueCurrency=",DoubleToString(currentRisk,2),
          " | aggregateCap=",DoubleToString(maxRisk,2),
@@ -385,9 +398,8 @@ double CurrentPlannedRiskUSD()
    return(total);
 }
 
-double LotsForRisk(string sym,double stopDist)
+double LotsForRisk(string sym,double stopDist,double riskMoney)
 {
-   double riskMoney=InpReferenceCapitalUSD*InpRiskPctPerTrade/100.0;
    double tv=MarketInfo(sym,MODE_TICKVALUE),ts=MarketInfo(sym,MODE_TICKSIZE);
    double minLot=MarketInfo(sym,MODE_MINLOT),maxLot=MarketInfo(sym,MODE_MAXLOT),step=MarketInfo(sym,MODE_LOTSTEP);
    if(riskMoney<=0 || tv<=0 || ts<=0 || stopDist<=0 || minLot<=0 || maxLot<minLot || step<=0)
