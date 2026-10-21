@@ -87,6 +87,7 @@ void OnTick()
    if(!scanAttempted) return;
    if(!found)
    {
+      if(g_scanRiskRejected>0) LogOpenRiskBreakdown();
       Print("BEST_CANDIDATE_NONE | reason=NO_SAFE_CANDIDATE | symbolsEvaluated=",g_scanSymbols,
          " | voteRejected=",g_scanVoteRejected," | spreadRejected=",g_scanSpreadRejected,
          " | riskRejected=",g_scanRiskRejected," | otherRejected=",g_scanOtherRejected,
@@ -253,6 +254,29 @@ void ExecuteCandidate(Candidate &c)
 }
 
 // Manage only this EA's market orders. SL can only tighten, never widen.
+void LogOpenRiskBreakdown()
+{
+   for(int i=OrdersTotal()-1;i>=0;i--)
+   {
+      if(!OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) continue;
+      if(OrderMagicNumber()!=InpMagic || (OrderType()!=OP_BUY && OrderType()!=OP_SELL)) continue;
+      string sym=OrderSymbol();
+      double point=MarketInfo(sym,MODE_POINT);
+      double tickValue=MarketInfo(sym,MODE_TICKVALUE);
+      double tickSizePoints=MarketInfo(sym,MODE_TICKSIZE);
+      double tickSizePrice=tickSizePoints*point;
+      double stopDist=MathAbs(OrderOpenPrice()-OrderStopLoss());
+      double risk=EstimateRiskUSD(sym,OrderLots(),stopDist);
+      Print("OPEN_RISK_POSITION_AUDIT | ticket=",OrderTicket()," | symbol=",sym,
+         " | lots=",DoubleToString(OrderLots(),4)," | stopDistance=",DoubleToString(stopDist,(int)MarketInfo(sym,MODE_DIGITS)),
+         " | tickValueAccountCurrency=",DoubleToString(tickValue,6),
+         " | tickSizePoints=",DoubleToString(tickSizePoints,6),
+         " | tickSizePrice=",DoubleToString(tickSizePrice,8),
+         " | estimatedRiskAccountCurrency=",DoubleToString(risk,2),
+         " | note=VERIFY_ACCOUNT_CURRENCY_AND_CONTRACT_SPEC");
+   }
+}
+
 void ManageOpenPositions()
 {
    if(!InpEnableBreakEven && !InpEnableATRTrailing) return;
