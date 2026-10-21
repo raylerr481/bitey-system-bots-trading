@@ -5,8 +5,8 @@
 //| No martingale, grid, averaging down, or forced minimum lot.       |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.01"
-#property description "Donchian breakout with ATR stop and fixed USD reference risk; demo/live account type is not a gate."
+#property version   "1.02"
+#property description "Donchian ATR EA with explicit entry-block diagnostics; account type is not a gate."
 
 input double ReferenceCapitalUSD       = 500.00;
 input double RiskBudgetUSD             = 1.25;
@@ -28,6 +28,7 @@ input bool   EnableTrading             = true;
 input string OrderCommentText          = "Bitey Turtle Donchian ATR";
 
 datetime g_lastSignalBar = 0;
+datetime g_lastGateLogBar = 0;
 
 int OnInit()
 {
@@ -45,7 +46,7 @@ int OnInit()
       Print("SAFETY_BLOCK | reason=ACCOUNT_CURRENCY_NOT_USD | currency=", AccountCurrency());
       return(INIT_FAILED);
    }
-   Print("BITEY_TURTLE_INIT | version=1.01 | mode=",
+   Print("BITEY_TURTLE_INIT | version=1.02 | mode=",
          (EnableTrading ? "ENABLED" : "SAFE_DISABLED"),
          " | strategy=DONCHIAN_BREAKOUT_ATR | capitalUSD=", DoubleToString(ReferenceCapitalUSD,2),
          " | riskBudgetUSD=", DoubleToString(RiskBudgetUSD,2),
@@ -58,12 +59,13 @@ int OnInit()
 
 void OnTick()
 {
-   if(!EnableTrading) return;
-   if(RequireUSDAccount && AccountCurrency() != "USD") return;
-   if(!IsTradeAllowed() || IsTradeContextBusy()) return;
+   if(!EnableTrading) { LogGateOncePerBar("TRADING_DISABLED_ENABLETRADING_FALSE"); return; }
+   if(RequireUSDAccount && AccountCurrency() != "USD") { LogGateOncePerBar("ACCOUNT_CURRENCY_NOT_USD"); return; }
+   if(!IsTradeAllowed()) { LogGateOncePerBar("MT4_OR_EXPERT_TRADING_NOT_ALLOWED_CHECK_AUTOTRADING_AND_EA_PERMISSIONS"); return; }
+   if(IsTradeContextBusy()) { LogGateOncePerBar("TRADE_CONTEXT_BUSY"); return; }
 
    if(Bars(Symbol(), SignalTimeframe) < MathMax(EntryChannelBars, ExitChannelBars) + ATRPeriod + 10)
-      return;
+   { LogGateOncePerBar("INSUFFICIENT_HISTORICAL_BARS_FOR_H1_SIGNAL"); return; }
 
    datetime barTime = iTime(Symbol(), SignalTimeframe, 0);
    if(barTime <= 0 || barTime == g_lastSignalBar) return;
@@ -141,9 +143,29 @@ void OnTick()
       Print("ENTRY_BLOCKED | reason=CONFLICTING_BREAKOUT");
       return;
    }
-   if(!buySignal && !sellSignal) return;
+   if(!buySignal && !sellSignal)
+   {
+      Print("NO_ENTRY | reason=NO_DONCHIAN_BREAKOUT | symbol=",Symbol(),
+            " close1=",DoubleToString(close1,(int)MarketInfo(Symbol(),MODE_DIGITS)),
+            " channelHigh=",DoubleToString(entryHigh,(int)MarketInfo(Symbol(),MODE_DIGITS)),
+            " channelLow=",DoubleToString(entryLow,(int)MarketInfo(Symbol(),MODE_DIGITS)),
+            " | no order is sent without a valid signal");
+      return;
+   }
 
    PlaceBreakoutOrder(buySignal ? OP_BUY : OP_SELL, atr1, close1, entryHigh, entryLow);
+}
+
+void LogGateOncePerBar(string reason)
+{
+   datetime bar=iTime(Symbol(),SignalTimeframe,0);
+   if(bar<=0) bar=TimeCurrent();
+   if(bar==g_lastGateLogBar) return;
+   g_lastGateLogBar=bar;
+   Print("ENTRY_GATE | reason=",reason," | symbol=",Symbol(),
+         " | accountCurrency=",AccountCurrency(),
+         " | tradeAllowed=",IsTradeAllowed(),
+         " | freeMargin=",DoubleToString(AccountFreeMargin(),2));
 }
 
 int FindOwnPosition(string sym)
