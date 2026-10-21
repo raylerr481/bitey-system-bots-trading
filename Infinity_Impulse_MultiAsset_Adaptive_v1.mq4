@@ -76,7 +76,7 @@ void ProcessSymbol(string symbol)
    int digits = (int)MarketInfo(symbol, MODE_DIGITS);
    double ask = MarketInfo(symbol, MODE_ASK);
    double bid = MarketInfo(symbol, MODE_BID);
-   double tickSize = MarketInfo(symbol, MODE_TICKSIZE);
+   double tickSizePoints = MarketInfo(symbol, MODE_TICKSIZE);\n   double tickSize = tickSizePoints * point; // MODE_TICKSIZE is reported in points by MT4
    double tickValue = MarketInfo(symbol, MODE_TICKVALUE);
    double atr = iATR(symbol, InpTimeframe, InpATRPeriod, 1);
    if(point <= 0 || ask <= 0 || bid <= 0 || tickSize <= 0 || tickValue <= 0 || atr <= 0)
