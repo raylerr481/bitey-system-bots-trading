@@ -57,7 +57,7 @@ int OnInit()
 //+------------------------------------------------------------------+
 void OnTick()
 {
-   if (CloseAtTradingEnd && Hour() >= TradingEndHourServer)
+   if (EnableTrading && CloseAtTradingEnd && Hour() >= TradingEndHourServer)
       CloseOwnPositions();
 
    if (!EnableTrading) return;
