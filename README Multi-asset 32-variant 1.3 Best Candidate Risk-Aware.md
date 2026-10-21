@@ -6,7 +6,7 @@
 - Adds a per-trade hard cap of min(USD 5, reference capital × configured risk percentage) and a spread-to-ATR filter.
 - Converts MODE_TICKSIZE from points into price units using MODE_POINT in risk calculations.
 - Adds candidate and risk audit logs.
-- Trading defaults to disabled; enable only after MetaEditor compilation, broker contract validation, backtesting and demo forward testing.
+- Automatic trading is enabled in this branch (`InpEnableTrading=true`). Do not attach it to a live account until MetaEditor compilation, broker contract validation, backtesting and demo forward testing are complete.
 - Keeps existing break-even and ATR trailing stop logic.
 
 ## Important limitations
