@@ -14,8 +14,9 @@ input double InpReferenceCapitalUSD = 500.0;
 input double InpRiskPctPerTrade = 1.0;
 input double InpMaxAggregateRiskPct = 2.0;
 input int InpMaxOpenPositions = 3;
-input int InpMinVotes = 20;
-input int InpMinVoteMargin = 6;
+input int InpMinActiveVotes = 8;       // At least 8 of 32 variants must emit a directional vote
+input double InpMinDirectionalPct = 70.0; // Winning side as % of active votes
+input int InpMinVoteMargin = 4;          // Minimum absolute BUY/SELL vote difference
 input int InpATRPeriod = 14;
 input double InpStopATR = 2.0;
 input double InpRewardRisk = 1.5;
@@ -25,7 +26,7 @@ input int InpMinBars = 250;
 input bool InpAllowBuy = true;
 input bool InpAllowSell = true;
 input bool InpOnePositionPerSymbol = true;
-input bool InpEnableTrading = false; // Must remain OFF until validated
+input bool InpEnableTrading = true; // User requested execution for qualifying signals; validate on demo first
 input bool InpLogVotes = true;
 
 #define MODEL_COUNT 32
@@ -95,13 +96,23 @@ void EvaluateSymbol(string sym)
    if(CountOpenPositions()>=InpMaxOpenPositions) { LogReject(sym,"MAX_OPEN_POSITIONS"); return; }
 
    int buys=0,sells=0; ScoreEnsemble(sym,buys,sells);
+   int activeVotes=buys+sells;
+   int winningVotes=MathMax(buys,sells);
+   double directionalPct=(activeVotes>0?100.0*winningVotes/activeVotes:0.0);
    int margin=MathAbs(buys-sells);
    if(InpLogVotes) Print("ENSEMBLE_AUDIT | symbol=",sym," | buyVotes=",buys,
-                         " | sellVotes=",sells," | margin=",margin,
+                         " | sellVotes=",sells," | activeVotes=",activeVotes,
+                         " | directionalPct=",DoubleToString(directionalPct,1), " | margin=",margin,
                          " | spreadPoints=",DoubleToString(spread,1));
    int cmd=-1;
-   if(InpAllowBuy && buys>=InpMinVotes && buys-sells>=InpMinVoteMargin) cmd=OP_BUY;
-   if(InpAllowSell && sells>=InpMinVotes && sells-buys>=InpMinVoteMargin) cmd=OP_SELL;
+   if(activeVotes<InpMinActiveVotes)
+   { LogReject(sym,"INSUFFICIENT_ACTIVE_VOTES"); return; }
+   if(directionalPct<InpMinDirectionalPct)
+   { LogReject(sym,"DIRECTIONAL_PERCENT_BELOW_MIN"); return; }
+   if(margin<InpMinVoteMargin)
+   { LogReject(sym,"VOTE_MARGIN_BELOW_MIN"); return; }
+   if(InpAllowBuy && buys>sells) cmd=OP_BUY;
+   else if(InpAllowSell && sells>buys) cmd=OP_SELL;
    if(cmd<0) { LogReject(sym,"ENSEMBLE_NO_CLEAR_CONSENSUS"); return; }
 
    double atr=iATR(sym,InpSignalTF,InpATRPeriod,1);
@@ -122,7 +133,7 @@ void EvaluateSymbol(string sym)
    if(!InpEnableTrading)
    {
       Print("DRY_RUN_CANDIDATE | symbol=",sym," | side=",(cmd==OP_BUY?"BUY":"SELL"),
-            " | votes=",MathMax(buys,sells),"/",MODEL_COUNT," | lots=",DoubleToString(lots,2),
+            " | activeVotes=",activeVotes," | directionPct=",DoubleToString(directionalPct,1),"% | votes=",MathMax(buys,sells),"/",MODEL_COUNT," | lots=",DoubleToString(lots,2),
             " | riskUSD=",DoubleToString(risk,2)," | entry=",DoubleToString(entry,digits),
             " | SL=",DoubleToString(sl,digits)," | TP=",DoubleToString(tp,digits),
             " | reason=TRADING_DISABLED");
