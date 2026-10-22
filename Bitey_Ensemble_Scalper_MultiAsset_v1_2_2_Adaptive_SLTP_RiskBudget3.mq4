@@ -58,7 +58,7 @@ int OnInit()
 
 void OnTick()
 {
-   if(InpEnableAdaptiveExits) ManageAdaptiveExits();
+   if(InpEnableAdaptiveExits || InpEnableNetProfitClose) ManageAdaptiveExits();
    for(int i=0;i<g_symbolCount;i++)
    {
       string sym=g_symbols[i];
@@ -301,6 +301,8 @@ void ManageAdaptiveExits()
          }
          continue;
       }
+
+      if(!InpEnableAdaptiveExits) continue;
 
       string sym=OrderSymbol();
       double point=MarketInfo(sym,MODE_POINT);
