@@ -1,16 +1,16 @@
 //+------------------------------------------------------------------+
-//| Bitey_Ensemble_Scalper_MultiAsset_v1_4_0_1.mq4                      |
+//| Bitey_Ensemble_Scalper_MultiAsset_v1_4_0_2.mq4                      |
 //| Scalping / day trading, multi-asset (max 5), bidirectional,       |
 //| adaptive SL/TP. Account type (demo/real) NEVER gates orders.      |
-//| v1.4.0: cost-aware (commission+spread), lot caps, circuit         |
+//| v1.4.0.2: TP step + log fixes. v1.4.0: cost-aware (commission+spread), lot caps, circuit         |
 //| breakers, rollover handling, BE/trail that cover costs.           |
 //| Not performance-validated: test on demo/tester before live use.   |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.40"
+#property version   "1.42"
 #property description "Ensemble scalper v1.4.0: 32 variants, regime aware, max 5 assets, BUY+SELL, cost-aware sizing and filters"
 
-#define EA_VERSION          "1.4.0.1"
+#define EA_VERSION          "1.4.0.2"
 #define MAX_SYMBOLS         128
 #define HARD_MAX_POSITIONS  5
 
@@ -19,7 +19,7 @@ input string           InpSymbolsCSV            = "";      // Blank = symbols in
 input ENUM_TIMEFRAMES  InpSignalTF              = PERIOD_M5;
 input ENUM_TIMEFRAMES  InpHTF                   = PERIOD_M15; // Higher-timeframe bias (trend regime only)
 input bool             InpUseHTFFilter          = true;
-input int              InpMagic                 = 21102026;
+input int              InpMagic                 = 21102027;
 
 //--- risk (risk per trade INCLUDES round-turn commission)
 input double           InpReferenceCapitalUSD   = 500.0;
@@ -33,7 +33,7 @@ input double           InpMaxLotsOther          = 0.10;    // Hard lot cap, meta
 //--- costs (round-turn commission per 1.00 lot, account currency)
 input double           InpCommissionPerLotFX    = 10.0;    // Tradewill statement: 0.01 lot = 0.10
 input double           InpCommissionPerLotOther = 15.0;    // Tradewill statement: 0.01 lot = 0.15
-input double           InpMaxCostR              = 0.20;    // Skip if (spread+commission) > this fraction of the stop (R)
+input double           InpMaxCostR              = 0.30;    // Skip if (spread+commission) > this fraction of the stop (R)
 
 //--- direction
 input bool             InpAllowBuy              = true;
@@ -82,6 +82,7 @@ input double           InpTrailDistanceATR      = 1.2;
 input double           InpTrailStepATR          = 0.10;    // Minimum SL improvement per modification
 input double           InpTPExpandTriggerATR    = 1.5;
 input double           InpTPExpandBufferATR     = 1.0;
+input double           InpTPExpandStepATR       = 0.25;    // Minimum TP extension per modification (fewer broker requests)
 input double           InpTPExpandADXMin        = 22.0;
 input double           InpTPMaxDistanceATR      = 5.0;
 input double           InpNetTargetR            = 0.0;     // Optional close at +N R net (0 = off; let adaptive TP run)
@@ -95,6 +96,7 @@ datetime g_lastBar[MAX_SYMBOLS];
 int      g_symbolCount = 0;
 uint     g_lastCycleTick = 0;
 datetime g_lastHeartbeat = 0;
+datetime g_lastDailyBlockLog = 0;
 
 string   g_candSym[MAX_SYMBOLS];
 int      g_candCmd[MAX_SYMBOLS];
@@ -263,7 +265,11 @@ void RunCycle()
       double dayNet=TodayNet();
       if(dayNet<=-dailyLimit)
       {
-         Print("DAILY_LOSS_BLOCK | dayNet=",DoubleToString(dayNet,2)," limit=-",DoubleToString(dailyLimit,2)," | no new entries");
+         if(g_lastDailyBlockLog==0 || TimeCurrent()-g_lastDailyBlockLog>=300)
+         {
+            g_lastDailyBlockLog=TimeCurrent();
+            Print("DAILY_LOSS_BLOCK | dayNet=",DoubleToString(dayNet,2)," limit=-",DoubleToString(dailyLimit,2)," | no new entries");
+         }
       }
       else
       {
@@ -625,8 +631,8 @@ void ManageExits()
             double curDist=MathAbs(oldTP-entry);
             double want=MathMin(atr*InpTPMaxDistanceATR,MathMax(curDist,favorable+atr*InpTPExpandBufferATR));
             double prop=NormalizeDouble(type==OP_BUY?entry+want:entry-want,digits);
-            if(type==OP_BUY  && prop>oldTP+point && prop>ask+minDist) { newTP=prop; tpUp=true; }
-            if(type==OP_SELL && prop<oldTP-point && prop<bid-minDist) { newTP=prop; tpUp=true; }
+            if(type==OP_BUY  && prop>oldTP+atr*InpTPExpandStepATR && prop>ask+minDist) { newTP=prop; tpUp=true; }
+            if(type==OP_SELL && prop<oldTP-atr*InpTPExpandStepATR && prop<bid-minDist) { newTP=prop; tpUp=true; }
          }
       }
 
