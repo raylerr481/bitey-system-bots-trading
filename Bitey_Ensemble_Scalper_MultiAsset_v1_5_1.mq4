@@ -111,6 +111,7 @@ int OnInit()
    {
       g_lastBar[i]=0;
       SymbolSelect(g_symbols[i],true);
+      Print("SYMBOL_REGISTERED | symbol=",g_symbols[i]," | key=",g_keys[i]);
    }
    EventSetTimer(1);
    Print("BITEY_ENSEMBLE_INIT | version=",EA_VERSION," | symbols=",g_symbolCount,
@@ -149,7 +150,7 @@ string AssetKey(string s)
 bool IsCrypto(string sym)
 {
    string k=AssetKey(sym);
-   string p[15]={"BTC","XBT","ETH","SOL","XRP","LTC","BCH","DOG","ADA","DOT","LIN","AVA","BNB","NEA","ZEC"};
+   string p[15]={"BTC","XBT","ETH","SOL","XRP","LTC","BCH","DOG","ADA","DOT","LIN","AVA","BNB","NEAR","ZEC"};
    for(int i=0;i<15;i++)
       if(StringFind(k,p[i])==0) return(true);
    return(false);
@@ -202,14 +203,15 @@ void ParseSymbols()
       AddSymbol(s);
    }
 
-   // v1.5.1: include broker-listed NEAR and ZEC variants even with a custom CSV.
-   // Exact tradable names (including suffixes such as .hb) are taken from Market Watch.
+   // v1.5.1: include broker-listed NEARUSDT and ZECUSDT variants even with a custom CSV.
+   // AssetKey deduplicates canonical assets; exact tradable broker names (including suffixes
+   // such as .hb) are taken from Market Watch. OnInit logs every registered symbol.
    int total=SymbolsTotal(true);
    for(int j=0;j<total && g_symbolCount<MAX_SYMBOLS;j++)
    {
       string listed=SymbolName(j,true);
       string key=AssetKey(listed);
-      if(StringFind(key,"NEA")==0 || StringFind(key,"ZEC")==0)
+      if(StringFind(key,"NEAR")==0 || StringFind(key,"ZEC")==0)
          AddSymbol(listed);
    }
 }
