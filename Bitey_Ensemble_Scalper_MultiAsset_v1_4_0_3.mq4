@@ -149,8 +149,8 @@ string AssetKey(string s)
 bool IsCrypto(string sym)
 {
    string k=AssetKey(sym);
-   string p[14]={"BTC","XBT","ETH","SOL","XRP","LTC","BCH","DOG","ADA","DOT","LIN","AVA","BNB","NEA"};
-   for(int i=0;i<14;i++)
+   string p[17]={"BTC","XBT","ETH","SOL","XRP","LTC","BCH","DOG","ADA","DOT","LIN","AVA","BNB","NEAR","LRC","UNI","ZEC"};
+   for(int i=0;i<17;i++)
       if(StringFind(k,p[i])==0) return(true);
    return(false);
 }
