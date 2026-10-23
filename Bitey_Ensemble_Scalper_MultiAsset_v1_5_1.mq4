@@ -220,7 +220,18 @@ void AddSymbol(string s)
    string k=AssetKey(s);
    if(StringLen(k)<3) return;
    for(int i=0;i<g_symbolCount;i++)
-      if(g_keys[i]==k) return;            // alias of an asset already listed
+   {
+      if(g_keys[i]!=k) continue;
+      // Prefer a broker-listed tradable alias over a generic CSV name (e.g. NEARUSDT -> NEARUSDT.hb).
+      bool existingListed=SymbolSelect(g_symbols[i],true);
+      bool candidateListed=SymbolSelect(s,true);
+      if(candidateListed && !existingListed)
+      {
+         g_symbols[i]=s;
+         g_keys[i]=k;
+      }
+      return;                              // keep one symbol per canonical asset
+   }
    g_symbols[g_symbolCount]=s;
    g_keys[g_symbolCount]=k;
    g_symbolCount++;
