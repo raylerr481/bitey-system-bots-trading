@@ -1,0 +1,384 @@
+//+------------------------------------------------------------------+
+//|                                   EA_Agresivo_Mensual_v4.00.mq4  |
+//|   Más frecuencia (cruce EMA + pullback) y más riesgo, con frenos |
+//+------------------------------------------------------------------+
+#property copyright "BiteFixes"
+#property version   "4.00"
+#property strict
+
+//--- DISEÑO
+//--- Agresivo = más operaciones (dos tipos de entrada) y 2% de riesgo por
+//--- operación. Eso amplía el rango de resultados en las dos direcciones;
+//--- no crea ventaja por sí solo. Por eso incluye frenos: pérdida diaria
+//--- máxima, drawdown mensual máximo y (opcional) objetivo mensual.
+//--- Exposición simultánea máxima teórica = InpMaxTrades x InpRiskPct.
+//--- Usar primero en demo y probar con spread FIJO realista en el Probador.
+
+enum ENUM_TRADE_DIRECTION { TRADE_DIR_BOTH=0, TRADE_DIR_BUY=1, TRADE_DIR_SELL=2 };
+
+input group "=== RIESGO =="
+input double InpRiskPct        = 2.0;    // % del balance por operación
+input double InpMaxLots        = 2.0;    // tope de lotes
+input int    InpMaxTrades      = 3;      // posiciones simultáneas máximas
+input int    InpSlippage       = 5;
+
+input group "=== FRENOS =="
+input double InpDailyLossPct   = 4.0;    // 0 = desactivado. Pérdida diaria que frena las entradas
+input double InpMonthDDPct     = 12.0;   // 0 = desactivado. Drawdown mensual que frena las entradas
+input double InpMonthTargetPct = 0.0;    // 0 = desactivado. Objetivo mensual: al alcanzarlo deja de operar
+input bool   InpCloseAllOnHalt = false;  // cerrar todo al activarse un freno
+
+input group "=== ENTRADAS =="
+input ENUM_TRADE_DIRECTION InpTradeDir = TRADE_DIR_BOTH;
+input int    InpFastEMA        = 8;
+input int    InpSlowEMA        = 21;
+input int    InpMacroEMA       = 200;
+input int    InpMinCrossPts    = 2;      // separación mínima de EMAs en el cruce (pips)
+input bool   InpUseCross       = true;   // entrada por cruce de EMAs
+input bool   InpUsePullback    = true;   // entrada por retroceso a la EMA lenta en tendencia
+input bool   InpUseTrendFilter = true;   // precio del lado correcto de la EMA macro
+input int    InpADXPeriod      = 14;
+input double InpADXMin         = 18.0;   // 0 = sin filtro ADX
+input int    InpRSIPeriod      = 14;
+input double InpRSIBuyMax      = 72.0;   // no comprar con RSI por encima
+input double InpRSISellMin     = 28.0;   // no vender con RSI por debajo
+input int    InpCooldownBars   = 3;      // velas mínimas entre entradas del mismo sentido
+
+input group "=== SALIDAS =="
+input int    InpATRPeriod      = 14;
+input double InpSLMult         = 1.5;    // stop = ATR x esto
+input double InpTPMult         = 3.0;    // objetivo = ATR x esto
+input bool   InpUseBE          = true;
+input double InpBEStartMult    = 1.2;    // ganancia (ATR x esto) para mover a break-even
+input double InpBELockMult     = 0.1;    // ganancia asegurada en el break-even (ATR x esto)
+input bool   InpUseTrail       = true;
+input double InpTrailStartMult = 1.8;
+input double InpTrailDistMult  = 1.0;
+
+input group "=== FILTROS DE MERCADO =="
+input bool   InpUseSpreadFilter = true;
+input int    InpMaxSpreadPts    = 30;    // puntos (30 = 3 pips)
+input bool   InpUseTimeFilter   = true;
+input int    InpStartHour       = 7;     // hora del servidor
+input int    InpEndHour         = 20;
+input bool   InpCloseOnFriday   = true;
+input int    InpFridayCloseH    = 21;
+
+input group "=== IDENTIFICACIÓN =="
+input int    InpMagic           = 8883001;
+input bool   InpDebug           = false;
+
+datetime g_last_bar = 0;
+datetime g_last_buy_time = 0, g_last_sell_time = 0;
+int      g_digits = 0, g_stops_level = 0;
+double   g_point = 0.0, g_adj_point = 0.0;
+
+int      g_day_key = 0, g_month_key = 0;
+double   g_day_start_eq = 0.0, g_month_start_eq = 0.0;
+bool     g_halt_day = false, g_halt_month = false;
+
+//+------------------------------------------------------------------+
+int OnInit()
+{
+   if(InpFastEMA >= InpSlowEMA) { Print("Error: EMA rápida debe ser menor que la lenta."); return(INIT_PARAMETERS_INCORRECT); }
+   if(InpSLMult <= 0 || InpTPMult <= 0) { Print("Error: multiplicadores de SL/TP inválidos."); return(INIT_PARAMETERS_INCORRECT); }
+
+   g_digits = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
+   g_point  = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+   g_adj_point = (g_digits == 3 || g_digits == 5) ? g_point * 10.0 : g_point;
+   g_stops_level = (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL);
+
+   g_day_key = 0; g_month_key = 0;
+   g_halt_day = false; g_halt_month = false;
+
+   Print("=== EA Agresivo v4.00 iniciado | riesgo/op ", DoubleToString(InpRiskPct, 1), "% | exposición máx teórica ",
+         DoubleToString(InpRiskPct * InpMaxTrades, 1), "% | freno diario ", DoubleToString(InpDailyLossPct, 1),
+         "% | freno mensual ", DoubleToString(InpMonthDDPct, 1), "% ===");
+   return(INIT_SUCCEEDED);
+}
+
+void OnDeinit(const int reason) {}
+
+//+------------------------------------------------------------------+
+void OnTick()
+{
+   UpdateRiskState();
+
+   if((g_halt_day || g_halt_month) && InpCloseAllOnHalt) CloseAllPositions();
+
+   ManagePositions();
+   CheckFridayClose();
+
+   if(!IsNewBar()) return;
+   if(g_halt_day || g_halt_month) return;
+   if(!MarketAllowsEntry()) return;
+   if(CountOpen() >= InpMaxTrades) return;
+
+   ExecuteStrategy();
+}
+
+bool IsNewBar()
+{
+   datetime t = iTime(_Symbol, _Period, 0);
+   if(t == 0) return false;
+   if(t != g_last_bar) { g_last_bar = t; return true; }
+   return false;
+}
+
+//+------------------------------------------------------------------+
+//| Frenos de riesgo diario / mensual                                |
+//+------------------------------------------------------------------+
+void UpdateRiskState()
+{
+   MqlDateTime dt;
+   TimeToStruct(TimeCurrent(), dt);
+   int dkey = dt.year * 10000 + dt.mon * 100 + dt.day;
+   int mkey = dt.year * 100 + dt.mon;
+   double eq = AccountEquity();
+
+   if(mkey != g_month_key) { g_month_key = mkey; g_month_start_eq = eq; g_halt_month = false; }
+   if(dkey != g_day_key)   { g_day_key = dkey;   g_day_start_eq = eq;   g_halt_day = false; }
+
+   if(InpDailyLossPct > 0 && !g_halt_day && eq <= g_day_start_eq * (1.0 - InpDailyLossPct / 100.0))
+   {
+      g_halt_day = true;
+      Print("FRENO DIARIO activado: equity ", DoubleToString(eq, 2), " (inicio del día ", DoubleToString(g_day_start_eq, 2), ")");
+   }
+   if(InpMonthDDPct > 0 && !g_halt_month && eq <= g_month_start_eq * (1.0 - InpMonthDDPct / 100.0))
+   {
+      g_halt_month = true;
+      Print("FRENO MENSUAL (drawdown) activado: equity ", DoubleToString(eq, 2), " (inicio del mes ", DoubleToString(g_month_start_eq, 2), ")");
+   }
+   if(InpMonthTargetPct > 0 && !g_halt_month && eq >= g_month_start_eq * (1.0 + InpMonthTargetPct / 100.0))
+   {
+      g_halt_month = true;
+      Print("OBJETIVO MENSUAL alcanzado: equity ", DoubleToString(eq, 2), " (inicio del mes ", DoubleToString(g_month_start_eq, 2), ")");
+   }
+}
+
+bool MarketAllowsEntry()
+{
+   if(InpUseSpreadFilter && (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD) > InpMaxSpreadPts)
+   {
+      if(InpDebug) Print("Spread alto (", (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), " pts), se omite la vela.");
+      return false;
+   }
+   if(InpUseTimeFilter)
+   {
+      MqlDateTime dt; TimeToStruct(TimeCurrent(), dt);
+      if(dt.hour < InpStartHour || dt.hour >= InpEndHour) return false;
+   }
+   return true;
+}
+
+int CountOpen()
+{
+   int c = 0;
+   for(int i = OrdersTotal() - 1; i >= 0; i--)
+      if(OrderSelect(i, SELECT_BY_POS, MODE_TRADES))
+         if(OrderSymbol() == _Symbol && OrderMagicNumber() == InpMagic) c++;
+   return c;
+}
+
+//+------------------------------------------------------------------+
+//| Señales                                                          |
+//+------------------------------------------------------------------+
+void ExecuteStrategy()
+{
+   double atr = iATR(_Symbol, _Period, InpATRPeriod, 1);
+   if(atr <= 0) return;
+
+   double f1 = iMA(_Symbol, _Period, InpFastEMA, 0, MODE_EMA, PRICE_CLOSE, 1);
+   double f2 = iMA(_Symbol, _Period, InpFastEMA, 0, MODE_EMA, PRICE_CLOSE, 2);
+   double s1 = iMA(_Symbol, _Period, InpSlowEMA, 0, MODE_EMA, PRICE_CLOSE, 1);
+   double s2 = iMA(_Symbol, _Period, InpSlowEMA, 0, MODE_EMA, PRICE_CLOSE, 2);
+   double macro = iMA(_Symbol, _Period, InpMacroEMA, 0, MODE_EMA, PRICE_CLOSE, 1);
+   double rsi = iRSI(_Symbol, _Period, InpRSIPeriod, PRICE_CLOSE, 1);
+   double c1 = iClose(_Symbol, _Period, 1);
+   double o1 = iOpen(_Symbol, _Period, 1);
+   double l1 = iLow(_Symbol, _Period, 1);
+   double h1 = iHigh(_Symbol, _Period, 1);
+
+   bool adx_ok = true;
+   if(InpADXMin > 0)
+      adx_ok = (iADX(_Symbol, _Period, InpADXPeriod, PRICE_CLOSE, MODE_MAIN, 1) >= InpADXMin);
+
+   bool macro_bull = true, macro_bear = true;
+   if(InpUseTrendFilter) { macro_bull = (c1 > macro); macro_bear = (c1 < macro); }
+
+   double min_cross = InpMinCrossPts * g_adj_point;
+
+   bool buy_cross  = InpUseCross && (f2 <= s2 && f1 > s1 && (f1 - s1) >= min_cross);
+   bool sell_cross = InpUseCross && (f2 >= s2 && f1 < s1 && (s1 - f1) >= min_cross);
+
+   // Pullback: en tendencia (EMA rápida sobre/bajo la lenta), la vela tocó la EMA lenta
+   // y cerró de nuevo a favor de la tendencia.
+   bool buy_pull  = InpUsePullback && (f1 > s1) && (l1 <= s1) && (c1 > f1) && (c1 > o1);
+   bool sell_pull = InpUsePullback && (f1 < s1) && (h1 >= s1) && (c1 < f1) && (c1 < o1);
+
+   bool buy  = (buy_cross  || buy_pull)  && macro_bull && adx_ok && (rsi < InpRSIBuyMax);
+   bool sell = (sell_cross || sell_pull) && macro_bear && adx_ok && (rsi > InpRSISellMin);
+
+   datetime now_bar = iTime(_Symbol, _Period, 0);
+   int cooldown = InpCooldownBars * PeriodSeconds(_Period);
+   if(g_last_buy_time  > 0 && (now_bar - g_last_buy_time)  < cooldown) buy  = false;
+   if(g_last_sell_time > 0 && (now_bar - g_last_sell_time) < cooldown) sell = false;
+
+   if(InpDebug)
+      Print("Vela ", TimeToString(now_bar), " | buy=", buy, " (cruce ", buy_cross, " pull ", buy_pull, ") sell=", sell,
+            " (cruce ", sell_cross, " pull ", sell_pull, ") RSI=", DoubleToString(rsi, 1), " ATR=", DoubleToString(atr, 5));
+
+   if(buy && (InpTradeDir == TRADE_DIR_BOTH || InpTradeDir == TRADE_DIR_BUY))
+      if(OpenOrder(OP_BUY, atr)) g_last_buy_time = now_bar;
+
+   if(sell && (InpTradeDir == TRADE_DIR_BOTH || InpTradeDir == TRADE_DIR_SELL) && CountOpen() < InpMaxTrades)
+      if(OpenOrder(OP_SELL, atr)) g_last_sell_time = now_bar;
+}
+
+//+------------------------------------------------------------------+
+//| Apertura de orden con stops válidos frente al spread              |
+//+------------------------------------------------------------------+
+bool OpenOrder(int type, double atr)
+{
+   RefreshRates();
+   double spread = Ask - Bid;
+   double rr = InpTPMult / InpSLMult;
+
+   double sl_dist = atr * InpSLMult;
+   double tp_dist = atr * InpTPMult;
+
+   // El stop debe ser más ancho que el spread y que el nivel mínimo del bróker.
+   double min_dist = MathMax(MathMax(g_stops_level * g_point, spread * 2.0), g_adj_point * 3.0);
+   if(sl_dist < min_dist) { sl_dist = min_dist; tp_dist = sl_dist * rr; }
+
+   double lots = CalcLots(sl_dist);
+   if(lots <= 0) return false;
+   if(AccountFreeMarginCheck(_Symbol, type, lots) <= 0) return false;
+
+   for(int attempt = 0; attempt < 3 && !IsStopped(); attempt++)
+   {
+      RefreshRates();
+      double price = (type == OP_BUY) ? Ask : Bid;
+      double sl = NormalizeDouble((type == OP_BUY) ? price - sl_dist : price + sl_dist, g_digits);
+      double tp = NormalizeDouble((type == OP_BUY) ? price + tp_dist : price - tp_dist, g_digits);
+
+      int ticket = OrderSend(_Symbol, type, lots, price, InpSlippage, sl, tp,
+                             "Agresivo v4.00", InpMagic, 0, (type == OP_BUY) ? clrDodgerBlue : clrTomato);
+      if(ticket > 0)
+      {
+         if(InpDebug) Print("Orden abierta #", ticket, " ", (type == OP_BUY ? "BUY" : "SELL"), " lotes=", lots,
+                            " sl=", sl, " tp=", tp);
+         return true;
+      }
+      Print("OrderSend falló (intento ", attempt + 1, "): error ", GetLastError(),
+            " | lotes=", lots, " sl=", sl, " tp=", tp, " spread=", DoubleToString(spread / g_point, 0), " pts");
+      if(!IsTesting()) Sleep(300);
+   }
+   return false;
+}
+
+double CalcLots(double sl_dist)
+{
+   double tick_val  = MarketInfo(_Symbol, MODE_TICKVALUE);
+   double tick_size = MarketInfo(_Symbol, MODE_TICKSIZE);
+   double min_lot   = MarketInfo(_Symbol, MODE_MINLOT);
+   double max_lot   = MarketInfo(_Symbol, MODE_MAXLOT);
+   double step      = MarketInfo(_Symbol, MODE_LOTSTEP);
+   if(tick_val <= 0 || tick_size <= 0 || sl_dist <= 0) return 0.0;
+   if(step <= 0) step = 0.01;
+
+   double risk_money   = AccountBalance() * InpRiskPct / 100.0;
+   double loss_per_lot = (sl_dist / tick_size) * tick_val;
+   if(loss_per_lot <= 0) return 0.0;
+
+   double lots = risk_money / loss_per_lot;
+   if(lots > InpMaxLots) lots = InpMaxLots;
+   if(lots > max_lot) lots = max_lot;
+   lots = MathFloor(lots / step) * step;
+   lots = NormalizeDouble(lots, 2);
+
+   // Si el lote mínimo ya supera el riesgo pedido, no se opera (no se fuerza más riesgo).
+   if(lots < min_lot)
+   {
+      if(InpDebug) Print("Lote calculado ", DoubleToString(lots, 3), " < mínimo ", DoubleToString(min_lot, 2), ": se omite la operación.");
+      return 0.0;
+   }
+   return lots;
+}
+
+//+------------------------------------------------------------------+
+//| Gestión de posiciones abiertas                                   |
+//+------------------------------------------------------------------+
+bool StopIsValid(int type, double new_sl)
+{
+   double min_dist = MathMax(g_stops_level * g_point, (Ask - Bid) * 1.0);
+   min_dist = MathMax(min_dist, g_point);
+   return (type == OP_BUY) ? ((Bid - new_sl) >= min_dist) : ((new_sl - Ask) >= min_dist);
+}
+
+void ManagePositions()
+{
+   if(!InpUseBE && !InpUseTrail) return;
+   double atr = iATR(_Symbol, _Period, InpATRPeriod, 1);
+   if(atr <= 0) return;
+
+   for(int i = OrdersTotal() - 1; i >= 0; i--)
+   {
+      if(!OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) continue;
+      if(OrderSymbol() != _Symbol || OrderMagicNumber() != InpMagic) continue;
+      int type = OrderType();
+      if(type != OP_BUY && type != OP_SELL) continue;
+
+      double open_p = OrderOpenPrice();
+      double cur_sl = OrderStopLoss();
+      double tp     = OrderTakeProfit();
+      double profit = (type == OP_BUY) ? (Bid - open_p) : (open_p - Ask);
+
+      double best_sl = cur_sl;
+
+      if(InpUseBE && profit >= atr * InpBEStartMult)
+      {
+         double be_sl = NormalizeDouble((type == OP_BUY) ? open_p + atr * InpBELockMult : open_p - atr * InpBELockMult, g_digits);
+         if(type == OP_BUY  && (best_sl == 0 || be_sl > best_sl)) best_sl = be_sl;
+         if(type == OP_SELL && (best_sl == 0 || be_sl < best_sl)) best_sl = be_sl;
+      }
+      if(InpUseTrail && profit >= atr * InpTrailStartMult)
+      {
+         double tr_sl = NormalizeDouble((type == OP_BUY) ? Bid - atr * InpTrailDistMult : Ask + atr * InpTrailDistMult, g_digits);
+         if(type == OP_BUY  && (best_sl == 0 || tr_sl > best_sl)) best_sl = tr_sl;
+         if(type == OP_SELL && (best_sl == 0 || tr_sl < best_sl)) best_sl = tr_sl;
+      }
+
+      bool improves = (type == OP_BUY) ? (cur_sl == 0 || best_sl > cur_sl + g_adj_point * 0.5)
+                                       : (cur_sl == 0 || best_sl < cur_sl - g_adj_point * 0.5);
+      if(best_sl != cur_sl && improves && StopIsValid(type, best_sl))
+      {
+         if(!OrderModify(OrderTicket(), open_p, best_sl, tp, 0, clrNONE) && InpDebug)
+            Print("OrderModify #", OrderTicket(), " falló: error ", GetLastError(), " sl=", best_sl);
+      }
+   }
+}
+
+//+------------------------------------------------------------------+
+void CloseAllPositions()
+{
+   for(int i = OrdersTotal() - 1; i >= 0; i--)
+   {
+      if(!OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) continue;
+      if(OrderSymbol() != _Symbol || OrderMagicNumber() != InpMagic) continue;
+      int type = OrderType();
+      if(type != OP_BUY && type != OP_SELL) continue;
+      double price = (type == OP_BUY) ? Bid : Ask;
+      if(!OrderClose(OrderTicket(), OrderLots(), price, InpSlippage + 2, clrGray) && InpDebug)
+         Print("Cierre #", OrderTicket(), " falló: error ", GetLastError());
+   }
+}
+
+void CheckFridayClose()
+{
+   if(!InpCloseOnFriday) return;
+   MqlDateTime dt;
+   TimeToStruct(TimeCurrent(), dt);
+   if(dt.day_of_week == 5 && dt.hour >= InpFridayCloseH) CloseAllPositions();
+}
+//+------------------------------------------------------------------+
