@@ -103,6 +103,10 @@ input bool             InpEnableTPExpand        = true;    // false = fixed TP (
 input double           InpTPExpandADXMin        = 22.0;
 input double           InpTPMaxDistanceATR      = 5.0;
 input double           InpNetTargetR            = 0.0;     // Optional close at +N R net (0 = off; let adaptive TP run)
+input bool             InpEnableNetProfitLock    = true;    // Cost-aware USD profit lock after net trigger
+input double           InpProfitLockTriggerUSD  = 1.00;    // Activate when estimated net open profit reaches this USD amount
+input double           InpProfitLockTargetUSD   = 0.70;    // Target net profit to protect with SL after costs
+input double           InpProfitLockStepUSD     = 0.25;    // Minimum improvement before recalculating the money lock
 
 input bool             InpEnableTrading         = true;    // false = log candidates only
 input bool             InpLogRejects            = false;
@@ -668,6 +672,56 @@ void ManageExits()
          if(type==OP_BUY  && tr>newSL+atr*InpTrailStepATR && tr<bid-minDist) newSL=tr;
          if(type==OP_SELL && (newSL<=0 || tr<newSL-atr*InpTrailStepATR) && tr>ask+minDist) newSL=tr;
       }
+      // Net USD profit lock: do not apply a USD threshold to a non-USD account.
+      // Convert the protected net amount to price distance using this symbol's tick value/size.
+      if(InpEnableNetProfitLock && InpProfitLockTriggerUSD>0.0 && InpProfitLockTargetUSD>0.0 &&
+         AccountCurrency()=="USD" && net>=InpProfitLockTriggerUSD)
+      {
+         double lockTickValue=MarketInfo(sym,MODE_TICKVALUE);
+         double lockTickSize=MarketInfo(sym,MODE_TICKSIZE);
+         double lockMoneyPerPrice=(lockTickValue>0.0 && lockTickSize>0.0 ? lots*lockTickValue/lockTickSize : 0.0);
+         if(lockMoneyPerPrice>0.0 && lots>0.0)
+         {
+            // Use the greater of posted commission and configured round-turn commission to avoid
+            // double-counting commission already booked while still reserving the expected full cost.
+            double postedCommission=MathAbs(OrderCommission());
+            double configuredRoundTurn=CommissionPerLot(sym)*lots;
+            double commissionEstimate=MathMax(postedCommission,configuredRoundTurn);
+            // Expected net at stop ~= price P/L + swap - commission estimate.
+            double requiredPricePnl=InpProfitLockTargetUSD-OrderSwap()+commissionEstimate;
+            double lockMove=MathMax(0.0,requiredPricePnl/lockMoneyPerPrice);
+            double lockSL=NormalizeDouble(type==OP_BUY?entry+lockMove:entry-lockMove,digits);
+            bool improves=(type==OP_BUY ? (newSL<=0.0 || lockSL>newSL+point*0.5)
+                                        : (newSL<=0.0 || lockSL<newSL-point*0.5));
+            bool brokerValid=(type==OP_BUY ? lockSL<bid-minDist : lockSL>ask+minDist);
+            double currentLockNet=-1.0e100;
+            if(oldSL>0.0)
+            {
+               double oldMove=(type==OP_BUY?oldSL-entry:entry-oldSL);
+               currentLockNet=oldMove*lockMoneyPerPrice+OrderSwap()-commissionEstimate;
+            }
+            double candidateLockNet=lockMove*lockMoneyPerPrice+OrderSwap()-commissionEstimate;
+            bool stepReached=(oldSL<=0.0 ||
+                              currentLockNet<InpProfitLockTargetUSD-InpProfitLockStepUSD ||
+                              candidateLockNet>=currentLockNet+InpProfitLockStepUSD);
+            if(improves && brokerValid && stepReached)
+            {
+               newSL=lockSL;
+               Print("NET_PROFIT_LOCK | ticket=",ticket," symbol=",sym,
+                     " netUSD=",DoubleToString(net,2),
+                     " targetNetUSD=",DoubleToString(InpProfitLockTargetUSD,2),
+                     " commissionEstimate=",DoubleToString(commissionEstimate,2),
+                     " swap=",DoubleToString(OrderSwap(),2),
+                     " SLcandidate=",DoubleToString(lockSL,digits));
+            }
+         }
+      }
+      else if(InpEnableNetProfitLock && AccountCurrency()!="USD" && net>=InpProfitLockTriggerUSD)
+      {
+         Print("NET_PROFIT_LOCK_SKIPPED | ticket=",ticket," symbol=",sym,
+               " reason=ACCOUNT_CURRENCY_NOT_USD currency=",AccountCurrency());
+      }
+
       newSL=(newSL>0?NormalizeDouble(newSL,digits):0);
       if(type==OP_BUY)  slUp=(newSL>0 && (oldSL<=0 || newSL>oldSL+point*0.5));
       else              slUp=(newSL>0 && (oldSL<=0 || newSL<oldSL-point*0.5));
