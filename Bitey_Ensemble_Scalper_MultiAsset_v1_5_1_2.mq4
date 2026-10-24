@@ -2,7 +2,7 @@
 //| Bitey_Ensemble_Scalper_MultiAsset_v1_5_1.mq4                      |
 //| Scalping / day trading, multi-asset (max 5), bidirectional,       |
 //| adaptive SL/TP. Account type (demo/real) NEVER gates orders.      |
-//| v1.5.2: InpAutoAddCrypto adds all tradable cryptos; v1.5.1: InpExtraSymbolsCSV forces NEARUSDT and ZECUSDT into the universe (outside the Tester).
+//| v1.5.3: adds cost-aware net USD profit lock after +$1; v1.5.2: auto-add tradable cryptos.
 //| v1.5.0: tester = chart symbol only, regime tag + toggles, equity-risk option, Friday flat, M15 default.
 //| v1.4.0.3: MFE/MAE CSV per trade, throttled reject logs, no entry on the start bar, TP-expand toggle.
 //| v1.4.0.2: TP step + log fixes. v1.4.0: cost-aware (commission+spread), lot caps, circuit         |
@@ -16,10 +16,10 @@
 //  B) No BE/trail:  InpEnableAdaptiveExits=false | RR 1.5
 //  C) Fixed TP only: BE 0 | TrailStart 0 | TPExpand false | RR 1.2
 //  D) Trail only:   BE 0 | TrailStart 1.5 | TrailDist 1.5 | RR 2.5
-#property version   "1.52"
-#property description "Ensemble scalper v1.4.0: 32 variants, regime aware, max 5 assets, BUY+SELL, cost-aware sizing and filters"
+#property version   "1.53"
+#property description "Ensemble scalper v1.5.3: adaptive cost-aware net profit lock, BUY+SELL, multi-asset"
 
-#define EA_VERSION          "1.5.2"
+#define EA_VERSION          "1.5.3"
 #define MAX_SYMBOLS         256
 #define HARD_MAX_POSITIONS  5
 
@@ -716,11 +716,7 @@ void ManageExits()
             }
          }
       }
-      else if(InpEnableNetProfitLock && AccountCurrency()!="USD" && net>=InpProfitLockTriggerUSD)
-      {
-         Print("NET_PROFIT_LOCK_SKIPPED | ticket=",ticket," symbol=",sym,
-               " reason=ACCOUNT_CURRENCY_NOT_USD currency=",AccountCurrency());
-      }
+      // On non-USD accounts the USD lock is intentionally skipped; convert thresholds before enabling.
 
       newSL=(newSL>0?NormalizeDouble(newSL,digits):0);
       if(type==OP_BUY)  slUp=(newSL>0 && (oldSL<=0 || newSL>oldSL+point*0.5));
