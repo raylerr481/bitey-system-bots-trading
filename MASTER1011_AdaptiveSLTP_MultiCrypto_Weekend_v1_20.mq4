@@ -128,7 +128,7 @@ bool GetEnvelope(string s,double &upper,double &lower,double &atr)
 
 double MoneyRiskAtStop(string s,double lots,double openPrice,double stopPrice)
 {
-   double tickSize=MarketInfo(s,MODE_TICKSIZE);
+   double tickSize=(MarketInfo(s,MODE_TICKSIZE)*SymPoint(s));
    double tickValue=MarketInfo(s,MODE_TICKVALUE);
    if(tickSize<=0 || tickValue<=0 || lots<=0) return -1;
    return MathAbs(openPrice-stopPrice)/tickSize*tickValue*lots;
@@ -136,7 +136,7 @@ double MoneyRiskAtStop(string s,double lots,double openPrice,double stopPrice)
 
 double LotsForRisk(string s,double stopDistance)
 {
-   double tickSize=MarketInfo(s,MODE_TICKSIZE);
+   double tickSize=(MarketInfo(s,MODE_TICKSIZE)*SymPoint(s));
    double tickValue=MarketInfo(s,MODE_TICKVALUE);
    double minLot=MarketInfo(s,MODE_MINLOT);
    double maxLot=MarketInfo(s,MODE_MAXLOT);
@@ -244,7 +244,7 @@ void ManageOpenPositions()
       double atr=ATRValue(s,1);
       double point=SymPoint(s);
       if(atr<=0 || point<=0) continue;
-      double tickSize=MarketInfo(s,MODE_TICKSIZE);
+      double tickSize=(MarketInfo(s,MODE_TICKSIZE)*SymPoint(s));
       double tickValue=MarketInfo(s,MODE_TICKVALUE);
       if(tickSize<=0 || tickValue<=0) continue;
       double bid=MarketInfo(s,MODE_BID), ask=MarketInfo(s,MODE_ASK);
@@ -310,7 +310,7 @@ bool OpenPosition(string s,int type,double atr)
 
    double point=SymPoint(s);
    double bid=MarketInfo(s,MODE_BID), ask=MarketInfo(s,MODE_ASK);
-   double tickSize=MarketInfo(s,MODE_TICKSIZE), tickValue=MarketInfo(s,MODE_TICKVALUE);
+   double tickSize=(MarketInfo(s,MODE_TICKSIZE)*SymPoint(s)), tickValue=MarketInfo(s,MODE_TICKVALUE);
    if(point<=0 || bid<=0 || ask<=0 || tickSize<=0 || tickValue<=0 || atr<=0) return false;
    if(ask-bid > atr*InpMaxSpreadATRRatio)
    {
