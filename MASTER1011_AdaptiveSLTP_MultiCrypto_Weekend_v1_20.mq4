@@ -19,6 +19,8 @@ input double InpTrail_ATR = 1.25;
 input double InpBreakEvenAtR = 0.80;
 input double InpProfitLockTriggerUSD = 1.00;
 input double InpProfitLockAmountUSD = 0.50;
+input bool   InpExtendTPAfterProfit = true;
+input double InpTPRearmDistanceATR = 0.65;
 input double InpRiskPctReferenceCapital = 0.50; // 0.5% of reference capital per position
 input double InpReferenceCapitalUSD = 500.0;
 input double InpMaxAggregateRiskPct = 2.0;      // aggregate risk cap = USD 10 at USD 500
@@ -254,7 +256,9 @@ void ManageOpenPositions()
       double favorable=(type==OP_BUY)?bid-OrderOpenPrice():OrderOpenPrice()-ask;
       double r=(riskDist>0)?favorable/riskDist:0;
       double newSL=OrderStopLoss();
+      double newTP=OrderTakeProfit();
       bool change=false;
+      bool tpChange=false;
 
       // Break-even and net-profit lock. Money conversion is approximate if account currency is not USD.
       double net=OrderProfit()+OrderSwap()+OrderCommission();
@@ -277,6 +281,23 @@ void ManageOpenPositions()
             { newSL=be; change=true; }
       }
 
+      // Once profit is positive enough, re-arm the TP farther out as price approaches it.
+      // This lets a winner run while the SL lock/trailing protects accumulated gains.
+      if(InpExtendTPAfterProfit && net>=InpProfitLockTriggerUSD && InpTPRearmDistanceATR>0)
+      {
+         double minGap=(MarketInfo(s,MODE_STOPLEVEL)+2)*point;
+         double gapToTP=(type==OP_BUY)?OrderTakeProfit()-bid:ask-OrderTakeProfit();
+         if(OrderTakeProfit()>0 && gapToTP<=atr*InpTPRearmDistanceATR)
+         {
+            double candidate=(type==OP_BUY)?bid+atr*InpTP_ATR:ask-atr*InpTP_ATR;
+            candidate=NormalizePrice(s,candidate);
+            if(type==OP_BUY && candidate>OrderTakeProfit() && candidate>bid+minGap)
+               { newTP=candidate; tpChange=true; }
+            if(type==OP_SELL && candidate<OrderTakeProfit() && candidate<ask-minGap)
+               { newTP=candidate; tpChange=true; }
+         }
+      }
+
       // ATR trailing only tightens the stop; never widens risk.
       double trail=(type==OP_BUY)?bid-atr*InpTrail_ATR:ask+atr*InpTrail_ATR;
       double minGap=(MarketInfo(s,MODE_STOPLEVEL)+2)*point;
@@ -290,12 +311,12 @@ void ManageOpenPositions()
          trail=MathMax(trail,ask+minGap);
          if((newSL<=0 || trail<newSL-point) && trail<OrderOpenPrice()) { newSL=trail; change=true; }
       }
-      if(change)
+      if(change || tpChange)
       {
          newSL=NormalizePrice(s,newSL);
          ResetLastError();
-         if(!OrderModify(OrderTicket(),OrderOpenPrice(),newSL,OrderTakeProfit(),0,clrNONE))
-            Print("Trailing/lock modify failed ticket=",OrderTicket()," symbol=",s," err=",GetLastError());
+         if(!OrderModify(OrderTicket(),OrderOpenPrice(),newSL,newTP,0,clrNONE))
+            Print("Trailing/lock/adaptive-TP modify failed ticket=",OrderTicket()," symbol=",s," err=",GetLastError());
       }
    }
 }
