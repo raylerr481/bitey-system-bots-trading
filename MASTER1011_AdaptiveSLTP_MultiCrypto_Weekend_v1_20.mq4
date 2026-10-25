@@ -61,7 +61,11 @@ bool IsCryptoLike(string s)
            StringFind(u,"ADA")>=0 || StringFind(u,"SOL")>=0 ||
            StringFind(u,"AVAX")>=0 || StringFind(u,"BNB")>=0 ||
            StringFind(u,"DOT")>=0 || StringFind(u,"LINK")>=0 ||
-           StringFind(u,"TRX")>=0);
+           StringFind(u,"TRX")>=0 || StringFind(u,"NEAR")>=0 ||
+           StringFind(u,"ZEC")>=0 || StringFind(u,"LRC")>=0 ||
+           StringFind(u,"UNI")>=0 || StringFind(u,"BCH")>=0 ||
+           StringFind(u,"XLM")>=0 || StringFind(u,"ATOM")>=0 ||
+           StringFind(u,"ETC")>=0 || StringFind(u,"FIL")>=0);
 }
 
 // Resolve common broker suffixes/prefixes. If ambiguous, prefer exact then first containing match.
