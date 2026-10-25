@@ -69,8 +69,7 @@ string ResolveSymbol(string requested)
 {
    requested=TrimCopy(requested);
    if(StringLen(requested)==0) return "";
-   if(MarketInfo(requested,MODE_EXISTS)>0 || SymbolSelect(requested,true))
-      return requested;
+   if(SymbolSelect(requested,true)) return requested;
    string wanted=UpperCopy(requested);
    int total=SymbolsTotal(false);
    string match="";
@@ -203,8 +202,11 @@ bool EnsureProtection(int ticket,string s)
    double slDist=MathMax(atr*InpSL_ATR,minDist);
    double tpDist=MathMax(atr*InpTP_ATR,minDist);
    bool buy=(OrderType()==OP_BUY);
-   double sl=NormalizePrice(s,buy?OrderOpenPrice()-slDist:OrderOpenPrice()+slDist);
-   double tp=NormalizePrice(s,buy?OrderOpenPrice()+tpDist:OrderOpenPrice()-tpDist);
+   // Preserve any protection already installed; never widen an existing stop.
+   double sl=OrderStopLoss();
+   double tp=OrderTakeProfit();
+   if(sl<=0) sl=NormalizePrice(s,buy?OrderOpenPrice()-slDist:OrderOpenPrice()+slDist);
+   if(tp<=0) tp=NormalizePrice(s,buy?OrderOpenPrice()+tpDist:OrderOpenPrice()-tpDist);
    RefreshRates();
    ResetLastError();
    bool ok=OrderModify(ticket,OrderOpenPrice(),sl,tp,0,clrNONE);
@@ -213,7 +215,12 @@ bool EnsureProtection(int ticket,string s)
    if(OrderStopLoss()<=0 || OrderTakeProfit()<=0)
    {
       Print("CRITICAL: SL/TP not confirmed ticket=",ticket," symbol=",s,
-            ". No new entries until manually checked.");
+            ". Attempting emergency close; inspect MT4 if close fails.");
+      RefreshRates();
+      double closePrice=(OrderType()==OP_BUY)?MarketInfo(s,MODE_BID):MarketInfo(s,MODE_ASK);
+      ResetLastError();
+      if(closePrice>0 && !OrderClose(ticket,OrderLots(),NormalizePrice(s,closePrice),InpSlippagePoints,clrOrangeRed))
+         Print("EMERGENCY CLOSE FAILED ticket=",ticket," symbol=",s," err=",GetLastError());
       return false;
    }
    return true;
@@ -350,8 +357,9 @@ void ScanSymbol(int idx)
    if(HasOurOrderOnSymbol(s)) return;
    datetime bar=iTime(s,InpTimeframe,0);
    if(bar<=0) return;
-   if(gLastBarTime[idx]==bar) return;
-   gLastBarTime[idx]=bar; // one signal evaluation per new bar
+   // Re-check during the whole bar so a band touch is not missed between bar opens.
+   gLastBarTime[idx]=bar;
+   if(InpUseWeekendCryptoMode && !IsCryptoLike(s)) return;
    double upper,lower,atr;
    if(!GetEnvelope(s,upper,lower,atr)) return;
    double bid=MarketInfo(s,MODE_BID), ask=MarketInfo(s,MODE_ASK);
