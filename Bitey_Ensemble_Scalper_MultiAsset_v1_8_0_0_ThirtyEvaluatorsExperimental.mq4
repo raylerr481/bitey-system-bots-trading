@@ -189,6 +189,9 @@ datetime g_lastCsvScan = 0;
 datetime g_lastNetSummaryScan = 0;
 bool     g_haltAll = false;    // v1.7.1: equity floor tripped, flatten and stop for this session
 int      g_tmpRegime = 0;      // 1 = trend, 2 = range (set by Analyze)
+int      g_tmpValidModels = 0;
+int      g_tmpBuyVotes = 0;
+int      g_tmpSellVotes = 0;
 int      g_candReg[MAX_SYMBOLS];
 datetime g_lastRejectLog[MAX_SYMBOLS];
 
@@ -374,7 +377,7 @@ void RunCycle()
       if(cmd==OP_BUY && !InpAllowBuy)  { Reject(sym,"BUY_DISABLED");  continue; }
       if(cmd==OP_SELL && !InpAllowSell) { Reject(sym,"SELL_DISABLED"); continue; }
       BiteyCsvLogAssetAssembly(sym+"_"+IntegerToString((int)iTime(sym,InpSignalTF,1)),EA_VERSION,sym,InpSignalTF,
-         score,0.0,0.0,30,0,0,false,"ELIGIBLE_CANDIDATE_POOL");
+         score,0.0,0.0,g_tmpValidModels,g_tmpBuyVotes,g_tmpSellVotes,false,"ELIGIBLE_CANDIDATE_POOL");
       g_candSym[nc]=sym; g_candCmd[nc]=cmd; g_candScore[nc]=score; g_candReg[nc]=g_tmpRegime; nc++;
    }
 
