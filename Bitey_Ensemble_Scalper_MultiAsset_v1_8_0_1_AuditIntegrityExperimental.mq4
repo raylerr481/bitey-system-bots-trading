@@ -1227,7 +1227,9 @@ bool WriteTradeRow(int ticket)
    string sym=OrderSymbol();
    int type=OrderType();
    int digits=(int)MarketInfo(sym,MODE_DIGITS);
-   double r0=GlobalVariableGet(GvKey("R0",ticket));
+   bool hasTracking=GlobalVariableCheck(GvKey("R0",ticket));
+   string closedVersion=(hasTracking?EA_VERSION:"LEGACY_UNTRACKED");
+   double r0=(hasTracking?GlobalVariableGet(GvKey("R0",ticket)):0.0);
    double mfe=GlobalVariableGet(GvKey("MFE",ticket));
    double mae=GlobalVariableGet(GvKey("MAE",ticket));
    double mfeR=(r0>0?mfe/r0:0.0), maeR=(r0>0?mae/r0:0.0);
@@ -1251,7 +1253,7 @@ bool WriteTradeRow(int ticket)
    string closedDecisionId="ticket_"+IntegerToString(ticket);
    if(GlobalVariableCheck(GvKey("DID",ticket)))
       closedDecisionId=sym+"_"+IntegerToString((int)GlobalVariableGet(GvKey("DID",ticket)));
-   BiteyCsvLogTradeClosed(closedDecisionId,EA_VERSION,ticket,sym,
+   BiteyCsvLogTradeClosed(closedDecisionId,closedVersion,ticket,sym,
       (type==OP_BUY?"BUY":"SELL"),OrderLots(),OrderOpenTime(),OrderCloseTime(),
       OrderOpenPrice(),OrderClosePrice(),gross,comm,swp,0.0,OrderComment());
    BiteyCsvLogAction(closedDecisionId,EA_VERSION,sym,"EXECUTION","ORDER_CLOSED",ticket,
@@ -1270,7 +1272,6 @@ void LogClosedTrades()
       if(!OrderSelect(i,SELECT_BY_POS,MODE_HISTORY)) continue;
       if(OrderMagicNumber()!=InpMagic || OrderType()>OP_SELL) continue;
       int ticket=OrderTicket();
-      if(!GlobalVariableCheck(GvKey("R0",ticket))) continue;    // not tracked (closed before this version)
       string kd=GvKey("LOG",ticket);
       if(GlobalVariableCheck(kd)) continue;
       GlobalVariableSet(kd,1.0);                       // claim first so a second copy does not write the same row
