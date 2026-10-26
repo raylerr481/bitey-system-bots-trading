@@ -395,6 +395,8 @@ void RunCycle()
                int tc=g_candCmd[a];    g_candCmd[a]=g_candCmd[b];  g_candCmd[b]=tc;
                double td=g_candScore[a]; g_candScore[a]=g_candScore[b]; g_candScore[b]=td;
                int tg=g_candReg[a];     g_candReg[a]=g_candReg[b];     g_candReg[b]=tg;
+               int tb=g_candBuyVotes[a]; g_candBuyVotes[a]=g_candBuyVotes[b]; g_candBuyVotes[b]=tb;
+               int tsell=g_candSellVotes[a]; g_candSellVotes[a]=g_candSellVotes[b]; g_candSellVotes[b]=tsell;
             }
 
       string blockWhy=EntryBlockReason();   // equity floor, daily loss, monthly drawdown, monthly target
