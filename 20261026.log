@@ -903,3 +903,119 @@
 0	14:45:04.878	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ORDER_ACCEPTED | ticket=95771228 symbol=GBPJPY side=BUY lots=0.01 risk=1.17 costR=0.158 score=36.6 RR=1.80 SL=210.099 TP=210.572
 0	14:46:53.988	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=5/5 dayNet=-7.76 monthNet=-18.88 symbols=114 lossStreakPause=off equityHalt=off
 0	14:51:53.841	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=5/5 dayNet=-8.71 monthNet=-19.83 symbols=114 lossStreakPause=off equityHalt=off
+0	14:56:54.995	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=5/5 dayNet=-8.11 monthNet=-19.23 symbols=114 lossStreakPause=off equityHalt=off
+0	15:01:55.068	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=5/5 dayNet=-6.61 monthNet=-17.73 symbols=114 lossStreakPause=off equityHalt=off
+0	15:06:55.227	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=5/5 dayNet=-6.68 monthNet=-17.80 symbols=114 lossStreakPause=off equityHalt=off
+0	15:11:51.508	Compiling 'Bitey_Ensemble_Scalper_MultiAsset_v2_0_0'
+0	15:11:53.985	Compiling 'Bitey_Ensemble_Scalper_MultiAsset_v2_0_0_1'
+0	15:12:09.295	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=5/5 dayNet=-7.16 monthNet=-18.28 symbols=114 lossStreakPause=off equityHalt=off
+0	15:16:12.174	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: uninit reason 1
+0	15:16:12.559	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: removed
+0	15:16:12.728	Expert Bitey_Ensemble_Scalper_MultiAsset_v2_0_0 EURUSD,M15: loaded successfully
+0	15:16:14.133	Bitey_Ensemble_Scalper_MultiAsset_v2_0_0 EURUSD,M15: initialized
+0	15:23:18.189	Bitey_Ensemble_Scalper_MultiAsset_v2_0_0 EURUSD,M15: uninit reason 1
+0	15:23:18.197	Expert Bitey_Ensemble_Scalper_MultiAsset_v2_0_0 EURUSD,M15: removed
+0	15:23:18.247	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: loaded successfully
+0	15:23:18.931	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15 inputs: InpSymbolsCSV=; InpAutoAddCrypto=true; InpAutoAddUSDT=true; InpUSDTIs24x7=true; InpExtraCryptoPrefixes=; InpExtraSymbolsCSV=NEARUSDT,ZECUSDT; InpSignalTF=15; InpHTF=60; InpUseHTFFilter=true; InpMagic=21102027; InpReferenceCapitalUSD=500.0; InpUseEquityRisk=false; InpRiskPctPerTrade=0.5; InpMaxAggregateRiskPct=2.5; InpDailyLossPct=3.0; InpMaxOpenPositions=5; InpMaxLotsFX=0.3; InpMaxLotsOther=0.1; InpAdaptiveRiskGovernor=true; InpAdaptiveRiskWindow=20; InpAdaptiveRiskMinTrades=8; InpRiskMultiplierWeak=0.75; InpRiskMultiplierBad=0.5; InpAdaptiveRewardRisk=true; InpWeakTrendADX=22.0; InpStrongTrendADX=30.0; InpWeakTrendRewardRisk=1.5; InpStrongTrendRewardRisk=2.2; InpCommissionPerLotFX=10.0; InpCommissionPerLotOther=15.0; InpMaxCostR=0.2; InpAllowBuy=true; InpAllowSell=true; InpFamilyMinVotes=3; InpTrendADX=20.0; InpAllowTrendRegime=true; InpAllowRangeRegime=false; InpMinADX=10.0; InpATRPeriod=14; InpStopATR=1.5; InpRewardRisk=1.8; InpMinSignalScore=0.0; InpMaxSignalBarATR=0.0; InpMaxSpreadPctOfStop=10.0; 
+0	15:23:19.058	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: EXTRA_SYMBOL | requested=NEARUSDT | replaces alias NEARUSD with NEARUSDT
+0	15:23:19.058	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: EXTRA_SYMBOL | requested=ZECUSDT | replaces alias ZECUSD with ZECUSDT
+0	15:23:19.058	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: AUTO_CRYPTO | added=0 skippedNotTradable=0 | 
+0	15:23:19.308	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: BITEY_ENSEMBLE_INIT | version=1.7.6-ARG | symbols=114 | maxPositions=5 | tf=15 | accountMode=NOT_A_GATE | trading=ON
+0	15:23:19.308	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: initialized
+0	15:23:20.677	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=5/5 dayNet=-6.67 monthNet=-17.79 symbols=114 lossStreakPause=off equityHalt=off
+0	15:24:00.855	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: uninit reason 1
+0	15:24:00.868	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: removed
+0	15:24:00.928	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_claude EURUSD,M15: loaded successfully
+0	15:24:01.641	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_claude EURUSD,M15 inputs: InpSymbolsCSV=; InpAutoAddCrypto=true; InpAutoAddUSDT=true; InpUSDTIs24x7=true; InpExtraCryptoPrefixes=; InpExtraSymbolsCSV=NEARUSDT,ZECUSDT; InpSignalTF=15; InpHTF=60; InpUseHTFFilter=true; InpMagic=21102027; InpReferenceCapitalUSD=500.0; InpUseEquityRisk=false; InpRiskPctPerTrade=0.5; InpMaxAggregateRiskPct=2.5; InpDailyLossPct=3.0; InpMaxOpenPositions=5; InpMaxLotsFX=0.3; InpMaxLotsOther=0.1; InpCommissionPerLotFX=10.0; InpCommissionPerLotOther=15.0; InpMaxCostR=0.2; InpAllowBuy=true; InpAllowSell=true; InpFamilyMinVotes=3; InpTrendADX=20.0; InpAllowTrendRegime=true; InpAllowRangeRegime=false; InpMinADX=10.0; InpATRPeriod=14; InpStopATR=1.5; InpRewardRisk=1.8; InpMaxSpreadPctOfStop=10.0; InpMaxSpreadPoints=0; InpMaxQuoteAgeSec=120; InpSlippagePoints=20; InpMinBars=250; InpUseSessionFilter=true; InpSessionStartHour=7; InpSessionEndHour=21; InpCooldownBars=6; InpReentryBars=3; InpMaxHoldBars=48; InpBlockRollover=true; InpFlatBeforeRollover=true; InpFridayFlatHour=22; InpRolloverStartMin=1410; 
+0	15:24:01.730	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_claude EURUSD,M15: EXTRA_SYMBOL | requested=NEARUSDT | replaces alias NEARUSD with NEARUSDT
+0	15:24:01.730	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_claude EURUSD,M15: EXTRA_SYMBOL | requested=ZECUSDT | replaces alias ZECUSD with ZECUSDT
+0	15:24:01.730	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_claude EURUSD,M15: AUTO_CRYPTO | added=0 skippedNotTradable=0 | 
+0	15:24:01.967	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_claude EURUSD,M15: BITEY_ENSEMBLE_INIT | version=1.7.2 | symbols=114 | maxPositions=5 | tf=15 | accountMode=NOT_A_GATE | trading=ON
+0	15:24:01.967	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_claude EURUSD,M15: initialized
+0	15:24:02.960	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=-6.53 monthNet=-17.65 symbols=114 lossStreakPause=off equityHalt=off
+0	15:29:03.522	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=-6.63 monthNet=-17.75 symbols=114 lossStreakPause=off equityHalt=off
+0	15:34:03.487	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=-7.12 monthNet=-18.24 symbols=114 lossStreakPause=off equityHalt=off
+0	15:39:03.500	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=-6.45 monthNet=-17.57 symbols=114 lossStreakPause=off equityHalt=off
+2	15:42:33.985	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_claude EURUSD,M15: modify #95771184 sell 0.02 EURAUD at 1.59318 sl: 1.59295 tp: 1.59098 ok
+0	15:42:33.985	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771184 symbol=EURAUD SL 1.59440->1.59295 TP 1.59098->1.59098
+0	15:44:02.706	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=-5.64 monthNet=-16.76 symbols=114 lossStreakPause=off equityHalt=off
+0	15:45:58.574	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_claude EURUSD,M15: uninit reason 1
+0	15:45:58.745	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_claude EURUSD,M15: removed
+0	15:45:58.844	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: loaded successfully
+0	15:45:59.692	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15 inputs: InpSymbolsCSV=; InpAutoAddCrypto=true; InpAutoAddUSDT=true; InpUSDTIs24x7=true; InpExtraCryptoPrefixes=; InpExtraSymbolsCSV=NEARUSDT,ZECUSDT; InpSignalTF=15; InpHTF=60; InpUseHTFFilter=true; InpMagic=21102027; InpReferenceCapitalUSD=500.0; InpUseEquityRisk=false; InpRiskPctPerTrade=0.5; InpMaxAggregateRiskPct=2.5; InpDailyLossPct=3.0; InpMaxOpenPositions=5; InpMaxLotsFX=0.3; InpMaxLotsOther=0.1; InpCommissionPerLotFX=10.0; InpCommissionPerLotOther=15.0; InpMaxCostR=0.2; InpAllowBuy=true; InpAllowSell=true; InpFamilyMinVotes=3; InpTrendADX=20.0; InpAllowTrendRegime=true; InpAllowRangeRegime=false; InpMinADX=10.0; InpATRPeriod=14; InpStopATR=1.5; InpRewardRisk=1.8; InpMaxSpreadPctOfStop=10.0; InpMaxSpreadPoints=0; InpMaxQuoteAgeSec=120; InpSlippagePoints=20; InpMinBars=250; InpUseSessionFilter=true; InpSessionStartHour=7; InpSessionEndHour=21; InpCooldownBars=6; InpReentryBars=3; InpMaxHoldBars=48; InpBlockRollover=true; InpFlatBeforeRollover=true; InpFridayFlatHour=22; InpRolloverStartMin=1410; 
+0	15:45:59.892	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: EXTRA_SYMBOL | requested=NEARUSDT | replaces alias NEARUSD with NEARUSDT
+0	15:45:59.892	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: EXTRA_SYMBOL | requested=ZECUSDT | replaces alias ZECUSD with ZECUSDT
+0	15:45:59.892	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: AUTO_CRYPTO | added=0 skippedNotTradable=0 | 
+0	15:45:59.895	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: BITEY_ENSEMBLE_INIT | version=1.7.2 | symbols=114 | maxPositions=5 | tf=15 | accountMode=NOT_A_GATE | trading=ON
+0	15:45:59.895	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: initialized
+2	15:46:01.220	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: modify #95771184 sell 0.02 EURAUD at 1.59318 sl: 1.59267 tp: 1.59098 ok
+0	15:46:01.220	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771184 symbol=EURAUD SL 1.59295->1.59267 TP 1.59098->1.59098
+2	15:46:01.509	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: modify #95771094 buy 0.02 EURCHF at 0.92474 sl: 0.92492 tp: 0.92615 ok
+0	15:46:01.509	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771094 symbol=EURCHF SL 0.92489->0.92492 TP 0.92615->0.92615
+0	15:46:01.871	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=-5.69 monthNet=-16.81 symbols=114 lossStreakPause=off equityHalt=off
+2	15:46:24.187	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: modify #95771184 sell 0.02 EURAUD at 1.59318 sl: 1.59261 tp: 1.59098 ok
+0	15:46:24.187	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771184 symbol=EURAUD SL 1.59267->1.59261 TP 1.59098->1.59098
+2	15:50:35.350	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: modify #95771094 buy 0.02 EURCHF at 0.92474 sl: 0.92494 tp: 0.92615 ok
+0	15:50:35.352	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771094 symbol=EURCHF SL 0.92492->0.92494 TP 0.92615->0.92615
+0	15:51:02.113	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=-6.73 monthNet=-17.85 symbols=114 lossStreakPause=off equityHalt=off
+0	15:56:02.258	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=-6.63 monthNet=-17.75 symbols=114 lossStreakPause=off equityHalt=off
+0	16:00:02.451	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=GRTUSD spread=0.00113 stop=0.00115 maxPct=10.0
+0	16:00:10.472	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=DOTUSD spread=0.005 stop=0.011 maxPct=10.0
+0	16:00:23.424	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: DIVERSIFY_RANK | symbol=TXNUSDT rawScore=44.6 overlap=1.0 adjScore=40.6
+0	16:00:23.425	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: RISK_REJECT | symbol=TXNUSDT reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=2.50
+0	16:01:02.398	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=-7.06 monthNet=-18.18 symbols=114 lossStreakPause=off equityHalt=off
+2	16:01:56.813	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: modify #95771225 sell 0.02 EURCAD at 1.56821 sl: 1.56798 tp: 1.56592 ok
+0	16:01:56.813	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771225 symbol=EURCAD SL 1.56948->1.56798 TP 1.56592->1.56592
+0	16:06:01.688	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=-6.70 monthNet=-17.82 symbols=114 lossStreakPause=off equityHalt=off
+0	16:11:01.962	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=-7.02 monthNet=-18.14 symbols=114 lossStreakPause=off equityHalt=off
+0	16:15:02.046	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: DIVERSIFY_RANK | symbol=UNIUSD rawScore=23.3 overlap=1.0 adjScore=19.3
+0	16:15:02.046	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=UNIUSD spread=0.016 stop=0.079 maxPct=10.0
+0	16:15:07.353	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: DIVERSIFY_RANK | symbol=BNBUSD.hb rawScore=29.7 overlap=1.0 adjScore=25.7
+0	16:15:07.353	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: RISK_REJECT | symbol=BNBUSD.hb reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=2.50
+0	16:15:11.057	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=VUSDT spread=0.55 stop=0.82 maxPct=10.0
+0	16:15:33.201	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: DIVERSIFY_RANK | symbol=ADAUSD.hb rawScore=6.8 overlap=1.0 adjScore=2.8
+0	16:15:33.201	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=ADAUSD.hb spread=0.00040 stop=0.00176 maxPct=10.0
+0	16:16:02.035	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=-6.77 monthNet=-17.89 symbols=114 lossStreakPause=off equityHalt=off
+0	16:16:48.030	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: DIVERSIFY_RANK | symbol=CSCOUSDT rawScore=31.6 overlap=1.0 adjScore=27.6
+0	16:16:48.030	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=CSCOUSDT spread=0.15 stop=0.48 maxPct=10.0
+0	16:21:02.229	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=-6.84 monthNet=-17.96 symbols=114 lossStreakPause=off equityHalt=off
+0	16:26:02.323	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=-7.05 monthNet=-18.17 symbols=114 lossStreakPause=off equityHalt=off
+2	16:27:36.588	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: modify #95771225 sell 0.02 EURCAD at 1.56821 sl: 1.56789 tp: 1.56592 ok
+0	16:27:36.588	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771225 symbol=EURCAD SL 1.56798->1.56789 TP 1.56592->1.56592
+0	16:27:39.352	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: uninit reason 1
+0	16:27:39.387	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_1_claude EURUSD,M15: removed
+0	16:27:39.405	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: loaded successfully
+0	16:27:40.078	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15 inputs: InpSymbolsCSV=; InpAutoAddCrypto=true; InpAutoAddUSDT=true; InpUSDTIs24x7=true; InpExtraCryptoPrefixes=; InpExtraSymbolsCSV=NEARUSDT,ZECUSDT; InpSignalTF=15; InpHTF=60; InpUseHTFFilter=true; InpMagic=21102027; InpReferenceCapitalUSD=500.0; InpUseEquityRisk=false; InpRiskPctPerTrade=0.5; InpMaxAggregateRiskPct=2.5; InpDailyLossPct=3.0; InpMaxOpenPositions=5; InpMaxLotsFX=0.3; InpMaxLotsOther=0.1; InpCommissionPerLotFX=10.0; InpCommissionPerLotOther=15.0; InpMaxCostR=0.2; InpAllowBuy=true; InpAllowSell=true; InpFamilyMinVotes=3; InpTrendADX=20.0; InpAllowTrendRegime=true; InpAllowRangeRegime=false; InpMinADX=10.0; InpATRPeriod=14; InpStopATR=1.5; InpRewardRisk=1.8; InpMaxSpreadPctOfStop=10.0; InpMaxSpreadPoints=0; InpMaxQuoteAgeSec=120; InpSlippagePoints=20; InpMinBars=250; InpUseSessionFilter=true; InpSessionStartHour=7; InpSessionEndHour=21; InpCooldownBars=6; InpReentryBars=3; InpMaxHoldBars=48; InpBlockRollover=true; InpFlatBeforeRollover=true; InpFridayFlatHour=22; InpRolloverStartMin=1410; 
+0	16:27:40.232	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: EXTRA_SYMBOL | requested=NEARUSDT | replaces alias NEARUSD with NEARUSDT
+0	16:27:40.232	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: EXTRA_SYMBOL | requested=ZECUSDT | replaces alias ZECUSD with ZECUSDT
+0	16:27:40.233	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: AUTO_CRYPTO | added=0 skippedNotTradable=0 | 
+0	16:27:40.473	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: BITEY_ENSEMBLE_INIT | version=1.7.2.2 | symbols=114 | maxPositions=5 | tf=15 | accountMode=NOT_A_GATE | trading=ON
+0	16:27:40.473	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: initialized
+0	16:27:41.504	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: NET_AUDIT_UPDATED | history_orders_scanned=375 | new_trade_rows=50 | assets=23 | trade_file=Bitey_SBT_TradeNetAudit_21102027.csv | asset_file=Bitey_SBT_AssetNetSummary_21102027.csv
+0	16:27:41.614	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: HEARTBEAT | v1.7.2.2 open=4/5 dayNet=-6.89 monthNet=-18.01 symbols=114 lossStreakPause=off equityHalt=off
+2	16:28:38.841	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: modify #95771225 sell 0.02 EURCAD at 1.56821 sl: 1.56784 tp: 1.56592 ok
+0	16:28:38.841	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771225 symbol=EURCAD SL 1.56789->1.56784 TP 1.56592->1.56592
+0	16:28:41.577	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: NET_AUDIT_UPDATED | history_orders_scanned=375 | new_trade_rows=0 | assets=23 | trade_file=Bitey_SBT_TradeNetAudit_21102027.csv | asset_file=Bitey_SBT_AssetNetSummary_21102027.csv
+2	16:28:42.830	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: modify #95771225 sell 0.02 EURCAD at 1.56821 sl: 1.56778 tp: 1.56592 ok
+0	16:28:42.830	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771225 symbol=EURCAD SL 1.56784->1.56778 TP 1.56592->1.56592
+2	16:28:48.832	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: modify #95771225 sell 0.02 EURCAD at 1.56821 sl: 1.56773 tp: 1.56592 ok
+0	16:28:48.832	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771225 symbol=EURCAD SL 1.56778->1.56773 TP 1.56592->1.56592
+2	16:29:06.874	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: modify #95771225 sell 0.02 EURCAD at 1.56821 sl: 1.56768 tp: 1.56592 ok
+0	16:29:06.874	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771225 symbol=EURCAD SL 1.56773->1.56768 TP 1.56592->1.56592
+0	16:29:41.622	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: NET_AUDIT_UPDATED | history_orders_scanned=375 | new_trade_rows=0 | assets=23 | trade_file=Bitey_SBT_TradeNetAudit_21102027.csv | asset_file=Bitey_SBT_AssetNetSummary_21102027.csv
+0	16:30:05.755	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: RISK_REJECT | symbol=BTCUSD reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=2.50
+0	16:30:29.598	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=VUSDT spread=0.55 stop=0.73 maxPct=10.0
+0	16:30:41.640	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: NET_AUDIT_UPDATED | history_orders_scanned=375 | new_trade_rows=0 | assets=23 | trade_file=Bitey_SBT_TradeNetAudit_21102027.csv | asset_file=Bitey_SBT_AssetNetSummary_21102027.csv
+0	16:30:55.640	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: COST_REJECT | symbol=MANAUSD.hb costR=3.000 max=0.200
+0	16:31:40.692	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: NET_AUDIT_UPDATED | history_orders_scanned=375 | new_trade_rows=0 | assets=23 | trade_file=Bitey_SBT_TradeNetAudit_21102027.csv | asset_file=Bitey_SBT_AssetNetSummary_21102027.csv
+0	16:32:40.710	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: NET_AUDIT_UPDATED | history_orders_scanned=375 | new_trade_rows=0 | assets=23 | trade_file=Bitey_SBT_TradeNetAudit_21102027.csv | asset_file=Bitey_SBT_AssetNetSummary_21102027.csv
+0	16:32:40.710	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: HEARTBEAT | v1.7.2.2 open=4/5 dayNet=-6.91 monthNet=-18.03 symbols=114 lossStreakPause=off equityHalt=off
+0	16:33:40.737	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: NET_AUDIT_UPDATED | history_orders_scanned=375 | new_trade_rows=0 | assets=23 | trade_file=Bitey_SBT_TradeNetAudit_21102027.csv | asset_file=Bitey_SBT_AssetNetSummary_21102027.csv
+0	16:34:40.724	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: NET_AUDIT_UPDATED | history_orders_scanned=375 | new_trade_rows=0 | assets=23 | trade_file=Bitey_SBT_TradeNetAudit_21102027.csv | asset_file=Bitey_SBT_AssetNetSummary_21102027.csv
+0	16:35:40.754	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: NET_AUDIT_UPDATED | history_orders_scanned=375 | new_trade_rows=0 | assets=23 | trade_file=Bitey_SBT_TradeNetAudit_21102027.csv | asset_file=Bitey_SBT_AssetNetSummary_21102027.csv
+0	16:36:40.895	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: NET_AUDIT_UPDATED | history_orders_scanned=375 | new_trade_rows=0 | assets=23 | trade_file=Bitey_SBT_TradeNetAudit_21102027.csv | asset_file=Bitey_SBT_AssetNetSummary_21102027.csv
+0	16:37:40.822	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: NET_AUDIT_UPDATED | history_orders_scanned=375 | new_trade_rows=0 | assets=23 | trade_file=Bitey_SBT_TradeNetAudit_21102027.csv | asset_file=Bitey_SBT_AssetNetSummary_21102027.csv
+0	16:37:40.822	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: HEARTBEAT | v1.7.2.2 open=4/5 dayNet=-6.97 monthNet=-18.09 symbols=114 lossStreakPause=off equityHalt=off
+0	16:38:40.850	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: NET_AUDIT_UPDATED | history_orders_scanned=375 | new_trade_rows=0 | assets=23 | trade_file=Bitey_SBT_TradeNetAudit_21102027.csv | asset_file=Bitey_SBT_AssetNetSummary_21102027.csv
+0	16:39:40.836	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: NET_AUDIT_UPDATED | history_orders_scanned=375 | new_trade_rows=0 | assets=23 | trade_file=Bitey_SBT_TradeNetAudit_21102027.csv | asset_file=Bitey_SBT_AssetNetSummary_21102027.csv
+0	16:40:40.876	Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_2_NetProfitAudit EURUSD,M15: NET_AUDIT_UPDATED | history_orders_scanned=375 | new_trade_rows=0 | assets=23 | trade_file=Bitey_SBT_TradeNetAudit_21102027.csv | asset_file=Bitey_SBT_AssetNetSummary_21102027.csv
