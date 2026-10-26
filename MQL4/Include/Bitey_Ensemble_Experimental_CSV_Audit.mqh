@@ -42,6 +42,21 @@ void BiteyCsvClose(int h)
    }
 }
 
+// Chronological action journal: decisions, filters, order lifecycle and adaptive exits.
+void BiteyCsvLogAction(
+   const string decisionId, const string eaVersion, const string symbol,
+   const string stage, const string action, const int ticket,
+   const string direction, const double score, const string reason)
+{
+   string fn = "Bitey_ActionLog.csv";
+   int h = BiteyCsvOpenAppend(fn,
+      "timestamp;decision_id;ea_version;symbol;stage;action;ticket;direction;score;reason");
+   if(h == INVALID_HANDLE) return;
+   FileWrite(h, BiteyCsvStamp(), decisionId, eaVersion, symbol, stage, action,
+      ticket, direction, DoubleToString(score, 6), reason);
+   BiteyCsvClose(h);
+}
+
 // One row per evaluator per candidate/decision. Use the same decisionId across
 // all 30 rows, both assemblies, and the eventual trade (if any).
 void BiteyCsvLogEvaluatorVote(
