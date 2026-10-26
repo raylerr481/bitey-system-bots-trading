@@ -42,8 +42,8 @@
 //  B) No BE/trail:  InpEnableAdaptiveExits=false | RR 1.5
 //  C) Fixed TP only: BE 0 | TrailStart 0 | TPExpand false | RR 1.2
 //  D) Trail only:   BE 0 | TrailStart 1.5 | TrailDist 1.5 | RR 2.5
-#property version   "1.73"
-#property description "Ensemble scalper v1.7.4: monotonic SL protection, adaptive TP enabled by default, opt-in TP extension, net profit lock"
+#property version   "1.74"
+#property description "Ensemble scalper v1.7.4: monotonic SL protection, adaptive TP enabled by default, trend-confirmed TP extension, net profit lock"
 
 #define EA_VERSION          "1.7.3"
 #define MAX_SYMBOLS         256
@@ -152,7 +152,7 @@ input double           InpTrailStepATR          = 0.10;    // Minimum SL improve
 input double           InpTPExpandTriggerATR    = 1.5;
 input double           InpTPExpandBufferATR     = 1.0;
 input double           InpTPExpandStepATR       = 0.25;    // Minimum TP extension per modification (fewer broker requests)
-input bool             InpEnableTPExpand        = false;   // v1.7.4: adaptive TP enabled by default; opt in only after validation
+input bool             InpEnableTPExpand        = true;    // v1.7.4: extend TP in confirmed trend; SL remains monotonic/protective
 input double           InpTPExpandADXMin        = 22.0;
 input double           InpTPMaxDistanceATR      = 5.0;
 input double           InpNetTargetR            = 0.0;     // Optional close at +N R net (0 = off; let adaptive TP run)
