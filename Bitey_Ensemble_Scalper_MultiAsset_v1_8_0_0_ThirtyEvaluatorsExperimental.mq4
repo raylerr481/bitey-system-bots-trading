@@ -678,6 +678,8 @@ bool Analyze(string sym,int &cmd,double &score,string &why)
       MathMin(1.0,(double)agree/4.0),modelVotes,
       (dir>0?famSell[0]+famSell[1]+famSell[2]+famSell[3]:famBuy[0]+famBuy[1]+famBuy[2]+famBuy[3]),
       0,0,0,true,"ASSEMBLY2_CONSENSUS");
+   BiteyCsvLogAction(decisionId,EA_VERSION,sym,"ASSEMBLY2","VOTE_APPROVED",0,
+      (dir>0?"BUY":"SELL"),score,"ASSEMBLY2_CONSENSUS");
    return(true);
 }
 
