@@ -433,7 +433,7 @@ void RunCycle()
                Print("DIVERSIFY_RANK | symbol=",g_candSym[best]," rawScore=",DoubleToString(g_candScore[best],1),
                      " overlap=",DoubleToString(bestOv,1)," adjScore=",DoubleToString(bestAdj,1));
             BiteyCsvLogAssetAssembly(g_candSym[best]+"_"+IntegerToString((int)iTime(g_candSym[best],InpSignalTF,1)),EA_VERSION,
-               g_candSym[best],InpSignalTF,g_candScore[best],0.0,0.0,30,0,0,true,"ASSEMBLY1_SELECTED_FOR_EXECUTION");
+               g_candSym[best],InpSignalTF,g_candScore[best],0.0,0.0,g_tmpValidModels,g_tmpBuyVotes,g_tmpSellVotes,true,"ASSEMBLY1_SELECTED_FOR_EXECUTION");
             OpenTrade(g_candSym[best],g_candCmd[best],g_candScore[best],g_candReg[best]);
          }
       }
@@ -585,6 +585,12 @@ bool Analyze(string sym,int &cmd,double &score,string &why)
    }
 
    string decisionId=sym+"_"+IntegerToString((int)iTime(sym,tf,1));
+   g_tmpValidModels=30; g_tmpBuyVotes=0; g_tmpSellVotes=0;
+   for(int countModel=0;countModel<30;countModel++)
+   {
+      if(modelDir[countModel]>0) g_tmpBuyVotes++;
+      else if(modelDir[countModel]<0) g_tmpSellVotes++;
+   }
    for(int v=0;v<30;v++)
       BiteyCsvLogEvaluatorVote(decisionId,EA_VERSION,sym,tf,modelName[v],modelFamily[v],
          (modelDir[v]>0?"BUY":(modelDir[v]<0?"SELL":"ABSTAIN")),modelScore[v],1.0,
