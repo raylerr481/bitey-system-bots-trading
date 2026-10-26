@@ -163,7 +163,8 @@ input double           InpProfitLockStepR       = 0.15;    // Minimum improvemen
 
 input bool             InpEnableTrading         = true;    // false = log candidates only
 input bool             InpLogRejects            = false;
-input bool             InpLogTradesCSV          = true;    // MFE/MAE per closed trade -> Common\Files\Bitey_Ens_MFE_MAE_<magic>.csv
+input bool             InpLogTradesCSV          = true;    // Per-trade gross/commission/swap/net -> Common\Files\Bitey_Ens_MFE_MAE_<magic>.csv
+input bool             InpLogAssetSummaryCSV    = true;    // Per-asset net summary CSV in Common Files
 input int              InpRejectLogMinutes      = 60;      // Throttle SPREAD/COST reject logs per symbol (0 = log all)
 
 string   g_symbols[MAX_SYMBOLS];
@@ -174,6 +175,7 @@ uint     g_lastCycleTick = 0;
 datetime g_lastHeartbeat = 0;
 datetime g_lastDailyBlockLog = 0;
 datetime g_lastCsvScan = 0;
+datetime g_lastNetSummaryScan = 0;
 bool     g_haltAll = false;    // v1.7.1: equity floor tripped, flatten and stop for this session
 int      g_tmpRegime = 0;      // 1 = trend, 2 = range (set by Analyze)
 int      g_candReg[MAX_SYMBOLS];
@@ -338,6 +340,7 @@ void RunCycle()
 
    ManageExits();
    LogClosedTrades();
+    WriteAssetNetSummary();
    CheckHaltActions();                     // v1.7.1: equity floor / monthly flatten (no-ops by default)
 
    int maxPos=MaxPositions();
@@ -1179,6 +1182,49 @@ void LogClosedTrades()
 //+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
+// Rebuild a read-only net summary from MT4's currently loaded closed history.
+// Set Account History to "All History" for complete totals.
+void WriteAssetNetSummary()
+{
+   if(!InpLogAssetSummaryCSV) return;
+   datetime now=TimeCurrent();
+   if(g_lastNetSummaryScan!=0 && now-g_lastNetSummaryScan<60) return;
+   g_lastNetSummaryScan=now;
+
+   string symbols[512];
+   int counts[512], wins[512], losses[512];
+   double gross[512], commissions[512], swaps[512], nets[512];
+   ArrayInitialize(counts,0); ArrayInitialize(wins,0); ArrayInitialize(losses,0);
+   ArrayInitialize(gross,0.0); ArrayInitialize(commissions,0.0);
+   ArrayInitialize(swaps,0.0); ArrayInitialize(nets,0.0);
+   int symbolCount=0, included=0;
+   double totalGross=0.0, totalCommission=0.0, totalSwap=0.0, totalNet=0.0;
+   int totalWins=0, totalLosses=0;
+   for(int p=OrdersHistoryTotal()-1; p>=0; p--)
+   {
+      if(!OrderSelect(p,SELECT_BY_POS,MODE_HISTORY)) continue;
+      if(OrderMagicNumber()!=InpMagic) continue;
+      int type=OrderType();
+      if((type!=OP_BUY && type!=OP_SELL) || OrderCloseTime()<=0) continue;
+      string sym=OrderSymbol(); int idx=-1;
+      for(int k=0;k<symbolCount;k++) if(symbols[k]==sym) { idx=k; break; }
+      if(idx<0) { if(symbolCount>=512) continue; idx=symbolCount++; symbols[idx]=sym; }
+      double g=OrderProfit(), c=OrderCommission(), s=OrderSwap(), n=g+c+s;
+      counts[idx]++; gross[idx]+=g; commissions[idx]+=c; swaps[idx]+=s; nets[idx]+=n;
+      if(n>0.000001) wins[idx]++; else if(n< -0.000001) losses[idx]++;
+      included++; totalGross+=g; totalCommission+=c; totalSwap+=s; totalNet+=n;
+      if(n>0.000001) totalWins++; else if(n< -0.000001) totalLosses++;
+   }
+   string fn="Bitey_Ens_NetByAsset_"+IntegerToString(InpMagic)+".csv";
+   int h=FileOpen(fn,FILE_WRITE|FILE_CSV|FILE_COMMON|FILE_SHARE_READ|FILE_SHARE_WRITE,';');
+   if(h==INVALID_HANDLE) { Print("NET_SUMMARY_OPEN_FAILED | file=",fn," error=",GetLastError()); return; }
+   FileWrite(h,"symbol","closed_trades","wins_net","losses_net","gross_profit","commission","swap","net_profit");
+   for(int j=0;j<symbolCount;j++)
+      FileWrite(h,symbols[j],counts[j],wins[j],losses[j],DoubleToString(gross[j],2),DoubleToString(commissions[j],2),DoubleToString(swaps[j],2),DoubleToString(nets[j],2));
+   FileWrite(h,"TOTAL",included,totalWins,totalLosses,DoubleToString(totalGross,2),DoubleToString(totalCommission,2),DoubleToString(totalSwap,2),DoubleToString(totalNet,2));
+   FileClose(h);
+   Print("NET_SUMMARY_UPDATED | trades=",included," assets=",symbolCount," net=",DoubleToString(totalNet,2)," commission=",DoubleToString(totalCommission,2)," swap=",DoubleToString(totalSwap,2)," file=",fn," | Account History must be All History for complete totals");
+}
 //| v1.5.0 helpers                                                    |
 //+------------------------------------------------------------------+
 double RiskCapital()
