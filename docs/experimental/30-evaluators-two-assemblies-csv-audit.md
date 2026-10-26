@@ -2,6 +2,25 @@
 
 This branch is experimental and does not replace or modify the currently used EA file.
 
+## Experimental EA now added
+
+`Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental.mq4` is a separate copy of the v1.7.2.4 baseline with the original adaptive exit/risk-management code retained and its signal analyzer replaced by 30 named rule evaluators.
+
+### Evaluator inventory (6 families × 5 parameter variants)
+
+1. EMA trend alignment: fast/slow EMA pairs.
+2. MACD direction and momentum: five fast/slow/signal parameter sets.
+3. Donchian price-channel breakouts: five lookback lengths.
+4. RSI momentum: five lookback lengths.
+5. Bollinger re-entry / mean reversion: five lookback lengths.
+6. Stochastic reversal cross: five K lookback lengths.
+
+The five variants within each family are aggregated first. Assembly 2 uses family-level direction rather than counting all 30 variants as independent votes. In the default trend regime it requires the configured number of the first four families to agree and applies the existing higher-timeframe filter. Range entries remain controlled by the existing range-regime setting and require both mean-reversion families to agree plus an RSI extreme.
+
+Assembly 1 uses the existing cross-asset candidate ranking/diversification loop, with CSV records for eligible candidates and the candidate selected for execution.
+
+These are rule-based technical evaluators, not 30 independently trained AI models. No rule is claimed to be profitable before validation.
+
 ## First artifact: CSV audit module
 
 `MQL4/Include/Bitey_Ensemble_Experimental_CSV_Audit.mqh` supplies logging functions for:
