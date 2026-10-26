@@ -23,14 +23,14 @@ These are rule-based technical evaluators, not 30 independently trained AI model
 
 ## First artifact: CSV audit module
 
-`MQL4/Include/Bitey_Ensemble_Experimental_CSV_Audit.mqh` supplies logging functions for:
-- individual evaluator votes (including abstentions and reasons)
-- Assembly 1 asset rankings/selections
-- Assembly 2 BUY/SELL/ABSTAIN decisions
-- accepted order entries
-- closed trades and realized net P/L
-- adaptive SL/TP transitions
-- performance snapshots
+`MQL4/Include/Bitey_Ensemble_Experimental_CSV_Audit.mqh` supplies logging functions and a dedicated chronological action journal, `Bitey_ActionLog.csv`, for Assembly 1 rejects/selections, Assembly 2 approvals/abstentions, accepted entries, closed trades, and adaptive SL/TP modifications. It also writes:
+- `Bitey_EvaluatorVotes.csv`: individual evaluator votes, including abstentions and reasons
+- `Bitey_AssetAssembly.csv`: Assembly 1 candidate rankings/selections and rejections
+- `Bitey_TradeAssembly.csv`: Assembly 2 BUY/SELL/ABSTAIN decisions
+- `Bitey_TradeAudit.csv`: accepted order entries
+- `Bitey_ClosedTrades.csv`: closed trades and realized net P/L
+- `Bitey_AdaptiveExits.csv`: adaptive SL/TP transitions
+- `Bitey_Performance.csv`: performance snapshots
 
 ### Install and use
 
