@@ -1,0 +1,2 @@
+time;direction;strategy;regime;confidence;evidence;directionalEvidence;buyScore;sellScore;ADX;ATR_points;RSI;EMA_gap_ATR;Momentum_ATR;BodyRatio;SpreadPoints;rejectReason;simulatedPnl;outcome
+2026.10.02 14:52;SELL;FRACTAL_HTF;TREND;0.5568;0.6028;0.4986;0.0709;0.5768;23.48;113.3;37.66;-0.6383;-2.2686;0.7074;1.0;spread;0.00;UNRESOLVED
