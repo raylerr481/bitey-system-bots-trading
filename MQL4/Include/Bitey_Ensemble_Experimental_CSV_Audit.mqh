@@ -111,9 +111,10 @@ void BiteyCsvLogTradeOpened(
    int h = BiteyCsvOpenAppend(fn,
       "timestamp;decision_id;ea_version;ticket;symbol;direction;lots;open_price;initial_sl;initial_tp;reference_capital_usd;risk_money_estimate;risk_mode;reason");
    if(h == INVALID_HANDLE) return;
+   int digits=(int)MarketInfo(symbol,MODE_DIGITS);
    FileWrite(h, BiteyCsvStamp(), decisionId, eaVersion, ticket, symbol,
-      direction, DoubleToString(lots, 2), DoubleToString(openPrice, Digits),
-      DoubleToString(initialSL, Digits), DoubleToString(initialTP, Digits),
+      direction, DoubleToString(lots, 2), DoubleToString(openPrice, digits),
+      DoubleToString(initialSL, digits), DoubleToString(initialTP, digits),
       DoubleToString(referenceCapital, 2), DoubleToString(riskMoney, 2),
       riskMode, reason);
    BiteyCsvClose(h);
@@ -134,11 +135,12 @@ void BiteyCsvLogTradeClosed(
    int h = BiteyCsvOpenAppend(fn,
       "timestamp;decision_id;ea_version;ticket;symbol;direction;lots;opened_at;closed_at;duration_seconds;open_price;close_price;gross_profit;commission;swap;net_profit;slippage_points;close_reason");
    if(h == INVALID_HANDLE) return;
+   int digits=(int)MarketInfo(symbol,MODE_DIGITS);
    FileWrite(h, BiteyCsvStamp(), decisionId, eaVersion, ticket, symbol,
       direction, DoubleToString(lots, 2),
       TimeToString(openedAt, TIME_DATE|TIME_SECONDS),
       TimeToString(closedAt, TIME_DATE|TIME_SECONDS), durationSeconds,
-      DoubleToString(openPrice, Digits), DoubleToString(closePrice, Digits),
+      DoubleToString(openPrice, digits), DoubleToString(closePrice, digits),
       DoubleToString(grossProfit, 2), DoubleToString(commission, 2),
       DoubleToString(swap, 2), DoubleToString(net, 2),
       DoubleToString(slippagePoints, 1), closeReason);
@@ -156,9 +158,10 @@ void BiteyCsvLogAdaptiveExit(
    int h = BiteyCsvOpenAppend(fn,
       "timestamp;decision_id;ea_version;ticket;symbol;old_sl;new_sl;old_tp;new_tp;current_net_profit;reason");
    if(h == INVALID_HANDLE) return;
+   int digits=(int)MarketInfo(symbol,MODE_DIGITS);
    FileWrite(h, BiteyCsvStamp(), decisionId, eaVersion, ticket, symbol,
-      DoubleToString(oldSL, Digits), DoubleToString(newSL, Digits),
-      DoubleToString(oldTP, Digits), DoubleToString(newTP, Digits),
+      DoubleToString(oldSL, digits), DoubleToString(newSL, digits),
+      DoubleToString(oldTP, digits), DoubleToString(newTP, digits),
       DoubleToString(currentNet, 2), reason);
    BiteyCsvClose(h);
 }
