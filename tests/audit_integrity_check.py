@@ -2,7 +2,7 @@
 """Audit reconciliation checks for Bitey MT4 CSV exports.
 
 Usage:
-  python audit_integrity_check.py Bitey_ClosedTrades.csv Bitey_Ens_NetByAsset_21102027.csv
+  python audit_integrity_check.py Bitey_ClosedTrades_v1_8_0_1.csv Bitey_Ens_NetByAsset_21102027.csv
 
 The MT4 files use semicolon delimiters. This script fails on duplicate closed
 trade tickets and on per-symbol/net-total mismatches between the closed-trade
