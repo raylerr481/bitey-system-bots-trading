@@ -1,0 +1,512 @@
+2026.10.26 11:21:07.091	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=-0.06 monthNet=-11.18 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 11:16:07.438	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=0.99 monthNet=-10.13 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 11:15:15.146	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=WMTUSDT spread=0.15 stop=0.49 maxPct=10.0
+2026.10.26 11:15:06.129	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=CSCOUSDT spread=0.15 stop=0.61 maxPct=10.0
+2026.10.26 11:15:02.327	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ORDER_ACCEPTED | ticket=95771001 symbol=EURJPY side=SELL lots=0.02 risk=2.17 costR=0.127 score=37.4 SL=176.115 TP=175.682
+2026.10.26 11:15:02.327	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: open #95771001 sell 0.02 EURJPY at 175.959 sl: 176.115 tp: 175.682 ok
+2026.10.26 11:15:02.065	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: DIVERSIFY_RANK | symbol=EURJPY rawScore=37.4 overlap=2.0 adjScore=29.4
+2026.10.26 11:15:02.065	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: COST_REJECT | symbol=NZDJPY costR=0.250 max=0.200
+2026.10.26 11:15:02.065	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: DIVERSIFY_RANK | symbol=NZDJPY rawScore=47.9 overlap=1.0 adjScore=43.9
+2026.10.26 11:15:01.081	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=AUDNZD spread=0.00009 stop=0.00082 maxPct=10.0
+2026.10.26 11:15:01.081	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: DIVERSIFY_RANK | symbol=AUDNZD rawScore=35.2 overlap=1.0 adjScore=31.2
+2026.10.26 11:15:01.081	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: COST_REJECT | symbol=AUDCAD costR=0.223 max=0.200
+2026.10.26 11:15:01.081	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: DIVERSIFY_RANK | symbol=AUDCAD rawScore=48.9 overlap=2.0 adjScore=40.9
+2026.10.26 11:14:25.137	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770951 symbol=USDCAD SL 1.40460->1.40460 TP 1.40601->1.40619
+2026.10.26 11:14:25.137	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770951 buy 0.03 USDCAD at 1.40376 sl: 1.40460 tp: 1.40619 ok
+2026.10.26 11:14:24.123	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770951 symbol=USDCAD SL 1.40452->1.40460 TP 1.40601->1.40601
+2026.10.26 11:14:24.123	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770951 buy 0.03 USDCAD at 1.40376 sl: 1.40460 tp: 1.40601 ok
+2026.10.26 11:14:17.013	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770951 symbol=USDCAD SL 1.40445->1.40452 TP 1.40601->1.40601
+2026.10.26 11:14:17.013	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770951 buy 0.03 USDCAD at 1.40376 sl: 1.40452 tp: 1.40601 ok
+2026.10.26 11:12:55.420	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770951 symbol=USDCAD SL 1.40436->1.40445 TP 1.40581->1.40601
+2026.10.26 11:12:55.420	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770951 buy 0.03 USDCAD at 1.40376 sl: 1.40445 tp: 1.40601 ok
+2026.10.26 11:12:01.171	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770951 symbol=USDCAD SL 1.40425->1.40436 TP 1.40581->1.40581
+2026.10.26 11:12:01.171	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770951 buy 0.03 USDCAD at 1.40376 sl: 1.40436 tp: 1.40581 ok
+2026.10.26 11:11:12.655	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770951 symbol=USDCAD SL 1.40413->1.40425 TP 1.40563->1.40581
+2026.10.26 11:11:12.655	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770951 buy 0.03 USDCAD at 1.40376 sl: 1.40425 tp: 1.40581 ok
+2026.10.26 11:11:06.684	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=3/5 dayNet=1.28 monthNet=-9.84 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 11:06:06.561	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=0.83 monthNet=-10.29 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 11:05:07.357	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770951 symbol=USDCAD SL 1.40413->1.40413 TP 1.40542->1.40563
+2026.10.26 11:05:07.357	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770951 buy 0.03 USDCAD at 1.40376 sl: 1.40413 tp: 1.40563 ok
+2026.10.26 11:04:31.766	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=NATGASUSDT spread=0.015 stop=0.036 maxPct=10.0
+2026.10.26 11:01:07.405	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=0.79 monthNet=-10.33 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 11:00:34.233	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=TRXUSDT spread=0.00021 stop=0.00043 maxPct=10.0
+2026.10.26 11:00:03.062	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=FILUSD spread=0.005 stop=0.010 maxPct=10.0
+2026.10.26 11:00:02.046	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: RISK_REJECT | symbol=BTCUSD reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=2.50
+2026.10.26 11:00:01.325	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: CORRELATION_BLOCK | symbol=USDJPY reason=FX_CURRENCY_EXPOSURE_CAP USD net=3
+2026.10.26 11:00:01.325	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ORDER_ACCEPTED | ticket=95770976 symbol=GBPJPY side=SELL lots=0.01 risk=1.31 costR=0.161 score=45.3 SL=210.114 TP=209.578
+2026.10.26 11:00:01.325	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: open #95770976 sell 0.01 GBPJPY at 209.923 sl: 210.114 tp: 209.578 ok
+2026.10.26 11:00:01.047	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: DIVERSIFY_RANK | symbol=GBPJPY rawScore=45.3 overlap=1.0 adjScore=41.3
+2026.10.26 10:59:45.247	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770906 symbol=GBPUSD SL 1.33379->1.33367 TP 1.33224->1.33224
+2026.10.26 10:59:45.247	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33367 tp: 1.33224 ok
+2026.10.26 10:59:40.215	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770906 symbol=GBPUSD SL 1.33387->1.33379 TP 1.33224->1.33224
+2026.10.26 10:59:40.215	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33379 tp: 1.33224 ok
+2026.10.26 10:59:39.200	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770906 symbol=GBPUSD SL 1.33387->1.33387 TP 1.33242->1.33224
+2026.10.26 10:59:39.200	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33387 tp: 1.33224 ok
+2026.10.26 10:59:10.920	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770906 symbol=GBPUSD SL 1.33398->1.33387 TP 1.33242->1.33242
+2026.10.26 10:59:10.920	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33387 tp: 1.33242 ok
+2026.10.26 10:58:59.871	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770906 symbol=GBPUSD SL 1.33412->1.33398 TP 1.33262->1.33242
+2026.10.26 10:58:59.871	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33398 tp: 1.33242 ok
+2026.10.26 10:58:27.793	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770906 symbol=GBPUSD SL 1.33420->1.33412 TP 1.33262->1.33262
+2026.10.26 10:58:27.793	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33412 tp: 1.33262 ok
+2026.10.26 10:58:17.746	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770951 symbol=USDCAD SL 1.40399->1.40413 TP 1.40542->1.40542
+2026.10.26 10:58:17.746	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770951 buy 0.03 USDCAD at 1.40376 sl: 1.40413 tp: 1.40542 ok
+2026.10.26 10:58:05.479	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770906 symbol=GBPUSD SL 1.33420->1.33420 TP 1.33280->1.33262
+2026.10.26 10:58:05.479	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33420 tp: 1.33262 ok
+2026.10.26 10:58:03.621	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770906 symbol=GBPUSD SL 1.33428->1.33420 TP 1.33280->1.33280
+2026.10.26 10:58:03.621	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33420 tp: 1.33280 ok
+2026.10.26 10:58:00.622	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770906 symbol=GBPUSD SL 1.33436->1.33428 TP 1.33280->1.33280
+2026.10.26 10:58:00.622	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33428 tp: 1.33280 ok
+2026.10.26 10:57:55.591	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770951 symbol=USDCAD SL 1.40284->1.40399 TP 1.40542->1.40542
+2026.10.26 10:57:55.591	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770951 buy 0.03 USDCAD at 1.40376 sl: 1.40399 tp: 1.40542 ok
+2026.10.26 10:57:09.096	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770906 symbol=GBPUSD SL 1.33445->1.33436 TP 1.33298->1.33280
+2026.10.26 10:57:09.096	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33436 tp: 1.33280 ok
+2026.10.26 10:56:06.517	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=3/5 dayNet=-0.27 monthNet=-11.39 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 10:51:06.515	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=3/5 dayNet=-1.07 monthNet=-12.19 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 10:46:07.482	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=-1.34 monthNet=-12.46 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 10:45:04.923	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=SOLUSD spread=0.059 stop=0.586 maxPct=10.0
+2026.10.26 10:45:03.001	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=HK50 spread=9.00 stop=33.41 maxPct=10.0
+2026.10.26 10:45:01.995	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=XRPUSDT spread=0.00110 stop=0.00748 maxPct=10.0
+2026.10.26 10:45:01.293	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ORDER_ACCEPTED | ticket=95770951 symbol=USDCAD side=BUY lots=0.03 risk=2.27 costR=0.174 score=49.9 SL=1.40284 TP=1.40542
+2026.10.26 10:45:01.293	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: open #95770951 buy 0.03 USDCAD at 1.40376 sl: 1.40284 tp: 1.40542 ok
+2026.10.26 10:45:01.018	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: DIVERSIFY_RANK | symbol=USDCAD rawScore=49.9 overlap=1.0 adjScore=45.9
+2026.10.26 10:45:01.018	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: RISK_REJECT | symbol=BTCUSD reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=2.50
+2026.10.26 10:41:07.186	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=1.30 monthNet=-9.82 symbols=114 lossStreakPause=ON equityHalt=off
+2026.10.26 10:36:55.668	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770905 symbol=EURUSD SL 1.11840->1.11840 TP 1.11744->1.11729
+2026.10.26 10:36:55.668	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11840 tp: 1.11729 ok
+2026.10.26 10:36:54.622	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770905 symbol=EURUSD SL 1.11847->1.11840 TP 1.11744->1.11744
+2026.10.26 10:36:54.622	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11840 tp: 1.11744 ok
+2026.10.26 10:36:51.637	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770905 symbol=EURUSD SL 1.11852->1.11847 TP 1.11744->1.11744
+2026.10.26 10:36:51.637	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11847 tp: 1.11744 ok
+2026.10.26 10:36:44.469	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770905 symbol=EURUSD SL 1.11869->1.11852 TP 1.11761->1.11744
+2026.10.26 10:36:44.469	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11852 tp: 1.11744 ok
+2026.10.26 10:36:41.513	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770905 symbol=EURUSD SL 1.11875->1.11869 TP 1.11761->1.11761
+2026.10.26 10:36:41.513	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11869 tp: 1.11761 ok
+2026.10.26 10:36:07.062	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=0.11 monthNet=-11.01 symbols=114 lossStreakPause=ON equityHalt=off
+2026.10.26 10:31:06.812	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=-0.82 monthNet=-11.94 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 10:26:42.575	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770905 symbol=EURUSD SL 1.11875->1.11875 TP 1.11775->1.11761
+2026.10.26 10:26:42.575	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11875 tp: 1.11761 ok
+2026.10.26 10:26:42.311	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770906 symbol=GBPUSD SL 1.33454->1.33445 TP 1.33298->1.33298
+2026.10.26 10:26:42.311	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33445 tp: 1.33298 ok
+2026.10.26 10:26:21.843	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770906 symbol=GBPUSD SL 1.33454->1.33454 TP 1.33317->1.33298
+2026.10.26 10:26:21.843	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33454 tp: 1.33298 ok
+2026.10.26 10:26:19.973	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770905 symbol=EURUSD SL 1.11882->1.11875 TP 1.11775->1.11775
+2026.10.26 10:26:19.973	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11875 tp: 1.11775 ok
+2026.10.26 10:26:18.044	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770906 symbol=GBPUSD SL 1.33478->1.33454 TP 1.33317->1.33317
+2026.10.26 10:26:18.044	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33454 tp: 1.33317 ok
+2026.10.26 10:26:16.966	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770905 symbol=EURUSD SL 1.11889->1.11882 TP 1.11775->1.11775
+2026.10.26 10:26:16.966	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11882 tp: 1.11775 ok
+2026.10.26 10:26:15.044	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770905 symbol=EURUSD SL 1.11889->1.11889 TP 1.11789->1.11775
+2026.10.26 10:26:15.044	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11889 tp: 1.11775 ok
+2026.10.26 10:26:13.036	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770905 symbol=EURUSD SL 1.11899->1.11889 TP 1.11789->1.11789
+2026.10.26 10:26:13.036	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11889 tp: 1.11789 ok
+2026.10.26 10:26:06.951	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=1.80 monthNet=-9.32 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 10:26:06.951	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770906 symbol=GBPUSD SL 1.33478->1.33478 TP 1.33335->1.33317
+2026.10.26 10:26:06.951	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33478 tp: 1.33317 ok
+2026.10.26 10:26:03.935	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770905 symbol=EURUSD SL 1.11913->1.11899 TP 1.11802->1.11789
+2026.10.26 10:26:03.935	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11899 tp: 1.11789 ok
+2026.10.26 10:25:53.827	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770906 symbol=GBPUSD SL 1.33589->1.33478 TP 1.33335->1.33335
+2026.10.26 10:25:53.827	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33478 tp: 1.33335 ok
+2026.10.26 10:21:06.608	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=0.35 monthNet=-10.77 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 10:16:06.485	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=0.84 monthNet=-10.28 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 10:15:05.403	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ORDER_ACCEPTED | ticket=95770925 symbol=HYPEUSDT side=BUY lots=0.01 risk=2.19 costR=0.150 score=38.2 SL=77.169 TP=78.311
+2026.10.26 10:15:05.403	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: open #95770925 buy 0.01 HYPEUSDT at 77.577 sl: 77.169 tp: 78.311 ok
+2026.10.26 10:15:05.147	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: DIVERSIFY_RANK | symbol=HYPEUSDT rawScore=38.2 overlap=1.0 adjScore=34.2
+2026.10.26 10:15:03.526	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=DELLUSDT spread=0.55 stop=3.35 maxPct=10.0
+2026.10.26 10:15:03.526	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: DIVERSIFY_RANK | symbol=DELLUSDT rawScore=34.0 overlap=1.0 adjScore=30.0
+2026.10.26 10:15:03.483	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770905 symbol=EURUSD SL 1.12003->1.11913 TP 1.11802->1.11802
+2026.10.26 10:15:03.483	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11913 tp: 1.11802 ok
+2026.10.26 10:15:02.158	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=NZDCAD spread=0.00007 stop=0.00055 maxPct=10.0
+2026.10.26 10:11:07.553	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=0.40 monthNet=-10.72 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 10:06:07.238	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=-1.31 monthNet=-12.43 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 10:01:07.390	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=-1.79 monthNet=-12.91 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 10:00:09.963	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=DASHUSD spread=0.15 stop=0.59 maxPct=10.0
+2026.10.26 10:00:09.963	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: DIVERSIFY_RANK | symbol=DASHUSD rawScore=26.8 overlap=1.0 adjScore=22.8
+2026.10.26 09:56:07.483	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=-0.94 monthNet=-12.06 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 09:51:06.630	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=-0.93 monthNet=-12.05 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 09:46:06.951	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=-0.43 monthNet=-11.55 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 09:45:03.233	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ORDER_ACCEPTED | ticket=95770906 symbol=GBPUSD side=SELL lots=0.02 risk=2.02 costR=0.154 score=37.1 SL=1.33589 TP=1.33335
+2026.10.26 09:45:03.233	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: open #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33589 tp: 1.33335 ok
+2026.10.26 09:45:02.982	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: DIVERSIFY_RANK | symbol=GBPUSD rawScore=37.1 overlap=1.0 adjScore=33.1
+2026.10.26 09:45:02.982	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ORDER_ACCEPTED | ticket=95770905 symbol=EURUSD side=SELL lots=0.03 risk=2.46 costR=0.153 score=41.4 SL=1.12003 TP=1.11802
+2026.10.26 09:45:02.982	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: open #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.12003 tp: 1.11802 ok
+2026.10.26 09:41:07.204	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=3/5 dayNet=-1.02 monthNet=-12.14 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 09:36:07.415	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=3/5 dayNet=-0.46 monthNet=-11.58 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 09:31:06.527	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=0.33 monthNet=-10.79 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 09:30:02.981	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: RISK_REJECT | symbol=BNBUSD.hb reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=2.50
+2026.10.26 09:30:02.981	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: DIVERSIFY_RANK | symbol=BNBUSD.hb rawScore=37.6 overlap=1.0 adjScore=33.6
+2026.10.26 09:30:02.074	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: RISK_REJECT | symbol=SNDKUSDT reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=2.50
+2026.10.26 09:30:02.074	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: DIVERSIFY_RANK | symbol=SNDKUSDT rawScore=56.0 overlap=1.0 adjScore=52.0
+2026.10.26 09:30:01.310	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: COST_REJECT | symbol=EURCAD costR=0.250 max=0.200
+2026.10.26 09:30:01.310	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ORDER_ACCEPTED | ticket=95770890 symbol=EURAUD side=SELL lots=0.02 risk=1.90 costR=0.167 score=41.0 SL=1.59396 TP=1.59057
+2026.10.26 09:30:01.310	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: open #95770890 sell 0.02 EURAUD at 1.59275 sl: 1.59396 tp: 1.59057 ok
+2026.10.26 09:30:01.048	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: DIVERSIFY_RANK | symbol=EURAUD rawScore=41.0 overlap=1.0 adjScore=37.0
+2026.10.26 09:26:06.474	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=2.11 monthNet=-9.01 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 09:21:05.717	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=2.95 monthNet=-8.17 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 09:16:05.938	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=4.08 monthNet=-7.04 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 09:11:05.530	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=5.77 monthNet=-5.35 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 09:07:03.200	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770803 symbol=USDCHF SL 0.82527->0.82621 TP 0.82749->0.82749
+2026.10.26 09:07:03.200	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: modify #95770803 buy 0.02 USDCHF at 0.82606 sl: 0.82621 tp: 0.82749 ok
+2026.10.26 09:06:05.516	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=5.43 monthNet=-5.69 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 09:01:05.736	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=4.33 monthNet=-6.79 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 09:00:01.671	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ORDER_ACCEPTED | ticket=95770860 symbol=USDJPY side=BUY lots=0.02 risk=1.74 costR=0.147 score=57.7 SL=157.324 TP=157.663
+2026.10.26 09:00:01.671	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: open #95770860 buy 0.02 USDJPY at 157.445 sl: 157.324 tp: 157.663 ok
+2026.10.26 09:00:01.411	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: DIVERSIFY_RANK | symbol=USDJPY rawScore=57.7 overlap=2.0 adjScore=49.7
+2026.10.26 08:56:06.108	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=4.30 monthNet=-6.82 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 08:51:06.232	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=3.96 monthNet=-7.16 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 08:46:05.452	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=4.96 monthNet=-6.16 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 08:45:18.159	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=CSCOUSDT spread=0.14 stop=0.28 maxPct=10.0
+2026.10.26 08:45:18.159	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: DIVERSIFY_RANK | symbol=CSCOUSDT rawScore=26.8 overlap=1.0 adjScore=22.8
+2026.10.26 08:45:15.144	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=AAPLUSDT spread=0.50 stop=1.31 maxPct=10.0
+2026.10.26 08:45:02.978	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: RISK_REJECT | symbol=UKOIL reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=2.50
+2026.10.26 08:45:02.123	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=EWYUSDT spread=0.16 stop=0.62 maxPct=10.0
+2026.10.26 08:45:02.123	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: DIVERSIFY_RANK | symbol=EWYUSDT rawScore=22.9 overlap=1.0 adjScore=18.9
+2026.10.26 08:45:01.025	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: DIVERSIFY_RANK | symbol=NZDCAD rawScore=47.5 overlap=1.0 adjScore=43.5
+2026.10.26 08:41:05.828	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=5.43 monthNet=-5.69 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 08:36:06.063	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=3.31 monthNet=-7.81 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 08:31:05.467	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=4.79 monthNet=-6.33 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 08:26:05.485	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=4.84 monthNet=-6.28 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 08:21:05.934	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=3.27 monthNet=-7.85 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 08:16:06.340	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=5/5 dayNet=3.75 monthNet=-7.37 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 08:15:04.594	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ORDER_ACCEPTED | ticket=95770804 symbol=AUDJPY side=BUY lots=0.02 risk=1.75 costR=0.154 score=40.6 SL=110.533 TP=110.874
+2026.10.26 08:15:04.594	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: open #95770804 buy 0.02 AUDJPY at 110.658 sl: 110.533 tp: 110.874 ok
+2026.10.26 08:15:04.341	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: DIVERSIFY_RANK | symbol=AUDJPY rawScore=40.6 overlap=1.0 adjScore=36.6
+2026.10.26 08:15:04.341	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: ORDER_ACCEPTED | ticket=95770803 symbol=USDCHF side=BUY lots=0.02 risk=2.11 costR=0.155 score=41.4 SL=0.82527 TP=0.82749
+2026.10.26 08:15:04.341	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: open #95770803 buy 0.02 USDCHF at 0.82606 sl: 0.82527 tp: 0.82749 ok
+2026.10.26 08:15:02.044	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: COST_REJECT | symbol=NZDCAD costR=0.302 max=0.200
+2026.10.26 08:15:02.044	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: DIVERSIFY_RANK | symbol=NZDCAD rawScore=49.0 overlap=1.0 adjScore=45.0
+2026.10.26 08:15:02.044	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: COST_REJECT | symbol=EURCAD costR=0.229 max=0.200
+2026.10.26 08:11:05.717	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=3/5 dayNet=4.87 monthNet=-6.25 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 08:06:05.982	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=3/5 dayNet=4.16 monthNet=-6.96 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 08:01:05.453	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=4.28 monthNet=-6.84 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 08:00:01.205	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=USDHKD spread=0.00011 stop=0.00057 maxPct=10.0
+2026.10.26 07:56:05.855	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=6.49 monthNet=-4.63 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 07:51:20.784	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=NATGASUSDT spread=0.015 stop=0.018 maxPct=10.0
+2026.10.26 07:51:05.745	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: HEARTBEAT | v1.7.2 open=4/5 dayNet=6.53 monthNet=-4.59 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 07:51:04.708	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: initialized
+2026.10.26 07:51:04.708	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: BITEY_ENSEMBLE_INIT | version=1.7.2 | symbols=114 | maxPositions=5 | tf=15 | accountMode=NOT_A_GATE | trading=ON
+2026.10.26 07:51:04.487	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: AUTO_CRYPTO | added=0 skippedNotTradable=0 | 
+2026.10.26 07:51:04.487	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: EXTRA_SYMBOL | requested=ZECUSDT | replaces alias ZECUSD with ZECUSDT
+2026.10.26 07:51:04.487	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: EXTRA_SYMBOL | requested=NEARUSDT | replaces alias NEARUSD with NEARUSDT
+2026.10.26 07:51:04.373	Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15 inputs: InpSymbolsCSV=; InpAutoAddCrypto=true; InpAutoAddUSDT=true; InpUSDTIs24x7=true; InpExtraCryptoPrefixes=; InpExtraSymbolsCSV=NEARUSDT,ZECUSDT; InpSignalTF=15; InpHTF=60; InpUseHTFFilter=true; InpMagic=21102027; InpReferenceCapitalUSD=500.0; InpUseEquityRisk=false; InpRiskPctPerTrade=0.5; InpMaxAggregateRiskPct=2.5; InpDailyLossPct=3.0; InpMaxOpenPositions=5; InpMaxLotsFX=0.3; InpMaxLotsOther=0.1; InpCommissionPerLotFX=10.0; InpCommissionPe
+2026.10.26 07:51:03.404	Expert Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: loaded successfully
+2026.10.26 07:51:03.384	Expert Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: removed
+2026.10.26 07:51:03.348	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: uninit reason 1
+2026.10.26 07:50:13.981	Compiling 'Bitey ensemble scalper multiasset v1 7 2 claude'
+2026.10.26 07:48:25.703	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: HEARTBEAT | v1.7.1 open=4/5 dayNet=6.64 monthNet=-4.48 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 07:45:02.445	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=AUDNZD spread=0.00011 stop=0.00097 maxPct=10.0
+2026.10.26 07:45:00.750	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: ORDER_ACCEPTED | ticket=95770780 symbol=EURJPY side=BUY lots=0.02 risk=2.17 costR=0.140 score=36.8 SL=176.128 TP=176.562
+2026.10.26 07:45:00.750	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: open #95770780 buy 0.02 EURJPY at 176.283 sl: 176.128 tp: 176.562 ok
+2026.10.26 07:44:33.606	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770621 symbol=USDJPY SL 157.285->157.300 TP 157.457->157.478
+2026.10.26 07:44:33.606	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: modify #95770621 buy 0.02 USDJPY at 157.159 sl: 157.300 tp: 157.478 ok
+2026.10.26 07:44:23.571	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770621 symbol=USDJPY SL 157.269->157.285 TP 157.457->157.457
+2026.10.26 07:44:23.571	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: modify #95770621 buy 0.02 USDJPY at 157.159 sl: 157.285 tp: 157.457 ok
+2026.10.26 07:43:57.360	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770621 symbol=USDJPY SL 157.260->157.269 TP 157.457->157.457
+2026.10.26 07:43:57.358	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: modify #95770621 buy 0.02 USDJPY at 157.159 sl: 157.269 tp: 157.457 ok
+2026.10.26 07:43:25.941	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: HEARTBEAT | v1.7.1 open=3/5 dayNet=7.46 monthNet=-3.66 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 07:38:26.246	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: HEARTBEAT | v1.7.1 open=4/5 dayNet=7.76 monthNet=-3.36 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 07:33:25.418	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: HEARTBEAT | v1.7.1 open=4/5 dayNet=8.24 monthNet=-2.88 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 07:30:17.529	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=USDHKD spread=0.00015 stop=0.00059 maxPct=10.0
+2026.10.26 07:28:26.203	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: HEARTBEAT | v1.7.1 open=4/5 dayNet=7.72 monthNet=-3.40 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 07:23:25.971	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: HEARTBEAT | v1.7.1 open=4/5 dayNet=7.71 monthNet=-3.41 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 07:18:25.892	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: HEARTBEAT | v1.7.1 open=4/5 dayNet=7.77 monthNet=-3.35 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 07:15:38.763	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=CSCOUSDT spread=0.15 stop=0.30 maxPct=10.0
+2026.10.26 07:15:16.650	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=VUSDT spread=0.55 stop=0.57 maxPct=10.0
+2026.10.26 07:15:08.825	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: ORDER_ACCEPTED | ticket=95770765 symbol=EURNZD side=BUY lots=0.02 risk=1.85 costR=0.190 score=32.9 SL=1.96863 TP=1.97269
+2026.10.26 07:15:08.825	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: open #95770765 buy 0.02 EURNZD at 1.97007 sl: 1.96863 tp: 1.97269 ok
+2026.10.26 07:15:08.569	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: COST_REJECT | symbol=NZDUSD costR=0.280 max=0.200
+2026.10.26 07:15:03.664	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=GRTUSD spread=0.00112 stop=0.00114 maxPct=10.0
+2026.10.26 07:15:03.664	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=EURCAD spread=0.00010 stop=0.00095 maxPct=10.0
+2026.10.26 07:13:26.034	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: HEARTBEAT | v1.7.1 open=3/5 dayNet=8.08 monthNet=-3.04 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 07:08:25.865	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: HEARTBEAT | v1.7.1 open=5/5 dayNet=9.64 monthNet=-1.48 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 07:08:25.354	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: initialized
+2026.10.26 07:08:25.354	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: BITEY_ENSEMBLE_INIT | version=1.7.1 | symbols=114 | maxPositions=5 | tf=15 | accountMode=NOT_A_GATE | trading=ON
+2026.10.26 07:08:25.352	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: AUTO_CRYPTO | added=0 skippedNotTradable=0 | 
+2026.10.26 07:08:25.352	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: EXTRA_SYMBOL | requested=ZECUSDT | replaces alias ZECUSD with ZECUSDT
+2026.10.26 07:08:25.350	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: EXTRA_SYMBOL | requested=NEARUSDT | replaces alias NEARUSD with NEARUSDT
+2026.10.26 07:08:25.253	Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15 inputs: InpSymbolsCSV=; InpAutoAddCrypto=true; InpAutoAddUSDT=true; InpUSDTIs24x7=true; InpExtraCryptoPrefixes=; InpExtraSymbolsCSV=NEARUSDT,ZECUSDT; InpSignalTF=15; InpHTF=60; InpUseHTFFilter=true; InpMagic=21102027; InpReferenceCapitalUSD=500.0; InpUseEquityRisk=false; InpRiskPctPerTrade=0.5; InpMaxAggregateRiskPct=2.5; InpDailyLossPct=3.0; InpMaxOpenPositions=5; InpMaxLotsFX=0.3; InpMaxLotsOther=0.1; InpCommissionPerLotFX=10.0; InpCommission
+2026.10.26 07:08:24.177	Expert Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: loaded successfully
+2026.10.26 07:08:24.159	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: removed
+2026.10.26 07:08:24.130	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: uninit reason 1
+2026.10.26 07:05:31.764	Compiling 'Bitey ensemble scalper multiasset v1 7 1 1 claude'
+2026.10.26 07:04:21.701	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=5/5 dayNet=10.55 monthNet=-0.57 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 06:59:21.775	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=5/5 dayNet=11.17 monthNet=0.05 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 06:55:20.728	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770621 symbol=USDJPY SL 157.245->157.260 TP 157.426->157.457
+2026.10.26 06:55:20.726	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770621 buy 0.02 USDJPY at 157.159 sl: 157.260 tp: 157.457 ok
+2026.10.26 06:54:22.123	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=5/5 dayNet=10.90 monthNet=-0.22 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 06:49:22.253	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=5/5 dayNet=10.53 monthNet=-0.59 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 06:44:57.884	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.642->110.653 TP 110.785->110.785
+2026.10.26 06:44:57.884	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.653 tp: 110.785 ok
+2026.10.26 06:44:57.624	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770621 symbol=USDJPY SL 157.229->157.245 TP 157.426->157.426
+2026.10.26 06:44:57.624	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770621 buy 0.02 USDJPY at 157.159 sl: 157.245 tp: 157.426 ok
+2026.10.26 06:44:22.107	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=5/5 dayNet=10.81 monthNet=-0.31 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 06:41:12.040	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.631->110.642 TP 110.785->110.785
+2026.10.26 06:41:12.039	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.642 tp: 110.785 ok
+2026.10.26 06:39:22.333	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=5/5 dayNet=10.19 monthNet=-0.93 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 06:37:48.138	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.622->110.631 TP 110.785->110.785
+2026.10.26 06:37:48.138	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.631 tp: 110.785 ok
+2026.10.26 06:37:36.045	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.612->110.622 TP 110.785->110.785
+2026.10.26 06:37:36.045	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.622 tp: 110.785 ok
+2026.10.26 06:34:40.982	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770621 symbol=USDJPY SL 157.219->157.229 TP 157.426->157.426
+2026.10.26 06:34:40.982	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770621 buy 0.02 USDJPY at 157.159 sl: 157.229 tp: 157.426 ok
+2026.10.26 06:34:21.591	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=5/5 dayNet=10.14 monthNet=-0.98 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 06:32:39.313	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770621 symbol=USDJPY SL 157.219->157.219 TP 157.401->157.426
+2026.10.26 06:32:39.313	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770621 buy 0.02 USDJPY at 157.159 sl: 157.219 tp: 157.426 ok
+2026.10.26 06:32:35.293	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770621 symbol=USDJPY SL 157.189->157.219 TP 157.401->157.401
+2026.10.26 06:32:35.293	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770621 buy 0.02 USDJPY at 157.159 sl: 157.219 tp: 157.401 ok
+2026.10.26 06:30:17.419	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.600->110.612 TP 110.785->110.785
+2026.10.26 06:30:17.419	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.612 tp: 110.785 ok
+2026.10.26 06:30:02.033	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770621 symbol=USDJPY SL 157.188->157.189 TP 157.401->157.401
+2026.10.26 06:30:02.032	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770621 buy 0.02 USDJPY at 157.159 sl: 157.189 tp: 157.401 ok
+2026.10.26 06:29:21.811	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=5/5 dayNet=9.03 monthNet=-2.09 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 06:29:07.998	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.600->110.600 TP 110.764->110.785
+2026.10.26 06:29:07.998	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.600 tp: 110.785 ok
+2026.10.26 06:24:21.731	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=5/5 dayNet=8.05 monthNet=-3.07 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 06:19:21.734	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=5/5 dayNet=8.54 monthNet=-2.58 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 06:14:21.715	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=5/5 dayNet=7.92 monthNet=-3.20 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 06:10:54.657	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.589->110.600 TP 110.764->110.764
+2026.10.26 06:10:54.657	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.600 tp: 110.764 ok
+2026.10.26 06:10:17.262	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.589->110.589 TP 110.744->110.764
+2026.10.26 06:10:17.262	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.589 tp: 110.764 ok
+2026.10.26 06:10:03.168	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.580->110.589 TP 110.744->110.744
+2026.10.26 06:10:03.168	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.589 tp: 110.744 ok
+2026.10.26 06:09:52.062	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.572->110.580 TP 110.744->110.744
+2026.10.26 06:09:52.062	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.580 tp: 110.744 ok
+2026.10.26 06:09:46.950	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.564->110.572 TP 110.724->110.744
+2026.10.26 06:09:46.950	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.572 tp: 110.744 ok
+2026.10.26 06:09:21.589	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=5/5 dayNet=8.82 monthNet=-2.30 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 06:06:59.841	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.556->110.564 TP 110.724->110.724
+2026.10.26 06:06:59.841	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.564 tp: 110.724 ok
+2026.10.26 06:06:11.512	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.548->110.556 TP 110.724->110.724
+2026.10.26 06:06:11.512	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.556 tp: 110.724 ok
+2026.10.26 06:04:21.451	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=5/5 dayNet=7.51 monthNet=-3.61 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 06:03:11.154	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770621 symbol=USDJPY SL 157.023->157.188 TP 157.401->157.401
+2026.10.26 06:03:11.154	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770621 buy 0.02 USDJPY at 157.159 sl: 157.188 tp: 157.401 ok
+2026.10.26 06:02:28.857	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.548->110.548 TP 110.704->110.724
+2026.10.26 06:02:28.857	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.548 tp: 110.724 ok
+2026.10.26 06:02:24.825	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.540->110.548 TP 110.704->110.704
+2026.10.26 06:02:24.825	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.548 tp: 110.704 ok
+2026.10.26 06:02:14.825	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.532->110.540 TP 110.704->110.704
+2026.10.26 06:02:14.825	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.540 tp: 110.704 ok
+2026.10.26 06:02:09.796	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.523->110.532 TP 110.684->110.704
+2026.10.26 06:02:09.796	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.532 tp: 110.704 ok
+2026.10.26 06:01:52.716	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.515->110.523 TP 110.684->110.684
+2026.10.26 06:01:52.716	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.523 tp: 110.684 ok
+2026.10.26 06:01:01.450	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.506->110.515 TP 110.684->110.684
+2026.10.26 06:01:01.450	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.515 tp: 110.684 ok
+2026.10.26 06:00:41.340	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.506->110.506 TP 110.664->110.684
+2026.10.26 06:00:41.340	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.506 tp: 110.684 ok
+2026.10.26 06:00:28.278	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.491->110.506 TP 110.664->110.664
+2026.10.26 06:00:28.278	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.506 tp: 110.664 ok
+2026.10.26 06:00:02.013	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ORDER_ACCEPTED | ticket=95770691 symbol=CHFJPY side=SELL lots=0.02 risk=2.13 costR=0.163 score=31.0 SL=190.545 TP=190.119
+2026.10.26 06:00:02.013	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: open #95770691 sell 0.02 CHFJPY at 190.398 sl: 190.545 tp: 190.119 ok
+2026.10.26 05:59:21.546	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=4/5 dayNet=7.98 monthNet=-3.14 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 05:57:17.048	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.491->110.491 TP 110.644->110.664
+2026.10.26 05:57:17.048	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.491 tp: 110.664 ok
+2026.10.26 05:56:17.718	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.483->110.491 TP 110.644->110.644
+2026.10.26 05:56:17.718	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.491 tp: 110.644 ok
+2026.10.26 05:55:51.467	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.475->110.483 TP 110.644->110.644
+2026.10.26 05:55:51.467	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.483 tp: 110.644 ok
+2026.10.26 05:54:21.499	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=4/5 dayNet=9.00 monthNet=-2.12 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 05:54:05.590	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.464->110.475 TP 110.621->110.644
+2026.10.26 05:54:05.590	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.475 tp: 110.644 ok
+2026.10.26 05:53:44.559	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.452->110.464 TP 110.621->110.621
+2026.10.26 05:53:44.559	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.464 tp: 110.621 ok
+2026.10.26 05:53:34.465	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.441->110.452 TP 110.597->110.621
+2026.10.26 05:53:34.465	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.452 tp: 110.621 ok
+2026.10.26 05:53:18.326	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.433->110.441 TP 110.597->110.597
+2026.10.26 05:53:18.326	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.441 tp: 110.597 ok
+2026.10.26 05:52:13.972	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.425->110.433 TP 110.597->110.597
+2026.10.26 05:52:13.972	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.433 tp: 110.597 ok
+2026.10.26 05:52:01.856	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.425->110.425 TP 110.577->110.597
+2026.10.26 05:52:01.856	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.425 tp: 110.597 ok
+2026.10.26 05:51:42.751	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.405->110.425 TP 110.577->110.577
+2026.10.26 05:51:42.751	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.425 tp: 110.577 ok
+2026.10.26 05:51:16.574	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.89929->1.89919 TP 1.89802->1.89802
+2026.10.26 05:51:16.574	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.89919 tp: 1.89802 ok
+2026.10.26 05:50:52.371	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.89938->1.89929 TP 1.89802->1.89802
+2026.10.26 05:50:52.371	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.89929 tp: 1.89802 ok
+2026.10.26 05:50:20.062	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.89947->1.89938 TP 1.89802->1.89802
+2026.10.26 05:50:20.062	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.89938 tp: 1.89802 ok
+2026.10.26 05:50:14.184	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.89956->1.89947 TP 1.89802->1.89802
+2026.10.26 05:50:14.184	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.89947 tp: 1.89802 ok
+2026.10.26 05:50:12.170	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.89966->1.89956 TP 1.89802->1.89802
+2026.10.26 05:50:12.170	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.89956 tp: 1.89802 ok
+2026.10.26 05:49:21.648	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=5/5 dayNet=5.87 monthNet=-5.25 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 05:47:58.249	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.89976->1.89966 TP 1.89802->1.89802
+2026.10.26 05:47:58.249	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.89966 tp: 1.89802 ok
+2026.10.26 05:47:38.121	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.89987->1.89976 TP 1.89802->1.89802
+2026.10.26 05:47:38.121	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.89976 tp: 1.89802 ok
+2026.10.26 05:47:35.091	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.89997->1.89987 TP 1.89802->1.89802
+2026.10.26 05:47:35.091	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.89987 tp: 1.89802 ok
+2026.10.26 05:46:55.622	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.89997->1.89997 TP 1.89828->1.89802
+2026.10.26 05:46:55.622	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.89997 tp: 1.89802 ok
+2026.10.26 05:45:19.200	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ORDER_ACCEPTED | ticket=95770666 symbol=ASTERUSDT side=BUY lots=0.01 risk=2.20 costR=0.171 score=57.0 SL=0.7061 TP=0.7176
+2026.10.26 05:45:19.200	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: open #95770666 buy 0.01 ASTERUSDT at 0.7102 sl: 0.7061 tp: 0.7176 ok
+2026.10.26 05:45:01.800	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: CORRELATION_BLOCK | symbol=AUDNZD reason=FX_CURRENCY_EXPOSURE_CAP AUD net=3
+2026.10.26 05:45:00.809	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: CORRELATION_BLOCK | symbol=AUDCAD reason=FX_CURRENCY_EXPOSURE_CAP AUD net=3
+2026.10.26 05:44:21.623	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=4/5 dayNet=4.77 monthNet=-6.35 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 05:41:02.560	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90008->1.89997 TP 1.89828->1.89828
+2026.10.26 05:41:02.560	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.89997 tp: 1.89828 ok
+2026.10.26 05:40:16.278	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770573 symbol=AUDJPY SL 110.267->110.405 TP 110.577->110.577
+2026.10.26 05:40:16.278	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.405 tp: 110.577 ok
+2026.10.26 05:39:21.656	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=4/5 dayNet=5.46 monthNet=-5.66 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 05:38:27.543	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90017->1.90008 TP 1.89828->1.89828
+2026.10.26 05:38:27.543	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90008 tp: 1.89828 ok
+2026.10.26 05:38:18.281	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90026->1.90017 TP 1.89850->1.89828
+2026.10.26 05:38:18.281	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90017 tp: 1.89828 ok
+2026.10.26 05:37:59.388	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90039->1.90026 TP 1.89850->1.89850
+2026.10.26 05:37:59.388	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90026 tp: 1.89850 ok
+2026.10.26 05:37:19.028	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90053->1.90039 TP 1.89874->1.89850
+2026.10.26 05:37:19.028	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90039 tp: 1.89850 ok
+2026.10.26 05:36:46.826	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90063->1.90053 TP 1.89874->1.89874
+2026.10.26 05:36:46.826	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90053 tp: 1.89874 ok
+2026.10.26 05:35:53.371	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90078->1.90063 TP 1.89903->1.89874
+2026.10.26 05:35:53.371	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90063 tp: 1.89874 ok
+2026.10.26 05:35:44.264	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90087->1.90078 TP 1.89903->1.89903
+2026.10.26 05:35:44.264	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90078 tp: 1.89903 ok
+2026.10.26 05:35:18.121	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90097->1.90087 TP 1.89903->1.89903
+2026.10.26 05:35:18.121	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90087 tp: 1.89903 ok
+2026.10.26 05:35:01.092	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90097->1.90097 TP 1.89929->1.89903
+2026.10.26 05:35:01.092	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90097 tp: 1.89903 ok
+2026.10.26 05:34:53.029	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90106->1.90097 TP 1.89929->1.89929
+2026.10.26 05:34:53.029	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90097 tp: 1.89929 ok
+2026.10.26 05:34:49.753	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=LABUSDT spread=0.006 stop=0.008 maxPct=10.0
+2026.10.26 05:34:24.826	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90118->1.90106 TP 1.89929->1.89929
+2026.10.26 05:34:24.826	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90106 tp: 1.89929 ok
+2026.10.26 05:34:21.528	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=4/5 dayNet=1.24 monthNet=-9.88 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 05:33:26.419	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90128->1.90118 TP 1.89951->1.89929
+2026.10.26 05:33:26.419	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90118 tp: 1.89929 ok
+2026.10.26 05:30:15.814	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=VUSDT spread=0.55 stop=0.57 maxPct=10.0
+2026.10.26 05:30:10.794	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=CSCOUSDT spread=0.15 stop=0.26 maxPct=10.0
+2026.10.26 05:30:06.778	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=TXNUSDT spread=0.15 stop=0.80 maxPct=10.0
+2026.10.26 05:30:02.680	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: CORRELATION_BLOCK | symbol=EURGBP reason=FX_CURRENCY_EXPOSURE_CAP GBP net=-3
+2026.10.26 05:30:01.725	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=EURNZD spread=0.00015 stop=0.00127 maxPct=10.0
+2026.10.26 05:30:00.981	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=EURCAD spread=0.00010 stop=0.00079 maxPct=10.0
+2026.10.26 05:30:00.981	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ORDER_ACCEPTED | ticket=95770644 symbol=GBPJPY side=SELL lots=0.02 risk=2.48 costR=0.160 score=33.0 SL=210.055 TP=209.555
+2026.10.26 05:30:00.981	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: open #95770644 sell 0.02 GBPJPY at 209.875 sl: 210.055 tp: 209.555 ok
+2026.10.26 05:29:21.412	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=3/5 dayNet=0.21 monthNet=-10.91 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 05:24:21.281	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=3/5 dayNet=-0.28 monthNet=-11.40 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 05:19:20.514	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=3/5 dayNet=-0.19 monthNet=-11.31 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 05:15:14.626	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=IOTAUSD spread=0.0018 stop=0.0020 maxPct=10.0
+2026.10.26 05:15:12.610	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=DOTUSD spread=0.004 stop=0.008 maxPct=10.0
+2026.10.26 05:15:04.544	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=ADAUSD.hb spread=0.00040 stop=0.00146 maxPct=10.0
+2026.10.26 05:15:02.511	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: COST_REJECT | symbol=MANAUSD.hb costR=2.500 max=0.300
+2026.10.26 05:15:02.511	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=NZDUSD spread=0.00004 stop=0.00039 maxPct=10.0
+2026.10.26 05:15:01.747	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=USDHKD spread=0.00020 stop=0.00067 maxPct=10.0
+2026.10.26 05:15:01.747	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: CORRELATION_BLOCK | symbol=EURJPY reason=FX_CURRENCY_EXPOSURE_CAP JPY net=-3
+2026.10.26 05:15:01.747	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ORDER_ACCEPTED | ticket=95770621 symbol=USDJPY side=BUY lots=0.02 risk=1.92 costR=0.124 score=41.3 SL=157.023 TP=157.401
+2026.10.26 05:15:01.747	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: open #95770621 buy 0.02 USDJPY at 157.159 sl: 157.023 tp: 157.401 ok
+2026.10.26 05:14:21.171	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=2/5 dayNet=-0.53 monthNet=-11.65 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 05:09:20.319	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=2/5 dayNet=-0.44 monthNet=-11.56 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 05:04:36.715	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90140->1.90128 TP 1.89973->1.89951
+2026.10.26 05:04:36.715	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90128 tp: 1.89951 ok
+2026.10.26 05:04:24.637	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90150->1.90140 TP 1.89973->1.89973
+2026.10.26 05:04:24.637	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90140 tp: 1.89973 ok
+2026.10.26 05:04:20.388	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=3/5 dayNet=0.28 monthNet=-10.84 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 05:03:50.418	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90159->1.90150 TP 1.89996->1.89973
+2026.10.26 05:03:50.418	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90150 tp: 1.89973 ok
+2026.10.26 05:00:47.877	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=ALGOUSD spread=0.0004 stop=0.0008 maxPct=10.0
+2026.10.26 05:00:02.643	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=FILUSD spread=0.005 stop=0.009 maxPct=10.0
+2026.10.26 05:00:01.655	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=GRTUSD spread=0.00111 stop=0.00113 maxPct=10.0
+2026.10.26 05:00:01.655	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=ICPUSD spread=0.015 stop=0.019 maxPct=10.0
+2026.10.26 05:00:00.668	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=BCHUSD.hb spread=0.52 stop=2.99 maxPct=10.0
+2026.10.26 05:00:00.668	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: RISK_REJECT | symbol=US100 reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=2.50
+2026.10.26 04:59:20.389	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=3/5 dayNet=0.23 monthNet=-10.89 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 04:54:20.342	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=4/5 dayNet=2.42 monthNet=-8.70 symbols=114 lossStreakPause=ON equityHalt=off
+2026.10.26 04:51:17.607	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90168->1.90159 TP 1.89996->1.89996
+2026.10.26 04:51:17.607	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90159 tp: 1.89996 ok
+2026.10.26 04:50:15.170	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90185->1.90168 TP 1.90022->1.89996
+2026.10.26 04:50:15.170	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90168 tp: 1.89996 ok
+2026.10.26 04:49:20.670	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=5/5 dayNet=2.29 monthNet=-8.83 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 04:47:17.128	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82516->0.82522 TP 0.82613->0.82613
+2026.10.26 04:47:17.128	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82522 tp: 0.82613 ok
+2026.10.26 04:45:46.437	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82516->0.82516 TP 0.82601->0.82613
+2026.10.26 04:45:46.437	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82516 tp: 0.82613 ok
+2026.10.26 04:45:40.418	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770494 symbol=EURUSD SL 1.12084->1.12084 TP 1.12011->1.12001
+2026.10.26 04:45:40.418	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12084 tp: 1.12001 ok
+2026.10.26 04:44:20.500	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=5/5 dayNet=3.31 monthNet=-7.81 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 04:44:00.824	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82511->0.82516 TP 0.82601->0.82601
+2026.10.26 04:44:00.824	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82516 tp: 0.82601 ok
+2026.10.26 04:44:00.560	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90196->1.90185 TP 1.90044->1.90022
+2026.10.26 04:44:00.560	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90185 tp: 1.90022 ok
+2026.10.26 04:43:29.231	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90216->1.90196 TP 1.90044->1.90044
+2026.10.26 04:43:29.231	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90196 tp: 1.90044 ok
+2026.10.26 04:42:31.935	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82503->0.82511 TP 0.82587->0.82601
+2026.10.26 04:42:31.935	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82511 tp: 0.82601 ok
+2026.10.26 04:42:24.902	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82498->0.82503 TP 0.82587->0.82587
+2026.10.26 04:42:24.902	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82503 tp: 0.82587 ok
+2026.10.26 04:42:15.791	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770494 symbol=EURUSD SL 1.12089->1.12084 TP 1.12011->1.12011
+2026.10.26 04:42:15.791	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12084 tp: 1.12011 ok
+2026.10.26 04:42:12.796	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90216->1.90216 TP 1.90063->1.90044
+2026.10.26 04:42:12.796	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90216 tp: 1.90044 ok
+2026.10.26 04:41:48.671	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770576 symbol=GBPAUD SL 1.90348->1.90216 TP 1.90063->1.90063
+2026.10.26 04:41:48.671	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90216 tp: 1.90063 ok
+2026.10.26 04:41:43.669	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770494 symbol=EURUSD SL 1.12094->1.12089 TP 1.12011->1.12011
+2026.10.26 04:41:43.669	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12089 tp: 1.12011 ok
+2026.10.26 04:41:42.670	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770494 symbol=EURUSD SL 1.12094->1.12094 TP 1.12021->1.12011
+2026.10.26 04:41:42.670	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12094 tp: 1.12011 ok
+2026.10.26 04:41:33.559	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770494 symbol=EURUSD SL 1.12099->1.12094 TP 1.12021->1.12021
+2026.10.26 04:41:33.559	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12094 tp: 1.12021 ok
+2026.10.26 04:41:32.606	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82493->0.82498 TP 0.82587->0.82587
+2026.10.26 04:41:32.606	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82498 tp: 0.82587 ok
+2026.10.26 04:41:25.590	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82493->0.82493 TP 0.82575->0.82587
+2026.10.26 04:41:25.590	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82493 tp: 0.82587 ok
+2026.10.26 04:41:15.465	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770494 symbol=EURUSD SL 1.12099->1.12099 TP 1.12032->1.12021
+2026.10.26 04:41:15.465	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12099 tp: 1.12021 ok
+2026.10.26 04:39:20.532	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=5/5 dayNet=-1.27 monthNet=-12.39 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 04:34:20.396	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=5/5 dayNet=-1.51 monthNet=-12.63 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 04:32:47.107	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82488->0.82493 TP 0.82575->0.82575
+2026.10.26 04:32:47.107	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82493 tp: 0.82575 ok
+2026.10.26 04:31:59.754	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82483->0.82488 TP 0.82575->0.82575
+2026.10.26 04:31:59.754	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82488 tp: 0.82575 ok
+2026.10.26 04:31:45.639	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82483->0.82483 TP 0.82564->0.82575
+2026.10.26 04:31:45.639	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82483 tp: 0.82575 ok
+2026.10.26 04:29:20.373	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=5/5 dayNet=-4.05 monthNet=-15.17 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 04:24:53.155	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770494 symbol=EURUSD SL 1.12105->1.12099 TP 1.12032->1.12032
+2026.10.26 04:24:53.155	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12099 tp: 1.12032 ok
+2026.10.26 04:24:52.887	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82477->0.82483 TP 0.82554->0.82564
+2026.10.26 04:24:52.887	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82483 tp: 0.82564 ok
+2026.10.26 04:24:45.829	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770494 symbol=EURUSD SL 1.12105->1.12105 TP 1.12041->1.12032
+2026.10.26 04:24:45.827	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12105 tp: 1.12032 ok
+2026.10.26 04:24:41.810	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82473->0.82477 TP 0.82554->0.82554
+2026.10.26 04:24:41.810	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82477 tp: 0.82554 ok
+2026.10.26 04:24:28.624	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82469->0.82473 TP 0.82544->0.82554
+2026.10.26 04:24:28.624	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82473 tp: 0.82554 ok
+2026.10.26 04:24:24.638	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770494 symbol=EURUSD SL 1.12109->1.12105 TP 1.12041->1.12041
+2026.10.26 04:24:24.638	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12105 tp: 1.12041 ok
+2026.10.26 04:24:20.358	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=5/5 dayNet=-3.00 monthNet=-14.12 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 04:24:16.313	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770494 symbol=EURUSD SL 1.12113->1.12109 TP 1.12041->1.12041
+2026.10.26 04:24:16.313	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12109 tp: 1.12041 ok
+2026.10.26 04:24:09.497	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770494 symbol=EURUSD SL 1.12119->1.12113 TP 1.12054->1.12041
+2026.10.26 04:24:09.497	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12113 tp: 1.12041 ok
+2026.10.26 04:24:08.825	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770494 symbol=EURUSD SL 1.12125->1.12119 TP 1.12054->1.12054
+2026.10.26 04:24:08.825	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12119 tp: 1.12054 ok
+2026.10.26 04:24:08.545	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82465->0.82469 TP 0.82544->0.82544
+2026.10.26 04:24:08.545	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82469 tp: 0.82544 ok
+2026.10.26 04:23:25.280	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82461->0.82465 TP 0.82544->0.82544
+2026.10.26 04:23:25.280	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82465 tp: 0.82544 ok
+2026.10.26 04:23:24.262	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82461->0.82461 TP 0.82534->0.82544
+2026.10.26 04:23:24.262	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82461 tp: 0.82544 ok
+2026.10.26 04:23:17.247	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82457->0.82461 TP 0.82534->0.82534
+2026.10.26 04:23:17.247	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82461 tp: 0.82534 ok
+2026.10.26 04:23:05.657	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82453->0.82457 TP 0.82534->0.82534
+2026.10.26 04:23:05.657	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82457 tp: 0.82534 ok
+2026.10.26 04:22:21.777	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82448->0.82453 TP 0.82524->0.82534
+2026.10.26 04:22:21.777	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82453 tp: 0.82534 ok
+2026.10.26 04:22:14.827	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82441->0.82448 TP 0.82524->0.82524
+2026.10.26 04:22:14.827	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82448 tp: 0.82524 ok
+2026.10.26 04:20:29.325	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82441->0.82441 TP 0.82514->0.82524
+2026.10.26 04:20:29.325	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82441 tp: 0.82524 ok
+2026.10.26 04:19:58.121	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770494 symbol=EURUSD SL 1.12125->1.12125 TP 1.12063->1.12054
+2026.10.26 04:19:58.121	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12125 tp: 1.12054 ok
+2026.10.26 04:19:20.655	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: HEARTBEAT | v1.7.0 open=5/5 dayNet=-6.02 monthNet=-17.14 symbols=114 lossStreakPause=off equityHalt=off
+2026.10.26 04:18:53.765	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82436->0.82441 TP 0.82514->0.82514
+2026.10.26 04:18:53.765	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82441 tp: 0.82514 ok
+2026.10.26 04:18:38.653	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82432->0.82436 TP 0.82514->0.82514
+2026.10.26 04:18:38.653	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82436 tp: 0.82514 ok
+2026.10.26 04:18:27.590	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82432->0.82432 TP 0.82504->0.82514
+2026.10.26 04:18:27.590	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82432 tp: 0.82514 ok
+2026.10.26 04:18:24.496	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82423->0.82432 TP 0.82504->0.82504
+2026.10.26 04:18:24.496	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82432 tp: 0.82504 ok
+2026.10.26 04:17:03.936	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: ADAPTIVE_MODIFY | ticket=95770563 symbol=USDCHF SL 0.82422->0.82423 TP 0.82504->0.82504
+2026.10.26 04:17:03.936	Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: modify #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82423 tp: 0.82504 ok
