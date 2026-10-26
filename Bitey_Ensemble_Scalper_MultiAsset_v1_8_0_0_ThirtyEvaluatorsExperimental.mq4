@@ -376,14 +376,16 @@ void RunCycle()
       int cmd; double score; string why;
       if(!Prefilter(sym,why))
       {
-         BiteyCsvLogAssetAssembly(sym+"_"+IntegerToString((int)iTime(sym,InpSignalTF,1)),EA_VERSION,
-            sym,InpSignalTF,0.0,0.0,0.0,0,0,0,false,"PREFILTER_REJECT_"+why);
+         string rejectId=sym+"_"+IntegerToString((int)iTime(sym,InpSignalTF,1));
+         BiteyCsvLogAssetAssembly(rejectId,EA_VERSION,sym,InpSignalTF,0.0,0.0,0.0,0,0,0,false,"PREFILTER_REJECT_"+why);
+         BiteyCsvLogAction(rejectId,EA_VERSION,sym,"ASSEMBLY1","REJECT",0,"ABSTAIN",0.0,"PREFILTER_"+why);
          Reject(sym,why); continue;
       }
       if(!Analyze(sym,cmd,score,why))
       {
-         BiteyCsvLogAssetAssembly(sym+"_"+IntegerToString((int)iTime(sym,InpSignalTF,1)),EA_VERSION,
-            sym,InpSignalTF,score,0.0,0.0,g_tmpValidModels,g_tmpBuyVotes,g_tmpSellVotes,false,"SIGNAL_REJECT_"+why);
+         string rejectId=sym+"_"+IntegerToString((int)iTime(sym,InpSignalTF,1));
+         BiteyCsvLogAssetAssembly(rejectId,EA_VERSION,sym,InpSignalTF,score,0.0,0.0,g_tmpValidModels,g_tmpBuyVotes,g_tmpSellVotes,false,"SIGNAL_REJECT_"+why);
+         BiteyCsvLogAction(rejectId,EA_VERSION,sym,"ASSEMBLY2","ABSTAIN",0,"ABSTAIN",score,why);
          Reject(sym,why); continue;
       }
       if(cmd==OP_BUY && !InpAllowBuy)  { Reject(sym,"BUY_DISABLED");  continue; }
@@ -449,6 +451,9 @@ void RunCycle()
                      " overlap=",DoubleToString(bestOv,1)," adjScore=",DoubleToString(bestAdj,1));
             BiteyCsvLogAssetAssembly(g_candSym[best]+"_"+IntegerToString((int)iTime(g_candSym[best],InpSignalTF,1)),EA_VERSION,
                g_candSym[best],InpSignalTF,g_candScore[best],0.0,0.0,30,g_candBuyVotes[best],g_candSellVotes[best],true,"ASSEMBLY1_SELECTED_FOR_EXECUTION");
+            string selectedId=g_candSym[best]+"_"+IntegerToString((int)iTime(g_candSym[best],InpSignalTF,1));
+            BiteyCsvLogAction(selectedId,EA_VERSION,g_candSym[best],"ASSEMBLY1","SELECT",0,
+               (g_candCmd[best]==OP_BUY?"BUY":"SELL"),g_candScore[best],"TOP_RANKED_CANDIDATE");
             OpenTrade(g_candSym[best],g_candCmd[best],g_candScore[best],g_candReg[best]);
          }
       }
@@ -766,6 +771,8 @@ bool OpenTrade(string sym,int cmd,double score,int regime)
    string decisionId=sym+"_"+IntegerToString((int)decisionBar);
    BiteyCsvLogTradeOpened(decisionId,EA_VERSION,ticket,sym,(cmd==OP_BUY?"BUY":"SELL"),
       lots,entry,sl,tp,InpReferenceCapitalUSD,risk,(IsTesting()?"TESTER":"TERMINAL"),"ORDER_ACCEPTED");
+   BiteyCsvLogAction(decisionId,EA_VERSION,sym,"EXECUTION","ORDER_OPENED",ticket,
+      (cmd==OP_BUY?"BUY":"SELL"),score,"ORDER_ACCEPTED");
    return(true);
 }
 
@@ -971,6 +978,8 @@ void ManageExits()
             exitDecisionId=sym+"_"+IntegerToString((int)GlobalVariableGet(GvKey("DID",ticket)));
          BiteyCsvLogAdaptiveExit(exitDecisionId,EA_VERSION,ticket,sym,oldSL,fSL,oldTP,fTP,
             OrderProfit()+OrderCommission()+OrderSwap(),"ADAPTIVE_SLTP_UPDATE");
+         BiteyCsvLogAction(exitDecisionId,EA_VERSION,sym,"RISK_MANAGEMENT","SLTP_MODIFIED",ticket,
+            (OrderType()==OP_BUY?"BUY":"SELL"),OrderProfit()+OrderCommission()+OrderSwap(),"ADAPTIVE_SLTP_UPDATE");
          Print("ADAPTIVE_MODIFY | ticket=",ticket," symbol=",sym,
                " SL ",DoubleToString(oldSL,digits),"->",DoubleToString(fSL,digits),
                " TP ",DoubleToString(oldTP,digits),"->",DoubleToString(fTP,digits));
@@ -1259,6 +1268,8 @@ bool WriteTradeRow(int ticket)
    BiteyCsvLogTradeClosed(closedDecisionId,EA_VERSION,ticket,sym,
       (type==OP_BUY?"BUY":"SELL"),OrderLots(),OrderOpenTime(),OrderCloseTime(),
       OrderOpenPrice(),OrderClosePrice(),gross,comm,swp,0.0,OrderComment());
+   BiteyCsvLogAction(closedDecisionId,EA_VERSION,sym,"EXECUTION","ORDER_CLOSED",ticket,
+      (type==OP_BUY?"BUY":"SELL"),gross+comm+swp,OrderComment());
    return(true);
 }
 
