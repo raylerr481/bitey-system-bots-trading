@@ -949,9 +949,16 @@ void ManageExits()
       double fSL=(slUp?newSL:oldSL), fTP=(tpUp?newTP:oldTP);
       ResetLastError();
       if(OrderModify(ticket,entry,fSL,fTP,0,clrNONE))
+      {
+         string exitDecisionId="ticket_"+IntegerToString(ticket);
+         if(GlobalVariableCheck(GvKey("DID",ticket)))
+            exitDecisionId=sym+"_"+IntegerToString((int)GlobalVariableGet(GvKey("DID",ticket)));
+         BiteyCsvLogAdaptiveExit(exitDecisionId,EA_VERSION,ticket,sym,oldSL,fSL,oldTP,fTP,
+            OrderProfit()+OrderCommission()+OrderSwap(),"ADAPTIVE_SLTP_UPDATE");
          Print("ADAPTIVE_MODIFY | ticket=",ticket," symbol=",sym,
                " SL ",DoubleToString(oldSL,digits),"->",DoubleToString(fSL,digits),
                " TP ",DoubleToString(oldTP,digits),"->",DoubleToString(fTP,digits));
+      }
       else
          Print("ADAPTIVE_MODIFY_FAILED | ticket=",ticket," symbol=",sym," error=",GetLastError());
    }
