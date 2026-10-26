@@ -1225,8 +1225,31 @@ void UpdateExcursion(int ticket,int type,double entry,double sl,double bid,doubl
    if(move>mfe)  GlobalVariableSet(kf,move);
    if(-move>mae) GlobalVariableSet(ka,-move);
 }
+bool BiteyClosedTicketAlreadyLogged(int ticket)
+{
+   string fn="Bitey_ClosedTrades_v1_8_0_1.csv";
+   int h=FileOpen(fn,FILE_READ|FILE_CSV|FILE_SHARE_READ|FILE_SHARE_WRITE,';');
+   if(h==INVALID_HANDLE) return(false);
+   string wanted=IntegerToString(ticket);
+   bool found=false;
+   while(!FileIsEnding(h))
+   {
+      string fields[21];
+      for(int k=0;k<21;k++)
+      {
+         fields[k]="";
+         if(FileIsEnding(h)) break;
+         fields[k]=FileReadString(h);
+      }
+      if(fields[3]==wanted) { found=true; break; }
+   }
+   FileClose(h);
+   return(found);
+}
+
 bool WriteTradeRow(int ticket)
 {
+   if(BiteyClosedTicketAlreadyLogged(ticket)) return(true);
    string sym=OrderSymbol();
    int type=OrderType();
    int digits=(int)MarketInfo(sym,MODE_DIGITS);
