@@ -199,6 +199,8 @@ string   g_candSym[MAX_SYMBOLS];
 int      g_candCmd[MAX_SYMBOLS];
 double   g_candScore[MAX_SYMBOLS];
 bool     g_candUsed[MAX_SYMBOLS];
+int      g_candBuyVotes[MAX_SYMBOLS];
+int      g_candSellVotes[MAX_SYMBOLS];
 
 //+------------------------------------------------------------------+
 int OnInit()
@@ -378,7 +380,8 @@ void RunCycle()
       if(cmd==OP_SELL && !InpAllowSell) { Reject(sym,"SELL_DISABLED"); continue; }
       BiteyCsvLogAssetAssembly(sym+"_"+IntegerToString((int)iTime(sym,InpSignalTF,1)),EA_VERSION,sym,InpSignalTF,
          score,0.0,0.0,g_tmpValidModels,g_tmpBuyVotes,g_tmpSellVotes,false,"ELIGIBLE_CANDIDATE_POOL");
-      g_candSym[nc]=sym; g_candCmd[nc]=cmd; g_candScore[nc]=score; g_candReg[nc]=g_tmpRegime; nc++;
+      g_candSym[nc]=sym; g_candCmd[nc]=cmd; g_candScore[nc]=score; g_candReg[nc]=g_tmpRegime;
+      g_candBuyVotes[nc]=g_tmpBuyVotes; g_candSellVotes[nc]=g_tmpSellVotes; nc++;
    }
 
    if(nc>0)
@@ -433,7 +436,7 @@ void RunCycle()
                Print("DIVERSIFY_RANK | symbol=",g_candSym[best]," rawScore=",DoubleToString(g_candScore[best],1),
                      " overlap=",DoubleToString(bestOv,1)," adjScore=",DoubleToString(bestAdj,1));
             BiteyCsvLogAssetAssembly(g_candSym[best]+"_"+IntegerToString((int)iTime(g_candSym[best],InpSignalTF,1)),EA_VERSION,
-               g_candSym[best],InpSignalTF,g_candScore[best],0.0,0.0,g_tmpValidModels,g_tmpBuyVotes,g_tmpSellVotes,true,"ASSEMBLY1_SELECTED_FOR_EXECUTION");
+               g_candSym[best],InpSignalTF,g_candScore[best],0.0,0.0,30,g_candBuyVotes[best],g_candSellVotes[best],true,"ASSEMBLY1_SELECTED_FOR_EXECUTION");
             OpenTrade(g_candSym[best],g_candCmd[best],g_candScore[best],g_candReg[best]);
          }
       }
