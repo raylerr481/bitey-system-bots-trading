@@ -1,0 +1,12 @@
+Parámetro,Versión Normal,Versión Agresiva
+Timeframe,M5,M1 (por defecto)
+Stop (ATR),1.45,1.05 (más apretado)
+Reward:Risk,1.85,1.35 (más realista para scalping)
+Consenso mínimo,3 votos,2 votos
+Cooldown,5 barras,2 barras
+Max hold,42 barras,18 barras
+Break-even,1.40 ATR,0.85 ATR (muy rápido)
+Trailing,más amplio,mucho más apretado
+Ciclo,~850ms,~400ms
+Max posiciones,5,6
+Riesgo por trade,0.45%,"0.35% (más trades, menos por trade)"
