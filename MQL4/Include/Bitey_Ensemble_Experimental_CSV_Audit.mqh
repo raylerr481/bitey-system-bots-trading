@@ -25,8 +25,8 @@ int BiteyCsvOpenAppend(const string fileName, const string header)
    }
    if(FileSize(h) == 0)
    {
-      // FileWrite uses FILE_CSV quoting/escaping for delimiter-containing fields.
-      FileWrite(h, header);
+      // Write the header as a raw delimited line so each header is a separate column.
+      FileWriteString(h, header + "\r\n");
       FileFlush(h);
    }
    FileSeek(h, 0, SEEK_END);
