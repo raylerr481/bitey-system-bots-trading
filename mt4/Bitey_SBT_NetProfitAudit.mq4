@@ -79,12 +79,13 @@ void OnStart()
       string side=(type==OP_BUY ? "BUY" : "SELL");
       string comment=SafeCsv(OrderComment());
 
+      int symbolDigits=(int)MarketInfo(OrderSymbol(),MODE_DIGITS);
       FileWrite(detail,
          OrderTicket(), OrderSymbol(), side, DoubleToString(OrderLots(),2),
          TimeToString(OrderOpenTime(),TIME_DATE|TIME_SECONDS),
          TimeToString(OrderCloseTime(),TIME_DATE|TIME_SECONDS),
-         DoubleToString(OrderOpenPrice(),Digits),
-         DoubleToString(OrderClosePrice(),Digits),
+         DoubleToString(OrderOpenPrice(),symbolDigits),
+         DoubleToString(OrderClosePrice(),symbolDigits),
          DoubleToString(g,2), DoubleToString(c,2), DoubleToString(s,2),
          DoubleToString(n,2), OrderMagicNumber(), comment);
 
