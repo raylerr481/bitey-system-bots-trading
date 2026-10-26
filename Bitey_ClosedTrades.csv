@@ -1,0 +1,1 @@
+timestamp;decision_id;ea_version;ticket;symbol;direction;lots;opened_at;closed_at;duration_seconds;open_price;close_price;gross_profit;commission;swap;net_profit;slippage_points;close_reason
