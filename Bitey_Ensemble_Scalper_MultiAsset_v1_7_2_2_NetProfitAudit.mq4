@@ -1215,6 +1215,7 @@ void LogClosedTrades()
 
 //+------------------------------------------------------------------+
 // Read-only per-asset closed-trade net summary.
+// Output: <TERMINAL_DATA_PATH>\\MQL4\\Files\\Bitey_Ens_NetByAsset.csv
 // MT4 Account History must be set to "All History" for complete totals.
 void WriteAssetNetSummary()
 {
@@ -1265,13 +1266,15 @@ void WriteAssetNetSummary()
       else if(n< -0.000001) totalLosses++;
    }
 
-   string fn="Bitey_Ens_NetByAsset_"+IntegerToString(InpMagic)+".csv";
+   string fn="Bitey_Ens_NetByAsset.csv";
    int h=FileOpen(fn,FILE_WRITE|FILE_CSV|FILE_SHARE_READ|FILE_SHARE_WRITE,';');
    if(h==INVALID_HANDLE)
    {
-      Print("NET_SUMMARY_OPEN_FAILED | file=",fn," error=",GetLastError(),
-            " full_path=",TerminalInfoString(TERMINAL_DATA_PATH),"\\MQL4\\Files\\",fn,
-            " | Check EA inputs, file permissions, and Experts log");
+      int fileErr=GetLastError();
+      Print("NET_SUMMARY_OPEN_FAILED | file=",fn," error=",fileErr,
+            " data_path=",TerminalInfoString(TERMINAL_DATA_PATH),
+            " expected_path=",TerminalInfoString(TERMINAL_DATA_PATH),"\\MQL4\\Files\\",fn,
+            " | Check InpLogAssetSummaryCSV and the Experts log");
       return; // Do not throttle a failed attempt; retry on the next cycle.
    }
    g_lastNetSummaryScan=now;
