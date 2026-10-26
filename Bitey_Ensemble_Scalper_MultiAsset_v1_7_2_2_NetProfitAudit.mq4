@@ -1218,7 +1218,10 @@ void WriteAssetNetSummary()
    if(!InpLogAssetSummaryCSV) return;
    datetime now=TimeCurrent();
    if(g_lastNetSummaryScan!=0 && now-g_lastNetSummaryScan<60) return;
-   g_lastNetSummaryScan=now;
+
+   Print("NET_SUMMARY_SCAN | enabled=1 magic=",InpMagic,
+         " history_orders=",OrdersHistoryTotal(),
+         " common_files=",TerminalInfoString(TERMINAL_COMMONDATA_PATH),"\\Files");
 
    string symbols[512];
    int counts[512], wins[512], losses[512];
@@ -1263,9 +1266,11 @@ void WriteAssetNetSummary()
    int h=FileOpen(fn,FILE_WRITE|FILE_CSV|FILE_COMMON|FILE_SHARE_READ|FILE_SHARE_WRITE,';');
    if(h==INVALID_HANDLE)
    {
-      Print("NET_SUMMARY_OPEN_FAILED | file=",fn," error=",GetLastError());
-      return;
+      Print("NET_SUMMARY_OPEN_FAILED | file=",fn," error=",GetLastError(),
+            " common_files=",TerminalInfoString(TERMINAL_COMMONDATA_PATH),"\\Files");
+      return; // Do not throttle a failed attempt; retry on the next cycle.
    }
+   g_lastNetSummaryScan=now;
    FileWrite(h,"symbol","closed_trades","wins_net","losses_net","gross_profit","commission","swap","net_profit");
    for(int j=0;j<symbolCount;j++)
       FileWrite(h,symbols[j],counts[j],wins[j],losses[j],
