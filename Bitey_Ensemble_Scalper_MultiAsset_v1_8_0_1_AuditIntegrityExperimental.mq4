@@ -99,7 +99,7 @@ void BiteyCsvLogTradeOpened(
    const double referenceCapital, const double riskMoney,
    const string riskMode, const string reason)
 {
-   string fn = "Bitey_TradeAudit.csv";
+   string fn = "Bitey_TradeAudit_v1_8_0_1.csv";
    int h = BiteyCsvOpenAppend(fn,
       "timestamp;decision_id;ea_version;ticket;magic;symbol;direction;lots;open_price;initial_sl;initial_tp;reference_capital_usd;risk_money_estimate;risk_mode;buy_votes;sell_votes;reason");
    if(h == INVALID_HANDLE) return;
@@ -119,7 +119,7 @@ bool BiteyCsvLogTradeClosed(
    const double closePrice, const double grossProfit, const double commission,
    const double swap, const double slippagePoints, const string closeReason)
 {
-   string fn = "Bitey_ClosedTrades.csv";
+   string fn = "Bitey_ClosedTrades_v1_8_0_1.csv";
    double net = grossProfit + commission + swap;
    int durationSeconds = (int)(closedAt - openedAt);
    int h = BiteyCsvOpenAppend(fn,
@@ -312,9 +312,9 @@ void BiteyCsvInitializeFiles()
    if(h!=INVALID_HANDLE) BiteyCsvClose(h);
    h=BiteyCsvOpenAppend("Bitey_TradeAssembly.csv","timestamp;decision_id;ea_version;symbol;timeframe;decision;consensus_score;confidence;supporting_models;opposing_models;estimated_spread_cost;estimated_commission;estimated_slippage;approved;reason");
    if(h!=INVALID_HANDLE) BiteyCsvClose(h);
-   h=BiteyCsvOpenAppend("Bitey_TradeAudit.csv","timestamp;decision_id;ea_version;ticket;magic;symbol;direction;lots;open_price;initial_sl;initial_tp;reference_capital_usd;risk_money_estimate;risk_mode;buy_votes;sell_votes;reason");
+   h=BiteyCsvOpenAppend("Bitey_TradeAudit_v1_8_0_1.csv","timestamp;decision_id;ea_version;ticket;magic;symbol;direction;lots;open_price;initial_sl;initial_tp;reference_capital_usd;risk_money_estimate;risk_mode;buy_votes;sell_votes;reason");
    if(h!=INVALID_HANDLE) BiteyCsvClose(h);
-   h=BiteyCsvOpenAppend("Bitey_ClosedTrades.csv","timestamp;decision_id;ea_version;ticket;symbol;direction;lots;opened_at;closed_at;duration_seconds;open_price;close_price;gross_profit;commission;swap;net_profit;slippage_points;close_reason");
+   h=BiteyCsvOpenAppend("Bitey_ClosedTrades_v1_8_0_1.csv","timestamp;decision_id;ea_version;ticket;symbol;direction;lots;opened_at;closed_at;duration_seconds;open_price;close_price;gross_profit;commission;swap;net_profit;slippage_points;close_reason");
    if(h!=INVALID_HANDLE) BiteyCsvClose(h);
    h=BiteyCsvOpenAppend("Bitey_AdaptiveExits.csv","timestamp;decision_id;ea_version;ticket;symbol;old_sl;new_sl;old_tp;new_tp;current_net_profit;reason");
    if(h!=INVALID_HANDLE) BiteyCsvClose(h);
