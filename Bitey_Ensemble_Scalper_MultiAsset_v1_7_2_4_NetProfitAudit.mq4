@@ -169,7 +169,7 @@ input double           InpReversalExitMinR       = 0.0;     // 0 = exit once net
 
 input bool             InpEnableTrading         = true;    // false = log candidates only
 input bool             InpLogRejects            = false;
-input bool             InpLogTradesCSV          = true;    // MFE/MAE per closed trade -> Common\Files\Bitey_Ens_MFE_MAE_<magic>.csv
+input bool             InpLogTradesCSV          = true;    // Per-trade audit CSV -> terminal MQL4\Files\Bitey_Ens_TradeAudit_<magic>.csv
 input bool             InpLogAssetSummaryCSV    = true;    // Net summary CSV in this terminal MQL4\\Files folder
 input int              InpRejectLogMinutes      = 60;      // Throttle SPREAD/COST reject logs per symbol (0 = log all)
 
@@ -1169,8 +1169,8 @@ bool WriteTradeRow(int ticket)
    double gross=OrderProfit(), comm=OrderCommission(), swp=OrderSwap();
    int durMin=(int)((OrderCloseTime()-OrderOpenTime())/60);
 
-   string fn="Bitey_Ens_MFE_MAE_"+IntegerToString(InpMagic)+".csv";
-   int h=FileOpen(fn,FILE_READ|FILE_WRITE|FILE_CSV|FILE_COMMON|FILE_SHARE_READ|FILE_SHARE_WRITE,';');
+   string fn="Bitey_Ens_TradeAudit_"+IntegerToString(InpMagic)+".csv";
+   int h=FileOpen(fn,FILE_READ|FILE_WRITE|FILE_CSV|FILE_SHARE_READ|FILE_SHARE_WRITE,';');
    if(h==INVALID_HANDLE) { Print("CSV_OPEN_FAILED | file=",fn," error=",GetLastError()); return(false); }
    if(FileSize(h)==0)
       FileWrite(h,"ticket","symbol","side","open_time","close_time","duration_min","lots","open_price","close_price",
