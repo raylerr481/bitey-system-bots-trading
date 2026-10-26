@@ -623,7 +623,7 @@ bool Analyze(string sym,int &cmd,double &score,string &why)
       {
          why="ASSEMBLY2_ABSTAIN_RANGE_NO_CONSENSUS";
          BiteyCsvLogTradeAssembly(decisionId,EA_VERSION,sym,tf,"ABSTAIN",0,0,
-            (famDir[4]!=0)+(famDir[5]!=0),0,0,0,0,false,why);
+            (famDir[4]!=0 ? 1 : 0)+(famDir[5]!=0 ? 1 : 0),0,0,0,0,false,why);
          return(false);
       }
       agree=2; opposing=0;
@@ -1219,6 +1219,9 @@ bool WriteTradeRow(int ticket)
              DoubleToString(gross,2),DoubleToString(comm,2),DoubleToString(swp,2),DoubleToString(gross+comm+swp,2),
              OrderComment());
    FileClose(h);
+   BiteyCsvLogTradeClosed("ticket_"+IntegerToString(ticket),EA_VERSION,ticket,sym,
+      (type==OP_BUY?"BUY":"SELL"),OrderLots(),OrderOpenTime(),OrderCloseTime(),
+      OrderOpenPrice(),OrderClosePrice(),gross,comm,swp,0.0,OrderComment());
    return(true);
 }
 
