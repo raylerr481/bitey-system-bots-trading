@@ -406,11 +406,36 @@ int      g_candBuyVotes[MAX_SYMBOLS];
 int      g_candSellVotes[MAX_SYMBOLS];
 
 //+------------------------------------------------------------------+
+void BiteyCsvInitializeFiles()
+{
+   int h;
+   h=BiteyCsvOpenAppend("Bitey_ActionLog.csv","timestamp;decision_id;ea_version;symbol;stage;action;ticket;direction;score;reason");
+   if(h!=INVALID_HANDLE) BiteyCsvClose(h);
+   h=BiteyCsvOpenAppend("Bitey_EvaluatorVotes.csv","timestamp;decision_id;ea_version;symbol;timeframe;model_id;model_family;direction;raw_score;model_weight;confidence;signal_valid;reason");
+   if(h!=INVALID_HANDLE) BiteyCsvClose(h);
+   h=BiteyCsvOpenAppend("Bitey_AssetAssembly.csv","timestamp;decision_id;ea_version;symbol;timeframe;opportunity_score;expected_net_estimate;estimated_cost;valid_models;buy_votes;sell_votes;selected;reason");
+   if(h!=INVALID_HANDLE) BiteyCsvClose(h);
+   h=BiteyCsvOpenAppend("Bitey_TradeAssembly.csv","timestamp;decision_id;ea_version;symbol;timeframe;decision;consensus_score;confidence;supporting_models;opposing_models;estimated_spread_cost;estimated_commission;estimated_slippage;approved;reason");
+   if(h!=INVALID_HANDLE) BiteyCsvClose(h);
+   h=BiteyCsvOpenAppend("Bitey_TradeAudit.csv","timestamp;decision_id;ea_version;ticket;symbol;direction;lots;open_price;initial_sl;initial_tp;reference_capital_usd;risk_money_estimate;risk_mode;reason");
+   if(h!=INVALID_HANDLE) BiteyCsvClose(h);
+   h=BiteyCsvOpenAppend("Bitey_ClosedTrades.csv","timestamp;decision_id;ea_version;ticket;symbol;direction;lots;opened_at;closed_at;duration_seconds;open_price;close_price;gross_profit;commission;swap;net_profit;slippage_points;close_reason");
+   if(h!=INVALID_HANDLE) BiteyCsvClose(h);
+   h=BiteyCsvOpenAppend("Bitey_AdaptiveExits.csv","timestamp;decision_id;ea_version;ticket;symbol;old_sl;new_sl;old_tp;new_tp;current_net_profit;reason");
+   if(h!=INVALID_HANDLE) BiteyCsvClose(h);
+   h=BiteyCsvOpenAppend("Bitey_Performance.csv","timestamp;ea_version;scope;symbol;trades;wins;losses;gross_profit;commissions;swap;net_closed_profit;profit_factor;max_drawdown_pct;expectancy_net;abstentions;note");
+   if(h!=INVALID_HANDLE) BiteyCsvClose(h);
+   BiteyCsvLogAction("startup_"+IntegerToString((int)TimeCurrent()),EA_VERSION,Symbol(),
+      "LIFECYCLE","EA_INITIALIZED",0,"NONE",0.0,"CSV_FILES_INITIALIZED");
+   Print("BITEY_CSV_INIT | files=8 | folder=MQL4\\Files | action=Bitey_ActionLog.csv");
+}
+
 int OnInit()
 {
    ParseSymbols();
    AddExtraSymbols();
    AddAllCrypto();
+   BiteyCsvInitializeFiles();
    if(g_symbolCount<=0) { Print("INIT_ERROR | no symbols found"); return(INIT_FAILED); }
    for(int i=0;i<g_symbolCount;i++)
    {
