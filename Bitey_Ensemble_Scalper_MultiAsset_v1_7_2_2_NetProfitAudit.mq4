@@ -1173,7 +1173,7 @@ bool WriteTradeRow(int ticket)
    int durMin=(int)((OrderCloseTime()-OrderOpenTime())/60);
 
    string fn="Bitey_Ens_MFE_MAE_"+IntegerToString(InpMagic)+".csv";
-   int h=FileOpen(fn,FILE_READ|FILE_WRITE|FILE_CSV|FILE_COMMON|FILE_SHARE_READ|FILE_SHARE_WRITE,';');
+   int h=FileOpen(fn,FILE_READ|FILE_WRITE|FILE_CSV|FILE_SHARE_READ|FILE_SHARE_WRITE,';');
    if(h==INVALID_HANDLE) { Print("CSV_OPEN_FAILED | file=",fn," error=",GetLastError()); return(false); }
    if(FileSize(h)==0)
       FileWrite(h,"ticket","symbol","side","open_time","close_time","duration_min","lots","open_price","close_price",
@@ -1267,31 +1267,64 @@ void WriteAssetNetSummary()
    }
 
    string fn="Bitey_Ens_NetByAsset.csv";
-   int h=FileOpen(fn,FILE_WRITE|FILE_CSV|FILE_SHARE_READ|FILE_SHARE_WRITE,';');
-   if(h==INVALID_HANDLE)
+   int flags=FILE_WRITE|FILE_CSV|FILE_SHARE_READ|FILE_SHARE_WRITE;
+   bool localOK=false, commonOK=false;
+   int h=FileOpen(fn,flags,';');
+   if(h!=INVALID_HANDLE)
    {
-      int fileErr=GetLastError();
-      Print("NET_SUMMARY_OPEN_FAILED | file=",fn," error=",fileErr,
-            " data_path=",TerminalInfoString(TERMINAL_DATA_PATH),
-            " expected_path=",TerminalInfoString(TERMINAL_DATA_PATH),"\\MQL4\\Files\\",fn,
-            " | Check InpLogAssetSummaryCSV and the Experts log");
-      return; // Do not throttle a failed attempt; retry on the next cycle.
+      FileWrite(h,"symbol","closed_trades","wins_net","losses_net","gross_profit","commission","swap","net_profit");
+      for(int j=0;j<symbolCount;j++)
+         FileWrite(h,symbols[j],counts[j],wins[j],losses[j],
+                   DoubleToString(gross[j],2),DoubleToString(commissions[j],2),
+                   DoubleToString(swaps[j],2),DoubleToString(nets[j],2));
+      FileWrite(h,"TOTAL",included,totalWins,totalLosses,DoubleToString(totalGross,2),
+                DoubleToString(totalCommission,2),DoubleToString(totalSwap,2),DoubleToString(totalNet,2));
+      FileFlush(h);
+      FileClose(h);
+      localOK=true;
    }
-   g_lastNetSummaryScan=now;
-   FileWrite(h,"symbol","closed_trades","wins_net","losses_net","gross_profit","commission","swap","net_profit");
-   for(int j=0;j<symbolCount;j++)
-      FileWrite(h,symbols[j],counts[j],wins[j],losses[j],
-                DoubleToString(gross[j],2),DoubleToString(commissions[j],2),
-                DoubleToString(swaps[j],2),DoubleToString(nets[j],2));
-   FileWrite(h,"TOTAL",included,totalWins,totalLosses,DoubleToString(totalGross,2),
-             DoubleToString(totalCommission,2),DoubleToString(totalSwap,2),DoubleToString(totalNet,2));
-   FileFlush(h);
-   FileClose(h);
-   Print("NET_SUMMARY_UPDATED | full_path=",TerminalInfoString(TERMINAL_DATA_PATH),"\\MQL4\\Files\\",fn,
-         " trades=",included," assets=",symbolCount,
-         " net=",DoubleToString(totalNet,2)," commission=",DoubleToString(totalCommission,2),
-         " swap=",DoubleToString(totalSwap,2)," file=",fn,
-         " | Account History must be All History for complete totals");
+   else
+   {
+      int localErr=GetLastError();
+      Print("NET_SUMMARY_LOCAL_OPEN_FAILED | file=",fn," error=",localErr,
+            " data_path=",TerminalInfoString(TERMINAL_DATA_PATH),
+            " | In Strategy Tester, local output is under Tester\\files");
+   }
+
+   // Also write a shared copy so tester runs and terminal runs are easy to retrieve.
+   ResetLastError();
+   int hc=FileOpen(fn,flags|FILE_COMMON,';');
+   if(hc!=INVALID_HANDLE)
+   {
+      FileWrite(hc,"symbol","closed_trades","wins_net","losses_net","gross_profit","commission","swap","net_profit");
+      for(int m=0;m<symbolCount;m++)
+         FileWrite(hc,symbols[m],counts[m],wins[m],losses[m],
+                   DoubleToString(gross[m],2),DoubleToString(commissions[m],2),
+                   DoubleToString(swaps[m],2),DoubleToString(nets[m],2));
+      FileWrite(hc,"TOTAL",included,totalWins,totalLosses,DoubleToString(totalGross,2),
+                DoubleToString(totalCommission,2),DoubleToString(totalSwap,2),DoubleToString(totalNet,2));
+      FileFlush(hc);
+      FileClose(hc);
+      commonOK=true;
+   }
+   else
+      Print("NET_SUMMARY_COMMON_OPEN_FAILED | file=",fn," error=",GetLastError(),
+            " common_path=",TerminalInfoString(TERMINAL_COMMONDATA_PATH),"\\Files");
+
+   if(localOK || commonOK)
+   {
+      g_lastNetSummaryScan=now;
+      Print("NET_SUMMARY_UPDATED | local=", (localOK?"OK":"FAILED"),
+            " local_path=",TerminalInfoString(TERMINAL_DATA_PATH),
+            " common=", (commonOK?"OK":"FAILED"),
+            " common_path=",TerminalInfoString(TERMINAL_COMMONDATA_PATH),"\\Files\\",fn,
+            " trades=",included," assets=",symbolCount,
+            " net=",DoubleToString(totalNet,2)," commission=",DoubleToString(totalCommission,2),
+            " swap=",DoubleToString(totalSwap,2),
+            " | Account History must be All History for complete totals");
+   }
+   else
+      Print("NET_SUMMARY_FAILED | both local and common writes failed; see errors above");
 }
 //+------------------------------------------------------------------+
 
