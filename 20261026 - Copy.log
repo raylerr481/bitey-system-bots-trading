@@ -1,0 +1,437 @@
+0	01:15:01.257	'66858961': order buy market 0.01 TSLAUSDT sl: 372.61 tp: 377.24
+0	01:15:01.512	'66858961': order was opened : #95770389 buy 0.01 TSLAUSDT at 374.30 sl: 372.61 tp: 377.24
+0	01:15:01.512	'66858961': order buy market 0.01 GBPJPY sl: 209.706 tp: 210.306
+0	01:15:01.762	'66858961': order was opened : #95770390 buy 0.01 GBPJPY at 209.919 sl: 209.706 tp: 210.306
+0	01:15:01.762	'66858961': order buy market 0.02 AUDJPY sl: 110.127 tp: 110.560
+0	01:15:02.013	'66858961': order was opened : #95770391 buy 0.02 AUDJPY at 110.282 sl: 110.127 tp: 110.560
+0	01:15:22.319	'66858961': order buy market 0.03 GBPUSD sl: 1.33763 tp: 1.33911
+0	01:15:22.592	'66858961': order was opened : #95770392 buy 0.03 GBPUSD at 1.33816 sl: 1.33763 tp: 1.33911
+0	01:17:42.264	'66858961': modify order #95770389 buy 0.01 TSLAUSDT at 374.30 sl: 372.61 tp: 377.24 -> sl: 374.62 tp: 377.24
+0	01:17:42.529	'66858961': order #95770389 buy 0.01 TSLAUSDT at 374.30 was modified -> sl: 374.62 tp: 377.24
+0	01:30:01.613	'66858961': order buy market 0.03 USDCHF sl: 0.82349 tp: 0.82497
+0	01:30:01.858	'66858961': order was opened : #95770405 buy 0.03 USDCHF at 0.82402 sl: 0.82349 tp: 0.82497
+0	02:10:16.610	'66858961': modify order #95770389 buy 0.01 TSLAUSDT at 374.30 sl: 374.62 tp: 377.24 -> sl: 375.00 tp: 377.24
+0	02:10:16.875	'66858961': order #95770389 buy 0.01 TSLAUSDT at 374.30 was modified -> sl: 375.00 tp: 377.24
+0	02:22:24.590	'66858961': order #95770392 buy 0.03 GBPUSD at 1.33816 closed due stop-loss at price 1.33763
+0	02:27:44.690	'66858961': modify order #95770389 buy 0.01 TSLAUSDT at 374.30 sl: 375.00 tp: 377.24 -> sl: 375.10 tp: 377.24
+0	02:27:44.969	'66858961': order #95770389 buy 0.01 TSLAUSDT at 374.30 was modified -> sl: 375.10 tp: 377.24
+0	02:31:11.982	'66858961': modify order #95770389 buy 0.01 TSLAUSDT at 374.30 sl: 375.10 tp: 377.24 -> sl: 375.37 tp: 377.52
+0	02:31:12.247	'66858961': order #95770389 buy 0.01 TSLAUSDT at 374.30 was modified -> sl: 375.37 tp: 377.52
+0	02:31:58.170	'66858961': modify order #95770389 buy 0.01 TSLAUSDT at 374.30 sl: 375.37 tp: 377.52 -> sl: 375.51 tp: 377.52
+0	02:31:58.449	'66858961': order #95770389 buy 0.01 TSLAUSDT at 374.30 was modified -> sl: 375.51 tp: 377.52
+0	02:38:52.856	'66858961': modify order #95770391 buy 0.02 AUDJPY at 110.282 sl: 110.127 tp: 110.560 -> sl: 110.310 tp: 110.560
+0	02:38:53.124	'66858961': order #95770391 buy 0.02 AUDJPY at 110.282 was modified -> sl: 110.310 tp: 110.560
+0	02:48:46.406	'66858961': modify order #95770405 buy 0.03 USDCHF at 0.82402 sl: 0.82349 tp: 0.82497 -> sl: 0.82414 tp: 0.82497
+0	02:48:46.670	'66858961': order #95770405 buy 0.03 USDCHF at 0.82402 was modified -> sl: 0.82414 tp: 0.82497
+0	02:48:56.452	'66858961': modify order #95770405 buy 0.03 USDCHF at 0.82402 sl: 0.82414 tp: 0.82497 -> sl: 0.82418 tp: 0.82497
+0	02:48:56.718	'66858961': order #95770405 buy 0.03 USDCHF at 0.82402 was modified -> sl: 0.82418 tp: 0.82497
+0	02:58:55.966	'66858961': order #95770405 buy 0.03 USDCHF at 0.82402 closed due stop-loss at price 0.82418
+0	02:58:56.727	'66858961': order sell market 0.04 EURUSD sl: 1.12211 tp: 1.12088
+0	02:58:56.999	'66858961': order was opened : #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12211 tp: 1.12088
+0	02:59:17.668	'66858961': modify order #95770390 buy 0.01 GBPJPY at 209.919 sl: 209.706 tp: 210.306 -> sl: 209.950 tp: 210.306
+0	02:59:17.918	'66858961': order #95770390 buy 0.01 GBPJPY at 209.919 was modified -> sl: 209.950 tp: 210.306
+0	02:59:40.842	'66858961': modify order #95770389 buy 0.01 TSLAUSDT at 374.30 sl: 375.51 tp: 377.52 -> sl: 375.67 tp: 377.80
+0	02:59:41.106	'66858961': order #95770389 buy 0.01 TSLAUSDT at 374.30 was modified -> sl: 375.67 tp: 377.80
+0	03:00:04.956	'66858961': order buy market 0.01 TAOUSDT sl: 249.93 tp: 255.87
+0	03:00:05.232	'66858961': order was opened : #95770496 buy 0.01 TAOUSDT at 252.08 sl: 249.93 tp: 255.87
+0	03:04:01.323	'66858961': order #95770391 buy 0.02 AUDJPY at 110.282 closed due stop-loss at price 110.310
+0	03:08:45.293	'66858961': order #95770496 buy 0.01 TAOUSDT at 252.08 closed due stop-loss at price 249.93
+0	03:14:04.030	'66858961': modify order #95770389 buy 0.01 TSLAUSDT at 374.30 sl: 375.67 tp: 377.80 -> sl: 375.82 tp: 377.80
+0	03:14:04.281	'66858961': order #95770389 buy 0.01 TSLAUSDT at 374.30 was modified -> sl: 375.82 tp: 377.80
+0	03:15:02.347	'66858961': order buy market 0.02 USDJPY sl: 156.982 tp: 157.334
+0	03:15:02.609	'66858961': order was opened : #95770508 buy 0.02 USDJPY at 157.109 sl: 156.982 tp: 157.334
+0	03:15:02.609	'66858961': order buy market 0.03 EURAUD sl: 1.59598 tp: 1.59861
+0	03:15:02.888	'66858961': order was opened : #95770509 buy 0.03 EURAUD at 1.59692 sl: 1.59598 tp: 1.59861
+0	03:23:55.155	'66858961': order #95770389 buy 0.01 TSLAUSDT at 374.30 closed due stop-loss at price 375.82
+0	03:28:50.607	'66858961': order #95770390 buy 0.01 GBPJPY at 209.919 closed due stop-loss at price 209.950
+0	03:30:03.733	'66858961': order #95770508 buy 0.02 USDJPY at 157.109 closed due stop-loss at price 156.982
+0	03:45:06.027	'66858961': order buy market 0.03 CADJPY sl: 111.971 tp: 112.208
+0	03:45:06.296	'66858961': order was opened : #95770555 buy 0.03 CADJPY at 112.056 sl: 111.971 tp: 112.208
+0	03:48:53.913	'66858961': login on TradewillGlobal-Demo through Main (ping: 207.00 ms)
+0	03:48:56.241	'66858961': previous successful authorization performed from 143.255.14.62
+0	03:48:57.231	'66858961': ping to current access point Main is 214.37 ms
+0	03:51:24.331	'66858961': order #95770509 buy 0.03 EURAUD at 1.59692 closed due stop-loss at price 1.59598
+0	04:00:01.403	'66858961': order buy market 0.03 USDCHF sl: 0.82361 tp: 0.82504
+0	04:00:01.669	'66858961': order was opened : #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82361 tp: 0.82504
+0	04:04:02.796	'66858961': order #95770555 buy 0.03 CADJPY at 112.056 closed due stop-loss at price 111.971
+0	04:06:17.590	'66858961': modify order #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12211 tp: 1.12088 -> sl: 1.12153 tp: 1.12088
+0	04:06:17.857	'66858961': order #95770494 sell 0.04 EURUSD at 1.12167 was modified -> sl: 1.12153 tp: 1.12088
+0	04:06:53.910	'66858961': modify order #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12153 tp: 1.12088 -> sl: 1.12150 tp: 1.12088
+0	04:06:54.170	'66858961': order #95770494 sell 0.04 EURUSD at 1.12167 was modified -> sl: 1.12150 tp: 1.12088
+0	04:06:55.920	'66858961': modify order #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12150 tp: 1.12088 -> sl: 1.12146 tp: 1.12088
+0	04:06:56.184	'66858961': order #95770494 sell 0.04 EURUSD at 1.12167 was modified -> sl: 1.12146 tp: 1.12088
+0	04:07:00.858	'66858961': modify order #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12146 tp: 1.12088 -> sl: 1.12137 tp: 1.12075
+0	04:07:01.137	'66858961': order #95770494 sell 0.04 EURUSD at 1.12167 was modified -> sl: 1.12137 tp: 1.12075
+0	04:07:05.967	'66858961': modify order #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12137 tp: 1.12075 -> sl: 1.12134 tp: 1.12075
+0	04:07:06.230	'66858961': order #95770494 sell 0.04 EURUSD at 1.12167 was modified -> sl: 1.12134 tp: 1.12075
+0	04:07:09.014	'66858961': modify order #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12134 tp: 1.12075 -> sl: 1.12130 tp: 1.12075
+0	04:07:09.263	'66858961': order #95770494 sell 0.04 EURUSD at 1.12167 was modified -> sl: 1.12130 tp: 1.12075
+0	04:07:09.919	'66858961': modify order #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12130 tp: 1.12075 -> sl: 1.12125 tp: 1.12063
+0	04:07:10.185	'66858961': order #95770494 sell 0.04 EURUSD at 1.12167 was modified -> sl: 1.12125 tp: 1.12063
+0	04:11:17.778	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82361 tp: 0.82504 -> sl: 0.82422 tp: 0.82504
+0	04:11:18.044	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82422 tp: 0.82504
+0	04:15:00.989	'66858961': order buy market 0.03 AUDJPY sl: 110.267 tp: 110.577
+0	04:15:01.262	'66858961': order was opened : #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.267 tp: 110.577
+0	04:15:01.263	'66858961': order buy market 0.04 NZDJPY sl: 89.412 tp: 89.625
+0	04:15:01.529	'66858961': order was opened : #95770574 buy 0.04 NZDJPY at 89.488 sl: 89.412 tp: 89.625
+0	04:15:01.529	'66858961': order sell market 0.03 GBPAUD sl: 1.90348 tp: 1.90063
+0	04:15:01.794	'66858961': order was opened : #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90348 tp: 1.90063
+0	04:17:03.684	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82422 tp: 0.82504 -> sl: 0.82423 tp: 0.82504
+0	04:17:03.936	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82423 tp: 0.82504
+0	04:18:24.237	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82423 tp: 0.82504 -> sl: 0.82432 tp: 0.82504
+0	04:18:24.496	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82432 tp: 0.82504
+0	04:18:27.325	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82432 tp: 0.82504 -> sl: 0.82432 tp: 0.82514
+0	04:18:27.590	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82432 tp: 0.82514
+0	04:18:38.391	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82432 tp: 0.82514 -> sl: 0.82436 tp: 0.82514
+0	04:18:38.653	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82436 tp: 0.82514
+0	04:18:53.493	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82436 tp: 0.82514 -> sl: 0.82441 tp: 0.82514
+0	04:18:53.763	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82441 tp: 0.82514
+0	04:19:57.840	'66858961': modify order #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12125 tp: 1.12063 -> sl: 1.12125 tp: 1.12054
+0	04:19:58.121	'66858961': order #95770494 sell 0.04 EURUSD at 1.12167 was modified -> sl: 1.12125 tp: 1.12054
+0	04:20:29.045	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82441 tp: 0.82514 -> sl: 0.82441 tp: 0.82524
+0	04:20:29.325	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82441 tp: 0.82524
+0	04:22:14.564	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82441 tp: 0.82524 -> sl: 0.82448 tp: 0.82524
+0	04:22:14.827	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82448 tp: 0.82524
+0	04:22:21.513	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82448 tp: 0.82524 -> sl: 0.82453 tp: 0.82534
+0	04:22:21.777	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82453 tp: 0.82534
+0	04:23:04.873	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82453 tp: 0.82534 -> sl: 0.82457 tp: 0.82534
+0	04:23:05.655	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82457 tp: 0.82534
+0	04:23:16.965	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82457 tp: 0.82534 -> sl: 0.82461 tp: 0.82534
+0	04:23:17.247	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82461 tp: 0.82534
+0	04:23:23.997	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82461 tp: 0.82534 -> sl: 0.82461 tp: 0.82544
+0	04:23:24.262	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82461 tp: 0.82544
+0	04:23:25.014	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82461 tp: 0.82544 -> sl: 0.82465 tp: 0.82544
+0	04:23:25.280	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82465 tp: 0.82544
+0	04:24:08.282	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82465 tp: 0.82544 -> sl: 0.82469 tp: 0.82544
+0	04:24:08.545	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82469 tp: 0.82544
+0	04:24:08.545	'66858961': modify order #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12125 tp: 1.12054 -> sl: 1.12119 tp: 1.12054
+0	04:24:08.825	'66858961': order #95770494 sell 0.04 EURUSD at 1.12167 was modified -> sl: 1.12119 tp: 1.12054
+0	04:24:09.241	'66858961': modify order #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12119 tp: 1.12054 -> sl: 1.12113 tp: 1.12041
+0	04:24:09.497	'66858961': order #95770494 sell 0.04 EURUSD at 1.12167 was modified -> sl: 1.12113 tp: 1.12041
+0	04:24:15.329	'66858961': modify order #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12113 tp: 1.12041 -> sl: 1.12109 tp: 1.12041
+0	04:24:16.311	'66858961': order #95770494 sell 0.04 EURUSD at 1.12167 was modified -> sl: 1.12109 tp: 1.12041
+0	04:24:24.374	'66858961': modify order #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12109 tp: 1.12041 -> sl: 1.12105 tp: 1.12041
+0	04:24:24.638	'66858961': order #95770494 sell 0.04 EURUSD at 1.12167 was modified -> sl: 1.12105 tp: 1.12041
+0	04:24:28.372	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82469 tp: 0.82544 -> sl: 0.82473 tp: 0.82554
+0	04:24:28.624	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82473 tp: 0.82554
+0	04:24:41.531	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82473 tp: 0.82554 -> sl: 0.82477 tp: 0.82554
+0	04:24:41.810	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82477 tp: 0.82554
+0	04:24:45.563	'66858961': modify order #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12105 tp: 1.12041 -> sl: 1.12105 tp: 1.12032
+0	04:24:45.827	'66858961': order #95770494 sell 0.04 EURUSD at 1.12167 was modified -> sl: 1.12105 tp: 1.12032
+0	04:24:52.623	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82477 tp: 0.82554 -> sl: 0.82483 tp: 0.82564
+0	04:24:52.887	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82483 tp: 0.82564
+0	04:24:52.887	'66858961': modify order #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12105 tp: 1.12032 -> sl: 1.12099 tp: 1.12032
+0	04:24:53.155	'66858961': order #95770494 sell 0.04 EURUSD at 1.12167 was modified -> sl: 1.12099 tp: 1.12032
+0	04:31:45.375	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82483 tp: 0.82564 -> sl: 0.82483 tp: 0.82575
+0	04:31:45.639	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82483 tp: 0.82575
+0	04:31:59.482	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82483 tp: 0.82575 -> sl: 0.82488 tp: 0.82575
+0	04:31:59.752	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82488 tp: 0.82575
+0	04:32:46.842	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82488 tp: 0.82575 -> sl: 0.82493 tp: 0.82575
+0	04:32:47.107	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82493 tp: 0.82575
+0	04:41:15.201	'66858961': modify order #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12099 tp: 1.12032 -> sl: 1.12099 tp: 1.12021
+0	04:41:15.465	'66858961': order #95770494 sell 0.04 EURUSD at 1.12167 was modified -> sl: 1.12099 tp: 1.12021
+0	04:41:25.328	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82493 tp: 0.82575 -> sl: 0.82493 tp: 0.82587
+0	04:41:25.590	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82493 tp: 0.82587
+0	04:41:32.349	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82493 tp: 0.82587 -> sl: 0.82498 tp: 0.82587
+0	04:41:32.606	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82498 tp: 0.82587
+0	04:41:33.298	'66858961': modify order #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12099 tp: 1.12021 -> sl: 1.12094 tp: 1.12021
+0	04:41:33.559	'66858961': order #95770494 sell 0.04 EURUSD at 1.12167 was modified -> sl: 1.12094 tp: 1.12021
+0	04:41:42.404	'66858961': modify order #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12094 tp: 1.12021 -> sl: 1.12094 tp: 1.12011
+0	04:41:42.670	'66858961': order #95770494 sell 0.04 EURUSD at 1.12167 was modified -> sl: 1.12094 tp: 1.12011
+0	04:41:43.408	'66858961': modify order #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12094 tp: 1.12011 -> sl: 1.12089 tp: 1.12011
+0	04:41:43.669	'66858961': order #95770494 sell 0.04 EURUSD at 1.12167 was modified -> sl: 1.12089 tp: 1.12011
+0	04:41:48.404	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90348 tp: 1.90063 -> sl: 1.90216 tp: 1.90063
+0	04:41:48.671	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.90216 tp: 1.90063
+0	04:42:12.529	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90216 tp: 1.90063 -> sl: 1.90216 tp: 1.90044
+0	04:42:12.796	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.90216 tp: 1.90044
+0	04:42:15.536	'66858961': modify order #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12089 tp: 1.12011 -> sl: 1.12084 tp: 1.12011
+0	04:42:15.791	'66858961': order #95770494 sell 0.04 EURUSD at 1.12167 was modified -> sl: 1.12084 tp: 1.12011
+0	04:42:24.642	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82498 tp: 0.82587 -> sl: 0.82503 tp: 0.82587
+0	04:42:24.902	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82503 tp: 0.82587
+0	04:42:31.670	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82503 tp: 0.82587 -> sl: 0.82511 tp: 0.82601
+0	04:42:31.935	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82511 tp: 0.82601
+0	04:43:28.973	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90216 tp: 1.90044 -> sl: 1.90196 tp: 1.90044
+0	04:43:29.231	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.90196 tp: 1.90044
+0	04:44:00.296	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90196 tp: 1.90044 -> sl: 1.90185 tp: 1.90022
+0	04:44:00.560	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.90185 tp: 1.90022
+0	04:44:00.561	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82511 tp: 0.82601 -> sl: 0.82516 tp: 0.82601
+0	04:44:00.824	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82516 tp: 0.82601
+0	04:45:40.154	'66858961': modify order #95770494 sell 0.04 EURUSD at 1.12167 sl: 1.12084 tp: 1.12011 -> sl: 1.12084 tp: 1.12001
+0	04:45:40.418	'66858961': order #95770494 sell 0.04 EURUSD at 1.12167 was modified -> sl: 1.12084 tp: 1.12001
+0	04:45:46.193	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82516 tp: 0.82601 -> sl: 0.82516 tp: 0.82613
+0	04:45:46.437	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82516 tp: 0.82613
+0	04:47:16.838	'66858961': modify order #95770563 buy 0.03 USDCHF at 0.82409 sl: 0.82516 tp: 0.82613 -> sl: 0.82522 tp: 0.82613
+0	04:47:17.128	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 was modified -> sl: 0.82522 tp: 0.82613
+0	04:50:14.911	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90185 tp: 1.90022 -> sl: 1.90168 tp: 1.89996
+0	04:50:15.170	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.90168 tp: 1.89996
+0	04:51:17.340	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90168 tp: 1.89996 -> sl: 1.90159 tp: 1.89996
+0	04:51:17.607	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.90159 tp: 1.89996
+0	04:53:25.653	'66858961': order #95770574 buy 0.04 NZDJPY at 89.488 closed due stop-loss at price 89.412
+0	04:56:31.278	'66858961': order #95770563 buy 0.03 USDCHF at 0.82409 closed due stop-loss at price 0.82522
+0	05:03:50.138	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90159 tp: 1.89996 -> sl: 1.90150 tp: 1.89973
+0	05:03:50.418	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.90150 tp: 1.89973
+0	05:04:24.377	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90150 tp: 1.89973 -> sl: 1.90140 tp: 1.89973
+0	05:04:24.637	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.90140 tp: 1.89973
+0	05:04:36.450	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90140 tp: 1.89973 -> sl: 1.90128 tp: 1.89951
+0	05:04:36.715	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.90128 tp: 1.89951
+0	05:08:06.247	'66858961': order #95770494 sell 0.04 EURUSD at 1.12167 closed due stop-loss at price 1.12084
+0	05:15:01.457	'66858961': order buy market 0.02 USDJPY sl: 157.023 tp: 157.401
+0	05:15:01.747	'66858961': order was opened : #95770621 buy 0.02 USDJPY at 157.159 sl: 157.023 tp: 157.401
+0	05:30:00.726	'66858961': order sell market 0.02 GBPJPY sl: 210.055 tp: 209.555
+0	05:30:00.981	'66858961': order was opened : #95770644 sell 0.02 GBPJPY at 209.875 sl: 210.055 tp: 209.555
+0	05:33:26.153	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90128 tp: 1.89951 -> sl: 1.90118 tp: 1.89929
+0	05:33:26.419	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.90118 tp: 1.89929
+0	05:34:24.543	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90118 tp: 1.89929 -> sl: 1.90106 tp: 1.89929
+0	05:34:24.826	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.90106 tp: 1.89929
+0	05:34:52.763	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90106 tp: 1.89929 -> sl: 1.90097 tp: 1.89929
+0	05:34:53.029	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.90097 tp: 1.89929
+0	05:35:00.797	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90097 tp: 1.89929 -> sl: 1.90097 tp: 1.89903
+0	05:35:01.091	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.90097 tp: 1.89903
+0	05:35:17.877	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90097 tp: 1.89903 -> sl: 1.90087 tp: 1.89903
+0	05:35:18.121	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.90087 tp: 1.89903
+0	05:35:44.021	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90087 tp: 1.89903 -> sl: 1.90078 tp: 1.89903
+0	05:35:44.264	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.90078 tp: 1.89903
+0	05:35:53.127	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90078 tp: 1.89903 -> sl: 1.90063 tp: 1.89874
+0	05:35:53.371	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.90063 tp: 1.89874
+0	05:36:46.544	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90063 tp: 1.89874 -> sl: 1.90053 tp: 1.89874
+0	05:36:46.826	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.90053 tp: 1.89874
+0	05:37:18.781	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90053 tp: 1.89874 -> sl: 1.90039 tp: 1.89850
+0	05:37:19.028	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.90039 tp: 1.89850
+0	05:37:59.122	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90039 tp: 1.89850 -> sl: 1.90026 tp: 1.89850
+0	05:37:59.388	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.90026 tp: 1.89850
+0	05:38:08.184	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90026 tp: 1.89850 -> sl: 1.90017 tp: 1.89828
+0	05:38:18.281	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.90017 tp: 1.89828
+0	05:38:27.304	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90017 tp: 1.89828 -> sl: 1.90008 tp: 1.89828
+0	05:38:27.543	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.90008 tp: 1.89828
+0	05:40:16.015	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.267 tp: 110.577 -> sl: 110.405 tp: 110.577
+0	05:40:16.278	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.405 tp: 110.577
+0	05:41:02.310	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.90008 tp: 1.89828 -> sl: 1.89997 tp: 1.89828
+0	05:41:02.560	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.89997 tp: 1.89828
+0	05:45:18.943	'66858961': order buy market 0.01 ASTERUSDT sl: 0.7061 tp: 0.7176
+0	05:45:19.200	'66858961': order was opened : #95770666 buy 0.01 ASTERUSDT at 0.7102 sl: 0.7061 tp: 0.7176
+0	05:46:55.364	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.89997 tp: 1.89828 -> sl: 1.89997 tp: 1.89802
+0	05:46:55.622	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.89997 tp: 1.89802
+0	05:47:34.837	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.89997 tp: 1.89802 -> sl: 1.89987 tp: 1.89802
+0	05:47:35.091	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.89987 tp: 1.89802
+0	05:47:37.859	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.89987 tp: 1.89802 -> sl: 1.89976 tp: 1.89802
+0	05:47:38.121	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.89976 tp: 1.89802
+0	05:47:57.984	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.89976 tp: 1.89802 -> sl: 1.89966 tp: 1.89802
+0	05:47:58.247	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.89966 tp: 1.89802
+0	05:50:11.904	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.89966 tp: 1.89802 -> sl: 1.89956 tp: 1.89802
+0	05:50:12.170	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.89956 tp: 1.89802
+0	05:50:13.908	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.89956 tp: 1.89802 -> sl: 1.89947 tp: 1.89802
+0	05:50:14.184	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.89947 tp: 1.89802
+0	05:50:19.813	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.89947 tp: 1.89802 -> sl: 1.89938 tp: 1.89802
+0	05:50:20.062	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.89938 tp: 1.89802
+0	05:50:52.109	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.89938 tp: 1.89802 -> sl: 1.89929 tp: 1.89802
+0	05:50:52.371	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.89929 tp: 1.89802
+0	05:51:16.309	'66858961': modify order #95770576 sell 0.03 GBPAUD at 1.90241 sl: 1.89929 tp: 1.89802 -> sl: 1.89919 tp: 1.89802
+0	05:51:16.574	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 was modified -> sl: 1.89919 tp: 1.89802
+0	05:51:42.481	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.405 tp: 110.577 -> sl: 110.425 tp: 110.577
+0	05:51:42.751	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.425 tp: 110.577
+0	05:52:01.608	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.425 tp: 110.577 -> sl: 110.425 tp: 110.597
+0	05:52:01.856	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.425 tp: 110.597
+0	05:52:13.701	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.425 tp: 110.597 -> sl: 110.433 tp: 110.597
+0	05:52:13.972	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.433 tp: 110.597
+0	05:53:18.075	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.433 tp: 110.597 -> sl: 110.441 tp: 110.597
+0	05:53:18.326	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.441 tp: 110.597
+0	05:53:34.204	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.441 tp: 110.597 -> sl: 110.452 tp: 110.621
+0	05:53:34.465	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.452 tp: 110.621
+0	05:53:44.282	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.452 tp: 110.621 -> sl: 110.464 tp: 110.621
+0	05:53:44.559	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.464 tp: 110.621
+0	05:54:05.340	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.464 tp: 110.621 -> sl: 110.475 tp: 110.644
+0	05:54:05.590	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.475 tp: 110.644
+0	05:54:11.480	'66858961': order #95770576 sell 0.03 GBPAUD at 1.90241 closed due take-profit at price 1.89802
+0	05:55:51.187	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.475 tp: 110.644 -> sl: 110.483 tp: 110.644
+0	05:55:51.467	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.483 tp: 110.644
+0	05:56:17.467	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.483 tp: 110.644 -> sl: 110.491 tp: 110.644
+0	05:56:17.718	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.491 tp: 110.644
+0	05:57:16.761	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.491 tp: 110.644 -> sl: 110.491 tp: 110.664
+0	05:57:17.042	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.491 tp: 110.664
+0	06:00:01.731	'66858961': order sell market 0.02 CHFJPY sl: 190.545 tp: 190.119
+0	06:00:02.013	'66858961': order was opened : #95770691 sell 0.02 CHFJPY at 190.398 sl: 190.545 tp: 190.119
+0	06:00:28.034	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.491 tp: 110.664 -> sl: 110.506 tp: 110.664
+0	06:00:28.278	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.506 tp: 110.664
+0	06:00:41.077	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.506 tp: 110.664 -> sl: 110.506 tp: 110.684
+0	06:00:41.340	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.506 tp: 110.684
+0	06:01:01.171	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.506 tp: 110.684 -> sl: 110.515 tp: 110.684
+0	06:01:01.450	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.515 tp: 110.684
+0	06:01:52.454	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.515 tp: 110.684 -> sl: 110.523 tp: 110.684
+0	06:01:52.716	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.523 tp: 110.684
+0	06:02:09.532	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.523 tp: 110.684 -> sl: 110.532 tp: 110.704
+0	06:02:09.796	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.532 tp: 110.704
+0	06:02:14.559	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.532 tp: 110.704 -> sl: 110.540 tp: 110.704
+0	06:02:14.825	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.540 tp: 110.704
+0	06:02:24.568	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.540 tp: 110.704 -> sl: 110.548 tp: 110.704
+0	06:02:24.825	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.548 tp: 110.704
+0	06:02:28.605	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.548 tp: 110.704 -> sl: 110.548 tp: 110.724
+0	06:02:28.857	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.548 tp: 110.724
+0	06:03:10.906	'66858961': modify order #95770621 buy 0.02 USDJPY at 157.159 sl: 157.023 tp: 157.401 -> sl: 157.188 tp: 157.401
+0	06:03:11.154	'66858961': order #95770621 buy 0.02 USDJPY at 157.159 was modified -> sl: 157.188 tp: 157.401
+0	06:06:11.256	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.548 tp: 110.724 -> sl: 110.556 tp: 110.724
+0	06:06:11.512	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.556 tp: 110.724
+0	06:06:59.591	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.556 tp: 110.724 -> sl: 110.564 tp: 110.724
+0	06:06:59.841	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.564 tp: 110.724
+0	06:09:46.707	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.564 tp: 110.724 -> sl: 110.572 tp: 110.744
+0	06:09:46.950	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.572 tp: 110.744
+0	06:09:51.812	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.572 tp: 110.744 -> sl: 110.580 tp: 110.744
+0	06:09:52.062	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.580 tp: 110.744
+0	06:10:02.906	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.580 tp: 110.744 -> sl: 110.589 tp: 110.744
+0	06:10:03.168	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.589 tp: 110.744
+0	06:10:17.022	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.589 tp: 110.744 -> sl: 110.589 tp: 110.764
+0	06:10:17.262	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.589 tp: 110.764
+0	06:10:54.404	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.589 tp: 110.764 -> sl: 110.600 tp: 110.764
+0	06:10:54.657	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.600 tp: 110.764
+0	06:29:07.733	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.600 tp: 110.764 -> sl: 110.600 tp: 110.785
+0	06:29:07.998	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.600 tp: 110.785
+0	06:30:01.013	'66858961': modify order #95770621 buy 0.02 USDJPY at 157.159 sl: 157.188 tp: 157.401 -> sl: 157.189 tp: 157.401
+0	06:30:02.032	'66858961': order #95770621 buy 0.02 USDJPY at 157.159 was modified -> sl: 157.189 tp: 157.401
+0	06:30:17.156	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.600 tp: 110.785 -> sl: 110.612 tp: 110.785
+0	06:30:17.419	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.612 tp: 110.785
+0	06:32:35.032	'66858961': modify order #95770621 buy 0.02 USDJPY at 157.159 sl: 157.189 tp: 157.401 -> sl: 157.219 tp: 157.401
+0	06:32:35.293	'66858961': order #95770621 buy 0.02 USDJPY at 157.159 was modified -> sl: 157.219 tp: 157.401
+0	06:32:39.061	'66858961': modify order #95770621 buy 0.02 USDJPY at 157.159 sl: 157.219 tp: 157.401 -> sl: 157.219 tp: 157.426
+0	06:32:39.313	'66858961': order #95770621 buy 0.02 USDJPY at 157.159 was modified -> sl: 157.219 tp: 157.426
+0	06:34:40.731	'66858961': modify order #95770621 buy 0.02 USDJPY at 157.159 sl: 157.219 tp: 157.426 -> sl: 157.229 tp: 157.426
+0	06:34:40.982	'66858961': order #95770621 buy 0.02 USDJPY at 157.159 was modified -> sl: 157.229 tp: 157.426
+0	06:37:35.780	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.612 tp: 110.785 -> sl: 110.622 tp: 110.785
+0	06:37:36.045	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.622 tp: 110.785
+0	06:37:47.857	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.622 tp: 110.785 -> sl: 110.631 tp: 110.785
+0	06:37:48.138	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.631 tp: 110.785
+0	06:41:11.769	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.631 tp: 110.785 -> sl: 110.642 tp: 110.785
+0	06:41:12.036	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.642 tp: 110.785
+0	06:44:57.358	'66858961': modify order #95770621 buy 0.02 USDJPY at 157.159 sl: 157.229 tp: 157.426 -> sl: 157.245 tp: 157.426
+0	06:44:57.624	'66858961': order #95770621 buy 0.02 USDJPY at 157.159 was modified -> sl: 157.245 tp: 157.426
+0	06:44:57.624	'66858961': modify order #95770573 buy 0.03 AUDJPY at 110.378 sl: 110.642 tp: 110.785 -> sl: 110.653 tp: 110.785
+0	06:44:57.884	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 was modified -> sl: 110.653 tp: 110.785
+0	06:55:20.468	'66858961': modify order #95770621 buy 0.02 USDJPY at 157.159 sl: 157.245 tp: 157.426 -> sl: 157.260 tp: 157.457
+0	06:55:20.726	'66858961': order #95770621 buy 0.02 USDJPY at 157.159 was modified -> sl: 157.260 tp: 157.457
+2	07:08:24.159	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_7_0_1_ claude EURUSD,M15: removed
+2	07:08:24.177	Expert Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: loaded successfully
+0	07:13:02.700	'66858961': order #95770691 sell 0.02 CHFJPY at 190.398 closed due stop-loss at price 190.545
+0	07:13:15.145	'66858961': order #95770573 buy 0.03 AUDJPY at 110.378 closed due stop-loss at price 110.653
+0	07:15:08.569	'66858961': order buy market 0.02 EURNZD sl: 1.96863 tp: 1.97269
+0	07:15:08.825	'66858961': order was opened : #95770765 buy 0.02 EURNZD at 1.97007 sl: 1.96863 tp: 1.97269
+0	07:39:25.708	'66858961': order #95770644 sell 0.02 GBPJPY at 209.875 closed due stop-loss at price 210.055
+0	07:43:57.108	'66858961': modify order #95770621 buy 0.02 USDJPY at 157.159 sl: 157.260 tp: 157.457 -> sl: 157.269 tp: 157.457
+0	07:43:57.358	'66858961': order #95770621 buy 0.02 USDJPY at 157.159 was modified -> sl: 157.269 tp: 157.457
+0	07:44:23.316	'66858961': modify order #95770621 buy 0.02 USDJPY at 157.159 sl: 157.269 tp: 157.457 -> sl: 157.285 tp: 157.457
+0	07:44:23.571	'66858961': order #95770621 buy 0.02 USDJPY at 157.159 was modified -> sl: 157.285 tp: 157.457
+0	07:44:33.357	'66858961': modify order #95770621 buy 0.02 USDJPY at 157.159 sl: 157.285 tp: 157.457 -> sl: 157.300 tp: 157.478
+0	07:44:33.606	'66858961': order #95770621 buy 0.02 USDJPY at 157.159 was modified -> sl: 157.300 tp: 157.478
+0	07:45:00.493	'66858961': order buy market 0.02 EURJPY sl: 176.128 tp: 176.562
+0	07:45:00.750	'66858961': order was opened : #95770780 buy 0.02 EURJPY at 176.283 sl: 176.128 tp: 176.562
+2	07:51:03.384	Expert Bitey_ensemble_scalper_multiasset_v1_7_1_1_1_claude EURUSD,M15: removed
+2	07:51:03.404	Expert Bitey ensemble scalper multiasset v1 7 2 1 claude EURUSD,M15: loaded successfully
+0	08:01:33.564	'66858961': order #95770621 buy 0.02 USDJPY at 157.159 closed due stop-loss at price 157.300
+0	08:15:04.077	'66858961': order buy market 0.02 USDCHF sl: 0.82527 tp: 0.82749
+0	08:15:04.341	'66858961': order was opened : #95770803 buy 0.02 USDCHF at 0.82606 sl: 0.82527 tp: 0.82749
+0	08:15:04.341	'66858961': order buy market 0.02 AUDJPY sl: 110.533 tp: 110.874
+0	08:15:04.590	'66858961': order was opened : #95770804 buy 0.02 AUDJPY at 110.658 sl: 110.533 tp: 110.874
+0	08:33:37.435	'66858961': order #95770780 buy 0.02 EURJPY at 176.283 closed due stop-loss at price 176.128
+0	09:00:01.411	'66858961': order buy market 0.02 USDJPY sl: 157.324 tp: 157.663
+0	09:00:01.671	'66858961': order was opened : #95770860 buy 0.02 USDJPY at 157.445 sl: 157.324 tp: 157.663
+0	09:07:02.925	'66858961': modify order #95770803 buy 0.02 USDCHF at 0.82606 sl: 0.82527 tp: 0.82749 -> sl: 0.82621 tp: 0.82749
+0	09:07:03.200	'66858961': order #95770803 buy 0.02 USDCHF at 0.82606 was modified -> sl: 0.82621 tp: 0.82749
+0	09:19:15.544	'66858961': order #95770803 buy 0.02 USDCHF at 0.82606 closed due stop-loss at price 0.82621
+0	09:27:29.136	'66858961': order #95770860 buy 0.02 USDJPY at 157.445 closed due stop-loss at price 157.324
+0	09:30:01.048	'66858961': order sell market 0.02 EURAUD sl: 1.59396 tp: 1.59057
+0	09:30:01.310	'66858961': order was opened : #95770890 sell 0.02 EURAUD at 1.59275 sl: 1.59396 tp: 1.59057
+0	09:33:15.512	'66858961': order #95770804 buy 0.02 AUDJPY at 110.658 closed due stop-loss at price 110.533
+0	09:45:02.713	'66858961': order sell market 0.03 EURUSD sl: 1.12003 tp: 1.11802
+0	09:45:02.982	'66858961': order was opened : #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.12003 tp: 1.11802
+0	09:45:02.982	'66858961': order sell market 0.02 GBPUSD sl: 1.33589 tp: 1.33335
+0	09:45:03.233	'66858961': order was opened : #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33589 tp: 1.33335
+0	09:54:57.481	'66858961': order #95770765 buy 0.02 EURNZD at 1.97007 closed due stop-loss at price 1.96863
+0	10:15:03.128	'66858961': modify order #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.12003 tp: 1.11802 -> sl: 1.11913 tp: 1.11802
+0	10:15:03.483	'66858961': order #95770905 sell 0.03 EURUSD at 1.11931 was modified -> sl: 1.11913 tp: 1.11802
+0	10:15:05.147	'66858961': order buy market 0.01 HYPEUSDT sl: 77.169 tp: 78.311
+0	10:15:05.402	'66858961': order was opened : #95770925 buy 0.01 HYPEUSDT at 77.577 sl: 77.169 tp: 78.311
+0	10:25:53.563	'66858961': modify order #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33589 tp: 1.33335 -> sl: 1.33478 tp: 1.33335
+0	10:25:53.827	'66858961': order #95770906 sell 0.02 GBPUSD at 1.33498 was modified -> sl: 1.33478 tp: 1.33335
+0	10:26:03.669	'66858961': modify order #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11913 tp: 1.11802 -> sl: 1.11899 tp: 1.11789
+0	10:26:03.935	'66858961': order #95770905 sell 0.03 EURUSD at 1.11931 was modified -> sl: 1.11899 tp: 1.11789
+0	10:26:06.699	'66858961': modify order #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33478 tp: 1.33335 -> sl: 1.33478 tp: 1.33317
+0	10:26:06.951	'66858961': order #95770906 sell 0.02 GBPUSD at 1.33498 was modified -> sl: 1.33478 tp: 1.33317
+0	10:26:12.764	'66858961': modify order #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11899 tp: 1.11789 -> sl: 1.11889 tp: 1.11789
+0	10:26:13.034	'66858961': order #95770905 sell 0.03 EURUSD at 1.11931 was modified -> sl: 1.11889 tp: 1.11789
+0	10:26:14.780	'66858961': modify order #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11889 tp: 1.11789 -> sl: 1.11889 tp: 1.11775
+0	10:26:15.044	'66858961': order #95770905 sell 0.03 EURUSD at 1.11931 was modified -> sl: 1.11889 tp: 1.11775
+0	10:26:16.705	'66858961': modify order #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11889 tp: 1.11775 -> sl: 1.11882 tp: 1.11775
+0	10:26:16.966	'66858961': order #95770905 sell 0.03 EURUSD at 1.11931 was modified -> sl: 1.11882 tp: 1.11775
+0	10:26:17.793	'66858961': modify order #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33478 tp: 1.33317 -> sl: 1.33454 tp: 1.33317
+0	10:26:18.044	'66858961': order #95770906 sell 0.02 GBPUSD at 1.33498 was modified -> sl: 1.33454 tp: 1.33317
+0	10:26:19.726	'66858961': modify order #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11882 tp: 1.11775 -> sl: 1.11875 tp: 1.11775
+0	10:26:19.973	'66858961': order #95770905 sell 0.03 EURUSD at 1.11931 was modified -> sl: 1.11875 tp: 1.11775
+0	10:26:21.579	'66858961': modify order #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33454 tp: 1.33317 -> sl: 1.33454 tp: 1.33298
+0	10:26:21.843	'66858961': order #95770906 sell 0.02 GBPUSD at 1.33498 was modified -> sl: 1.33454 tp: 1.33298
+0	10:26:42.044	'66858961': modify order #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33454 tp: 1.33298 -> sl: 1.33445 tp: 1.33298
+0	10:26:42.311	'66858961': order #95770906 sell 0.02 GBPUSD at 1.33498 was modified -> sl: 1.33445 tp: 1.33298
+0	10:26:42.311	'66858961': modify order #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11875 tp: 1.11775 -> sl: 1.11875 tp: 1.11761
+0	10:26:42.575	'66858961': order #95770905 sell 0.03 EURUSD at 1.11931 was modified -> sl: 1.11875 tp: 1.11761
+0	10:31:59.356	'66858961': order #95770925 buy 0.01 HYPEUSDT at 77.577 closed due stop-loss at price 77.169
+0	10:36:41.254	'66858961': modify order #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11875 tp: 1.11761 -> sl: 1.11869 tp: 1.11761
+0	10:36:41.513	'66858961': order #95770905 sell 0.03 EURUSD at 1.11931 was modified -> sl: 1.11869 tp: 1.11761
+0	10:36:44.230	'66858961': modify order #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11869 tp: 1.11761 -> sl: 1.11852 tp: 1.11744
+0	10:36:44.469	'66858961': order #95770905 sell 0.03 EURUSD at 1.11931 was modified -> sl: 1.11852 tp: 1.11744
+0	10:36:51.372	'66858961': modify order #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11852 tp: 1.11744 -> sl: 1.11847 tp: 1.11744
+0	10:36:51.637	'66858961': order #95770905 sell 0.03 EURUSD at 1.11931 was modified -> sl: 1.11847 tp: 1.11744
+0	10:36:54.366	'66858961': modify order #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11847 tp: 1.11744 -> sl: 1.11840 tp: 1.11744
+0	10:36:54.622	'66858961': order #95770905 sell 0.03 EURUSD at 1.11931 was modified -> sl: 1.11840 tp: 1.11744
+0	10:36:55.391	'66858961': modify order #95770905 sell 0.03 EURUSD at 1.11931 sl: 1.11840 tp: 1.11744 -> sl: 1.11840 tp: 1.11729
+0	10:36:55.668	'66858961': order #95770905 sell 0.03 EURUSD at 1.11931 was modified -> sl: 1.11840 tp: 1.11729
+0	10:43:27.405	'66858961': order #95770905 sell 0.03 EURUSD at 1.11931 closed due stop-loss at price 1.11840
+0	10:45:01.018	'66858961': order buy market 0.03 USDCAD sl: 1.40284 tp: 1.40542
+0	10:45:01.293	'66858961': order was opened : #95770951 buy 0.03 USDCAD at 1.40376 sl: 1.40284 tp: 1.40542
+0	10:47:51.357	'66858961': order #95770666 buy 0.01 ASTERUSDT at 0.7102 closed due stop-loss at price 0.7061
+1	10:49:38.092	'66858961': connect failed [No hay conexión]
+0	10:50:24.953	'66858961': login on TradewillGlobal-Demo through Main (ping: 214.37 ms)
+0	10:50:27.127	'66858961': previous successful authorization performed from 143.255.14.62
+0	10:50:28.300	'66858961': ping to current access point Main is 211.31 ms
+0	10:57:08.847	'66858961': modify order #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33445 tp: 1.33298 -> sl: 1.33436 tp: 1.33280
+0	10:57:09.095	'66858961': order #95770906 sell 0.02 GBPUSD at 1.33498 was modified -> sl: 1.33436 tp: 1.33280
+0	10:57:55.328	'66858961': modify order #95770951 buy 0.03 USDCAD at 1.40376 sl: 1.40284 tp: 1.40542 -> sl: 1.40399 tp: 1.40542
+0	10:57:55.591	'66858961': order #95770951 buy 0.03 USDCAD at 1.40376 was modified -> sl: 1.40399 tp: 1.40542
+0	10:58:00.358	'66858961': modify order #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33436 tp: 1.33280 -> sl: 1.33428 tp: 1.33280
+0	10:58:00.622	'66858961': order #95770906 sell 0.02 GBPUSD at 1.33498 was modified -> sl: 1.33428 tp: 1.33280
+0	10:58:03.356	'66858961': modify order #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33428 tp: 1.33280 -> sl: 1.33420 tp: 1.33280
+0	10:58:03.621	'66858961': order #95770906 sell 0.02 GBPUSD at 1.33498 was modified -> sl: 1.33420 tp: 1.33280
+0	10:58:05.224	'66858961': modify order #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33420 tp: 1.33280 -> sl: 1.33420 tp: 1.33262
+0	10:58:05.479	'66858961': order #95770906 sell 0.02 GBPUSD at 1.33498 was modified -> sl: 1.33420 tp: 1.33262
+0	10:58:17.470	'66858961': modify order #95770951 buy 0.03 USDCAD at 1.40376 sl: 1.40399 tp: 1.40542 -> sl: 1.40413 tp: 1.40542
+0	10:58:17.746	'66858961': order #95770951 buy 0.03 USDCAD at 1.40376 was modified -> sl: 1.40413 tp: 1.40542
+0	10:58:27.531	'66858961': modify order #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33420 tp: 1.33262 -> sl: 1.33412 tp: 1.33262
+0	10:58:27.793	'66858961': order #95770906 sell 0.02 GBPUSD at 1.33498 was modified -> sl: 1.33412 tp: 1.33262
+0	10:58:59.601	'66858961': modify order #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33412 tp: 1.33262 -> sl: 1.33398 tp: 1.33242
+0	10:58:59.871	'66858961': order #95770906 sell 0.02 GBPUSD at 1.33498 was modified -> sl: 1.33398 tp: 1.33242
+0	10:59:10.655	'66858961': modify order #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33398 tp: 1.33242 -> sl: 1.33387 tp: 1.33242
+0	10:59:10.918	'66858961': order #95770906 sell 0.02 GBPUSD at 1.33498 was modified -> sl: 1.33387 tp: 1.33242
+0	10:59:38.927	'66858961': modify order #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33387 tp: 1.33242 -> sl: 1.33387 tp: 1.33224
+0	10:59:39.200	'66858961': order #95770906 sell 0.02 GBPUSD at 1.33498 was modified -> sl: 1.33387 tp: 1.33224
+0	10:59:39.951	'66858961': modify order #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33387 tp: 1.33224 -> sl: 1.33379 tp: 1.33224
+0	10:59:40.215	'66858961': order #95770906 sell 0.02 GBPUSD at 1.33498 was modified -> sl: 1.33379 tp: 1.33224
+0	10:59:44.969	'66858961': modify order #95770906 sell 0.02 GBPUSD at 1.33498 sl: 1.33379 tp: 1.33224 -> sl: 1.33367 tp: 1.33224
+0	10:59:45.247	'66858961': order #95770906 sell 0.02 GBPUSD at 1.33498 was modified -> sl: 1.33367 tp: 1.33224
+0	11:00:01.047	'66858961': order sell market 0.01 GBPJPY sl: 210.114 tp: 209.578
+0	11:00:01.325	'66858961': order was opened : #95770976 sell 0.01 GBPJPY at 209.923 sl: 210.114 tp: 209.578
+0	11:05:07.090	'66858961': modify order #95770951 buy 0.03 USDCAD at 1.40376 sl: 1.40413 tp: 1.40542 -> sl: 1.40413 tp: 1.40563
+0	11:05:07.357	'66858961': order #95770951 buy 0.03 USDCAD at 1.40376 was modified -> sl: 1.40413 tp: 1.40563
+0	11:09:52.810	'66858961': order #95770906 sell 0.02 GBPUSD at 1.33498 closed due stop-loss at price 1.33367
+0	11:11:12.321	'66858961': modify order #95770951 buy 0.03 USDCAD at 1.40376 sl: 1.40413 tp: 1.40563 -> sl: 1.40425 tp: 1.40581
+0	11:11:12.655	'66858961': order #95770951 buy 0.03 USDCAD at 1.40376 was modified -> sl: 1.40425 tp: 1.40581
+0	11:12:00.919	'66858961': modify order #95770951 buy 0.03 USDCAD at 1.40376 sl: 1.40425 tp: 1.40581 -> sl: 1.40436 tp: 1.40581
+0	11:12:01.171	'66858961': order #95770951 buy 0.03 USDCAD at 1.40376 was modified -> sl: 1.40436 tp: 1.40581
+0	11:12:55.168	'66858961': modify order #95770951 buy 0.03 USDCAD at 1.40376 sl: 1.40436 tp: 1.40581 -> sl: 1.40445 tp: 1.40601
+0	11:12:55.420	'66858961': order #95770951 buy 0.03 USDCAD at 1.40376 was modified -> sl: 1.40445 tp: 1.40601
+0	11:14:16.758	'66858961': modify order #95770951 buy 0.03 USDCAD at 1.40376 sl: 1.40445 tp: 1.40601 -> sl: 1.40452 tp: 1.40601
+0	11:14:17.013	'66858961': order #95770951 buy 0.03 USDCAD at 1.40376 was modified -> sl: 1.40452 tp: 1.40601
+0	11:14:23.858	'66858961': modify order #95770951 buy 0.03 USDCAD at 1.40376 sl: 1.40452 tp: 1.40601 -> sl: 1.40460 tp: 1.40601
+0	11:14:24.123	'66858961': order #95770951 buy 0.03 USDCAD at 1.40376 was modified -> sl: 1.40460 tp: 1.40601
+0	11:14:24.859	'66858961': modify order #95770951 buy 0.03 USDCAD at 1.40376 sl: 1.40460 tp: 1.40601 -> sl: 1.40460 tp: 1.40619
+0	11:14:25.137	'66858961': order #95770951 buy 0.03 USDCAD at 1.40376 was modified -> sl: 1.40460 tp: 1.40619
+0	11:15:02.065	'66858961': order sell market 0.02 EURJPY sl: 176.115 tp: 175.682
+0	11:15:02.327	'66858961': order was opened : #95771001 sell 0.02 EURJPY at 175.959 sl: 176.115 tp: 175.682
+0	11:24:26.876	'66858961': order #95771001 sell 0.02 EURJPY at 175.959 closed due stop-loss at price 176.115
+0	11:24:29.447	'66858961': order #95770976 sell 0.01 GBPJPY at 209.923 closed due stop-loss at price 210.114
+0	11:30:32.705	'66858961': order #95770951 buy 0.03 USDCAD at 1.40376 closed due stop-loss at price 1.40460
+0	11:33:48.548	'66858961': order #95770890 sell 0.02 EURAUD at 1.59275 closed due stop-loss at price 1.59396
