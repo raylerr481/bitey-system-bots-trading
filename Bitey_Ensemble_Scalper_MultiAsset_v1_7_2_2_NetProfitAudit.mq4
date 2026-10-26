@@ -207,7 +207,10 @@ int OnInit()
    EventSetTimer(1);
    Print("BITEY_ENSEMBLE_INIT | version=",EA_VERSION," | symbols=",g_symbolCount,
          " | maxPositions=",MaxPositions()," | tf=",(int)InpSignalTF,
-         " | accountMode=NOT_A_GATE | trading=",(InpEnableTrading?"ON":"OFF"));
+         " | accountMode=NOT_A_GATE | trading=",(InpEnableTrading?"ON":"OFF"),
+         " | netSummaryCSV=",(InpLogAssetSummaryCSV?"ON":"OFF"),
+         " | localFiles=",TerminalInfoString(TERMINAL_DATA_PATH),"\\MQL4\\Files");
+   if(InpLogAssetSummaryCSV) WriteAssetNetSummary(); // Create summary immediately on initialization.
    return(INIT_SUCCEEDED);
 }
 
@@ -1221,7 +1224,7 @@ void WriteAssetNetSummary()
 
    Print("NET_SUMMARY_SCAN | enabled=1 magic=",InpMagic,
          " history_orders=",OrdersHistoryTotal(),
-         " common_files=",TerminalInfoString(TERMINAL_COMMONDATA_PATH),"\\Files");
+         " target_dir=",TerminalInfoString(TERMINAL_DATA_PATH),"\\MQL4\\Files");
 
    string symbols[512];
    int counts[512], wins[512], losses[512];
@@ -1267,7 +1270,8 @@ void WriteAssetNetSummary()
    if(h==INVALID_HANDLE)
    {
       Print("NET_SUMMARY_OPEN_FAILED | file=",fn," error=",GetLastError(),
-            " common_files=",TerminalInfoString(TERMINAL_COMMONDATA_PATH),"\\Files");
+            " full_path=",TerminalInfoString(TERMINAL_DATA_PATH),"\\MQL4\\Files\\",fn,
+            " | Check EA inputs, file permissions, and Experts log");
       return; // Do not throttle a failed attempt; retry on the next cycle.
    }
    g_lastNetSummaryScan=now;
@@ -1278,8 +1282,10 @@ void WriteAssetNetSummary()
                 DoubleToString(swaps[j],2),DoubleToString(nets[j],2));
    FileWrite(h,"TOTAL",included,totalWins,totalLosses,DoubleToString(totalGross,2),
              DoubleToString(totalCommission,2),DoubleToString(totalSwap,2),DoubleToString(totalNet,2));
+   FileFlush(h);
    FileClose(h);
-   Print("NET_SUMMARY_UPDATED | trades=",included," assets=",symbolCount,
+   Print("NET_SUMMARY_UPDATED | full_path=",TerminalInfoString(TERMINAL_DATA_PATH),"\\MQL4\\Files\\",fn,
+         " trades=",included," assets=",symbolCount,
          " net=",DoubleToString(totalNet,2)," commission=",DoubleToString(totalCommission,2),
          " swap=",DoubleToString(totalSwap,2)," file=",fn,
          " | Account History must be All History for complete totals");
