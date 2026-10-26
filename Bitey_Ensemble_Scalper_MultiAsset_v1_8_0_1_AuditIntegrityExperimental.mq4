@@ -134,8 +134,8 @@ void BiteyCsvLogTradeClosed(
       DoubleToString(grossProfit, 2), DoubleToString(commission, 2),
       DoubleToString(swap, 2), DoubleToString(net, 2),
       DoubleToString(slippagePoints, 1),
-      (GlobalVariableCheck(GvKey("BUYV",ticket))?IntegerToString((int)GlobalVariableGet(GvKey("BUYV",ticket)):"0"),
-      (GlobalVariableCheck(GvKey("SELLV",ticket))?IntegerToString((int)GlobalVariableGet(GvKey("SELLV",ticket)):"0"), closeReason);
+      (GlobalVariableCheck(GvKey("BUYV",ticket))?IntegerToString((int)GlobalVariableGet(GvKey("BUYV",ticket))):"0"),
+      (GlobalVariableCheck(GvKey("SELLV",ticket))?IntegerToString((int)GlobalVariableGet(GvKey("SELLV",ticket))):"0"), closeReason);
    BiteyCsvClose(h);
 }
 void BiteyCsvLogAdaptiveExit(
