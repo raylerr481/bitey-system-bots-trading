@@ -112,7 +112,7 @@ void BiteyCsvLogTradeOpened(
       (GlobalVariableCheck(GvKey("SELLV",ticket))?IntegerToString((int)GlobalVariableGet(GvKey("SELLV",ticket))):"0"), reason);
    BiteyCsvClose(h);
 }
-void BiteyCsvLogTradeClosed(
+bool BiteyCsvLogTradeClosed(
    const string decisionId, const string eaVersion, const int ticket,
    const string symbol, const string direction, const double lots,
    const datetime openedAt, const datetime closedAt, const double openPrice,
@@ -124,7 +124,7 @@ void BiteyCsvLogTradeClosed(
    int durationSeconds = (int)(closedAt - openedAt);
    int h = BiteyCsvOpenAppend(fn,
       "timestamp;decision_id;ea_version;ticket;magic;symbol;direction;lots;opened_at;closed_at;duration_seconds;open_price;close_price;gross_profit;commission;swap;net_profit;slippage_points;buy_votes;sell_votes;close_reason");
-   if(h == INVALID_HANDLE) return;
+   if(h == INVALID_HANDLE) return(false);
    int digits=(int)MarketInfo(symbol,MODE_DIGITS);
    FileWrite(h, BiteyCsvStamp(), decisionId, eaVersion, ticket, InpMagic, symbol,
       direction, DoubleToString(lots, 2),
@@ -137,6 +137,7 @@ void BiteyCsvLogTradeClosed(
       (GlobalVariableCheck(GvKey("BUYV",ticket))?IntegerToString((int)GlobalVariableGet(GvKey("BUYV",ticket))):"0"),
       (GlobalVariableCheck(GvKey("SELLV",ticket))?IntegerToString((int)GlobalVariableGet(GvKey("SELLV",ticket))):"0"), closeReason);
    BiteyCsvClose(h);
+   return(true);
 }
 void BiteyCsvLogAdaptiveExit(
    const string decisionId, const string eaVersion, const int ticket,
@@ -1235,6 +1236,9 @@ bool WriteTradeRow(int ticket)
    double mfeR=(r0>0?mfe/r0:0.0), maeR=(r0>0?mae/r0:0.0);
    double gross=OrderProfit(), comm=OrderCommission(), swp=OrderSwap();
    int durMin=(int)((OrderCloseTime()-OrderOpenTime())/60);
+   string mfeLogKey=GvKey("MFELOG",ticket);
+   if(!GlobalVariableCheck(mfeLogKey))
+   {
    string fn="Bitey_Ens_TradeAudit_"+IntegerToString(InpMagic)+".csv";
    int h=FileOpen(fn,FILE_READ|FILE_WRITE|FILE_CSV|FILE_SHARE_READ|FILE_SHARE_WRITE,';');
    if(h==INVALID_HANDLE) { Print("CSV_OPEN_FAILED | file=",fn," error=",GetLastError()); return(false); }
@@ -1250,12 +1254,14 @@ bool WriteTradeRow(int ticket)
              DoubleToString(gross,2),DoubleToString(comm,2),DoubleToString(swp,2),DoubleToString(gross+comm+swp,2),
              OrderComment());
    FileClose(h);
+   GlobalVariableSet(mfeLogKey,1.0);
+   }
    string closedDecisionId="ticket_"+IntegerToString(ticket);
    if(GlobalVariableCheck(GvKey("DID",ticket)))
       closedDecisionId=sym+"_"+IntegerToString((int)GlobalVariableGet(GvKey("DID",ticket)));
-   BiteyCsvLogTradeClosed(closedDecisionId,closedVersion,ticket,sym,
+   if(!BiteyCsvLogTradeClosed(closedDecisionId,closedVersion,ticket,sym,
       (type==OP_BUY?"BUY":"SELL"),OrderLots(),OrderOpenTime(),OrderCloseTime(),
-      OrderOpenPrice(),OrderClosePrice(),gross,comm,swp,0.0,OrderComment());
+      OrderOpenPrice(),OrderClosePrice(),gross,comm,swp,0.0,OrderComment())) return(false);
    BiteyCsvLogAction(closedDecisionId,EA_VERSION,sym,"EXECUTION","ORDER_CLOSED",ticket,
       (type==OP_BUY?"BUY":"SELL"),gross+comm+swp,OrderComment());
    return(true);
