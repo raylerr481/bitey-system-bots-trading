@@ -512,6 +512,8 @@ void RunCycle()
       string blockWhy=EntryBlockReason();   // equity floor, daily loss, monthly drawdown, monthly target
       if(blockWhy!="")
       {
+         for(int blocked=0;blocked<nc;blocked++)
+            BiteyCsvLogAction(g_candSym[blocked]+"_"+IntegerToString((int)iTime(g_candSym[blocked],InpSignalTF,1)),EA_VERSION,g_candSym[blocked],"ENTRY_GUARD","REJECT",0,(g_candCmd[blocked]==OP_BUY?"BUY":"SELL"),g_candScore[blocked],blockWhy);
          if(g_lastDailyBlockLog==0 || TimeCurrent()-g_lastDailyBlockLog>=300)
          {
             g_lastDailyBlockLog=TimeCurrent();
