@@ -1230,7 +1230,10 @@ bool WriteTradeRow(int ticket)
              DoubleToString(gross,2),DoubleToString(comm,2),DoubleToString(swp,2),DoubleToString(gross+comm+swp,2),
              OrderComment());
    FileClose(h);
-   BiteyCsvLogTradeClosed("ticket_"+IntegerToString(ticket),EA_VERSION,ticket,sym,
+   string closedDecisionId="ticket_"+IntegerToString(ticket);
+   if(GlobalVariableCheck(GvKey("DID",ticket)))
+      closedDecisionId=sym+"_"+IntegerToString((int)GlobalVariableGet(GvKey("DID",ticket)));
+   BiteyCsvLogTradeClosed(closedDecisionId,EA_VERSION,ticket,sym,
       (type==OP_BUY?"BUY":"SELL"),OrderLots(),OrderOpenTime(),OrderCloseTime(),
       OrderOpenPrice(),OrderClosePrice(),gross,comm,swp,0.0,OrderComment());
    return(true);
