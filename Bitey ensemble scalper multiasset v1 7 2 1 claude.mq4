@@ -2,7 +2,7 @@
 //| Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_claude.mq4                 |
 //| Scalping / day trading, multi-asset (max 5), bidirectional,       |
 //| adaptive SL/TP. Account type (demo/real) NEVER gates orders.      |
-//| v1.7.2 = v1.7.1 + gross FX currency cap + diversification ranking:   |
+//| v1.7.2.2 = v1.7.2 + terminal/broker execution-permission preflight diagnostics:   |
 //|  - InpMaxCcyGross: max positions touching one FX currency in ANY     |
 //|    direction (v1.7.1 only capped the NET, so 2 long + 2 short JPY    |
 //|    crosses looked "flat" while all four rode the same yen factor).   |
@@ -42,10 +42,10 @@
 //  B) No BE/trail:  InpEnableAdaptiveExits=false | RR 1.5
 //  C) Fixed TP only: BE 0 | TrailStart 0 | TPExpand false | RR 1.2
 //  D) Trail only:   BE 0 | TrailStart 1.5 | TrailDist 1.5 | RR 2.5
-#property version   "1.72"
-#property description "Ensemble scalper v1.7.2: adaptive SL/TP + net profit lock, BUY+SELL, multi-asset, monthly/daily brakes, gross+net correlation guard, diversification ranking, envelope family"
+#property version   "1.722"
+#property description "Ensemble scalper v1.7.2.2: v1.7.2 strategy plus startup execution-permission diagnostics; account type is informational only"
 
-#define EA_VERSION          "1.7.2"
+#define EA_VERSION          "1.7.2.2"
 #define MAX_SYMBOLS         256
 #define HARD_MAX_POSITIONS  5
 
@@ -162,6 +162,7 @@ input double           InpProfitLockTargetR     = 0.40;    // Net profit (in R) 
 input double           InpProfitLockStepR       = 0.15;    // Minimum improvement (in R) before recalculating the lock
 
 input bool             InpEnableTrading         = true;    // false = log candidates only
+input bool             InpLogExecutionPreflight  = true;    // Report terminal/account/broker permissions; never gates by demo/real
 input bool             InpLogRejects            = false;
 input bool             InpLogTradesCSV          = true;    // MFE/MAE per closed trade -> Common\Files\Bitey_Ens_MFE_MAE_<magic>.csv
 input int              InpRejectLogMinutes      = 60;      // Throttle SPREAD/COST reject logs per symbol (0 = log all)
@@ -185,6 +186,39 @@ double   g_candScore[MAX_SYMBOLS];
 bool     g_candUsed[MAX_SYMBOLS];
 
 //+------------------------------------------------------------------+
+void LogExecutionPreflight()
+{
+   if(!InpLogExecutionPreflight) return;
+   string mode="UNKNOWN";
+   long accountMode=AccountInfoInteger(ACCOUNT_TRADE_MODE);
+   if(accountMode==ACCOUNT_TRADE_MODE_DEMO) mode="DEMO";
+   else if(accountMode==ACCOUNT_TRADE_MODE_REAL) mode="REAL";
+   else if(accountMode==ACCOUNT_TRADE_MODE_CONTEST) mode="CONTEST";
+
+   Print("EXEC_PREFLIGHT | accountMode=",mode,
+         " | connected=",(IsConnected()?"YES":"NO"),
+         " | expertEnabled=",(IsExpertEnabled()?"YES":"NO"),
+         " | terminalTradeAllowed=",(IsTradeAllowed()?"YES":"NO"),
+         " | accountTradeAllowed=",(AccountInfoInteger(ACCOUNT_TRADE_ALLOWED)?"YES":"NO"),
+         " | eaTradingInput=",(InpEnableTrading?"ON":"OFF"),
+         " | accountModeIsGate=NO");
+
+   for(int i=0;i<g_symbolCount;i++)
+   {
+      string sym=g_symbols[i];
+      ResetLastError();
+      double tradeAllowed=MarketInfo(sym,MODE_TRADEALLOWED);
+      int err=GetLastError();
+      int digits=(int)MarketInfo(sym,MODE_DIGITS);
+      Print("EXEC_SYMBOL_PREFLIGHT | symbol=",sym,
+            " | brokerTradeAllowed=",(tradeAllowed>0.0?"YES":"NO"),
+            " | bid=",DoubleToString(MarketInfo(sym,MODE_BID),digits),
+            " | ask=",DoubleToString(MarketInfo(sym,MODE_ASK),digits),
+            " | quoteTime=",TimeToString((datetime)MarketInfo(sym,MODE_TIME),TIME_DATE|TIME_SECONDS),
+            " | error=",err);
+   }
+}
+
 int OnInit()
 {
    ParseSymbols();
@@ -196,6 +230,7 @@ int OnInit()
       g_lastBar[i]=0;
       SymbolSelect(g_symbols[i],true);
    }
+   LogExecutionPreflight();
    EventSetTimer(1);
    Print("BITEY_ENSEMBLE_INIT | version=",EA_VERSION," | symbols=",g_symbolCount,
          " | maxPositions=",MaxPositions()," | tf=",(int)InpSignalTF,
@@ -497,8 +532,7 @@ int FamilyDir(int b,int s)
    return(0);
 }
 
-bool Analyze(string sym,int &cmd,double &score,string &why)
-{
+bool Analyze(string sym,int &cmd,double &score,string &why){
    cmd=-1; score=0.0; why="";
    int tf=InpSignalTF;
    double c1=iClose(sym,tf,1), c2=iClose(sym,tf,2);
@@ -997,8 +1031,7 @@ bool LossStreakBlock()
    datetime newest=0;
    for(int k=0;k<cnt;k++)
    {
-      int best=-1;
-      for(int j=0;j<cnt;j++)
+      int best=-1;      for(int j=0;j<cnt;j++)
          if(!used[j] && (best<0 || ct[j]>ct[best])) best=j;
       if(best<0) break;
       used[best]=true;
