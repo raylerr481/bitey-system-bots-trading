@@ -170,7 +170,7 @@ input double           InpReversalExitMinR       = 0.0;     // 0 = exit once net
 input bool             InpEnableTrading         = true;    // false = log candidates only
 input bool             InpLogRejects            = false;
 input bool             InpLogTradesCSV          = true;    // Per-trade MFE/MAE + gross/commission/swap/net CSV
-input bool             InpLogAssetSummaryCSV    = true;    // Per-asset net summary CSV in Common Files
+input bool             InpLogAssetSummaryCSV    = true;    // Per-asset net summary CSV in MQL4\\Files
 input int              InpRejectLogMinutes      = 60;      // Throttle SPREAD/COST reject logs per symbol (0 = log all)
 
 string   g_symbols[MAX_SYMBOLS];
@@ -1263,7 +1263,7 @@ void WriteAssetNetSummary()
    }
 
    string fn="Bitey_Ens_NetByAsset_"+IntegerToString(InpMagic)+".csv";
-   int h=FileOpen(fn,FILE_WRITE|FILE_CSV|FILE_COMMON|FILE_SHARE_READ|FILE_SHARE_WRITE,';');
+   int h=FileOpen(fn,FILE_WRITE|FILE_CSV|FILE_SHARE_READ|FILE_SHARE_WRITE,';');
    if(h==INVALID_HANDLE)
    {
       Print("NET_SUMMARY_OPEN_FAILED | file=",fn," error=",GetLastError(),
