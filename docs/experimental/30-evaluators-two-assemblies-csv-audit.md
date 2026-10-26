@@ -44,13 +44,18 @@ Files are opened in append mode and flushed/closed after each row. This favors a
 
 ## Important limitations
 
-- This commit adds the audit module only. It does **not** claim that the 30 evaluators or the two assemblies have been integrated into a complete EA.
+- The branch now contains the experimental EA and the audit module. Compilation, runtime logging, and Strategy Tester validation remain pending; this is not a production-ready or proven-profitable release.
 - The caller must supply valid values, including a stable decision ID, actual commission/swap, and real slippage when available. If slippage cannot be measured, pass a documented estimate and label it in the reason/note.
 - The module does not calculate profit factor, drawdown, model weights, or expected net value. It records those metrics supplied by the EA or an offline analysis.
-- In MT4, the `Digits` global refers to the current chart symbol. For multi-symbol logging, callers should pass normalized prices or extend the helper to use per-symbol digits.
+- The audit helper uses per-symbol digits for order prices. Some estimated-cost/expected-net fields are currently placeholders (zero) and must not be treated as measured costs or forecasts.
 - CSV output is not a substitute for comparing the broker history with the audit files.
 - Compilation, runtime logging, and Strategy Tester validation remain pending. Do not use this module as evidence of profitability or change the active EA based on it.
 
-## Next implementation stage
+## Validation still required
 
-Inventory existing signal functions; define 30 non-duplicative evaluators with out-of-sample weights; implement Assembly 1 asset selection and Assembly 2 direction/abstention; wire all decisions to these audit functions; preserve existing adaptive SL/TP and independent risk controls; then compare the experimental EA and baseline with identical MT4 conditions and transaction costs.
+1. Compile the experimental EA in MetaEditor and resolve any compiler diagnostics.
+2. Confirm the EA discovers the broker's actual symbol suffixes and that no more than five positions are open simultaneously.
+3. Verify BUY and SELL on symbols where broker permissions allow both directions; account type itself is not a gate, but broker permissions and risk guards remain authoritative.
+4. Confirm the adaptive SL/TP manager never widens stop-loss risk and that every modification is logged.
+5. Verify all CSVs in `MQL4/Files`, match the 30 evaluator rows to the two assemblies and the eventual ticket, and reconcile close net P/L against broker history.
+6. Run out-of-sample Strategy Tester and demo tests with spread, commission, swap, and slippage accounted for. Keep the production EA unchanged until these checks pass.
