@@ -34,11 +34,11 @@ These are rule-based technical evaluators, not 30 independently trained AI model
 
 ### Install and use
 
-1. Copy the include file to the terminal's `MQL4/Include` folder.
-2. Add `#include <Bitey_Ensemble_Experimental_CSV_Audit.mqh>` to the experimental EA.
-3. Assign one stable `decisionId` to each candidate decision; reuse it across the 30 evaluator rows, both assembly rows, and the resulting trade.
-4. Call `BiteyCsvLogTradeOpened` only after a successful order send. Call `BiteyCsvLogTradeClosed` once per closed order using actual history values.
-5. Compile in MetaEditor and inspect the generated CSVs in the terminal's `MQL4/Files` directory.
+1. Copy `MQL4/Include/Bitey_Ensemble_Experimental_CSV_Audit.mqh` into the terminal's `MQL4/Include` folder, preserving the path.
+2. Open `Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental.mq4` in MetaEditor; the include and logger calls are already wired into this experimental EA.
+3. Compile and fix any MetaEditor diagnostics before attaching it. Compilation has not been performed by this workflow.
+4. Run a Strategy Tester pass and a demo forward test, then inspect the CSVs in the terminal's `MQL4/Files` folder.
+5. Reconcile tickets and net P/L with MT4 Account History; do not treat the zero-valued expected-net/cost placeholders as measured values.
 
 Files are opened in append mode and flushed/closed after each row. This favors audit durability over speed; do not call every logger on every tick. Log at decision, order, exit-change, close, and snapshot events.
 
