@@ -745,7 +745,9 @@ bool OpenTrade(string sym,int cmd,double score,int regime)
          " lots=",DoubleToString(lots,2)," risk=",DoubleToString(risk,2)," costR=",DoubleToString(costR,3),
          " score=",DoubleToString(score,1)," SL=",DoubleToString(sl,digits)," TP=",DoubleToString(tp,digits));
    TrackOpen(ticket,stopDist);
-   string decisionId=sym+"_"+IntegerToString((int)iTime(sym,InpSignalTF,1));
+   datetime decisionBar=iTime(sym,InpSignalTF,1);
+   GlobalVariableSet(GvKey("DID",ticket),(double)decisionBar);
+   string decisionId=sym+"_"+IntegerToString((int)decisionBar);
    BiteyCsvLogTradeOpened(decisionId,EA_VERSION,ticket,sym,(cmd==OP_BUY?"BUY":"SELL"),
       lots,entry,sl,tp,InpReferenceCapitalUSD,risk,(IsTesting()?"TESTER":"TERMINAL"),"ORDER_ACCEPTED");
    return(true);
