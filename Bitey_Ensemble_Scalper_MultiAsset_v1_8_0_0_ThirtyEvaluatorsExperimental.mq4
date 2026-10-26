@@ -374,8 +374,18 @@ void RunCycle()
 
       if(CountOpenPositions()+nc>=maxPos) { Reject(sym,"MAX_POSITIONS"); continue; }
       int cmd; double score; string why;
-      if(!Prefilter(sym,why)) { Reject(sym,why); continue; }
-      if(!Analyze(sym,cmd,score,why)) { Reject(sym,why); continue; }
+      if(!Prefilter(sym,why))
+      {
+         BiteyCsvLogAssetAssembly(sym+"_"+IntegerToString((int)iTime(sym,InpSignalTF,1)),EA_VERSION,
+            sym,InpSignalTF,0.0,0.0,0.0,0,0,0,false,"PREFILTER_REJECT_"+why);
+         Reject(sym,why); continue;
+      }
+      if(!Analyze(sym,cmd,score,why))
+      {
+         BiteyCsvLogAssetAssembly(sym+"_"+IntegerToString((int)iTime(sym,InpSignalTF,1)),EA_VERSION,
+            sym,InpSignalTF,score,0.0,0.0,g_tmpValidModels,g_tmpBuyVotes,g_tmpSellVotes,false,"SIGNAL_REJECT_"+why);
+         Reject(sym,why); continue;
+      }
       if(cmd==OP_BUY && !InpAllowBuy)  { Reject(sym,"BUY_DISABLED");  continue; }
       if(cmd==OP_SELL && !InpAllowSell) { Reject(sym,"SELL_DISABLED"); continue; }
       BiteyCsvLogAssetAssembly(sym+"_"+IntegerToString((int)iTime(sym,InpSignalTF,1)),EA_VERSION,sym,InpSignalTF,
@@ -526,6 +536,7 @@ int FamilyDir(int b,int s)
 bool Analyze(string sym,int &cmd,double &score,string &why)
 {
    cmd=-1; score=0.0; why="";
+   g_tmpValidModels=0; g_tmpBuyVotes=0; g_tmpSellVotes=0;
    int tf=InpSignalTF;
    double c1=iClose(sym,tf,1), c2=iClose(sym,tf,2);
    double atr=iATR(sym,tf,InpATRPeriod,1);
