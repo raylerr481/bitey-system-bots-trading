@@ -45,7 +45,7 @@
 #property version   "1.74"
 #property description "Ensemble scalper v1.7.4: monotonic SL protection, adaptive TP enabled by default, trend-confirmed TP extension, net profit lock"
 
-#define EA_VERSION          "1.7.3"
+#define EA_VERSION          "1.7.4"
 #define MAX_SYMBOLS         256
 #define HARD_MAX_POSITIONS  5
 
