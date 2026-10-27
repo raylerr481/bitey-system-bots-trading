@@ -18,12 +18,18 @@ class EA_AuditContractTests(unittest.TestCase):
         self.assertIn("#define HARD_MAX_POSITIONS  5", self.source)
 
     def test_closed_trade_header_matches_writer_and_initializer(self):
-        headers = re.findall(
+        initializer_headers = re.findall(
             r'BiteyCsvOpenAppend\("Bitey_ClosedTrades_v1_8_0_2\.csv","([^"]+)"\)',
             self.source,
         )
-        self.assertGreaterEqual(len(headers), 2)
-        self.assertEqual(len(set(headers)), 1)
+        writer_match = re.search(
+            r'bool BiteyCsvLogTradeClosed\([\s\S]*?int h = BiteyCsvOpenAppend\(fn,\s*"([^"]+)"',
+            self.source,
+        )
+        self.assertEqual(len(initializer_headers), 1)
+        self.assertIsNotNone(writer_match)
+        self.assertEqual(initializer_headers[0], writer_match.group(1))
+        headers = [initializer_headers[0], writer_match.group(1)]
         expected = (
             "timestamp;decision_id;ea_version;ticket;magic;symbol;direction;lots;"
             "opened_at;closed_at;duration_seconds;open_price;close_price;gross_profit;"
