@@ -808,6 +808,10 @@ bool OpenTrade(string sym,int cmd,double score,int regime,int buyVotes,int sellV
    double risk=EstimateRisk(sym,lots,stopDist);
    if(!InpEnableTrading)
    {
+      BiteyCsvLogAction(decisionId,EA_VERSION,sym,"EXECUTION","DRY_RUN_CANDIDATE",0,
+         (cmd==OP_BUY?"BUY":"SELL"),score,
+         "TRADING_DISABLED lots="+DoubleToString(lots,2)+" risk="+DoubleToString(risk,2)+
+         " costR="+DoubleToString(costR,3)+" sl="+DoubleToString(sl,digits)+" tp="+DoubleToString(tp,digits));
       Print("DRY_RUN_CANDIDATE | symbol=",sym," side=",(cmd==OP_BUY?"BUY":"SELL")," score=",DoubleToString(score,1),
             " lots=",DoubleToString(lots,2)," risk=",DoubleToString(risk,2)," costR=",DoubleToString(costR,3),
             " SL=",DoubleToString(sl,digits)," TP=",DoubleToString(tp,digits));
@@ -830,8 +834,11 @@ bool OpenTrade(string sym,int cmd,double score,int regime,int buyVotes,int sellV
    Print("ORDER_ACCEPTED | ticket=",ticket," symbol=",sym," side=",(cmd==OP_BUY?"BUY":"SELL"),
          " lots=",DoubleToString(lots,2)," risk=",DoubleToString(risk,2)," costR=",DoubleToString(costR,3),
          " score=",DoubleToString(score,1)," SL=",DoubleToString(sl,digits)," TP=",DoubleToString(tp,digits));
-   TrackOpen(ticket,stopDist);
+   double filledEntry=entry;
+   if(OrderSelect(ticket,SELECT_BY_TICKET,MODE_TRADES)) filledEntry=OrderOpenPrice();
+   TrackOpen(ticket,MathAbs(filledEntry-sl));
    GlobalVariableSet(GvKey("DID",ticket),(double)decisionBar);
+   GlobalVariableSet(GvKey("REQPX",ticket),entry);
    GlobalVariableSet(GvKey("BUYV",ticket),(double)buyVotes);
    GlobalVariableSet(GvKey("SELLV",ticket),(double)sellVotes);
    GlobalVariableSet(GvKey("MAGIC",ticket),(double)InpMagic);
@@ -1308,8 +1315,9 @@ void LogClosedTrades()
       int ticket=OrderTicket();
       string kd=GvKey("LOG",ticket);
       if(GlobalVariableCheck(kd)) continue;
-      GlobalVariableSet(kd,1.0);                       // claim first so a second copy does not write the same row
-      if(!WriteTradeRow(ticket)) GlobalVariableDel(kd);
+      // Persist the claim only after the audit row is confirmed. If the terminal stops
+      // during a write, the next scan retries; CSV ticket dedupe prevents duplicates.
+      if(WriteTradeRow(ticket)) GlobalVariableSet(kd,1.0);
    }
 }
 void WriteAssetNetSummary()
