@@ -1091,6 +1091,7 @@ double PeriodNet(datetime ds)
 bool InCooldown(string sym)
 {
    datetime latest=0; double latestNet=0.0;
+   int seen=0;
    for(int i=OrdersHistoryTotal()-1;i>=0 && seen<120;i--)
    {
       if(!OrderSelect(i,SELECT_BY_POS,MODE_HISTORY)) continue;
