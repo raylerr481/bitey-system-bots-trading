@@ -1,0 +1,355 @@
+0	00:00:01.246	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=MSTRUSDT spread=0.10 stop=0.99 maxPct=10.0
+0	00:00:04.268	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-12.30 recentPF=0.46 multiplier=0.50 perTradeBudget=1.25
+0	00:00:04.268	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=ETHUSD reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	00:00:04.268	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=GRTUSD spread=0.00111 stop=0.00113 maxPct=10.0
+0	00:00:10.270	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-12.30 recentPF=0.46 multiplier=0.50 perTradeBudget=1.25
+0	00:00:10.270	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=BTCUSD reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	00:00:18.296	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=DOTUSD spread=0.004 stop=0.007 maxPct=10.0
+0	00:01:19.376	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=0/5 dayNet=-1.16 monthNet=-20.17 symbols=114 lossStreakPause=off equityHalt=off
+0	00:06:19.862	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=0/5 dayNet=-1.16 monthNet=-20.17 symbols=114 lossStreakPause=off equityHalt=off
+0	00:11:19.362	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=0/5 dayNet=-1.16 monthNet=-20.17 symbols=114 lossStreakPause=off equityHalt=off
+0	00:15:04.490	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=AAVEUSD costR=0.245 max=0.200
+0	00:15:04.490	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-12.30 recentPF=0.46 multiplier=0.50 perTradeBudget=1.25
+0	00:15:04.490	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=BNBUSD.hb reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	00:15:04.490	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=NEARUSDT spread=0.013 stop=0.055 maxPct=10.0
+0	00:15:04.490	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=ETCUSD spread=0.011 stop=0.039 maxPct=10.0
+0	00:15:17.607	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-12.30 recentPF=0.46 multiplier=0.50 perTradeBudget=1.25
+0	00:15:17.607	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=BTCUSD reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	00:15:17.609	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-12.30 recentPF=0.46 multiplier=0.50 perTradeBudget=1.25
+0	00:15:17.609	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=ETHUSD reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	00:15:17.609	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=AVAXUSD spread=0.010 stop=0.048 maxPct=10.0
+0	00:15:28.592	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=AMZNUSDT spread=0.50 stop=0.52 maxPct=10.0
+0	00:16:19.733	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=0/5 dayNet=-1.16 monthNet=-20.17 symbols=114 lossStreakPause=off equityHalt=off
+0	00:21:19.282	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=0/5 dayNet=-1.16 monthNet=-20.17 symbols=114 lossStreakPause=off equityHalt=off
+0	00:26:19.797	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=0/5 dayNet=-1.16 monthNet=-20.17 symbols=114 lossStreakPause=off equityHalt=off
+0	00:30:04.242	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=SPCXUSDT spread=0.16 stop=0.46 maxPct=10.0
+0	00:30:04.242	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=BCHUSD.hb spread=0.51 stop=2.26 maxPct=10.0
+0	00:30:05.188	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-12.30 recentPF=0.46 multiplier=0.50 perTradeBudget=1.25
+0	00:30:05.188	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=BNBUSD.hb reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	00:30:21.185	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=METAUSDT spread=0.50 stop=1.53 maxPct=10.0
+0	00:30:21.185	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=TRXUSDT spread=0.00021 stop=0.00033 maxPct=10.0
+0	00:30:21.185	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=GOOGLUSDT spread=0.50 stop=0.61 maxPct=10.0
+0	00:31:19.325	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=0/5 dayNet=-1.16 monthNet=-20.17 symbols=114 lossStreakPause=off equityHalt=off
+0	00:36:19.875	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=0/5 dayNet=-1.16 monthNet=-20.17 symbols=114 lossStreakPause=off equityHalt=off
+0	00:41:19.376	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=0/5 dayNet=-1.16 monthNet=-20.17 symbols=114 lossStreakPause=off equityHalt=off
+0	00:45:01.701	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=XRPUSDT spread=0.00110 stop=0.00667 maxPct=10.0
+0	00:45:01.701	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=EWYUSDT spread=0.16 stop=1.17 maxPct=10.0
+0	00:45:08.734	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=ASTERUSDT spread=0.0004 stop=0.0030 maxPct=10.0
+0	00:46:19.811	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=0/5 dayNet=-1.16 monthNet=-20.17 symbols=114 lossStreakPause=off equityHalt=off
+0	00:51:19.269	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=0/5 dayNet=-1.16 monthNet=-20.17 symbols=114 lossStreakPause=off equityHalt=off
+0	00:56:19.627	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=0/5 dayNet=-1.16 monthNet=-20.17 symbols=114 lossStreakPause=off equityHalt=off
+0	01:00:02.253	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-12.30 recentPF=0.46 multiplier=0.50 perTradeBudget=1.25
+2	01:00:02.527	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: open #95771805 sell 0.01 EURNZD at 1.95875 sl: 1.96064 tp: 1.95460 ok
+0	01:00:02.527	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ORDER_ACCEPTED | ticket=95771805 symbol=EURNZD side=SELL lots=0.01 risk=1.18 costR=0.172 score=39.8 RR=2.20 SL=1.96064 TP=1.95460
+0	01:00:02.527	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-12.30 recentPF=0.46 multiplier=0.50 perTradeBudget=1.25
+0	01:00:02.527	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=ETHUSD reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	01:00:02.529	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=NZDCHF rawScore=38.2 overlap=1.0 adjScore=34.2
+0	01:00:02.529	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=NZDCHF costR=0.235 max=0.200
+0	01:00:02.529	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=EURCAD rawScore=33.5 overlap=1.0 adjScore=29.5
+0	01:00:02.529	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=EURCAD spread=0.00010 stop=0.00058 maxPct=10.0
+0	01:00:25.141	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-12.30 recentPF=0.46 multiplier=0.50 perTradeBudget=1.25
+0	01:00:25.141	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=BTCUSD reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	01:00:25.141	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=SOLUSD spread=0.059 stop=0.424 maxPct=10.0
+0	01:00:25.141	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=DOTUSD spread=0.004 stop=0.008 maxPct=10.0
+0	01:00:50.140	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=ALGOUSD spread=0.0004 stop=0.0007 maxPct=10.0
+0	01:01:01.160	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=FILUSD spread=0.005 stop=0.008 maxPct=10.0
+0	01:01:19.220	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=1/5 dayNet=-1.35 monthNet=-20.36 symbols=114 lossStreakPause=off equityHalt=off
+0	01:06:19.453	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=1/5 dayNet=-1.30 monthNet=-20.31 symbols=114 lossStreakPause=off equityHalt=off
+0	01:11:19.874	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=1/5 dayNet=-1.36 monthNet=-20.37 symbols=114 lossStreakPause=off equityHalt=off
+0	01:15:02.520	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=GBPCAD spread=0.00008 stop=0.00061 maxPct=10.0
+0	01:15:02.520	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=EURCAD rawScore=51.6 overlap=1.0 adjScore=47.6
+0	01:15:02.520	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=AUDCHF costR=0.246 max=0.200
+0	01:15:02.520	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=CADJPY costR=0.276 max=0.200
+0	01:15:04.431	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-12.30 recentPF=0.46 multiplier=0.50 perTradeBudget=1.25
+2	01:15:04.700	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: open #95771812 sell 0.01 GBPAUD at 1.89756 sl: 1.89897 tp: 1.89447 ok
+0	01:15:04.700	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ORDER_ACCEPTED | ticket=95771812 symbol=GBPAUD side=SELL lots=0.01 risk=1.09 costR=0.172 score=38.8 RR=2.20 SL=1.89897 TP=1.89447
+0	01:15:26.477	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=MANAUSD.hb costR=3.000 max=0.200
+0	01:16:19.546	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=2/5 dayNet=-1.65 monthNet=-20.66 symbols=114 lossStreakPause=off equityHalt=off
+0	01:21:19.200	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=2/5 dayNet=-2.03 monthNet=-21.04 symbols=114 lossStreakPause=off equityHalt=off
+0	01:26:19.689	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=2/5 dayNet=-2.18 monthNet=-21.19 symbols=114 lossStreakPause=off equityHalt=off
+0	01:30:02.215	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-12.30 recentPF=0.46 multiplier=0.50 perTradeBudget=1.25
+0	01:30:02.215	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=UKOIL reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	01:30:02.216	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-12.30 recentPF=0.46 multiplier=0.50 perTradeBudget=1.25
+0	01:30:02.216	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=US100 reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	01:30:03.062	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-12.30 recentPF=0.46 multiplier=0.50 perTradeBudget=1.25
+0	01:30:03.062	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=BTCUSD reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	01:30:03.062	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-12.30 recentPF=0.46 multiplier=0.50 perTradeBudget=1.25
+0	01:30:03.062	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=TAOUSDT reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	01:30:03.062	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=AAVEUSD costR=0.238 max=0.200
+0	01:30:05.061	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=NEARUSDT spread=0.013 stop=0.054 maxPct=10.0
+0	01:30:05.061	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=ETCUSD spread=0.011 stop=0.037 maxPct=10.0
+0	01:30:10.048	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-12.30 recentPF=0.46 multiplier=0.50 perTradeBudget=1.25
+0	01:30:10.048	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=ETHUSD reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	01:30:10.048	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=SPCXUSDT spread=0.16 stop=0.45 maxPct=10.0
+0	01:30:10.048	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=LINKUSD.hb spread=0.0110 stop=0.0699 maxPct=10.0
+0	01:30:14.053	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-12.30 recentPF=0.46 multiplier=0.50 perTradeBudget=1.25
+0	01:30:14.053	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=BNBUSD.hb reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	01:30:14.053	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=DASHUSD spread=0.17 stop=0.71 maxPct=10.0
+0	01:30:23.084	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-12.30 recentPF=0.46 multiplier=0.50 perTradeBudget=1.25
+0	01:30:23.084	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=USOIL reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	01:30:35.088	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=AVAXUSD spread=0.010 stop=0.053 maxPct=10.0
+0	01:30:35.088	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=HBARUSDT spread=0.00021 stop=0.00045 maxPct=10.0
+0	01:31:19.204	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=2/5 dayNet=-2.52 monthNet=-21.53 symbols=114 lossStreakPause=off equityHalt=off
+0	01:36:19.672	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=2/5 dayNet=-2.79 monthNet=-21.80 symbols=114 lossStreakPause=off equityHalt=off
+0	01:41:19.187	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=1/5 dayNet=-3.05 monthNet=-22.06 symbols=114 lossStreakPause=off equityHalt=off
+0	01:45:06.658	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-11.68 recentPF=0.48 multiplier=0.50 perTradeBudget=1.25
+0	01:45:06.658	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=ETHUSD reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	01:45:06.658	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=EURGBP spread=0.00003 stop=0.00018 maxPct=10.0
+0	01:45:26.563	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=IBMUSDT spread=0.10 stop=0.17 maxPct=10.0
+0	01:45:26.563	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=METAUSDT spread=0.50 stop=1.19 maxPct=10.0
+0	01:45:44.581	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-10.93 recentPF=0.49 multiplier=0.50 perTradeBudget=1.25
+0	01:45:44.581	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=BTCUSD reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	01:46:19.655	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=0/5 dayNet=-3.42 monthNet=-22.43 symbols=114 lossStreakPause=off equityHalt=off
+0	01:46:34.700	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=ASTERUSDT spread=0.0004 stop=0.0026 maxPct=10.0
+0	01:46:34.700	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=IOTAUSD spread=0.0018 stop=0.0020 maxPct=10.0
+0	01:51:19.216	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=0/5 dayNet=-3.42 monthNet=-22.43 symbols=114 lossStreakPause=off equityHalt=off
+0	01:56:19.858	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=0/5 dayNet=-3.42 monthNet=-22.43 symbols=114 lossStreakPause=off equityHalt=off
+0	02:00:01.529	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=EURUSD costR=0.279 max=0.200
+0	02:00:01.529	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=AUDUSD costR=0.246 max=0.200
+0	02:00:01.531	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=USDCHF spread=0.00006 stop=0.00045 maxPct=10.0
+0	02:00:01.531	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=CHFJPY spread=0.014 stop=0.092 maxPct=10.0
+0	02:00:04.381	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-10.93 recentPF=0.49 multiplier=0.50 perTradeBudget=1.25
+0	02:00:04.381	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=US30 reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	02:00:04.381	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-10.93 recentPF=0.49 multiplier=0.50 perTradeBudget=1.25
+0	02:00:04.381	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=UKOIL reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	02:00:04.381	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-10.93 recentPF=0.49 multiplier=0.50 perTradeBudget=1.25
+0	02:00:04.381	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=USOIL reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	02:00:04.381	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=DAX40 spread=5.40 stop=21.61 maxPct=10.0
+0	02:00:04.381	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=TRXUSDT spread=0.00021 stop=0.00024 maxPct=10.0
+0	02:01:19.484	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=0/5 dayNet=-3.42 monthNet=-22.43 symbols=114 lossStreakPause=off equityHalt=off
+0	02:06:19.983	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=0/5 dayNet=-3.42 monthNet=-22.43 symbols=114 lossStreakPause=off equityHalt=off
+0	02:11:20.564	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=0/5 dayNet=-3.42 monthNet=-22.43 symbols=114 lossStreakPause=off equityHalt=off
+0	02:15:02.210	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=EURJPY spread=0.008 stop=0.078 maxPct=10.0
+0	02:15:02.211	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-10.93 recentPF=0.49 multiplier=0.50 perTradeBudget=1.25
+2	02:15:02.558	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: open #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.59139 tp: 1.58755 ok
+0	02:15:02.558	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ORDER_ACCEPTED | ticket=95771859 symbol=EURAUD side=SELL lots=0.01 risk=0.94 costR=0.169 score=32.9 RR=2.20 SL=1.59139 TP=1.58755
+0	02:15:02.562	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=EURCAD rawScore=29.1 overlap=1.0 adjScore=25.1
+0	02:15:02.562	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=EURCAD spread=0.00012 stop=0.00046 maxPct=10.0
+0	02:15:04.075	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=GBPUSD costR=0.241 max=0.200
+0	02:15:04.091	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=GBPCAD spread=0.00009 stop=0.00054 maxPct=10.0
+0	02:15:04.091	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=SOLUSD spread=0.059 stop=0.370 maxPct=10.0
+0	02:15:06.143	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=USDCAD spread=0.00005 stop=0.00049 maxPct=10.0
+0	02:15:09.051	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=ALGOUSD spread=0.0005 stop=0.0007 maxPct=10.0
+0	02:15:31.175	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-10.93 recentPF=0.49 multiplier=0.50 perTradeBudget=1.25
+0	02:15:31.175	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=USOIL reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	02:16:20.278	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=1/5 dayNet=-3.61 monthNet=-22.62 symbols=114 lossStreakPause=off equityHalt=off
+0	02:21:20.890	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=1/5 dayNet=-3.61 monthNet=-22.62 symbols=114 lossStreakPause=off equityHalt=off
+0	02:26:20.406	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=1/5 dayNet=-3.73 monthNet=-22.74 symbols=114 lossStreakPause=off equityHalt=off
+0	02:30:03.791	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=EURUSD rawScore=48.7 overlap=1.0 adjScore=44.7
+0	02:30:03.793	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=AUDCAD costR=0.272 max=0.200
+0	02:30:03.793	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=EURCAD rawScore=28.4 overlap=1.0 adjScore=24.4
+0	02:30:04.703	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=MANAUSD.hb spread=0.0001 stop=0.0005 maxPct=10.0
+0	02:30:10.732	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=AMZNUSDT spread=0.50 stop=0.52 maxPct=10.0
+0	02:31:20.842	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=1/5 dayNet=-3.68 monthNet=-22.69 symbols=114 lossStreakPause=off equityHalt=off
+0	02:36:20.390	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=1/5 dayNet=-3.73 monthNet=-22.74 symbols=114 lossStreakPause=off equityHalt=off
+0	02:41:19.984	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=1/5 dayNet=-3.81 monthNet=-22.82 symbols=114 lossStreakPause=off equityHalt=off
+0	02:45:07.478	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=XRPUSDT spread=0.00110 stop=0.00565 maxPct=10.0
+0	02:45:07.478	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=CADJPY costR=0.340 max=0.200
+0	02:46:20.486	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=1/5 dayNet=-3.90 monthNet=-22.91 symbols=114 lossStreakPause=off equityHalt=off
+0	02:51:19.998	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=1/5 dayNet=-3.80 monthNet=-22.81 symbols=114 lossStreakPause=off equityHalt=off
+0	02:56:20.421	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=1/5 dayNet=-3.33 monthNet=-22.34 symbols=114 lossStreakPause=off equityHalt=off
+0	03:00:01.984	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=GBPJPY spread=0.018 stop=0.119 maxPct=10.0
+0	03:00:01.984	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=NZDJPY costR=0.219 max=0.200
+0	03:00:01.984	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=AUDJPY rawScore=34.7 overlap=1.0 adjScore=30.7
+0	03:00:01.984	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=AUDJPY costR=0.209 max=0.200
+0	03:00:01.984	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=AUDNZD spread=0.00014 stop=0.00077 maxPct=10.0
+0	03:00:02.963	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=DASHUSD spread=0.15 stop=0.67 maxPct=10.0
+0	03:00:26.986	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=IBMUSDT spread=0.10 stop=0.22 maxPct=10.0
+0	03:01:02.046	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=ASTERUSDT spread=0.0004 stop=0.0020 maxPct=10.0
+0	03:01:20.094	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=1/5 dayNet=-3.51 monthNet=-22.52 symbols=114 lossStreakPause=off equityHalt=off
+0	03:06:20.503	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=1/5 dayNet=-3.44 monthNet=-22.45 symbols=114 lossStreakPause=off equityHalt=off
+0	03:11:20.030	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=1/5 dayNet=-3.50 monthNet=-22.51 symbols=114 lossStreakPause=off equityHalt=off
+0	03:15:01.356	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-10.93 recentPF=0.49 multiplier=0.50 perTradeBudget=1.25
+2	03:15:01.637	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: open #95771922 buy 0.01 USDJPY at 157.786 sl: 157.688 tp: 157.933 ok
+0	03:15:01.637	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ORDER_ACCEPTED | ticket=95771922 symbol=USDJPY side=BUY lots=0.01 risk=0.72 costR=0.161 score=52.6 RR=1.50 SL=157.688 TP=157.933
+0	03:15:01.637	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=NZDJPY rawScore=35.2 overlap=1.0 adjScore=31.2
+0	03:15:01.637	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=GBPJPY rawScore=35.0 overlap=1.0 adjScore=31.0
+0	03:15:01.637	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=AUDJPY rawScore=36.4 overlap=2.0 adjScore=28.4
+0	03:15:01.637	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-10.93 recentPF=0.49 multiplier=0.50 perTradeBudget=1.25
+2	03:15:01.903	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: open #95771923 buy 0.01 AUDJPY at 110.788 sl: 110.684 tp: 110.981 ok
+0	03:15:01.903	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ORDER_ACCEPTED | ticket=95771923 symbol=AUDJPY side=BUY lots=0.01 risk=0.77 costR=0.187 score=36.4 RR=1.80 SL=110.684 TP=110.981
+0	03:15:02.389	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=USDCAD rawScore=30.2 overlap=1.0 adjScore=26.2
+0	03:15:04.402	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=US500 spread=1.05 stop=8.71 maxPct=10.0
+0	03:15:04.402	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=SPCXUSDT spread=0.16 stop=0.45 maxPct=10.0
+0	03:15:05.436	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=SOLUSD spread=0.059 stop=0.345 maxPct=10.0
+0	03:15:07.396	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=AAVEUSD spread=0.10 stop=0.85 maxPct=10.0
+0	03:15:07.396	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=AVAXUSD spread=0.010 stop=0.059 maxPct=10.0
+0	03:15:09.393	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=GOOGLUSDT spread=0.50 stop=0.54 maxPct=10.0
+0	03:15:20.451	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=TRXUSDT spread=0.00021 stop=0.00029 maxPct=10.0
+0	03:16:05.489	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=DOTUSD spread=0.004 stop=0.006 maxPct=10.0
+0	03:16:05.489	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=FILUSD spread=0.005 stop=0.007 maxPct=10.0
+0	03:16:20.548	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=3/5 dayNet=-3.75 monthNet=-22.76 symbols=114 lossStreakPause=off equityHalt=off
+0	03:21:20.126	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=3/5 dayNet=-3.77 monthNet=-22.78 symbols=114 lossStreakPause=off equityHalt=off
+0	03:26:20.735	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=3/5 dayNet=-3.56 monthNet=-22.57 symbols=114 lossStreakPause=off equityHalt=off
+0	03:30:04.112	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: CORRELATION_BLOCK | symbol=EURJPY reason=FX_CURRENCY_EXPOSURE_CAP JPY net=-3
+0	03:30:09.197	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=METAUSDT spread=0.50 stop=1.37 maxPct=10.0
+0	03:30:48.268	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=ALGOUSD spread=0.0004 stop=0.0006 maxPct=10.0
+0	03:31:20.342	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=3/5 dayNet=-3.34 monthNet=-22.35 symbols=114 lossStreakPause=off equityHalt=off
+0	03:36:20.919	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=3/5 dayNet=-3.90 monthNet=-22.91 symbols=114 lossStreakPause=off equityHalt=off
+0	03:41:20.454	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=3/5 dayNet=-4.07 monthNet=-23.08 symbols=114 lossStreakPause=off equityHalt=off
+0	03:45:01.935	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=EURUSD rawScore=37.7 overlap=2.0 adjScore=29.7
+0	03:45:01.935	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=EURUSD costR=0.262 max=0.200
+0	03:45:01.935	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=EURCAD rawScore=27.0 overlap=1.0 adjScore=23.0
+0	03:45:01.935	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=EURCAD spread=0.00011 stop=0.00047 maxPct=10.0
+0	03:45:02.902	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=AUDCAD costR=0.286 max=0.200
+0	03:45:02.902	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=USDCAD rawScore=31.1 overlap=1.0 adjScore=27.1
+0	03:45:02.902	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=USDCAD costR=0.383 max=0.200
+0	03:46:20.044	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=3/5 dayNet=-3.96 monthNet=-22.97 symbols=114 lossStreakPause=off equityHalt=off
+0	03:51:20.389	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=3/5 dayNet=-3.93 monthNet=-22.94 symbols=114 lossStreakPause=off equityHalt=off
+0	03:56:20.751	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=3/5 dayNet=-4.17 monthNet=-23.18 symbols=114 lossStreakPause=off equityHalt=off
+0	04:00:01.129	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=EURCAD rawScore=46.7 overlap=1.0 adjScore=42.7
+0	04:00:01.129	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=NZDCAD costR=0.334 max=0.200
+0	04:00:02.227	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=EURNZD rawScore=35.2 overlap=1.0 adjScore=31.2
+0	04:00:02.227	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=EURNZD costR=0.212 max=0.200
+0	04:00:02.227	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=USDCAD rawScore=32.3 overlap=1.0 adjScore=28.3
+0	04:00:04.231	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-10.93 recentPF=0.49 multiplier=0.50 perTradeBudget=1.25
+0	04:00:04.231	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=BTCUSD reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	04:00:17.265	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=ONDOUSDT spread=0.0004 stop=0.0024 maxPct=10.0
+0	04:01:20.328	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=3/5 dayNet=-3.65 monthNet=-22.66 symbols=114 lossStreakPause=off equityHalt=off
+0	04:06:20.562	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=3/5 dayNet=-3.42 monthNet=-22.43 symbols=114 lossStreakPause=off equityHalt=off
+0	04:11:20.171	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=3/5 dayNet=-4.29 monthNet=-23.30 symbols=114 lossStreakPause=off equityHalt=off
+0	04:15:01.364	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=EURCAD rawScore=47.2 overlap=1.0 adjScore=43.2
+0	04:15:02.430	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=GBPCAD spread=0.00009 stop=0.00062 maxPct=10.0
+0	04:15:02.430	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=GBPNZD spread=0.00017 stop=0.00150 maxPct=10.0
+0	04:15:03.499	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=DASHUSD spread=0.16 stop=0.62 maxPct=10.0
+0	04:15:06.426	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=ETHUSD spread=0.96 stop=8.64 maxPct=10.0
+0	04:15:06.426	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-10.93 recentPF=0.49 multiplier=0.50 perTradeBudget=1.25
+0	04:15:06.426	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=BTCUSD reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	04:15:12.518	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=AVAXUSD spread=0.010 stop=0.053 maxPct=10.0
+0	04:15:18.453	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=AAVEUSD spread=0.10 stop=0.79 maxPct=10.0
+0	04:15:18.453	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=SOLUSD spread=0.059 stop=0.353 maxPct=10.0
+0	04:15:20.501	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=GOOGLUSDT spread=0.50 stop=0.52 maxPct=10.0
+0	04:15:27.513	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=BNBUSD.hb spread=0.21 stop=1.87 maxPct=10.0
+0	04:15:59.567	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=TRXUSDT spread=0.00021 stop=0.00035 maxPct=10.0
+0	04:16:07.582	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=ETCUSD spread=0.011 stop=0.029 maxPct=10.0
+0	04:16:20.550	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=3/5 dayNet=-4.46 monthNet=-23.47 symbols=114 lossStreakPause=off equityHalt=off
+0	04:16:33.658	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=WMTUSDT spread=0.15 stop=0.17 maxPct=10.0
+0	04:21:20.110	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=3/5 dayNet=-4.85 monthNet=-23.86 symbols=114 lossStreakPause=off equityHalt=off
+0	04:26:20.467	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=2/5 dayNet=-5.06 monthNet=-24.07 symbols=114 lossStreakPause=off equityHalt=off
+0	04:30:02.016	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=HK50 spread=9.00 stop=68.18 maxPct=10.0
+0	04:30:02.016	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-9.50 recentPF=0.53 multiplier=0.50 perTradeBudget=1.25
+0	04:30:02.016	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=XAUUSD reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	04:30:02.016	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=USDCAD rawScore=35.0 overlap=1.0 adjScore=31.0
+0	04:30:06.884	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=ASTERUSDT spread=0.0004 stop=0.0019 maxPct=10.0
+0	04:31:20.029	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=2/5 dayNet=-5.17 monthNet=-24.18 symbols=114 lossStreakPause=off equityHalt=off
+0	04:36:20.424	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=2/5 dayNet=-5.08 monthNet=-24.09 symbols=114 lossStreakPause=off equityHalt=off
+0	04:41:21.035	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=2/5 dayNet=-4.94 monthNet=-23.95 symbols=114 lossStreakPause=off equityHalt=off
+0	04:45:01.394	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=CADJPY rawScore=33.3 overlap=1.0 adjScore=29.3
+0	04:45:01.394	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=CADJPY costR=0.223 max=0.200
+0	04:45:01.394	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=EURCAD rawScore=32.3 overlap=1.0 adjScore=28.3
+0	04:45:01.394	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=EURCAD spread=0.00009 stop=0.00065 maxPct=10.0
+0	04:45:01.394	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=NZDJPY rawScore=27.0 overlap=1.0 adjScore=23.0
+0	04:45:01.394	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=NZDJPY costR=0.208 max=0.200
+0	04:45:02.403	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-9.50 recentPF=0.53 multiplier=0.50 perTradeBudget=1.25
+0	04:45:02.403	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=ZECUSDT reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	04:45:03.399	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-9.50 recentPF=0.53 multiplier=0.50 perTradeBudget=1.25
+2	04:45:03.653	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: open #95772067 sell 0.01 GBPNZD at 2.34095 sl: 2.34255 tp: 2.33808 ok
+0	04:45:03.653	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ORDER_ACCEPTED | ticket=95772067 symbol=GBPNZD side=SELL lots=0.01 risk=1.01 costR=0.197 score=36.6 RR=1.80 SL=2.34255 TP=2.33808
+0	04:45:03.653	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=AUDCAD costR=0.265 max=0.200
+0	04:45:03.653	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=GBPAUD rawScore=34.0 overlap=2.0 adjScore=26.0
+0	04:45:03.653	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=GBPAUD costR=0.204 max=0.200
+0	04:45:06.407	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-9.50 recentPF=0.53 multiplier=0.50 perTradeBudget=1.25
+0	04:45:06.407	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=BTCUSD reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	04:46:21.499	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=3/5 dayNet=-5.17 monthNet=-24.18 symbols=114 lossStreakPause=off equityHalt=off
+0	04:51:21.012	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=3/5 dayNet=-4.71 monthNet=-23.72 symbols=114 lossStreakPause=off equityHalt=off
+0	04:56:21.362	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=3/5 dayNet=-5.11 monthNet=-24.12 symbols=114 lossStreakPause=off equityHalt=off
+0	05:00:01.776	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=EURJPY rawScore=36.7 overlap=1.0 adjScore=32.7
+0	05:00:01.776	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-9.50 recentPF=0.53 multiplier=0.50 perTradeBudget=1.25
+2	05:00:02.045	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: open #95772079 buy 0.01 EURJPY at 176.182 sl: 176.050 tp: 176.420 ok
+0	05:00:02.045	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ORDER_ACCEPTED | ticket=95772079 symbol=EURJPY side=BUY lots=0.01 risk=0.94 costR=0.165 score=36.7 RR=1.80 SL=176.050 TP=176.420
+0	05:00:02.047	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: CORRELATION_BLOCK | symbol=GBPJPY reason=FX_CURRENCY_EXPOSURE_CAP JPY net=-3
+0	05:00:02.770	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=AUDUSD rawScore=38.8 overlap=1.0 adjScore=34.8
+0	05:00:02.770	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=AUDUSD costR=0.220 max=0.200
+0	05:00:04.779	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=NZDUSD rawScore=29.4 overlap=1.0 adjScore=25.4
+0	05:00:04.779	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=NZDUSD costR=0.250 max=0.200
+0	05:01:21.935	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=4/5 dayNet=-4.97 monthNet=-23.98 symbols=114 lossStreakPause=off equityHalt=off
+0	05:06:21.374	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=4/5 dayNet=-4.39 monthNet=-23.40 symbols=114 lossStreakPause=off equityHalt=off
+0	05:11:21.576	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=4/5 dayNet=-4.48 monthNet=-23.49 symbols=114 lossStreakPause=off equityHalt=off
+2	05:12:08.925	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58994 tp: 1.58755 ok
+0	05:12:08.925	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.59139->1.58994 TP 1.58755->1.58755
+0	05:15:03.020	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-9.50 recentPF=0.53 multiplier=0.50 perTradeBudget=1.25
+0	05:15:03.020	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=ZECUSDT reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	05:15:04.064	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_RISK_GOVERNOR | n=20 recentNet=-9.50 recentPF=0.53 multiplier=0.50 perTradeBudget=1.25
+0	05:15:04.064	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: RISK_REJECT | symbol=HYPEUSDT reason=MIN_LOT_EXCEEDS_BUDGET_OR_CAP budget=1.25
+0	05:15:07.007	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: DIVERSIFY_RANK | symbol=USDCAD rawScore=38.7 overlap=1.0 adjScore=34.7
+0	05:15:07.007	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: COST_REJECT | symbol=USDCAD costR=0.243 max=0.200
+0	05:16:21.070	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=4/5 dayNet=-4.77 monthNet=-23.78 symbols=114 lossStreakPause=off equityHalt=off
+2	05:16:36.372	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58993 tp: 1.58755 ok
+0	05:16:36.372	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58994->1.58993 TP 1.58755->1.58755
+0	05:17:02.069	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=TRXUSDT spread=0.00021 stop=0.00041 maxPct=10.0
+2	05:17:24.482	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58971 tp: 1.58755 ok
+0	05:17:24.482	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58993->1.58971 TP 1.58755->1.58755
+0	05:18:01.248	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: SPREAD_VS_STOP_REJECT | symbol=VUSDT spread=0.55 stop=0.57 maxPct=10.0
+0	05:21:21.530	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=4/5 dayNet=-4.51 monthNet=-23.52 symbols=114 lossStreakPause=off equityHalt=off
+0	05:26:22.032	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=2/5 dayNet=-5.41 monthNet=-24.42 symbols=114 lossStreakPause=ON equityHalt=off
+0	05:31:21.390	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=2/5 dayNet=-5.75 monthNet=-24.76 symbols=114 lossStreakPause=ON equityHalt=off
+0	05:36:22.063	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=2/5 dayNet=-5.72 monthNet=-24.73 symbols=114 lossStreakPause=ON equityHalt=off
+0	05:41:22.388	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=2/5 dayNet=-5.47 monthNet=-24.48 symbols=114 lossStreakPause=ON equityHalt=off
+0	05:46:22.763	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=2/5 dayNet=-5.47 monthNet=-24.48 symbols=114 lossStreakPause=ON equityHalt=off
+2	05:47:20.139	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58963 tp: 1.58755 ok
+0	05:47:20.139	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58971->1.58963 TP 1.58755->1.58755
+2	05:47:28.154	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58954 tp: 1.58755 ok
+0	05:47:28.154	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58963->1.58954 TP 1.58755->1.58755
+2	05:47:41.186	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58947 tp: 1.58755 ok
+0	05:47:41.186	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58954->1.58947 TP 1.58755->1.58755
+2	05:47:58.091	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58936 tp: 1.58755 ok
+0	05:47:58.091	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58947->1.58936 TP 1.58755->1.58755
+2	05:48:07.169	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58928 tp: 1.58755 ok
+0	05:48:07.169	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58936->1.58928 TP 1.58755->1.58755
+2	05:48:42.228	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58905 tp: 1.58755 ok
+0	05:48:42.228	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58928->1.58905 TP 1.58755->1.58755
+2	05:49:17.278	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58897 tp: 1.58755 ok
+0	05:49:17.278	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58905->1.58897 TP 1.58755->1.58755
+2	05:49:41.326	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58897 tp: 1.58737 ok
+0	05:49:41.326	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58897->1.58897 TP 1.58755->1.58737
+2	05:49:53.389	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58887 tp: 1.58737 ok
+0	05:49:53.389	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58897->1.58887 TP 1.58737->1.58737
+2	05:50:39.372	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58880 tp: 1.58737 ok
+0	05:50:39.372	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58887->1.58880 TP 1.58737->1.58737
+2	05:50:40.434	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58880 tp: 1.58718 ok
+0	05:50:40.434	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58880->1.58880 TP 1.58737->1.58718
+2	05:50:43.419	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58870 tp: 1.58718 ok
+0	05:50:43.419	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58880->1.58870 TP 1.58718->1.58718
+2	05:50:48.420	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58862 tp: 1.58718 ok
+0	05:50:48.420	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58870->1.58862 TP 1.58718->1.58718
+0	05:51:22.249	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=2/5 dayNet=-4.85 monthNet=-23.86 symbols=114 lossStreakPause=ON equityHalt=off
+2	05:52:44.637	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58855 tp: 1.58698 ok
+0	05:52:44.637	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58862->1.58855 TP 1.58718->1.58698
+2	05:53:01.653	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58847 tp: 1.58698 ok
+0	05:53:01.653	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58855->1.58847 TP 1.58698->1.58698
+0	05:56:22.659	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: HEARTBEAT | v1.7.6-ARG open=2/5 dayNet=-4.60 monthNet=-23.61 symbols=114 lossStreakPause=ON equityHalt=off
+0	05:59:28.483	Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: uninit reason 1
+0	05:59:28.493	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_7_6_AdaptiveRisk EURUSD,M15: removed
+0	05:59:28.532	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: loaded successfully
+0	05:59:29.289	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15 inputs: InpSymbolsCSV=; InpAutoAddCrypto=true; InpAutoAddUSDT=true; InpUSDTIs24x7=true; InpExtraCryptoPrefixes=; InpExtraSymbolsCSV=NEARUSDT,ZECUSDT; InpSignalTF=15; InpHTF=60; InpUseHTFFilter=true; InpMagic=21102027; InpReferenceCapitalUSD=500.0; InpUseEquityRisk=false; InpRiskPctPerTrade=0.5; InpMaxAggregateRiskPct=2.5; InpDailyLossPct=3.0; InpMaxOpenPositions=5; InpMaxLotsFX=0.3; InpMaxLotsOther=0.1; InpCommissionPerLotFX=10.0; InpCommissionPerLotOther=15.0; InpMaxCostR=0.2; InpAllowBuy=true; InpAllowSell=true; InpFamilyMinVotes=3; InpAssemblyMinFamilies=3; InpAssemblyMinModelVotes=3; InpTrendADX=20.0; InpAllowTrendRegime=true; InpAllowRangeRegime=false; InpMinADX=10.0; InpATRPeriod=14; InpStopATR=1.5; InpRewardRisk=1.8; InpMaxSpreadPctOfStop=10.0; InpMaxSpreadPoints=0; InpMaxQuoteAgeSec=120; InpSlippagePoints=20; InpMinBars=250; InpUseSessionFilter=true; InpSessionStartHour=7; InpSessionEndHour=21; InpCooldownBars=6; InpReentryBars=3; InpMaxHoldBars=48; InpBlockRollover=true; InpFlatBeforeRollover=true; 
+0	05:59:29.449	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: EXTRA_SYMBOL | requested=NEARUSDT | replaces alias NEARUSD with NEARUSDT
+0	05:59:29.449	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: EXTRA_SYMBOL | requested=ZECUSDT | replaces alias ZECUSD with ZECUSDT
+0	05:59:29.450	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: AUTO_CRYPTO | added=0 skippedNotTradable=0 | 
+0	05:59:29.472	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: BITEY_CSV_INIT | files=8 | folder=MQL4\Files | action=Bitey_ActionLog.csv
+0	05:59:29.693	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: BITEY_ENSEMBLE_INIT | version=1.8.0.0-EXP | symbols=114 | maxPositions=5 | tf=15 | accountMode=NOT_A_GATE | trading=ON
+0	05:59:29.693	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: initialized
+2	05:59:30.935	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58830 tp: 1.58698 ok
+0	05:59:30.937	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58847->1.58830 TP 1.58698->1.58698
+0	05:59:30.939	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: NET_SUMMARY_UPDATED | file=Bitey_Ens_NetByAsset_21102027.csv folder=MQL4\Files | history=386 matched=61 assets=27 | gross=-11.63 commission=-13.50 swap=0.00 net=-25.13 | set Account History to All History for full available totals
+0	05:59:30.939	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: HEARTBEAT | v1.8.0.0-EXP open=2/5 dayNet=-5.02 monthNet=-24.03 symbols=114 lossStreakPause=ON equityHalt=off
+2	05:59:31.951	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58824 tp: 1.58698 ok
+0	05:59:31.953	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58830->1.58824 TP 1.58698->1.58698
+2	05:59:34.965	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58814 tp: 1.58698 ok
+0	05:59:34.969	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58824->1.58814 TP 1.58698->1.58698
+2	06:00:10.856	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58796 tp: 1.58672 ok
+0	06:00:10.862	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58814->1.58796 TP 1.58698->1.58672
+2	06:00:26.918	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58788 tp: 1.58672 ok
+0	06:00:26.920	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58796->1.58788 TP 1.58672->1.58672
+2	06:00:27.951	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58780 tp: 1.58672 ok
+0	06:00:27.955	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58788->1.58780 TP 1.58672->1.58672
+2	06:00:31.013	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58773 tp: 1.58652 ok
+0	06:00:31.017	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58780->1.58773 TP 1.58672->1.58652
+0	06:00:31.019	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: NET_SUMMARY_UPDATED | file=Bitey_Ens_NetByAsset_21102027.csv folder=MQL4\Files | history=386 matched=61 assets=27 | gross=-11.63 commission=-13.50 swap=0.00 net=-25.13 | set Account History to All History for full available totals
+2	06:01:06.057	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58765 tp: 1.58652 ok
+0	06:01:06.111	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58773->1.58765 TP 1.58652->1.58652
+0	06:01:30.798	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: NET_SUMMARY_UPDATED | file=Bitey_Ens_NetByAsset_21102027.csv folder=MQL4\Files | history=386 matched=61 assets=27 | gross=-11.63 commission=-13.50 swap=0.00 net=-25.13 | set Account History to All History for full available totals
+2	06:02:24.076	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58757 tp: 1.58652 ok
+0	06:02:24.082	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58765->1.58757 TP 1.58652->1.58652
+2	06:02:27.904	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: modify #95771859 sell 0.01 EURAUD at 1.59019 sl: 1.58746 tp: 1.58629 ok
+0	06:02:27.908	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: ADAPTIVE_MODIFY | ticket=95771859 symbol=EURAUD SL 1.58757->1.58746 TP 1.58652->1.58629
+0	06:02:30.826	Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_0_ThirtyEvaluatorsExperimental EURUSD,M15: NET_SUMMARY_UPDATED | file=Bitey_Ens_NetByAsset_21102027.csv folder=MQL4\Files | history=386 matched=61 assets=27 | gross=-11.63 commission=-13.50 swap=0.00 net=-25.13 | set Account History to All History for full available totals
