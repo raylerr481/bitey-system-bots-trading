@@ -1611,6 +1611,7 @@ void AddAllCrypto()
    {
       string n=SymbolName(i,false);
       if(!IsCrypto(n)) continue; // IsCrypto already validates the exact base ticker.
+      if(!InpAutoAddUSDT && IsUSDTSymbol(n)) continue;
       discovered++;
       string k=AssetKey(n);
       bool dup=false;
