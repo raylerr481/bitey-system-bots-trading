@@ -819,7 +819,10 @@ bool OpenTrade(string sym,int cmd,double score,int regime,int buyVotes,int sellV
    if(ticket<0)
    {
       int err=GetLastError();
-      BiteyCsvLogAction(decisionId,EA_VERSION,sym,"EXECUTION","ORDER_FAILED",0,(cmd==OP_BUY?"BUY":"SELL"),score,"OrderSend_error_"+IntegerToString(err));
+      BiteyCsvLogAction(decisionId,EA_VERSION,sym,"EXECUTION","ORDER_FAILED",0,(cmd==OP_BUY?"BUY":"SELL"),score,
+          "OrderSend_error="+IntegerToString(err)+" lots="+DoubleToString(lots,2)+
+          " risk="+DoubleToString(risk,2)+" entry="+DoubleToString(entry,digits)+
+          " sl="+DoubleToString(sl,digits)+" tp="+DoubleToString(tp,digits));
       Print("ORDER_REJECTED | symbol=",sym," side=",(cmd==OP_BUY?"BUY":"SELL")," error=",err,
             " lots=",DoubleToString(lots,2)," SL=",DoubleToString(sl,digits)," TP=",DoubleToString(tp,digits));
       return(false);
@@ -833,7 +836,7 @@ bool OpenTrade(string sym,int cmd,double score,int regime,int buyVotes,int sellV
    GlobalVariableSet(GvKey("SELLV",ticket),(double)sellVotes);
    GlobalVariableSet(GvKey("MAGIC",ticket),(double)InpMagic);
    BiteyCsvLogTradeOpened(decisionId,EA_VERSION,ticket,sym,(cmd==OP_BUY?"BUY":"SELL"),
-      lots,entry,sl,tp,InpReferenceCapitalUSD,risk,(IsTesting()?"TESTER":"TERMINAL"),"ORDER_ACCEPTED");
+      lots,filledEntry,sl,tp,InpReferenceCapitalUSD,risk,(IsTesting()?"TESTER":"TERMINAL"),"ORDER_ACCEPTED");
    BiteyCsvLogAction(decisionId,EA_VERSION,sym,"EXECUTION","ORDER_OPENED",ticket,
       (cmd==OP_BUY?"BUY":"SELL"),score,"ORDER_ACCEPTED");
    return(true);
@@ -1286,7 +1289,7 @@ bool WriteTradeRow(int ticket)
       closedDecisionId=sym+"_"+IntegerToString((int)GlobalVariableGet(GvKey("DID",ticket)));
    if(!BiteyCsvLogTradeClosed(closedDecisionId,closedVersion,ticket,sym,
       (type==OP_BUY?"BUY":"SELL"),OrderLots(),OrderOpenTime(),OrderCloseTime(),
-      OrderOpenPrice(),OrderClosePrice(),gross,comm,swp,0.0,OrderComment())) return(false);
+      OrderOpenPrice(),OrderClosePrice(),gross,comm,swp,entrySlippagePoints,OrderComment())) return(false);
    BiteyCsvLogAction(closedDecisionId,EA_VERSION,sym,"EXECUTION","ORDER_CLOSED",ticket,
       (type==OP_BUY?"BUY":"SELL"),gross+comm+swp,OrderComment());
    return(true);
