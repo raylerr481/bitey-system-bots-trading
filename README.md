@@ -135,3 +135,17 @@ Before considering a build ready:
 
 **Status note:** this architecture is a specification and test contract. The Python CSV checker tests audit exports; it does not compile the MQ4 EA or prove profitability. Do not promote this experimental build to production until the MQ4 and MT4 checks above are completed.
 
+
+
+## v1.8.0.2 — experimental audit-integrity improvement
+
+Source: `Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_2_AuditIntegrityImprovedExperimental.mq4`
+
+- Uses version-isolated `Bitey_TradeAudit_v1_8_0_2.csv` and `Bitey_ClosedTrades_v1_8_0_2.csv` files so the previous v1.8.0.1 schema is not mixed with the corrected schema.
+- Aligns the closed-trade CSV header with the actual 21-column writer, including magic number and aggregated BUY/SELL votes.
+- Writes an explicit audit action for dry-run candidates and richer context when `OrderSend` fails.
+- Records requested entry price and computes observed entry slippage in points from the actual fill; `-1` means the requested-price evidence is unavailable, not zero slippage.
+- Marks a closed ticket as logged only after the audit write succeeds; subsequent scans can retry a failed write, while CSV ticket deduplication prevents repeated rows.
+- Adds Python regression checks for version, position ceiling, header agreement, dry-run/failure evidence, retry order and slippage sentinel; CI runs the CSV and source-contract tests.
+
+**Scope guard:** this is an experimental audit improvement. It intentionally does not change entry signals, risk inputs, SL/TP parameters, account-mode behavior, or the production branch. Automated source-contract tests do not replace MetaEditor compilation, MT4 Strategy Tester validation, or demo forward testing.
