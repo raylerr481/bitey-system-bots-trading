@@ -1270,6 +1270,11 @@ bool WriteTradeRow(int ticket)
    double mae=GlobalVariableGet(GvKey("MAE",ticket));
    double mfeR=(r0>0?mfe/r0:0.0), maeR=(r0>0?mae/r0:0.0);
    double gross=OrderProfit(), comm=OrderCommission(), swp=OrderSwap();
+   double entrySlippagePoints=-1.0;
+   string requestedPriceKey=GvKey("REQPX",ticket);
+   double symbolPoint=MarketInfo(sym,MODE_POINT);
+   if(symbolPoint>0.0 && GlobalVariableCheck(requestedPriceKey))
+      entrySlippagePoints=MathAbs(OrderOpenPrice()-GlobalVariableGet(requestedPriceKey))/symbolPoint;
    int durMin=(int)((OrderCloseTime()-OrderOpenTime())/60);
    string mfeLogKey=GvKey("MFELOG",ticket);
    if(!GlobalVariableCheck(mfeLogKey))
