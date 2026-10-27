@@ -276,7 +276,7 @@ input int              InpMaxCcyExposure        = 2;       // Max net same-direc
 input int              InpMaxCcyGross           = 3;       // v1.7.2: max positions touching one FX currency in ANY direction (0 = no cap)
 input double           InpDiversifyPenalty      = 4.0;     // v1.7.2: score penalty per unit of same-direction overlap with open positions (0 = rank by raw score)
 input bool             InpCryptoPriorityEnabled = true;    // Small tie-break preference for liquid major crypto candidates; never bypasses signal/risk filters
-input double           InpCryptoPriorityTopBonus= 0.8;     // Max ranking bonus for BTC/ETH/SOL/XRP/BNB etc; does not alter signal score or risk
+input double           InpCryptoPriorityTopBonus= 2.0;     // Max ranking bonus for BTC/ETH/SOL/XRP/BNB etc; does not alter signal score or risk
 input bool             InpUseMeanExit           = true;
 input int              InpExitMAPeriod          = 20;      // SMA used as the mean
 input double           InpExitBandATR           = 1.0;     // Opposite band = mean +/- this many ATR
