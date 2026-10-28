@@ -751,7 +751,7 @@ void RunCycle()
       g_lastHeartbeat=now;
       Print("HEARTBEAT | v",EA_VERSION," open=",CountOpenPositions(),"/",maxPos,
             " dayNet=",DoubleToString(TodayNet(),2)," monthNet=",DoubleToString(MonthNet(),2)," symbols=",g_symbolCount,
-            " lossStreakPause=",(lossBlock?"ON":"off")," equityHalt=",(g_haltAll?"ON":"off"));
+            " equityHalt=",(g_haltAll?"ON":"off"));
    }
 }
 // Optional external ChatGPT indicator bridge. It must return ONLY a plain number.
@@ -1261,31 +1261,35 @@ void ManageExits()
       if(type==OP_BUY)  slUp=(newSL>0 && (oldSL<=0 || newSL>oldSL+point*0.5));
       else              slUp=(newSL>0 && (oldSL<=0 || newSL<oldSL-point*0.5));
       double adx=iADX(sym,InpSignalTF,14,PRICE_CLOSE,MODE_MAIN,1);
-      if(InpEnableTPExpand && oldTP>0 && favorable>=atr*InpTPExpandTriggerATR && adx>=InpTPExpandADXMin)
+      if(InpEnableTPExpand && oldTP>0 && favorable>=atr*InpTPExpandTriggerATR)
       {
          double remainingToTP=(type==OP_BUY?oldTP-bid:ask-oldTP);
-         if(remainingToTP<=atr*InpTPExpandBufferATR)
+         string tpReason="";
+         double prop=oldTP;
+         if(adx<InpTPExpandADXMin) tpReason="TP_EXPAND_ADX_BELOW_MIN";
+         else if(remainingToTP>atr*InpTPExpandBufferATR) tpReason="TP_EXPAND_TP_NOT_NEAR";
+         else
          {
             double curDist=MathAbs(oldTP-entry);
             double want=MathMin(atr*InpTPMaxDistanceATR,MathMax(curDist,favorable+atr*InpTPExpandBufferATR));
-            double prop=NormalizeDouble(type==OP_BUY?entry+want:entry-want,digits);
+            prop=NormalizeDouble(type==OP_BUY?entry+want:entry-want,digits);
             bool stepOK=(type==OP_BUY ? prop>oldTP+atr*InpTPExpandStepATR : prop<oldTP-atr*InpTPExpandStepATR);
             bool brokerOK=(type==OP_BUY ? prop>ask+minDist : prop<bid-minDist);
             if(stepOK && brokerOK) { newTP=prop; tpUp=true; exitWhy+="TP_EXPAND;"; }
-            else if(BiteyExitAuditOncePerBar(ticket,sym,"TPAUDIT"))
-            {
-               string tpReason=(!stepOK?"TP_EXPAND_NO_STEP":"TP_EXPAND_BROKER_DISTANCE_REJECT");
-               Print("TP_ADAPTIVE_NOT_MODIFIED | ticket=",ticket," symbol=",sym,
-                     " currentNet=",DoubleToString(net,2)," favorable=",DoubleToString(favorable,digits),
-                     " ATR=",DoubleToString(atr,digits)," ADX=",DoubleToString(adx,2),
-                     " oldTP=",DoubleToString(oldTP,digits)," candidateTP=",DoubleToString(prop,digits),
-                     " remainingToTP=",DoubleToString(remainingToTP,digits)," reason=",tpReason);
-               string tpDecisionId="ticket_"+IntegerToString(ticket);
-               if(GlobalVariableCheck(GvKey("DID",ticket)))
-                  tpDecisionId=sym+"_"+IntegerToString((int)GlobalVariableGet(GvKey("DID",ticket)));
-               BiteyCsvLogAdaptiveExitAttempt(tpDecisionId,EA_VERSION,ticket,sym,oldSL,oldSL,oldTP,oldTP,
-                  net,0.0,tpReason,"NOT_MODIFIED",0);
-            }
+            else tpReason=(!stepOK?"TP_EXPAND_NO_STEP":"TP_EXPAND_BROKER_DISTANCE_REJECT");
+         }
+         if(!tpUp && tpReason!="" && BiteyExitAuditOncePerBar(ticket,sym,"TPAUDIT"))
+         {
+            Print("TP_ADAPTIVE_NOT_MODIFIED | ticket=",ticket," symbol=",sym,
+                  " currentNet=",DoubleToString(net,2)," favorable=",DoubleToString(favorable,digits),
+                  " ATR=",DoubleToString(atr,digits)," ADX=",DoubleToString(adx,2),
+                  " oldTP=",DoubleToString(oldTP,digits)," candidateTP=",DoubleToString(prop,digits),
+                  " remainingToTP=",DoubleToString(remainingToTP,digits)," reason=",tpReason);
+            string tpDecisionId="ticket_"+IntegerToString(ticket);
+            if(GlobalVariableCheck(GvKey("DID",ticket)))
+               tpDecisionId=sym+"_"+IntegerToString((int)GlobalVariableGet(GvKey("DID",ticket)));
+            BiteyCsvLogAdaptiveExitAttempt(tpDecisionId,EA_VERSION,ticket,sym,oldSL,oldSL,oldTP,oldTP,
+               net,0.0,tpReason,"NOT_MODIFIED",0);
          }
       }
       if(!slUp && !tpUp) continue;
