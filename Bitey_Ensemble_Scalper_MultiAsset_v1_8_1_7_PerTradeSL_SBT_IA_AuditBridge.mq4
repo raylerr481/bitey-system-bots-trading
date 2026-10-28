@@ -291,6 +291,7 @@ input int              InpChatGPTTimeoutMs       = 700;     // Short timeout; fa
 input bool             InpChatGPTLog             = true;    // Log advisory success/failure
 input bool             InpSbtTelemetryEnabled     = true;    // Reporting only: MT4 -> SBT -> Bitey IA
 input string           InpSbtTelemetryURL         = "https://bitey-system-bots-trading.raylerr481.workers.dev/api/v1/mt4/bitey-report";
+input string           InpSbtExitEventURL         = "https://bitey-system-bots-trading.raylerr481.workers.dev/api/v1/mt4/signal-event";
 input string           InpSbtClosedTradeURL       = "https://bitey-system-bots-trading.raylerr481.workers.dev/api/v1/mt4/trade-closed";
 input string           InpSbtToken                = "";      // Optional shared token; never hard-code secrets
 input int              InpSbtTelemetryTimeoutMs   = 1200;    // Short timeout: telemetry must not stall trade management
@@ -440,6 +441,8 @@ void SbtPostAdaptiveExitEvent(string sym,int ticket,double oldSL,double newSL,
    body+="\"timeframe\":\""+IntegerToString((int)InpSignalTF)+"\",";
    body+="\"timestamp\":\""+SbtJsonEscape(TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS))+"\",";
    body+="\"mode\":\""+(IsTesting()?"TESTER":"MT4_TERMINAL")+"\",";
+   body+="\"ticket\":"+IntegerToString(ticket)+",";
+   body+="\"magic\":"+IntegerToString(InpMagic)+",";
    body+="\"report_type\":\"adaptive_exit_event\",";
    body+="\"execution_enabled\":"+(InpEnableTrading?"true":"false")+",";
    body+="\"metrics\":{";
@@ -467,7 +470,7 @@ void SbtPostAdaptiveExitEvent(string sym,int ticket,double oldSL,double newSL,
    body+="\"bot\":{\"name\":\"Bitey Ensemble Scalper\",\"id\":\"bitey-ensemble-scalper\",";
    body+="\"version\":\"1.8.1.7\",\"magic\":"+IntegerToString(InpMagic)+",";
    body+="\"strategy\":\"MULTIASSET_ADAPTIVE_EXITS\",\"signal\":\"HOLD\",\"active\":true}}";
-   SbtPostJson(InpSbtTelemetryURL,body,"adaptive_exit_"+IntegerToString(ticket));
+   SbtPostJson(InpSbtExitEventURL,body,"adaptive_exit_"+IntegerToString(ticket));
 }
 string SbtHistoryExitReason()
 {
