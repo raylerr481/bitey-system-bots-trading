@@ -1,0 +1,54 @@
+0	00:00:04.634	'66858961': order buy market 0.01 TAOUSDT sl: 256.21 tp: 260.83
+0	00:00:04.898	'66858961': order was opened : #95773122 buy 0.01 TAOUSDT at 257.86 sl: 256.21 tp: 260.83
+0	00:32:20.963	'66858961': modify order #95773122 buy 0.01 TAOUSDT at 257.86 sl: 256.21 tp: 260.83 -> sl: 258.19 tp: 260.83
+0	00:32:21.210	'66858961': order #95773122 buy 0.01 TAOUSDT at 257.86 was modified -> sl: 258.19 tp: 260.83
+0	00:34:41.791	'66858961': modify order #95773122 buy 0.01 TAOUSDT at 257.86 sl: 258.19 tp: 260.83 -> sl: 258.28 tp: 260.83
+0	00:34:42.039	'66858961': order #95773122 buy 0.01 TAOUSDT at 257.86 was modified -> sl: 258.28 tp: 260.83
+0	00:40:17.387	'66858961': modify order #95773122 buy 0.01 TAOUSDT at 257.86 sl: 258.28 tp: 260.83 -> sl: 258.37 tp: 260.83
+0	00:40:17.649	'66858961': order #95773122 buy 0.01 TAOUSDT at 257.86 was modified -> sl: 258.37 tp: 260.83
+0	00:41:39.633	'66858961': modify order #95773122 buy 0.01 TAOUSDT at 257.86 sl: 258.37 tp: 260.83 -> sl: 258.49 tp: 260.83
+0	00:41:39.897	'66858961': order #95773122 buy 0.01 TAOUSDT at 257.86 was modified -> sl: 258.49 tp: 260.83
+0	00:42:12.759	'66858961': modify order #95773122 buy 0.01 TAOUSDT at 257.86 sl: 258.49 tp: 260.83 -> sl: 258.59 tp: 260.83
+0	00:42:13.024	'66858961': order #95773122 buy 0.01 TAOUSDT at 257.86 was modified -> sl: 258.59 tp: 260.83
+0	00:45:12.390	'66858961': order buy market 0.01 BNBUSD.hb sl: 746.88 tp: 753.35
+1	00:45:12.652	'66858961': order buy 0.01 BNBUSD.hb opening at market sl: 746.88 tp: 753.35 failed [Trade is disabled]
+0	00:45:15.581	'66858961': order buy market 0.01 BTCUSD sl: 80970.08 tp: 81579.71
+1	00:45:15.835	'66858961': order buy 0.01 BTCUSD opening at market sl: 80970.08 tp: 81579.71 failed [Trade is disabled]
+0	00:52:51.195	'66858961': order #95773122 buy 0.01 TAOUSDT at 257.86 closed due stop-loss at price 258.59
+0	01:15:01.900	'66858961': order buy market 0.03 USDJPY sl: 157.876 tp: 158.128
+0	01:15:02.163	'66858961': order was opened : #95773180 buy 0.03 USDJPY at 157.966 sl: 157.876 tp: 158.128
+0	01:58:09.430	'66858961': order #95773180 buy 0.03 USDJPY at 157.966 closed due stop-loss at price 157.876
+2	06:17:55.384	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_7_CryptoPriorityExperimental EURUSD,M15: removed
+2	06:17:55.405	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_8 EURUSD,M15: loaded successfully
+2	06:22:45.590	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_8 EURUSD,M15: removed
+2	06:22:45.615	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_9_ProfitSelectorExperimental EURUSD,M15: loaded successfully
+2	06:34:15.546	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_9_ProfitSelectorExperimental EURUSD,M15: removed
+2	06:34:15.572	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_8_1_0_SelectorShadowExperimental EURUSD,M15: loaded successfully
+2	13:55:25.261	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_8_1_0_SelectorShadowExperimental EURUSD,M15: removed
+2	13:55:25.411	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_7_CryptoPriorityExperimental EURUSD,M15: loaded successfully
+2	13:55:57.039	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_7_CryptoPriorityExperimental EURUSD,M15: removed
+2	13:55:57.059	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_7_CryptoPriorityExperimental EURUSD,M15: loaded successfully
+2	13:56:13.363	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_7_CryptoPriorityExperimental EURUSD,M15: removed
+2	13:56:13.400	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_8_1_0_SelectorShadowExperimental EURUSD,M15: loaded successfully
+2	13:56:16.127	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_8_1_0_SelectorShadowExperimental EURUSD,M15: removed
+2	13:56:17.346	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_8_1_0_SelectorShadowExperimental EURUSD,M15: loaded successfully
+2	13:56:21.297	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_8_1_0_SelectorShadowExperimental EURUSD,M15: removed
+2	13:56:21.335	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_9_ProfitSelectorExperimental EURUSD,M15: loaded successfully
+2	13:57:41.285	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_8_0_9_ProfitSelectorExperimental EURUSD,M15: removed
+2	13:57:41.318	Expert Bitey_Ensemble_Scalper_MultiAsset_v1_8_1_4_AdaptiveSelection_NoDailyBrake EURUSD,M15: loaded successfully
+0	14:00:07.048	'66858961': order buy market 0.02 AUDUSD sl: 0.70323 tp: 0.70638
+0	14:00:07.336	'66858961': order was opened : #95773726 buy 0.02 AUDUSD at 0.70428 sl: 0.70323 tp: 0.70638
+0	14:00:07.359	'66858961': order buy market 0.01 EURUSD sl: 1.11361 tp: 1.11723
+0	14:00:07.610	'66858961': order was opened : #95773727 buy 0.01 EURUSD at 1.11482 sl: 1.11361 tp: 1.11723
+0	14:15:02.092	'66858961': order buy market 0.01 CHFJPY sl: 190.609 tp: 191.199
+0	14:15:02.352	'66858961': order was opened : #95773736 buy 0.01 CHFJPY at 190.808 sl: 190.609 tp: 191.199
+0	14:54:12.678	'66858961': order #95773727 buy 0.01 EURUSD at 1.11482 closed due stop-loss at price 1.11361
+0	14:58:15.870	'66858961': login on TradewillGlobal-Demo through Main (ping: 211.31 ms)
+0	14:58:18.789	'66858961': previous successful authorization performed from 191.39.73.133
+0	14:58:19.126	'66858961': ping to current access point Main is 209.66 ms
+0	15:01:27.844	'66858961': login on TradewillGlobal-Demo through Main (ping: 209.66 ms)
+0	15:01:29.473	'66858961': previous successful authorization performed from 143.255.14.62
+0	15:21:50.132	'66858961': order #95773726 buy 0.02 AUDUSD at 0.70428 closed due stop-loss at price 0.70323
+0	15:28:18.821	'66858961': order #95773736 buy 0.01 CHFJPY at 190.808 closed due stop-loss at price 190.609
+0	17:00:01.818	'66858961': order buy market 0.01 LINKUSD.hb sl: 11.6913 tp: 12.2304
+1	17:00:02.069	'66858961': order buy 0.01 LINKUSD.hb opening at market sl: 11.6913 tp: 12.2304 failed [Trade is disabled]
