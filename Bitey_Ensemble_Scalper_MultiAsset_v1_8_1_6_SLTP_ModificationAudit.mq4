@@ -224,7 +224,10 @@ void BiteyLogSLTPBlockedOncePerBar(const string decisionId,const string eaVersio
    const double oldSL,const double oldTP,const double minDist)
 {
    datetime bar=iTime(symbol,InpSignalTF,0);
-   string key=GvKey("SLTPBLOCK_"+IntegerToString(ticket)+"_"+IntegerToString((int)bar)+"_"+IntegerToString(StringGetChar(reason,0)),ticket);
+   int reasonHash=0;
+   for(int ri=0;ri<StringLen(reason);ri++)
+      reasonHash=(reasonHash*31+StringGetChar(reason,ri))%1000000;
+   string key=GvKey("SLTPBLOCK_"+IntegerToString(ticket)+"_"+IntegerToString((int)bar)+"_"+IntegerToString(reasonHash),ticket);
    if(GlobalVariableCheck(key)) return;
    GlobalVariableSet(key,(double)TimeCurrent());
    BiteyCsvLogSLTPEvent(decisionId,eaVersion,ticket,symbol,"BLOCKED",reason,net,
