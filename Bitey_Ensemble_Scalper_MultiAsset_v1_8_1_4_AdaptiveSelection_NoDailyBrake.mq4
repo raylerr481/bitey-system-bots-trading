@@ -229,7 +229,6 @@ input double           InpReferenceCapitalUSD   = 500.0;
 input bool             InpUseEquityRisk         = false;   // true = size risk on min(balance,equity) instead of the reference capital
 input double           InpRiskPctPerTrade       = 0.5;     // 5 positions x 0.5% = 2.5% aggregate
 input double           InpMaxAggregateRiskPct   = 2.5;
-input double           InpDailyLossPct          = 3.0;     // Blocks NEW entries; open trades stay managed
 input int              InpMaxOpenPositions      = 5;       // Clamped to 1..5, one position per asset
 input double           InpMaxLotsFX             = 0.30;    // Hard lot cap, forex pairs
 input double           InpMaxLotsOther          = 0.10;    // Hard lot cap, metals/crypto/stocks/indices
@@ -1798,9 +1797,7 @@ string EntryBlockReason()
 {
    if(g_haltAll) return("EQUITY_FLOOR_HALT");
    if(InpRequireCsvAudit && g_csvFailed) return("CSV_AUDIT_UNAVAILABLE");
-   double cap=RiskCapital();
-   if(InpDailyLossPct>0.0 && TodayNet()<=-cap*InpDailyLossPct/100.0) return("DAILY_LOSS_BLOCK");
-   if(InpMaxTradesPerDay>0 && TradesOpenedToday()>=InpMaxTradesPerDay) return("DAILY_TRADE_CAP");
+   double cap=RiskCapital();   if(InpMaxTradesPerDay>0 && TradesOpenedToday()>=InpMaxTradesPerDay) return("DAILY_TRADE_CAP");
    return("");
 }
 void AddCcyExposure(string sym,int type,int &net[])
