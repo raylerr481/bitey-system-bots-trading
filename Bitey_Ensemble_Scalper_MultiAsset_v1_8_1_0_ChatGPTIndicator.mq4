@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //| Bitey_Ensemble_Scalper_MultiAsset_v1_8_1_0_ChatGPTIndicator.mq4
-//| v1.8.1.0 EXPERIMENTAL = v1.8.0.8 + six cost-vs-profit levers:        |
+//| v1.8.1.0 EXPERIMENTAL = v1.8.0.9 + optional ChatGPT advisory:        |
 //|  1 Adaptive stop: widen the stop (up to InpStopATRMax x ATR) until   |
 //|    cost-R <= InpTargetCostR; lots shrink so risk stays constant.     |
 //|  2 Selectivity: InpMinScore gate and InpMaxTradesPerDay cap.         |
@@ -19,7 +19,7 @@
 //+------------------------------------------------------------------+
 #property strict
 #property version   "1.810"
-#property description "Experimental 30 evaluators / profit selector / adaptive stop / cost levers / audit integrity; not performance validated"
+#property description "Experimental multi-asset ensemble / profit selector / optional ChatGPT ranking advisory; not performance validated"
 
 input int              InpMagic                 = 21102027;  // Declared first: the CSV module below uses it
 bool g_csvFailed = false;   // true while the last audit CSV open failed
