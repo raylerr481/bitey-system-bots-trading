@@ -417,7 +417,9 @@ bool SbtPostJson(string url,string body,string eventName)
    if(StringLen(InpSbtToken)>0) headers+="X-MT4-Token: "+InpSbtToken+"\r\n";
    string responseHeaders="";
    ResetLastError();
-   int status=WebRequest("POST",url,headers,MathMax(250,InpSbtTelemetryTimeoutMs),post,result,responseHeaders);
+   int timeoutMs=InpSbtTelemetryTimeoutMs;
+   if(timeoutMs<250) timeoutMs=250;
+   int status=WebRequest("POST",url,headers,timeoutMs,post,result,responseHeaders);
    int err=GetLastError();
    if(status>=200 && status<300)
    {
@@ -501,7 +503,8 @@ void SbtReportClosedTrades()
       string sym=OrderSymbol();
       int digits=(int)MarketInfo(sym,MODE_DIGITS);
       double net=OrderProfit()+OrderCommission()+OrderSwap();
-      double risk=EstimateRisk(sym,OrderLots(),MathAbs(OrderOpenPrice()-OrderStopLoss()));
+      double initialStopDist=(GlobalVariableCheck(GvKey("R0",ticket))?GlobalVariableGet(GvKey("R0",ticket)):MathAbs(OrderOpenPrice()-OrderStopLoss()));
+      double risk=EstimateRisk(sym,OrderLots(),initialStopDist);
       double rewardR=(risk>0.0 && risk<1.0e11 ? net/risk : 0.0);
       string side=(OrderType()==OP_BUY?"BUY":"SELL");
       string body="{";
