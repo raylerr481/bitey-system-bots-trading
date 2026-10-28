@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //| Bitey_Ensemble_Scalper_MultiAsset_v1_8_1_6_PerTradeSL_FullCostAudit.mq4
-//| v1.8.1.6 EXPERIMENTAL = per-trade SL risk, no account-period loss brakes, detailed cost audit:        |
+//| v1.8.1.6 EXPERIMENTAL = per-trade SL risk, no account-period loss brakes, SL/TP modification audit:        |
 //|  1 Adaptive stop: widen the stop (up to InpStopATRMax x ATR) until   |
 //|    cost-R <= InpTargetCostR; lots shrink so risk stays constant.     |
 //|  2 Selectivity: InpMinScore gate and InpMaxTradesPerDay cap.         |
@@ -18,7 +18,7 @@
 //| Not compiled or performance-validated; test in the MT4 tester first. |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.815"
+#property version   "1.816"
 #property description "Experimental multi-asset ensemble / per-trade SL / full cost audit / no daily or monthly loss brake; not validated"
 
 input int              InpMagic                 = 21102027;  // Declared first: the CSV module below uses it
