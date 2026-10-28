@@ -1252,16 +1252,61 @@ void ManageExits()
       if(type==OP_BUY)  slUp=(newSL>0 && (oldSL<=0 || newSL>oldSL+point*0.5));
       else              slUp=(newSL>0 && (oldSL<=0 || newSL<oldSL-point*0.5));
       double adx=iADX(sym,InpSignalTF,14,PRICE_CLOSE,MODE_MAIN,1);
-      if(InpEnableTPExpand && oldTP>0 && favorable>=atr*InpTPExpandTriggerATR && adx>=InpTPExpandADXMin)
+      bool tpTriggerReached=(InpEnableTPExpand && oldTP>0 &&
+                             favorable>=atr*InpTPExpandTriggerATR && adx>=InpTPExpandADXMin);
+      if(tpTriggerReached)
       {
          double remainingToTP=(type==OP_BUY?oldTP-bid:ask-oldTP);
-         if(remainingToTP<=atr*InpTPExpandBufferATR)
+         double tpBuffer=atr*InpTPExpandBufferATR;
+         if(remainingToTP>tpBuffer)
+         {
+            // Log once per gate-state transition to avoid writing a row on every tick.
+            double previousGate=(GlobalVariableCheck(GvKey("TPGATE",ticket))?
+                                 GlobalVariableGet(GvKey("TPGATE",ticket)):-1.0);
+            if(previousGate!=1.0)
+            {
+               string tpAuditId="ticket_"+IntegerToString(ticket);
+               BiteyCsvLogAction(tpAuditId,EA_VERSION,sym,"RISK_MANAGEMENT","TP_EXPANSION_WAITING",ticket,
+                  (type==OP_BUY?"BUY":"SELL"),net,
+                  "TP_TRIGGER_REACHED_WAITING_FOR_BUFFER;remaining="+DoubleToString(remainingToTP,digits)+
+                  ";buffer="+DoubleToString(tpBuffer,digits)+";ADX="+DoubleToString(adx,2));
+               GlobalVariableSet(GvKey("TPGATE",ticket),1.0);
+            }
+         }
+         else
          {
             double curDist=MathAbs(oldTP-entry);
-            double want=MathMin(atr*InpTPMaxDistanceATR,MathMax(curDist,favorable+atr*InpTPExpandBufferATR));
+            double want=MathMin(atr*InpTPMaxDistanceATR,MathMax(curDist,favorable+tpBuffer));
             double prop=NormalizeDouble(type==OP_BUY?entry+want:entry-want,digits);
-            if(type==OP_BUY  && prop>oldTP+atr*InpTPExpandStepATR && prop>ask+minDist) { newTP=prop; tpUp=true; exitWhy+="TP_EXPAND;"; }
-            if(type==OP_SELL && prop<oldTP-atr*InpTPExpandStepATR && prop<bid-minDist) { newTP=prop; tpUp=true; exitWhy+="TP_EXPAND;"; }
+            bool stepOK=(type==OP_BUY ? prop>oldTP+atr*InpTPExpandStepATR
+                                      : prop<oldTP-atr*InpTPExpandStepATR);
+            bool brokerOK=(type==OP_BUY ? prop>ask+minDist : prop<bid-minDist);
+            if(stepOK && brokerOK)
+            {
+               newTP=prop; tpUp=true; exitWhy+="TP_EXPAND;";
+               GlobalVariableSet(GvKey("TPGATE",ticket),3.0);
+               BiteyCsvLogAction("ticket_"+IntegerToString(ticket),EA_VERSION,sym,
+                  "RISK_MANAGEMENT","TP_EXPANSION_CANDIDATE",ticket,
+                  (type==OP_BUY?"BUY":"SELL"),net,
+                  "TP_EXPANSION_THRESHOLD_MET;oldTP="+DoubleToString(oldTP,digits)+
+                  ";candidateTP="+DoubleToString(prop,digits)+";ADX="+DoubleToString(adx,2));
+            }
+            else
+            {
+               double previousGate=(GlobalVariableCheck(GvKey("TPGATE",ticket))?
+                                    GlobalVariableGet(GvKey("TPGATE",ticket)):-1.0);
+               string blockReason=(!stepOK?"TP_STEP_NOT_REACHED":"BROKER_STOP_DISTANCE_BLOCK");
+               if(previousGate!=2.0)
+               {
+                  BiteyCsvLogAction("ticket_"+IntegerToString(ticket),EA_VERSION,sym,
+                     "RISK_MANAGEMENT","TP_EXPANSION_BLOCKED",ticket,
+                     (type==OP_BUY?"BUY":"SELL"),net,
+                     blockReason+";oldTP="+DoubleToString(oldTP,digits)+
+                     ";candidateTP="+DoubleToString(prop,digits)+
+                     ";minDistance="+DoubleToString(minDist,digits));
+                  GlobalVariableSet(GvKey("TPGATE",ticket),2.0);
+               }
+            }
          }
       }
       if(!slUp && !tpUp) continue;
