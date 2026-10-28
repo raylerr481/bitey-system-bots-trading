@@ -215,15 +215,6 @@ void BiteyCsvLogAdaptiveExitAttempt(
       reason,outcome,errorCode);
    BiteyCsvClose(h);
 }
-bool BiteyExitAuditOncePerBar(const int ticket,const string symbol,const string tag)
-{
-   datetime barTime=iTime(symbol,InpSignalTF,0);
-   if(barTime<=0) barTime=TimeCurrent();
-   string key=GvKey(tag,ticket);
-   if(GlobalVariableCheck(key) && (datetime)GlobalVariableGet(key)==barTime) return(false);
-   GlobalVariableSet(key,(double)barTime);
-   return(true);
-}
 
 void BiteyCsvLogPerformance(
    const string eaVersion, const string scope, const string symbol,
@@ -1476,6 +1467,15 @@ bool RejectLogDue(string sym)
 string GvKey(string tag,int ticket)
 {
    return("BE"+IntegerToString(InpMagic)+"_"+tag+"_"+IntegerToString(ticket));
+}
+bool BiteyExitAuditOncePerBar(const int ticket,const string symbol,const string tag)
+{
+   datetime barTime=iTime(symbol,InpSignalTF,0);
+   if(barTime<=0) barTime=TimeCurrent();
+   string key=GvKey(tag,ticket);
+   if(GlobalVariableCheck(key) && (datetime)GlobalVariableGet(key)==barTime) return(false);
+   GlobalVariableSet(key,(double)barTime);
+   return(true);
 }
 void TrackOpen(int ticket,double r0)
 {
