@@ -26,6 +26,7 @@ BITEY_Q_LEARNING_URL = os.getenv(
 _latest: dict[str, Any] | None = None
 _history: list[dict[str, Any]] = []
 _backtests: list[dict[str, Any]] = []
+_adaptive_exit_events: list[dict[str, Any]] = []
 
 
 class MT4EntryDiagnostic(BaseModel):
@@ -248,6 +249,58 @@ def _normalize_evidence_lab(payload: dict[str, Any]) -> dict[str, Any]:
 def _check_token(token: str | None) -> None:
     if MT4_INGEST_TOKEN and token != MT4_INGEST_TOKEN:
         raise HTTPException(status_code=401, detail="Invalid MT4 ingestion token")
+
+
+class MT4AdaptiveExitEvent(BaseModel):
+    source: str = "Bitey_Ensemble_Scalper_MultiAsset"
+    symbol: str = Field(min_length=1, max_length=32)
+    timeframe: str = Field(min_length=2, max_length=12)
+    timestamp: str | None = None
+    report_type: str = "adaptive_exit_event"
+    ticket: int
+    magic: int | None = None
+    metrics: dict[str, Any] = Field(default_factory=dict)
+    account: dict[str, Any] = Field(default_factory=dict)
+    risk_gate: dict[str, Any] = Field(default_factory=dict)
+    bot: dict[str, Any] = Field(default_factory=dict)
+
+
+@router.post("/signal-event")
+async def ingest_adaptive_exit_event(
+    event: MT4AdaptiveExitEvent,
+    x_mt4_token: str | None = Header(default=None),
+):
+    """Record SL/TP management telemetry without replacing the latest live snapshot or issuing commands."""
+    _check_token(x_mt4_token)
+    payload = event.model_dump()
+    payload["timestamp"] = payload["timestamp"] or datetime.now(timezone.utc).isoformat()
+    payload["source_module"] = "Bitey System Bots Trading"
+    payload["execution"] = "reporting_only"
+    payload["orders_allowed_by_event"] = False
+    _adaptive_exit_events.append(payload)
+    if len(_adaptive_exit_events) > 500:
+        del _adaptive_exit_events[:-500]
+    return {
+        "accepted": True,
+        "stored": True,
+        "event_type": payload["report_type"],
+        "ticket": payload["ticket"],
+        "execution": "reporting_only",
+        "orders_allowed": False,
+        "event_count_in_memory": len(_adaptive_exit_events),
+    }
+
+
+@router.get("/signal-events")
+def adaptive_exit_events(limit: int = 100):
+    limit = max(1, min(limit, 500))
+    items = list(reversed(_adaptive_exit_events[-limit:]))
+    return {
+        "items": items,
+        "count": len(items),
+        "persistence": "process_memory_only",
+        "execution_enabled": False,
+    }
 
 
 @router.post("/bitey-report")
