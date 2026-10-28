@@ -506,6 +506,7 @@ void SbtReportClosedTrades()
       string side=(OrderType()==OP_BUY?"BUY":"SELL");
       string body="{";
       body+="\"source\":\"MT4_DESKTOP\",";
+      body+="\"account_mode\":\""+(IsDemo()?"demo":"live")+"\",";
       body+="\"bot_id\":\"BITEY_ENSEMBLE_SCALPER\",";
       body+="\"strategy\":\"ENSEMBLE_ADAPTIVE_EXITS\",";
       body+="\"version\":\"1.8.1.7\",";
@@ -530,7 +531,7 @@ void SbtReportClosedTrades()
       body+="\"learning_scope\":\"shared_bitey_ia_sbt\",";
       body+="\"q_learning\":{\"algorithm\":\"Q_LEARNING\",";
       body+="\"policy_key\":\"bitey_shared_trading_q_v1\",";
-      body+="\"eligible\":true,\"reward_r\":"+DoubleToString(rewardR,5)+",";
+      body+="\"eligible\":"+(risk>0.0 && risk<1.0e11?"true":"false")+",\"reward_r\":"+DoubleToString(rewardR,5)+",";
       body+="\"terminal\":true,\"costs_included\":true,";
       body+="\"update_policy\":\"backend_owned_not_client_assumed\"}}}";
       if(SbtPostJson(InpSbtClosedTradeURL,body,"closed_trade_"+IntegerToString(ticket)))
