@@ -723,7 +723,7 @@ bool OpenTrade(string sym,int cmd,double score,int regime)
    Print("ORDER_ACCEPTED | ticket=",ticket," symbol=",sym," side=",(cmd==OP_BUY?"BUY":"SELL"),
          " lots=",DoubleToString(lots,2)," risk=",DoubleToString(risk,2)," costR=",DoubleToString(costR,3),
          " score=",DoubleToString(score,1)," SL=",DoubleToString(sl,digits)," TP=",DoubleToString(tp,digits));
-   TrackOpen(ticket,stopDist,score,cmd);
+   TrackOpen(ticket,stopDist,score,cmd,(ask-bid)/point,spreadPrice);
    LogMicroEvent("ENTRY_OPENED","ENTRY",ticket,sym,(cmd==OP_BUY?"BUY":"SELL"),0,0,0,0,0,0,0,0,0,score,"REGIME="+IntegerToString(regime)+"|"+g_lastVoteSummary);
    return(true);
 }
@@ -777,7 +777,7 @@ double MicroNegativeSeconds(int ticket)
    string k=GvKey("NEGSEC",ticket);
    return(GlobalVariableCheck(k)?GlobalVariableGet(k):0.0);
 }
-void UpdateMicroTradeClock(int ticket,double net)
+void UpdateMicroTradeClock(int ticket,double net,double netAfter)
 {
    datetime now=TimeCurrent();
    string kl=GvKey("LASTTS",ticket), kn=GvKey("NEGSEC",ticket), kf=GvKey("NEGFLAG",ticket);
@@ -787,17 +787,26 @@ void UpdateMicroTradeClock(int ticket,double net)
    if(dt>5.0) dt=5.0; // terminal downtime is not treated as observed negative exposure
    double neg=MicroNegativeSeconds(ticket);
    double wasNeg=(GlobalVariableCheck(kf)?GlobalVariableGet(kf):0.0);
-   if(net<0.0)
+   double symPoint=MarketInfo(OrderSymbol(),MODE_POINT);
+   double bidNow=MarketInfo(OrderSymbol(),MODE_BID), askNow=MarketInfo(OrderSymbol(),MODE_ASK);
+   if(symPoint>0.0 && askNow>=bidNow)
+   {
+      double spreadNow=(askNow-bidNow)/symPoint;
+      string km=GvKey("MAXSPR",ticket);
+      double maxSpread=(GlobalVariableCheck(km)?GlobalVariableGet(km):0.0);
+      if(spreadNow>maxSpread) GlobalVariableSet(km,spreadNow);
+   }
+   if(netAfter<0.0)
    {
       neg+=dt;
       if(wasNeg<0.5)
-         LogMicroEvent("TRADE_ENTERED_NEGATIVE","MONITOR",ticket,OrderSymbol(),(OrderType()==OP_BUY?"BUY":"SELL"),(int)(now-OrderOpenTime()),(int)neg,net,net,OrderProfit(),OrderCommission(),OrderSwap(),0,InpMicroProfitTargetUSD,0,"NET_BELOW_ZERO");
+         LogMicroEvent("TRADE_ENTERED_NEGATIVE","MONITOR",ticket,OrderSymbol(),(OrderType()==OP_BUY?"BUY":"SELL"),(int)(now-OrderOpenTime()),(int)neg,net,netAfter,OrderProfit(),OrderCommission(),OrderSwap(),0,InpMicroProfitTargetUSD,0,"NET_AFTER_ESTIMATED_CLOSE_COSTS_BELOW_ZERO");
       GlobalVariableSet(kf,1.0);
    }
    else
    {
       if(wasNeg>=0.5)
-         LogMicroEvent("TRADE_RECOVERED_NONNEGATIVE","MONITOR",ticket,OrderSymbol(),(OrderType()==OP_BUY?"BUY":"SELL"),(int)(now-OrderOpenTime()),(int)neg,net,net,OrderProfit(),OrderCommission(),OrderSwap(),0,InpMicroProfitTargetUSD,0,"NET_AT_OR_ABOVE_ZERO");
+         LogMicroEvent("TRADE_RECOVERED_NONNEGATIVE","MONITOR",ticket,OrderSymbol(),(OrderType()==OP_BUY?"BUY":"SELL"),(int)(now-OrderOpenTime()),(int)neg,net,netAfter,OrderProfit(),OrderCommission(),OrderSwap(),0,InpMicroProfitTargetUSD,0,"NET_AFTER_ESTIMATED_CLOSE_COSTS_AT_OR_ABOVE_ZERO");
       GlobalVariableSet(kf,0.0);
    }
    GlobalVariableSet(kn,neg);
@@ -910,8 +919,15 @@ bool CloseTicket(int ticket,string reason)
    if(px<=0) return(false);
    double net=OrderProfit()+OrderSwap()+OrderCommission();
    ResetLastError();
+   double remainingCloseCommission=EstimatedRemainingCloseCommission(sym,lots);
+   double estimatedNetAtClose=net-remainingCloseCommission;
    bool ok=OrderClose(ticket,lots,NormalizeDouble(px,digits),InpSlippagePoints,clrNONE);
-   if(ok) GlobalVariableSet(GvKey("CR",ticket),(double)CloseReasonCode(reason));
+   if(ok)
+   {
+      GlobalVariableSet(GvKey("CR",ticket),(double)CloseReasonCode(reason));
+      GlobalVariableSet(GvKey("EC",ticket),remainingCloseCommission);
+      GlobalVariableSet(GvKey("NE",ticket),estimatedNetAtClose);
+   }
    else GlobalVariableSet(GvKey("CR",ticket),-1.0);
    Print("CLOSE | reason=",reason," ticket=",ticket," symbol=",sym," net=",DoubleToString(net,2)," ok=",(ok?"true":"false"),
          " error=",(ok?0:GetLastError()));
@@ -942,10 +958,10 @@ void ManageExits()
       bool rangeTrade=(StringFind(OrderComment()," R")>=0);   // order comment is tagged " R" (range) or " T" (trend) at entry
 
       UpdateExcursion(ticket,type,entry,oldSL,bid,ask);
-      UpdateMicroTradeClock(ticket,net);
+      double netAfterClose=NetAfterEstimatedCloseCosts(sym,lots,net);
+      UpdateMicroTradeClock(ticket,net,netAfterClose);
       if(InpMicroProfitEnabled)
       {
-         double netAfterClose=NetAfterEstimatedCloseCosts(sym,lots,net);
          int ageSec=(int)(TimeCurrent()-OrderOpenTime());
          if(InpMicroProfitTargetUSD>0.0 && netAfterClose>=InpMicroProfitTargetUSD)
          {
@@ -1339,7 +1355,7 @@ string GvKey(string tag,int ticket)
    return("BE"+IntegerToString(InpMagic)+"_"+tag+"_"+IntegerToString(ticket));
 }
 
-void TrackOpen(int ticket,double r0,double entryScore,int side)
+void TrackOpen(int ticket,double r0,double entryScore,int side,double spreadPoints,double spreadPrice)
 {
    GlobalVariableSet(GvKey("R0",ticket),r0);
    GlobalVariableSet(GvKey("MFE",ticket),0.0);
@@ -1348,6 +1364,9 @@ void TrackOpen(int ticket,double r0,double entryScore,int side)
    GlobalVariableSet(GvKey("SIDE",ticket),(double)side);
    GlobalVariableSet(GvKey("NEGSEC",ticket),0.0);
    GlobalVariableSet(GvKey("LASTTS",ticket),(double)TimeCurrent());
+   GlobalVariableSet(GvKey("SPREADP",ticket),spreadPoints);
+   GlobalVariableSet(GvKey("SPREADX",ticket),spreadPrice);
+   GlobalVariableSet(GvKey("MAXSPR",ticket),spreadPoints);
 }
 
 void UpdateExcursion(int ticket,int type,double entry,double sl,double bid,double ask)
@@ -1383,20 +1402,24 @@ bool WriteTradeRow(int ticket)
    int durMin=(int)((OrderCloseTime()-OrderOpenTime())/60);
    double negMin=MicroNegativeSeconds(ticket)/60.0;
    double entryScore=(GlobalVariableCheck(GvKey("SC",ticket))?GlobalVariableGet(GvKey("SC",ticket)):0.0);
+   double entrySpread=(GlobalVariableCheck(GvKey("SPREADP",ticket))?GlobalVariableGet(GvKey("SPREADP",ticket)):0.0);
+   double maxSpread=(GlobalVariableCheck(GvKey("MAXSPR",ticket))?GlobalVariableGet(GvKey("MAXSPR",ticket)):0.0);
+   double estimatedClose=(GlobalVariableCheck(GvKey("EC",ticket))?GlobalVariableGet(GvKey("EC",ticket)):0.0);
+   double estimatedNet=(GlobalVariableCheck(GvKey("NE",ticket))?GlobalVariableGet(GvKey("NE",ticket)):gross+comm+swp);
 
    string fn="Bitey_Ens_TradeAudit_"+IntegerToString(InpMagic)+".csv";
    int h=FileOpen(fn,FILE_READ|FILE_WRITE|FILE_CSV|FILE_SHARE_READ|FILE_SHARE_WRITE,';');
    if(h==INVALID_HANDLE) { Print("CSV_OPEN_FAILED | file=",fn," error=",GetLastError()); return(false); }
    if(FileSize(h)==0)
       FileWrite(h,"ticket","symbol","side","open_time","close_time","duration_min","negative_minutes","entry_score","lots","open_price","close_price",
-                "initial_risk_price","mfe_price","mae_price","mfe_R","mae_R","gross","commission","swap","net","close_reason","comment");
+                "entry_spread_points","max_spread_points","initial_risk_price","mfe_price","mae_price","mfe_R","mae_R","gross","commission","swap","taxes_separate_api_value","estimated_close_commission","net_at_close_estimate","net","close_reason","comment");
    FileSeek(h,0,SEEK_END);
    FileWrite(h,ticket,sym,(type==OP_BUY?"BUY":"SELL"),
              TimeToString(OrderOpenTime(),TIME_DATE|TIME_SECONDS),TimeToString(OrderCloseTime(),TIME_DATE|TIME_SECONDS),
              durMin,DoubleToString(negMin,2),DoubleToString(entryScore,2),DoubleToString(OrderLots(),2),DoubleToString(OrderOpenPrice(),digits),DoubleToString(OrderClosePrice(),digits),
-             DoubleToString(r0,digits),DoubleToString(mfe,digits),DoubleToString(mae,digits),
+             DoubleToString(entrySpread,1),DoubleToString(maxSpread,1),DoubleToString(r0,digits),DoubleToString(mfe,digits),DoubleToString(mae,digits),
              DoubleToString(mfeR,2),DoubleToString(maeR,2),
-             DoubleToString(gross,2),DoubleToString(comm,2),DoubleToString(swp,2),DoubleToString(gross+comm+swp,2),
+             DoubleToString(gross,2),DoubleToString(comm,2),DoubleToString(swp,2),"NOT_EXPOSED_SEPARATELY",DoubleToString(estimatedClose,2),DoubleToString(estimatedNet,2),DoubleToString(gross+comm+swp,2),
              CloseReasonText(ticket),OrderComment());
    FileClose(h);
    return(true);
