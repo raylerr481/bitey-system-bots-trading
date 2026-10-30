@@ -1,0 +1,2 @@
+Time,Symbol,Period,Regime,PreviousRegime,ATRRatio,StdRatio,ADX,Hurst,BestStrategy,BestScore,OOSPF,OOSExpectancy,OOSDD,TrainTrades,OOSTrades,RegimeChanges
+2026.10.01 00:16:02,EURUSD,60,TREND_DOWN,TREND_DOWN,1.1671,1.1566,33.920,0.6379,FRACTAL_HTF,218.994,2.7191,0.54287,6.0000,57,19,0

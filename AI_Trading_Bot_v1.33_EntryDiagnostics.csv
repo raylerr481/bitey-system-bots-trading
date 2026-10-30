@@ -1,0 +1,2 @@
+event;ticket;time;direction;entry;sl;tp;result;score_buy;score_sell;atr_points;adx;rsi;ema_fast;ema_slow;ema200;ema200_prev;ema200_slope_points;mae_points;mfe_points;mae_R;mfe_R;duration_min;exit_reason
+ENTRY;95735520;2026.09.29 14:00:01;SELL;1.13490;1.13606;1.13259;0;2;5;88.9;34.1;39.5;1.13513;1.13606;1.14240;1.14247;-7.5;;;;;;

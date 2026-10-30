@@ -1,0 +1,13 @@
+BITEY_STRATEGY_ATTRIBUTION_V2.64.7
+symbol=EURUSD
+timeframe=H1
+note=closed trades attributed by MT4 order comment; diagnostic attribution, not proof of future performance
+strategy=TREND_FOLLOWING|trades=0|wins=0|losses=0|win_rate=0.00|profit_factor=0.000|net=0.00|expectancy=0.0000|buy_trades=0|buy_wins=0|buy_net=0.00|sell_trades=0|sell_wins=0|sell_net=0.00
+strategy=MEAN_REVERSION|trades=0|wins=0|losses=0|win_rate=0.00|profit_factor=0.000|net=0.00|expectancy=0.0000|buy_trades=0|buy_wins=0|buy_net=0.00|sell_trades=0|sell_wins=0|sell_net=0.00
+strategy=MOMENTUM|trades=0|wins=0|losses=0|win_rate=0.00|profit_factor=0.000|net=0.00|expectancy=0.0000|buy_trades=0|buy_wins=0|buy_net=0.00|sell_trades=0|sell_wins=0|sell_net=0.00
+strategy=VOLATILITY_BREAKOUT|trades=0|wins=0|losses=0|win_rate=0.00|profit_factor=0.000|net=0.00|expectancy=0.0000|buy_trades=0|buy_wins=0|buy_net=0.00|sell_trades=0|sell_wins=0|sell_net=0.00
+strategy=SESSION_BIAS|trades=0|wins=0|losses=0|win_rate=0.00|profit_factor=0.000|net=0.00|expectancy=0.0000|buy_trades=0|buy_wins=0|buy_net=0.00|sell_trades=0|sell_wins=0|sell_net=0.00
+strategy=DIVERGENCE|trades=0|wins=0|losses=0|win_rate=0.00|profit_factor=0.000|net=0.00|expectancy=0.0000|buy_trades=0|buy_wins=0|buy_net=0.00|sell_trades=0|sell_wins=0|sell_net=0.00
+strategy=STRICT_RANGE|trades=0|wins=0|losses=0|win_rate=0.00|profit_factor=0.000|net=0.00|expectancy=0.0000|buy_trades=0|buy_wins=0|buy_net=0.00|sell_trades=0|sell_wins=0|sell_net=0.00
+strategy=FRACTAL_HTF|trades=0|wins=0|losses=0|win_rate=0.00|profit_factor=0.000|net=0.00|expectancy=0.0000|buy_trades=0|buy_wins=0|buy_net=0.00|sell_trades=0|sell_wins=0|sell_net=0.00
+unknown_strategy_trades=0
