@@ -57,3 +57,33 @@ amount. Gaps, fast price changes, broker execution, rejected closes, and slippag
 beyond the configured reserve can result in a realized net below 0.10. If a close
 request fails, the EA logs the failure and checks again on the next management cycle.
 Compile in MetaEditor and validate on demo before live use.
+
+
+## Two-sided first-priority net guard (updated)
+
+The EA now applies a two-sided, conservative net-result guard before the time exit,
+trend/ATR checks, optional R target, break-even, trailing stop, or adaptive TP:
+
+- **Profit protection:** attempt to close when estimated net proceeds are
+  `>= InpNetCloseThreshold` (default 0.10 in account currency).
+- **Loss containment:** attempt to close when estimated net proceeds are
+  `<= -InpNetLossCutThreshold` (default 0.20 in account currency).
+
+The loss threshold is a positive magnitude; the comparison is against its negative
+value. Both rules use the same estimated close result, including current MT4
+floating profit, opening commission and swap, estimated closing commission,
+slippage reserve and extra cost buffer. Positive tax reserve is deducted only from
+positive estimated proceeds. The executable-side Bid/Ask mark already reflects the
+broker spread; spread is not subtracted twice.
+
+This is an additional market-close guard, **not a replacement for the broker-side
+Stop Loss**. The SL remains essential for terminal disconnection, missed ticks,
+gaps and rejected/failed close requests. Adaptive TP remains useful to capture
+larger trends only while neither net guard has triggered. A loss cut at -0.20 can
+also exit a trade before its original SL; that is intentional for this experiment.
+
+The 0.10 and 0.20 values are in account currency (USD only on a USD account).
+Closing commission must be configured accurately. Taxes are user-configured
+reserves, not a legal tax calculation. Market execution cannot guarantee the exact
+threshold: gaps, slippage and broker rejection can produce a worse realized result.
+Compile and run controlled demo tests before any live use.
