@@ -939,7 +939,7 @@ bool CloseTicket(int ticket,string reason)
    Print("CLOSE | reason=",reason," ticket=",ticket," symbol=",sym," net=",DoubleToString(net,2)," ok=",(ok?"true":"false"),
          " error=",(ok?0:GetLastError()));
    LogMicroEvent(ok?"CLOSE_CONFIRMED":"CLOSE_FAILED","EXIT",ticket,sym,(type==OP_BUY?"BUY":"SELL"),(int)(TimeCurrent()-OrderOpenTime()),(int)MicroNegativeSeconds(ticket),net,NetAfterEstimatedCloseCosts(sym,lots,net),net-OrderSwap()-OrderCommission(),OrderCommission(),OrderSwap(),EstimatedRemainingCloseCommission(sym,lots),InpMicroProfitTargetUSD,0,reason+(ok?"":"_ERROR_"+IntegerToString(GetLastError())));
-   if(ok && net<0.0) MarkMicroReentryFailure(sym,type,(GlobalVariableCheck(GvKey("SC",ticket))?GlobalVariableGet(GvKey("SC",ticket)):0.0),ticket);
+   if(ok && (net<0.0 || reason=="MICROPROFIT_TIME_EXPIRY")) MarkMicroReentryFailure(sym,type,(GlobalVariableCheck(GvKey("SC",ticket))?GlobalVariableGet(GvKey("SC",ticket)):0.0),ticket);
    return(ok);
 }
 
@@ -1451,7 +1451,7 @@ void LogClosedTrades()
       if(GlobalVariableCheck(kd)) continue;
       GlobalVariableSet(kd,1.0);                       // claim first so a second copy does not write the same row
       double closedNet=OrderProfit()+OrderSwap()+OrderCommission();
-      if(closedNet<0.0) MarkMicroReentryFailure(OrderSymbol(),OrderType(),(GlobalVariableCheck(GvKey("SC",ticket))?GlobalVariableGet(GvKey("SC",ticket)):0.0),ticket);
+      if(closedNet<0.0 || CloseReasonText(ticket)=="MICROPROFIT_TIME_EXPIRY") MarkMicroReentryFailure(OrderSymbol(),OrderType(),(GlobalVariableCheck(GvKey("SC",ticket))?GlobalVariableGet(GvKey("SC",ticket)):0.0),ticket);
       else if(closedNet>0.0) ClearMicroReentryFailure(OrderSymbol(),OrderType());
       LogMicroEvent("TRADE_CLOSED","TRADE",ticket,OrderSymbol(),(OrderType()==OP_BUY?"BUY":"SELL"),(int)(OrderCloseTime()-OrderOpenTime()),(int)MicroNegativeSeconds(ticket),closedNet,closedNet,OrderProfit(),OrderCommission(),OrderSwap(),0,InpMicroProfitTargetUSD,(GlobalVariableCheck(GvKey("SC",ticket))?GlobalVariableGet(GvKey("SC",ticket)):0.0),CloseReasonText(ticket));
       if(!WriteTradeRow(ticket)) GlobalVariableDel(kd);
