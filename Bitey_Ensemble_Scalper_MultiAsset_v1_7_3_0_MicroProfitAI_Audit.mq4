@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//| Bitey_Ensemble_Scalper_MultiAsset_v1_7_2_4_NetProfitAudit.mq4      |
+//| Bitey_Ensemble_Scalper_MultiAsset_v1_7_3_0_MicroProfitAI_Audit.mq4 |
 //| Scalping / day trading, multi-asset (max 5), bidirectional,       |
 //| adaptive SL/TP. Account type (demo/real) NEVER gates orders.      |
 //| v1.7.2 = v1.7.1 + gross FX currency cap + diversification ranking:   |
@@ -33,7 +33,11 @@
 //| v1.4.0.3: MFE/MAE CSV per trade, throttled reject logs, no entry on the start bar, TP-expand toggle.
 //| v1.4.0.2: TP step + log fixes. v1.4.0: cost-aware (commission+spread), lot caps, circuit         |
 //| breakers, rollover handling, BE/trail that cover costs.           |
-//| Not performance-validated: test on demo/tester before live use.   |
+//| v1.7.3.0: net +$0.10 close, 20m expiry, asset-wide strict re-entry,|
+//|  persistent 50% daily-peak giveback protection, process/event CSV. |
+//| Existing signal engine remains 4 rule families x 8 variants; no   |
+//| external 30-model AI assembly is claimed or fabricated.            |
+//| Not compiled or performance-validated: test in MetaEditor/demo.    |
 //+------------------------------------------------------------------+
 #property strict
 
