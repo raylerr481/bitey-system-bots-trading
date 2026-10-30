@@ -69,7 +69,8 @@ input double           InpNetLockGivebackPct     = 35.0;    // Lock (100-this)% 
 input double           InpNetLockStepUSD         = 0.25;    // Persist peak only after this improvement
 input double           InpEstimatedCloseCommissionPerLot = 0.0; // Configure broker close commission per 1.0 lot, account currency
 input int              InpNetLockSlippagePoints  = 3;       // Adverse stop-fill slippage reserve
-input double           InpNetCloseThreshold      = 0.10;    // FIRST-PRIORITY close floor in account currency (USD on USD accounts)
+input double           InpNetCloseThreshold      = 0.10;    // FIRST-PRIORITY net profit close floor, account currency
+input double           InpNetLossCutThreshold     = 0.20;    // FIRST-PRIORITY loss cut when estimated net <= -this amount
 input double           InpNetTaxReservePct       = 0.0;     // Optional tax reserve on positive net profit; 0 disables
 input double           InpCloseCostBuffer        = 0.02;    // Additional execution-cost safety buffer
 input double           InpHoldTrendADXMin        = 22.0;    // Trend strength required to keep a profitable trade
@@ -502,9 +503,15 @@ void ManageExits()
       double entry=OrderOpenPrice(), oldSL=OrderStopLoss(), oldTP=OrderTakeProfit(), lots=OrderLots();
       double net=OrderProfit()+OrderSwap()+OrderCommission();
 
-      // FIRST PRIORITY: close as soon as conservatively estimated net proceeds reach
-      // the configured floor. A strong trend cannot veto this protection.
+      // FIRST PRIORITY GUARD: use the same conservative net estimate for both sides.
+      // Profit target: close at/above +floor. Loss cut: close at/below -loss threshold.
+      // These checks run before time, trend, ATR, R-target, SL trailing or adaptive TP.
       double closeNet=EstimatedCloseNet(sym,lots,net);
+      if(InpNetLossCutThreshold>0.0 && closeNet<=-InpNetLossCutThreshold)
+      {
+         CloseTicket(ticket,"PRIORITY_NET_LOSS_CUT");
+         continue;
+      }
       if(closeNet>=InpNetCloseThreshold)
       {
          CloseTicket(ticket,"PRIORITY_NET_PROFIT_FLOOR");
