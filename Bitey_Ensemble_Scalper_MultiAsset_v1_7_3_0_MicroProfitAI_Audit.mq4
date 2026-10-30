@@ -525,6 +525,7 @@ int FamilyDir(int b,int s)
 bool Analyze(string sym,int &cmd,double &score,string &why)
 {
    cmd=-1; score=0.0; why="";
+   g_lastVoteSummary="";
    int tf=InpSignalTF;
    double c1=iClose(sym,tf,1), c2=iClose(sym,tf,2);
    double atr=iATR(sym,tf,InpATRPeriod,1);
@@ -632,6 +633,7 @@ bool Analyze(string sym,int &cmd,double &score,string &why)
    double stopRef=atr*InpStopATR;
    double costR=EntryCostR(sym,stopRef);
    score=10.0*agree+win+MathMin(adx,40.0)/4.0-30.0*MathMin(costR,2.0);
+   g_lastVoteSummary+=";REGIME="+IntegerToString(g_tmpRegime)+";ADX="+DoubleToString(adx,1)+";COST_R="+DoubleToString(costR,3)+";FAMILY_AGREE="+IntegerToString(agree)+";WIN_VARIANTS="+IntegerToString(win);
    cmd=(dir>0?OP_BUY:OP_SELL);
    return(true);
 }
@@ -743,7 +745,7 @@ int CloseReasonCode(string reason)
 string CloseReasonText(int ticket)
 {
    string k=GvKey("CR",ticket);
-   if(!GlobalVariableCheck(k)) return("BROKER_SL_TP_OR_EXTERNAL");
+   if(!GlobalVariableCheck(k))\n   {\n      double pt=MarketInfo(OrderSymbol(),MODE_POINT);\n      if(pt>0.0 && OrderStopLoss()>0.0 && MathAbs(OrderClosePrice()-OrderStopLoss())<=pt*5.0) return("BROKER_STOP_LOSS");\n      if(pt>0.0 && OrderTakeProfit()>0.0 && MathAbs(OrderClosePrice()-OrderTakeProfit())<=pt*5.0) return("BROKER_TAKE_PROFIT");\n      return("EXTERNAL_OR_UNKNOWN");\n   }
    int c=(int)GlobalVariableGet(k);
    if(c==1) return("MICROPROFIT_NET_TARGET");
    if(c==2) return("MICROPROFIT_TIME_EXPIRY");
@@ -802,8 +804,8 @@ void UpdateMicroTradeClock(int ticket,double net)
 }
 string MicroReentryKey(string sym,int side,string suffix)
 {
-   string sd=(side==OP_BUY?"B":"S");
-   return("BEMR_"+IntegerToString(AccountNumber())+"_"+IntegerToString(InpMagic)+"_"+AssetKey(sym)+"_"+sd+"_"+suffix);
+   // Re-entry lock is per ASSET, not per direction: after a failure both BUY and SELL need a stronger fresh signal.
+   return("BEMR_"+IntegerToString(AccountNumber())+"_"+IntegerToString(InpMagic)+"_"+AssetKey(sym)+"_"+suffix);
 }
 void MarkMicroReentryFailure(string sym,int side,double entryScore,int ticket)
 {
