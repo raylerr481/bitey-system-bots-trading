@@ -69,7 +69,7 @@ input double           InpNetLockGivebackPct     = 35.0;    // Lock (100-this)% 
 input double           InpNetLockStepUSD         = 0.25;    // Persist peak only after this improvement
 input double           InpEstimatedCloseCommissionPerLot = 0.0; // Configure broker close commission per 1.0 lot, account currency
 input int              InpNetLockSlippagePoints  = 3;       // Adverse stop-fill slippage reserve
-input double           InpNetCloseThreshold      = 0.10;    // Close when estimated realized net exceeds this amount
+input double           InpNetCloseThreshold      = 0.10;    // FIRST-PRIORITY close floor in account currency (USD on USD accounts)
 input double           InpNetTaxReservePct       = 0.0;     // Optional tax reserve on positive net profit; 0 disables
 input double           InpCloseCostBuffer        = 0.02;    // Additional execution-cost safety buffer
 input double           InpHoldTrendADXMin        = 22.0;    // Trend strength required to keep a profitable trade
@@ -501,28 +501,23 @@ void ManageExits()
       int digits=(int)MarketInfo(sym,MODE_DIGITS);
       double entry=OrderOpenPrice(), oldSL=OrderStopLoss(), oldTP=OrderTakeProfit(), lots=OrderLots();
       double net=OrderProfit()+OrderSwap()+OrderCommission();
-      double atr=iATR(sym,InpSignalTF,InpATRPeriod,1);
 
+      // FIRST PRIORITY: close as soon as conservatively estimated net proceeds reach
+      // the configured floor. A strong trend cannot veto this protection.
+      double closeNet=EstimatedCloseNet(sym,lots,net);
+      if(closeNet>=InpNetCloseThreshold)
+      {
+         CloseTicket(ticket,"PRIORITY_NET_PROFIT_FLOOR");
+         continue;
+      }
+
+      double atr=iATR(sym,InpSignalTF,InpATRPeriod,1);
       if(InpMaxHoldBars>0)
       {
          int barsOpen=iBarShift(sym,InpSignalTF,OrderOpenTime(),false);
          if(barsOpen>=InpMaxHoldBars) { CloseTicket(ticket,"TIME_EXIT"); continue; }
       }
       if(atr<=0) continue;
-      // Net-profit opportunity exit: spread is already reflected in Bid/Ask mark-to-market.
-      // Keep a profitable trade only while directional trend evidence remains strong.
-      double closeNet=EstimatedCloseNet(sym,lots,net);
-      if(closeNet>InpNetCloseThreshold)
-      {
-         if(!IsTrendStrongForPosition(sym,type))
-         {
-            CloseTicket(ticket,"NET_PROFIT_WEAK_TREND");
-            continue;
-         }
-         Print("NET_PROFIT_HOLD | ticket=",ticket," symbol=",sym,
-               " estimatedNet=",DoubleToString(closeNet,2)," trend=STRONG; adaptive SL/TP retained");
-      }
-
 
       if(InpNetTargetR>0.0)
       {
