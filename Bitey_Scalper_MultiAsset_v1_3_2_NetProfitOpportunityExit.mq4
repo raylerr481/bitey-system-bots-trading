@@ -70,7 +70,7 @@ input double           InpNetLockStepUSD         = 0.25;    // Persist peak only
 input double           InpEstimatedCloseCommissionPerLot = 0.0; // Configure broker close commission per 1.0 lot, account currency
 input int              InpNetLockSlippagePoints  = 3;       // Adverse stop-fill slippage reserve
 input double           InpNetCloseThreshold      = 0.10;    // FIRST-PRIORITY net profit close floor, account currency
-input double           InpNetLossCutThreshold     = 0.20;    // FIRST-PRIORITY loss cut when estimated net <= -this amount
+input double           InpNetLossCutThreshold     = 0.10;    // FIRST-PRIORITY loss cut when estimated net <= -this amount
 input double           InpNetTaxReservePct       = 0.0;     // Optional tax reserve on positive net profit; 0 disables
 input double           InpCloseCostBuffer        = 0.02;    // Additional execution-cost safety buffer
 input double           InpHoldTrendADXMin        = 22.0;    // Trend strength required to keep a profitable trade
