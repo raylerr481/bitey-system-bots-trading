@@ -15,8 +15,9 @@ Independent MT4 Expert Advisor on a feature branch. It does not replace v1.1.0, 
 - ATR width, spread, stop-level, daily-loss and trade-count guards apply. No signal means HOLD.
 
 ## Day-trading controls
-- `EnableTrading=true` by default for Strategy Tester and demo accounts.
-- Real accounts are blocked by default with `AllowLiveTrading=false`; this must be explicitly changed by the user after validation. The terminal's AutoTrading permission and EA trading permission must also be enabled.
+- `EnableTrading=true` by default. The EA does not block entries based on account type: Strategy Tester, demo and real accounts use the same entry logic.
+- There is no `IsDemo()` / `IsTesting()` account-type gate and no `AllowLiveTrading` switch. The terminal's AutoTrading permission, EA trading permission, broker permissions and the `EnableTrading` input must still allow trading.
+- Real-account use carries financial risk. Validate the EA in Strategy Tester and demo before enabling it on a real account; the EA's risk guards do not guarantee a maximum realized loss.
 - Risk 0.25% of balance per trade; lot volume rounds down, never up.
 - Maximum 3 entries per symbol per broker-server day; one open position per symbol/Magic Number.
 - Daily equity-loss guard 2% from captured start-of-day equity.
@@ -31,10 +32,10 @@ MT4 crypto symbols are broker-specific contracts/CFDs, not necessarily spot cryp
 ## Installation and validation
 1. Copy the EA into MQL4/Experts/.
 2. Compile in MetaEditor and resolve errors/warnings.
-3. Initially keep trading disabled and inspect logs.
+3. Compile and inspect logs; confirm `trading=ON`.
 4. Backtest each instrument separately with realistic variable spread, commission, swap and quality tick history.
 5. Demo-test order sizing, stop distances, M5 confirmation, daily guard, holding/day-end exits and net lock.
-6. Compare out-of-sample results with v1.1.0. No profitability claim is made.
+6. Only after validation, decide whether to enable it on a real account. Compare out-of-sample results with v1.1.0. No profitability claim is made.
 
 ## Known limitations
 - This authoring step did not compile or backtest the EA.
