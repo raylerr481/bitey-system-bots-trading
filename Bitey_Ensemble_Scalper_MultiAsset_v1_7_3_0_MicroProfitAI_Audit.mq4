@@ -746,7 +746,13 @@ int CloseReasonCode(string reason)
 string CloseReasonText(int ticket)
 {
    string k=GvKey("CR",ticket);
-   if(!GlobalVariableCheck(k))\n   {\n      double pt=MarketInfo(OrderSymbol(),MODE_POINT);\n      if(pt>0.0 && OrderStopLoss()>0.0 && MathAbs(OrderClosePrice()-OrderStopLoss())<=pt*5.0) return("BROKER_STOP_LOSS");\n      if(pt>0.0 && OrderTakeProfit()>0.0 && MathAbs(OrderClosePrice()-OrderTakeProfit())<=pt*5.0) return("BROKER_TAKE_PROFIT");\n      return("EXTERNAL_OR_UNKNOWN");\n   }
+   if(!GlobalVariableCheck(k))
+   {
+      double pt=MarketInfo(OrderSymbol(),MODE_POINT);
+      if(pt>0.0 && OrderStopLoss()>0.0 && MathAbs(OrderClosePrice()-OrderStopLoss())<=pt*5.0) return("BROKER_STOP_LOSS");
+      if(pt>0.0 && OrderTakeProfit()>0.0 && MathAbs(OrderClosePrice()-OrderTakeProfit())<=pt*5.0) return("BROKER_TAKE_PROFIT");
+      return("EXTERNAL_OR_UNKNOWN");
+   }
    int c=(int)GlobalVariableGet(k);
    if(c==1) return("MICROPROFIT_NET_TARGET");
    if(c==2) return("MICROPROFIT_TIME_EXPIRY");
@@ -901,7 +907,8 @@ void LogMicroEvent(string eventType,string process,int ticket,string sym,string 
    FileWrite(h,"1.0",g_microSessionId,eventId,TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS),eventType,process,ticket,sym,side,
              InpMagic,EA_VERSION,elapsedSec,negativeSec,DoubleToString(net,2),DoubleToString(netAfter,2),
              DoubleToString(gross,2),DoubleToString(commission,2),DoubleToString(swap,2),
-             DoubleToString(estimatedClose,2),DoubleToString(target,2),DoubleToString(score,2),\n             ((eventType=="ENTRY_OPENED" || eventType=="ENTRY_REJECT" || eventType=="REENTRY_STRICT_REJECT")?g_lastVoteSummary:""),reason);
+             DoubleToString(estimatedClose,2),DoubleToString(target,2),DoubleToString(score,2),
+             ((eventType=="ENTRY_OPENED" || eventType=="ENTRY_REJECT" || eventType=="REENTRY_STRICT_REJECT")?g_lastVoteSummary:""),reason);
    FileClose(h);
 }
 
