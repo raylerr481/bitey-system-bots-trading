@@ -1418,7 +1418,7 @@ bool WriteTradeRow(int ticket)
    double estimatedClose=(GlobalVariableCheck(GvKey("EC",ticket))?GlobalVariableGet(GvKey("EC",ticket)):0.0);
    double estimatedNet=(GlobalVariableCheck(GvKey("NE",ticket))?GlobalVariableGet(GvKey("NE",ticket)):gross+comm+swp);
 
-   string fn="Bitey_Ens_TradeAudit_"+IntegerToString(InpMagic)+".csv";
+   string fn="Bitey_Ens_TradeAudit_v1_7_3_0_"+IntegerToString(InpMagic)+".csv";
    int h=FileOpen(fn,FILE_READ|FILE_WRITE|FILE_CSV|FILE_SHARE_READ|FILE_SHARE_WRITE,';');
    if(h==INVALID_HANDLE) { Print("CSV_OPEN_FAILED | file=",fn," error=",GetLastError()); return(false); }
    if(FileSize(h)==0)
