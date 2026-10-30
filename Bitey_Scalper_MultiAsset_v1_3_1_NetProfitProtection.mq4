@@ -95,6 +95,8 @@ int OnInit()
       SymbolSelect(g_symbols[i],true);
    }
    EventSetTimer(1);
+   if(AccountCurrency()!="USD") Print("RISK_WARNING | reference capital is USD but account currency is ",AccountCurrency(),"; verify conversion before trading");
+   if(InpEstimatedCloseCommissionPerLot<=0.0) Print("NET_LOCK_WARNING | set InpEstimatedCloseCommissionPerLot if broker charges closing commission; exact net lock cannot be guaranteed otherwise");
    Print("BITEY_ENSEMBLE_INIT | version=",EA_VERSION," | symbols=",g_symbolCount,
          " | maxPositions=",MaxPositions()," | tf=",(int)InpSignalTF,
          " | accountMode=NOT_A_GATE | trading=",(InpEnableTrading?"ON":"OFF"));
