@@ -15,7 +15,8 @@ Independent MT4 Expert Advisor on a feature branch. It does not replace v1.1.0, 
 - ATR width, spread, stop-level, daily-loss and trade-count guards apply. No signal means HOLD.
 
 ## Day-trading controls
-- EnableTrading=false by default.
+- `EnableTrading=true` by default for Strategy Tester and demo accounts.
+- Real accounts are blocked by default with `AllowLiveTrading=false`; this must be explicitly changed by the user after validation. The terminal's AutoTrading permission and EA trading permission must also be enabled.
 - Risk 0.25% of balance per trade; lot volume rounds down, never up.
 - Maximum 3 entries per symbol per broker-server day; one open position per symbol/Magic Number.
 - Daily equity-loss guard 2% from captured start-of-day equity.
