@@ -5,7 +5,7 @@
 All files are written to the MT4 terminal's local `MQL4\Files` folder (not Common\Files).
 
 1. `Bitey_MicroProfit_Process_<magic>.csv` — append-only event stream.
-2. `Bitey_Ens_TradeAudit_<magic>.csv` — one row per captured closed EA trade, extended with negative duration, entry score and close reason.
+2. `Bitey_Ens_TradeAudit_v1_7_3_0_<magic>.csv` — one row per captured closed EA trade, extended with negative duration, entry score and close reason.
 3. `Bitey_Ens_NetByAsset_<magic>.csv` — existing per-symbol closed-trade net summary.
 
 Set MT4 Account History to **All History** for the most complete closed-trade audit.
