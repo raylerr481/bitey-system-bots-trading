@@ -284,7 +284,7 @@ void ManageOpenTrades()
       int age=(int)((TimeCurrent()-OrderOpenTime())/60);
       double net=EstimatedNetUSD();
       bool closeNow=false; string why="";
-      if(EnableTrading && net>=TargetNetProfitUSD){closeNow=true; why="NET_TARGET";}
+      if(net>=TargetNetProfitUSD){closeNow=true; why="NET_TARGET";}
       if(!closeNow && age>=MaxTradeDurationMinutes){closeNow=true; why="TIME_EXIT";}
       if(closeNow)
       {
