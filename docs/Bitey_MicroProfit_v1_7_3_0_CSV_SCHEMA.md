@@ -28,6 +28,9 @@ Set MT4 Account History to **All History** for the most complete closed-trade au
 | net_current | Current posted net P/L |
 | net_after_estimated_close | Net after reserving estimated remaining close commission |
 | gross / commission / swap | MT4 order components |
+| entry_spread_points / max_spread_points | Spread at entry and maximum observed spread during the open trade |
+| taxes_separate_api_value | Always `NOT_EXPOSED_SEPARATELY`: standard MT4 order API does not provide a universal separate tax field |
+| estimated_close_commission / net_at_close_estimate | Estimated remaining commission and net immediately before the EA close request |
 | estimated_remaining_close_commission | Remaining round-turn commission estimate |
 | target_net | Configured net close target |
 | entry_score | Existing rule-based signal score |
@@ -60,7 +63,7 @@ Set MT4 Account History to **All History** for the most complete closed-trade au
 - The remaining close commission is estimated from the configured round-turn commission minus commission already posted on the open order. Calibrate `InpCommissionPerLotFX` and `InpCommissionPerLotOther` to actual Tradewill statements.
 - Slippage, requotes, partial fills and broker-side fees can make realized net differ from the estimate.
 - The inherited signal engine is four rule-based families with eight variants each (32 indicator variants). It is **not** a connected 30-independent-AI-model assembly. The CSV records the real family vote counts; no model votes are fabricated.
-- Negative time is accumulated while the EA is running and observing the order; terminal downtime is intentionally not counted as observed negative time.
+- Negative time is accumulated while the EA is running and observing the order, using net after estimated remaining close commission; terminal downtime is intentionally not counted as observed negative time.
 - CSV rows depend on MT4 exposing the relevant order history. Use All History and preserve the files between test runs.
 
 ## Validation status
