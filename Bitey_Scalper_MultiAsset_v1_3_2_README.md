@@ -79,7 +79,7 @@ broker spread; spread is not subtracted twice.
 This is an additional market-close guard, **not a replacement for the broker-side
 Stop Loss**. The SL remains essential for terminal disconnection, missed ticks,
 gaps and rejected/failed close requests. Adaptive TP remains useful to capture
-larger trends only while neither net guard has triggered. A loss cut at -0.20 can
+larger trends only while neither net guard has triggered. A loss cut at -0.10 can
 also exit a trade before its original SL; that is intentional for this experiment.
 
 The 0.10 and 0.20 values are in account currency (USD only on a USD account).
