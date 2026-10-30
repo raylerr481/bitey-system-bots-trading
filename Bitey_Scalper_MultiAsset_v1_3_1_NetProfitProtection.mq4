@@ -23,6 +23,7 @@ input int              InpMagic                 = 21102026;
 input double           InpReferenceCapitalUSD   = 500.0;
 input double           InpRiskPctPerTrade       = 0.5;     // 5 positions x 0.5% = 2.5% aggregate
 input double           InpMaxAggregateRiskPct   = 2.5;
+input double           InpMaxCurrencyRiskPct    = 1.5;     // Maximum stop-risk attributed to either FX currency
 input double           InpDailyLossPct          = 3.0;     // Blocks NEW entries; open trades stay managed
 input int              InpMaxOpenPositions      = 5;       // Clamped to 1..5, one position per asset
 
@@ -430,6 +431,7 @@ bool OpenTrade(string sym,int cmd,double score)
    double lots=LotsForRisk(sym,stopDist,budget);
    if(lots<=0) { Print("RISK_REJECT | symbol=",sym," reason=MIN_LOT_EXCEEDS_BUDGET budget=",DoubleToString(budget,2)); return(false); }
    double risk=EstimateRisk(sym,lots,stopDist);
+   if(!CurrencyRiskAllowed(sym,lots,stopDist,risk)) return(false);
 
    if(!InpEnableTrading)
    {
@@ -645,6 +647,37 @@ int CountOpenPositions()
 }
 
 // Adverse entry-to-stop risk only; a stop at/after break-even counts as zero risk.
+bool CurrencyRiskAllowed(string sym,double lots,double stopDist,double candidateRisk)
+{
+   if(InpMaxCurrencyRiskPct<=0.0 || IsCrypto(sym)) return(true);
+   string key=AssetKey(sym);
+   if(StringLen(key)<6) return(true); // Unknown/non-FX contract: retain aggregate-risk control
+   string base=StringSubstr(key,0,3), quote=StringSubstr(key,3,3);
+   double cap=InpReferenceCapitalUSD*InpMaxCurrencyRiskPct/100.0;
+   double baseRisk=candidateRisk, quoteRisk=candidateRisk;
+   for(int i=OrdersTotal()-1;i>=0;i--)
+   {
+      if(!OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) continue;
+      if(OrderMagicNumber()!=InpMagic || (OrderType()!=OP_BUY && OrderType()!=OP_SELL)) continue;
+      if(IsCrypto(OrderSymbol())) continue;
+      string k=AssetKey(OrderSymbol());
+      if(StringLen(k)<6) continue;
+      string b=StringSubstr(k,0,3), q=StringSubstr(k,3,3);
+      double d=(OrderType()==OP_BUY?OrderOpenPrice()-OrderStopLoss():OrderStopLoss()-OrderOpenPrice());
+      if(OrderStopLoss()<=0.0) return(false); // fail closed when an existing stop-risk is unknown
+      double existing=(d>0.0?EstimateRisk(OrderSymbol(),OrderLots(),d):0.0);
+      if(b==base || q==base) baseRisk+=existing;
+      if(b==quote || q==quote) quoteRisk+=existing;
+   }
+   if(baseRisk>cap+0.02 || quoteRisk>cap+0.02)
+   {
+      Print("CURRENCY_RISK_REJECT | symbol=",sym," base=",base," risk=",DoubleToString(baseRisk,2),
+            " quote=",quote," risk2=",DoubleToString(quoteRisk,2)," cap=",DoubleToString(cap,2));
+      return(false);
+   }
+   return(true);
+}
+
 double CurrentOpenRisk()
 {
    double total=0.0;
