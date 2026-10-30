@@ -52,7 +52,7 @@ Set MT4 Account History to **All History** for the most complete closed-trade au
 - Close when estimated net after remaining commission is at least USD 0.10.
 - Close at 20 minutes from open if the target was not reached.
 - Record accumulated time while posted net P/L is negative.
-- After a losing close, block that symbol in either direction for at least 20 minutes; afterward require a score at least 8 points above the previous failed entry's score.
+- After a losing close or a time-expired close that missed the USD 0.10 target (even if slightly positive), block that symbol in either direction for at least 20 minutes; afterward require a score at least 8 points above the previous failed entry's score.
 - Persist daily net peak per account + Magic + broker/server date. At a 50% giveback from the positive peak, close only this EA's positions and block entries until the next server day.
 - Preserve the inherited entry signal, lot sizing, risk caps, SL/TP construction, and Magic ownership.
 
