@@ -31,8 +31,8 @@ MT4 crypto symbols are broker-specific contracts/CFDs, not necessarily spot cryp
 
 ## Installation and validation
 1. Copy the EA into MQL4/Experts/.
-2. Compile in MetaEditor and resolve errors/warnings.
-3. Compile and inspect logs; confirm `trading=ON`.
+2. Compile in MetaEditor and resolve all errors and warnings.
+3. Run the Strategy Tester and inspect logs; confirm `trading=ON`.
 4. Backtest each instrument separately with realistic variable spread, commission, swap and quality tick history. Verify tick value, tick size, minimum lot and lot step for every broker symbol.
 5. Demo-test order sizing, stop distances, M5 confirmation, daily guard, holding/day-end exits and net lock.
 6. Only after validation, decide whether to enable it on a real account. Compare out-of-sample results with v1.1.0. No profitability claim is made. Static code review is not a substitute for MetaEditor compilation and broker-specific demo validation.
@@ -44,5 +44,6 @@ MT4 crypto symbols are broker-specific contracts/CFDs, not necessarily spot cryp
 - Strategy Tester deliberately captures a fresh daily baseline for each test run. On live/demo terminal instances, the persistent baseline is local to that MT4 terminal; deleting terminal Global Variables or changing the Magic Number creates a new baseline.
 - Trade count depends on terminal-loaded account history.
 - Day-end close can incur slippage, spread widening or broker rejection.
-- Net lock is an estimate using current tick value/size and reported swap/commission; realized P/L can differ.
+- Net lock is an estimate using the broker's current tick value/size and reported swap/commission; realized P/L can differ.
+- The tick-value calculations assume the broker reports `MODE_TICKSIZE` in MT4 points, as specified by the MQL4 interface. Confirm unusual CFD/crypto contract specifications with the broker.
 - Use distinct Magic Numbers for multiple instances on the same symbol.
