@@ -29,7 +29,11 @@ input bool            UseRSIFilter         = true;
 input int             BuyRSIMax            = 45;
 input int             SellRSIMin           = 55;
 input bool            CloseAtMidline       = false;     // If true, TP at range midpoint
-input bool            OneTradePerSymbol    = true;\ninput bool            UseNetProfitLock     = true;\ninput double          NetProfitLockTrigger = 1.00;  // Account currency, after commission and swap\ninput double          NetProfitLockFloor   = 0.20;  // Minimum protected net profit, account currency\ninput int             LockRetrySeconds     = 5;
+input bool            OneTradePerSymbol    = true;
+input bool            UseNetProfitLock     = true;
+input double          NetProfitLockTrigger = 1.00;  // Account currency, after commission and swap
+input double          NetProfitLockFloor   = 0.20;  // Minimum protected net profit, account currency
+input int             LockRetrySeconds     = 5;
 
 datetime g_lastBarTime = 0;
 int      g_dayKey = -1;
