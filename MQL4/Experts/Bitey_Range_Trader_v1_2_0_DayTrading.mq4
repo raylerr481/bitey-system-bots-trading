@@ -1,15 +1,14 @@
 //+------------------------------------------------------------------+
 //| Bitey_Range_Trader_v1_2_0_DayTrading.mq4                                   |
 //| Standalone intraday range + confirmed breakout EA for MetaTrader 4                    |
-//| Research/demo first. Trading is DISABLED by default.              |
+//| Trading can run on demo or real accounts; risk guards remain.    |
 //+------------------------------------------------------------------+
 #property strict
 #property version   "1.20"
 #property description "Intraday: range rejection and confirmed breakout continuation, BUY/SELL."
 #property description "All-day operation; M15 context, M5 breakout confirmation and intraday exits."
 
-input bool            EnableTrading       = true;      // Auto-enable entries in Strategy Tester and demo
-input bool            AllowLiveTrading    = false;     // Separate explicit permission for real accounts
+input bool            EnableTrading       = true;      // Enable entries on any account type
 input int             MagicNumber         = 29102601;
 input ENUM_TIMEFRAMES SignalTimeframe     = PERIOD_M15;
 input ENUM_TIMEFRAMES BreakoutConfirmTF   = PERIOD_M5;
@@ -59,7 +58,6 @@ int OnInit()
    Print("BITEY_RANGE_INIT symbol=", Symbol(),
          " tf=", EnumToString(SignalTimeframe),
          " trading=", (EnableTrading ? "ON" : "OFF"),
-         " liveAllowed=", (AllowLiveTrading ? "YES" : "NO"),
          " riskPct=", DoubleToString(RiskPercent, 2),
          " lookback=", RangeLookback,
          " breakoutTF=", EnumToString(BreakoutConfirmTF),
@@ -80,11 +78,6 @@ void OnTick()
    if(!EnableTrading)
    {
       Print("BITEY_RANGE_BLOCK reason=TRADING_DISABLED");
-      return;
-   }
-   if(!IsTesting() && !IsDemo() && !AllowLiveTrading)
-   {
-      Print("BITEY_RANGE_BLOCK reason=LIVE_ACCOUNT_DISABLED");
       return;
    }
    if(!IsTradeAllowed())
