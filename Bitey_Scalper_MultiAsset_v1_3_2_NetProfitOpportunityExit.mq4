@@ -595,8 +595,9 @@ double EstimatedCloseNet(string sym,double lots,double floatingNet)
    if(point>0 && InpNetLockSlippagePoints>0)
       slip=EstimateRisk(sym,lots,InpNetLockSlippagePoints*point);
    if(slip>=1.0e11) return(-1.0e12);
-   // OrderProfit is already marked at Bid for BUY / Ask for SELL, including spread.
-   // OrderCommission and swap are already included in floatingNet.
+   // OrderProfit is marked at executable-side Bid (BUY) / Ask (SELL), so broker
+   // spread is already reflected once; do not subtract it again.
+   // Opening commission and swap are already included in floatingNet.
    double beforeTax=floatingNet-closeCommission-slip-MathMax(0.0,InpCloseCostBuffer);
    double tax=MathMax(0.0,beforeTax)*MathMax(0.0,MathMin(100.0,InpNetTaxReservePct))/100.0;
    return(beforeTax-tax);
