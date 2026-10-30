@@ -604,7 +604,8 @@ bool NetProfitLockStop(int ticket,string sym,int type,double entry,double lots,d
    // Floating OrderProfit is marked at Bid for BUY / Ask for SELL: spread is included.
    // Reserve estimated closing commission and adverse stop-fill slippage.
    double closeCommission=MathMax(0.0,InpEstimatedCloseCommissionPerLot)*lots;
-   double slipReserve=EstimateRisk(sym,lots,MathMax(0,InpNetLockSlippagePoints)*point);
+   double slipReserve=0.0;
+   if(InpNetLockSlippagePoints>0) slipReserve=EstimateRisk(sym,lots,InpNetLockSlippagePoints*point);
    if(slipReserve>=1.0e11) return(false);
    double requiredGross=lockNet-OrderSwap()-OrderCommission()+closeCommission+slipReserve;
    double move=requiredGross/moneyPerPrice;
