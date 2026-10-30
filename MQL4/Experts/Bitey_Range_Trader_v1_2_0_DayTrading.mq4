@@ -202,6 +202,12 @@ void EvaluateRangeSignal()
    double low1   = iLow(Symbol(), SignalTimeframe, 1);
    double rsi    = iRSI(Symbol(), SignalTimeframe, RSIPeriod, PRICE_CLOSE, 1);
 
+   if(width < atr * MinRangeATR || width > atr * MaxRangeATR)
+   {
+      Print("BITEY_RANGE_BLOCK reason=RANGE_WIDTH widthATR=", DoubleToString(width/atr, 2));
+      return;
+   }
+
    // Confirmed breakout continuation: completed M15 close beyond range and M5 agreement.
    bool bullishBreakout = (close1 > rangeHigh + atr * BreakoutBufferATR);
    bool bearishBreakout = (close1 < rangeLow - atr * BreakoutBufferATR);
@@ -226,12 +232,6 @@ void EvaluateRangeSignal()
          return;
       }
       Print("BITEY_RANGE_BLOCK reason=BREAKOUT_WITHOUT_M5_CONFIRMATION");
-      return;
-   }
-
-   if(width < atr * MinRangeATR || width > atr * MaxRangeATR)
-   {
-      Print("BITEY_RANGE_BLOCK reason=RANGE_WIDTH widthATR=", DoubleToString(width/atr, 2));
       return;
    }
 
