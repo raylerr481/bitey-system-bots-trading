@@ -456,6 +456,7 @@ void RunCycle()
 void Reject(string sym,string reason)
 {
    if(InpLogRejects) Print("SYMBOL_REJECT | symbol=",sym," | reason=",reason);
+   LogMicroEvent("SYMBOL_REJECT","ENTRY_FILTER",0,sym,"",0,0,0,0,0,0,0,0,0,0,reason);
 }
 
 //+------------------------------------------------------------------+
@@ -891,7 +892,7 @@ void LogMicroEvent(string eventType,string process,int ticket,string sym,string 
    FileWrite(h,"1.0",g_microSessionId,eventId,TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS),eventType,process,ticket,sym,side,
              InpMagic,EA_VERSION,elapsedSec,negativeSec,DoubleToString(net,2),DoubleToString(netAfter,2),
              DoubleToString(gross,2),DoubleToString(commission,2),DoubleToString(swap,2),
-             DoubleToString(estimatedClose,2),DoubleToString(target,2),DoubleToString(score,2),g_lastVoteSummary,reason);
+             DoubleToString(estimatedClose,2),DoubleToString(target,2),DoubleToString(score,2),\n             ((eventType=="ENTRY_OPENED" || eventType=="ENTRY_REJECT" || eventType=="REENTRY_STRICT_REJECT")?g_lastVoteSummary:""),reason);
    FileClose(h);
 }
 
