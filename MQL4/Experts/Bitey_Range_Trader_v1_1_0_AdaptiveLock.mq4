@@ -62,9 +62,8 @@ int OnInit()
 void OnTick()
 {
    UpdateDailyState();
+   ManageOpenPositions(); // Run protection on every tick.
    if(!IsNewSignalBar()) return;
-
-   ManageOpenPositions();
 
    if(!EnableTrading)
    {
@@ -323,7 +322,55 @@ double CalculateLots(double stopDistance)
 
 void ManageOpenPositions()
 {
-   // Stops and targets are placed at entry. No widening of stop-loss is performed.
-   // This function is reserved for future break-even / net-profit-lock logic.
+   if(!UseNetProfitLock || NetProfitLockTrigger <= 0.0 || NetProfitLockFloor < 0.0) return;
+   static datetime lastAttempt = 0;
+   if(TimeCurrent() - lastAttempt < LockRetrySeconds) return;
+
+   for(int i=OrdersTotal()-1; i>=0; i--)
+   {
+      if(!OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) continue;
+      if(OrderSymbol() != Symbol() || OrderMagicNumber() != MagicNumber) continue;
+      int type = OrderType();
+      if(type != OP_BUY && type != OP_SELL) continue;
+
+      double netNow = OrderProfit() + OrderSwap() + OrderCommission();
+      if(netNow < NetProfitLockTrigger) continue;
+
+      double tickValue = MarketInfo(Symbol(), MODE_TICKVALUE);
+      double tickSize = MarketInfo(Symbol(), MODE_TICKSIZE);
+      if(tickValue <= 0.0 || tickSize <= 0.0) continue;
+
+      double requiredGross = NetProfitLockFloor - OrderSwap() - OrderCommission();
+      double moneyPerPriceUnit = (tickValue / tickSize) * OrderLots();
+      if(moneyPerPriceUnit <= 0.0) continue;
+      double priceDistance = requiredGross / moneyPerPriceUnit;
+      double candidate = (type == OP_BUY)
+                         ? OrderOpenPrice() + priceDistance
+                         : OrderOpenPrice() - priceDistance;
+
+      RefreshRates();
+      double stopLevel = MarketInfo(Symbol(), MODE_STOPLEVEL) * Point;
+      candidate = NormalizeDouble(candidate, Digits);
+
+      if(type == OP_BUY)
+      {
+         if(candidate <= OrderStopLoss() || candidate >= Bid - stopLevel) continue;
+      }
+      else
+      {
+         if(OrderStopLoss() > 0.0 && candidate >= OrderStopLoss()) continue;
+         if(candidate <= Ask + stopLevel) continue;
+      }
+
+      lastAttempt = TimeCurrent();
+      ResetLastError();
+      if(!OrderModify(OrderTicket(), OrderOpenPrice(), candidate, OrderTakeProfit(), 0, clrNONE))
+         Print("BITEY_RANGE_LOCK_ERROR ticket=", OrderTicket(), " err=", GetLastError());
+      else
+         Print("BITEY_RANGE_NET_LOCK ticket=", OrderTicket(),
+               " netNow=", DoubleToString(netNow, 2),
+               " protectedFloor=", DoubleToString(NetProfitLockFloor, 2),
+               " newSL=", DoubleToString(candidate, Digits));
+   }
 }
 //+------------------------------------------------------------------+
