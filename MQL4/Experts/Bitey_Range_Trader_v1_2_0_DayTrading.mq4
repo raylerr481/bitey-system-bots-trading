@@ -26,7 +26,7 @@ input double          RewardRisk           = 1.20;
 input double          MaxSpreadPoints      = 30;
 input int             SlippagePoints       =  3;
 input int             MaxTradesPerDay      = 3;
-input double          DailyLossLimitPct    = 2.0;       // Stop new entries after realized daily loss
+input double          DailyLossLimitPct    = 2.0;       // Stop entries after 2% equity drawdown from daily baseline
 input bool            UseRSIFilter         = true;
 input int             BuyRSIMax            = 45;
 input int             SellRSIMin           = 55;
@@ -48,8 +48,16 @@ bool     g_dailyBlocked = false;
 //+------------------------------------------------------------------+
 int OnInit()
 {
-   if(RangeLookback < 10 || EdgeFraction <= 0.0 || EdgeFraction >= 0.5 ||
-      RiskPercent <= 0.0 || RewardRisk <= 0.0)
+   if(RangeLookback < 10 || ATRPeriod < 2 || RSIPeriod < 2 ||
+      EdgeFraction <= 0.0 || EdgeFraction >= 0.5 ||
+      RiskPercent <= 0.0 || RiskPercent > 100.0 ||
+      RewardRisk <= 0.0 || MaxSpreadPoints <= 0.0 ||
+      MaxTradesPerDay < 1 || DailyLossLimitPct <= 0.0 ||
+      MinRangeATR <= 0.0 || MaxRangeATR < MinRangeATR ||
+      BreakoutBufferATR < 0.0 || StopBufferATR <= 0.0 ||
+      BuyRSIMax < 0 || BuyRSIMax > 100 ||
+      SellRSIMin < 0 || SellRSIMin > 100 ||
+      LockRetrySeconds < 1 || MinutesBeforeDayEnd < 0)
    {
       Print("BITEY_RANGE_INIT_ERROR invalid inputs");
       return(INIT_PARAMETERS_INCORRECT);
@@ -118,11 +126,27 @@ bool IsNewSignalBar()
    return(true);
 }
 
+string BuildDailyEquityKey(int dayKey)
+{
+   return("BRT_EQ_" + IntegerToString(AccountNumber()) + "_" +
+          IntegerToString(MagicNumber) + "_" + IntegerToString(dayKey));
+}
+
 void ResetDailyState()
 {
    datetime now = TimeCurrent();
    g_dayKey = TimeYear(now) * 1000 + TimeDayOfYear(now);
-   g_dayStartEquity = AccountEquity();
+   string key = BuildDailyEquityKey(g_dayKey);
+
+   // Preserve the daily equity baseline across EA/terminal restarts.
+   // Strategy Tester uses an in-memory baseline to avoid cross-test contamination.
+   if(!IsTesting() && GlobalVariableCheck(key))
+      g_dayStartEquity = GlobalVariableGet(key);
+   else
+   {
+      g_dayStartEquity = AccountEquity();
+      if(!IsTesting()) GlobalVariableSet(key, g_dayStartEquity);
+   }
    g_dailyBlocked = false;
 }
 
@@ -140,8 +164,31 @@ void UpdateDailyState()
 double GetSpreadPoints()
 {
    RefreshRates();
-   if(Point <= 0) return(999999);
+   if(Point <= 0 || Ask <= 0.0 || Bid <= 0.0 || Ask < Bid) return(999999);
    return((Ask - Bid) / Point);
+}
+
+// MT4 MODE_TICKSIZE is expressed in points, not raw price units.
+double GetTickSizePrice()
+{
+   double tickSizePoints = MarketInfo(Symbol(), MODE_TICKSIZE);
+   if(tickSizePoints <= 0.0) return(Point);
+   return(tickSizePoints * Point);
+}
+
+double NormalizePriceToTick(double price)
+{
+   double tickSizePrice = GetTickSizePrice();
+   if(tickSizePrice <= 0.0) return(NormalizeDouble(price, Digits));
+   return(NormalizeDouble(MathRound(price / tickSizePrice) * tickSizePrice, Digits));
+}
+
+int GetLotDigits(double lotStep)
+{
+   for(int digits=0; digits<=8; digits++)
+      if(MathAbs(lotStep - NormalizeDouble(lotStep, digits)) < 0.00000001)
+         return(digits);
+   return(8);
 }
 
 bool HasOpenPosition()
@@ -219,16 +266,16 @@ void EvaluateRangeSignal()
       if(m5Open <= 0 || m5Close <= 0) { Print("BITEY_RANGE_BLOCK reason=INSUFFICIENT_M5_CONFIRMATION_HISTORY"); return; }
       if(bullishBreakout && m5Close > m5Open)
       {
-         double breakoutSL = NormalizeDouble(rangeHigh - atr * StopBufferATR, Digits);
+         double breakoutSL = NormalizePriceToTick(rangeHigh - atr * StopBufferATR);
          double breakoutRisk = Ask - breakoutSL;
-         if(breakoutRisk > 0) SendEntry(OP_BUY, breakoutSL, NormalizeDouble(Ask + breakoutRisk * RewardRisk, Digits), rangeHigh, rangeLow, rsi);
+         if(breakoutRisk > 0) SendEntry(OP_BUY, breakoutSL, NormalizePriceToTick(Ask + breakoutRisk * RewardRisk), rangeHigh, rangeLow, rsi);
          return;
       }
       if(bearishBreakout && m5Close < m5Open)
       {
-         double breakoutSL = NormalizeDouble(rangeLow + atr * StopBufferATR, Digits);
+         double breakoutSL = NormalizePriceToTick(rangeLow + atr * StopBufferATR);
          double breakoutRisk = breakoutSL - Bid;
-         if(breakoutRisk > 0) SendEntry(OP_SELL, breakoutSL, NormalizeDouble(Bid - breakoutRisk * RewardRisk, Digits), rangeHigh, rangeLow, rsi);
+         if(breakoutRisk > 0) SendEntry(OP_SELL, breakoutSL, NormalizePriceToTick(Bid - breakoutRisk * RewardRisk), rangeHigh, rangeLow, rsi);
          return;
       }
       Print("BITEY_RANGE_BLOCK reason=BREAKOUT_WITHOUT_M5_CONFIRMATION");
@@ -249,25 +296,25 @@ void EvaluateRangeSignal()
 
    if(bullishRejection && !bearishRejection)
    {
-      double sl = NormalizeDouble(rangeLow - atr * StopBufferATR, Digits);
+      double sl = NormalizePriceToTick(rangeLow - atr * StopBufferATR);
       double entry = Ask;
       double riskDist = entry - sl;
       if(riskDist <= 0) return;
       double tp = CloseAtMidline ? (rangeLow + rangeHigh) / 2.0 : entry + riskDist * RewardRisk;
       if(tp <= entry) return;
-      SendEntry(OP_BUY, sl, NormalizeDouble(tp, Digits), rangeHigh, rangeLow, rsi);
+      SendEntry(OP_BUY, sl, NormalizePriceToTick(tp), rangeHigh, rangeLow, rsi);
       return;
    }
 
    if(bearishRejection && !bullishRejection)
    {
-      double sl = NormalizeDouble(rangeHigh + atr * StopBufferATR, Digits);
+      double sl = NormalizePriceToTick(rangeHigh + atr * StopBufferATR);
       double entry = Bid;
       double riskDist = sl - entry;
       if(riskDist <= 0) return;
       double tp = CloseAtMidline ? (rangeLow + rangeHigh) / 2.0 : entry - riskDist * RewardRisk;
       if(tp >= entry) return;
-      SendEntry(OP_SELL, sl, NormalizeDouble(tp, Digits), rangeHigh, rangeLow, rsi);
+      SendEntry(OP_SELL, sl, NormalizePriceToTick(tp), rangeHigh, rangeLow, rsi);
       return;
    }
 
@@ -282,11 +329,19 @@ void SendEntry(int type, double sl, double tp, double rangeHigh, double rangeLow
 {
    RefreshRates();
    double entry = (type == OP_BUY) ? Ask : Bid;
+   sl = NormalizePriceToTick(sl);
+   tp = NormalizePriceToTick(tp);
    double stopDistance = MathAbs(entry - sl);
    double stopLevel = MarketInfo(Symbol(), MODE_STOPLEVEL) * Point;
-   if(stopDistance <= stopLevel || MathAbs(tp-entry) <= stopLevel)
+   if((type == OP_BUY && (sl >= entry || tp <= entry)) ||
+      (type == OP_SELL && (sl <= entry || tp >= entry)) ||
+      stopDistance < stopLevel || MathAbs(tp-entry) < stopLevel)
    {
-      Print("BITEY_RANGE_BLOCK reason=STOP_LEVEL_TOO_CLOSE");
+      Print("BITEY_RANGE_BLOCK reason=INVALID_OR_TOO_CLOSE_STOPS",
+            " entry=", DoubleToString(entry, Digits),
+            " sl=", DoubleToString(sl, Digits),
+            " tp=", DoubleToString(tp, Digits),
+            " stopLevelPts=", DoubleToString(stopLevel/Point, 1));
       return;
    }
 
@@ -294,6 +349,18 @@ void SendEntry(int type, double sl, double tp, double rangeHigh, double rangeLow
    if(lots <= 0)
    {
       Print("BITEY_RANGE_BLOCK reason=LOT_SIZE_INVALID");
+      return;
+   }
+
+   ResetLastError();
+   double freeMarginAfter = AccountFreeMarginCheck(Symbol(), type, lots);
+   int marginError = GetLastError();
+   if(freeMarginAfter <= 0.0 || marginError == 134)
+   {
+      Print("BITEY_RANGE_BLOCK reason=INSUFFICIENT_MARGIN lots=",
+            DoubleToString(lots, GetLotDigits(MarketInfo(Symbol(), MODE_LOTSTEP))),
+            " freeMarginAfter=", DoubleToString(freeMarginAfter, 2),
+            " err=", marginError);
       return;
    }
 
@@ -323,10 +390,10 @@ double CalculateLots(double stopDistance)
 {
    double riskMoney = AccountBalance() * RiskPercent / 100.0;
    double tickValue = MarketInfo(Symbol(), MODE_TICKVALUE);
-   double tickSize = MarketInfo(Symbol(), MODE_TICKSIZE);
-   if(riskMoney <= 0 || tickValue <= 0 || tickSize <= 0 || stopDistance <= 0) return(0);
+   double tickSizePrice = GetTickSizePrice();
+   if(riskMoney <= 0 || tickValue <= 0 || tickSizePrice <= 0 || stopDistance <= 0) return(0);
 
-   double lossPerLot = (stopDistance / tickSize) * tickValue;
+   double lossPerLot = (stopDistance / tickSizePrice) * tickValue;
    if(lossPerLot <= 0) return(0);
    double rawLots = riskMoney / lossPerLot;
 
@@ -340,11 +407,7 @@ double CalculateLots(double stopDistance)
    lots = MathMin(lots, maxLot);
    if(lots < minLot) return(0);
 
-   int lotDigits = 2;
-   if(lotStep >= 1.0) lotDigits = 0;
-   else if(lotStep >= 0.1) lotDigits = 1;
-   else if(lotStep < 0.01) lotDigits = 3;
-   return(NormalizeDouble(lots, lotDigits));
+   return(NormalizeDouble(lots, GetLotDigits(lotStep)));
 }
 
 void ManageIntradayExit()
@@ -387,11 +450,11 @@ void ManageOpenPositions()
       if(netNow < NetProfitLockTrigger) continue;
 
       double tickValue = MarketInfo(Symbol(), MODE_TICKVALUE);
-      double tickSize = MarketInfo(Symbol(), MODE_TICKSIZE);
-      if(tickValue <= 0.0 || tickSize <= 0.0) continue;
+      double tickSizePrice = GetTickSizePrice();
+      if(tickValue <= 0.0 || tickSizePrice <= 0.0) continue;
 
       double requiredGross = NetProfitLockFloor - OrderSwap() - OrderCommission();
-      double moneyPerPriceUnit = (tickValue / tickSize) * OrderLots();
+      double moneyPerPriceUnit = (tickValue / tickSizePrice) * OrderLots();
       if(moneyPerPriceUnit <= 0.0) continue;
       double priceDistance = requiredGross / moneyPerPriceUnit;
       double candidate = (type == OP_BUY)
@@ -399,8 +462,9 @@ void ManageOpenPositions()
                          : OrderOpenPrice() - priceDistance;
 
       RefreshRates();
-      double stopLevel = MarketInfo(Symbol(), MODE_STOPLEVEL) * Point;
-      candidate = NormalizeDouble(candidate, Digits);
+      double stopLevel = MathMax(MarketInfo(Symbol(), MODE_STOPLEVEL),
+                                 MarketInfo(Symbol(), MODE_FREEZELEVEL)) * Point;
+      candidate = NormalizePriceToTick(candidate);
 
       if(type == OP_BUY)
       {
