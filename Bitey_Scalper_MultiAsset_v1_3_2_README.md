@@ -27,3 +27,33 @@ Successor to v1.3.1, isolated on `feature/scalper-v1-3-2-net-profit-opportunity-
 
 ## Validation
 Committed source only. Not compiled in MetaEditor; not Strategy-Tested or forward-tested. Compile and test BUY/SELL, weak/strong trend, FX and crypto symbols, broker commissions, swap, stop/freeze levels and rejected-close handling on demo before live use.
+
+
+## First-priority net-profit floor (updated)
+
+The EA now checks the net-profit floor at the start of managing each open position,
+before the time exit, trend filter, ATR-dependent logic, R-multiple target, break-even,
+trailing stop, or adaptive take-profit logic. When the conservative estimate is
+**greater than or equal to** `InpNetCloseThreshold` (default `0.10` in account
+currency), it immediately attempts to close the position with reason
+`PRIORITY_NET_PROFIT_FLOOR`. A strong trend no longer delays this close.
+
+The estimate starts with MT4 `OrderProfit()+OrderSwap()+OrderCommission()`:
+- swap and opening commission are included by MT4;
+- the executable-side Bid for BUY / Ask for SELL already reflects the broker spread,
+  so spread is not subtracted a second time;
+- estimated closing commission per lot, configured slippage reserve, close-cost
+  buffer, and optional tax reserve are deducted before comparing with the floor.
+
+**Configuration is essential:** set `InpEstimatedCloseCommissionPerLot` to the
+broker's actual closing commission per 1.0 lot in account currency, and set
+`InpNetTaxReservePct` to the tax reserve you want to model. The default tax reserve
+is 0% because the EA cannot determine the user's actual tax liability. The 0.10
+threshold is in account currency; it represents USD 0.10 only on a USD-denominated
+account.
+
+This is a conservative estimated-net trigger, not a guarantee of the final booked
+amount. Gaps, fast price changes, broker execution, rejected closes, and slippage
+beyond the configured reserve can result in a realized net below 0.10. If a close
+request fails, the EA logs the failure and checks again on the next management cycle.
+Compile in MetaEditor and validate on demo before live use.
