@@ -522,8 +522,8 @@ void RunCycle()
             " indicatorsEvaluated=",g_cycleIndicatorRuns," candidates=",g_cycleSignalCandidates,
             " buy=",g_cycleBuySignals," sell=",g_cycleSellSignals,
             " prefilterRejected=",g_cyclePrefilterRejects," signalRejected=",g_cycleSignalRejects," capacitySkipped=",g_cycleCapacityRejects);
-      int quoteFresh=0,quoteStale=0,quoteMissing=0,quoteOldestAge=0;
-      CountQuoteStates(quoteFresh,quoteStale,quoteMissing,quoteOldestAge);
+      int quoteFresh=0,quoteStale=0,quoteMissing=0,quoteNeverRefreshed=0,quoteOldestAge=0;
+      CountQuoteStates(quoteFresh,quoteStale,quoteMissing,quoteNeverRefreshed,quoteOldestAge);
       string feedStatus="NO_FRESH_QUOTES";
       if(quoteFresh==g_symbolCount && quoteStale==0 && quoteMissing==0)
          feedStatus="ALL_QUOTES_FRESH";
@@ -533,7 +533,7 @@ void RunCycle()
          feedStatus="NO_QUOTES";
       LogSessionSymbolStats();
       Print("MARKET_DATA_DIAGNOSTICS | freshQuotes=",quoteFresh," staleQuotes=",quoteStale,
-            " missingQuotes=",quoteMissing," oldestObservedAgeSec=",quoteOldestAge,
+            " missingQuotes=",quoteMissing," neverRefreshedAfterInit=",quoteNeverRefreshed," oldestObservedAgeSec=",quoteOldestAge,
             " feedStatus=",feedStatus,
             " universe=",g_symbolCount,
             " note=QUOTE_FRESHNESS_DOES_NOT_GUARANTEE_SYMBOL_TRADE_PERMISSION");
@@ -591,16 +591,16 @@ bool QuoteFresh(string sym)
    return(age>=0 && age<=InpMaxQuoteAgeSec);
 }
 
-void CountQuoteStates(int &fresh,int &stale,int &missing,int &oldestAge)
+void CountQuoteStates(int &fresh,int &stale,int &missing,int &neverRefreshed,int &oldestAge)
 {
-   fresh=0; stale=0; missing=0; oldestAge=0;
+   fresh=0; stale=0; missing=0; neverRefreshed=0; oldestAge=0;
    for(int i=0;i<g_symbolCount;i++)
    {
       datetime qt=(datetime)MarketInfo(g_symbols[i],MODE_TIME);
       if(qt<=0) { missing++; continue; }
       int age=QuoteAgeSeconds(g_symbols[i]);
       if(age<=InpMaxQuoteAgeSec) fresh++; else stale++;
-      if(age>=2147483647) oldestAge=2147483647;
+      if(age>=2147483647) { neverRefreshed++; oldestAge=2147483647; }
       else if(oldestAge<2147483647 && age>oldestAge) oldestAge=age;
    }
 }
