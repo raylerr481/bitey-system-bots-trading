@@ -83,6 +83,7 @@ datetime g_lastBar[MAX_SYMBOLS];
 int      g_symbolCount = 0;
 uint     g_lastCycleTick = 0;
 datetime g_lastHeartbeat = 0;
+uint     g_lastHeartbeatTick = 0;
 int      g_cycleNewBars = 0;
 int      g_cyclePrefilterOK = 0;
 int      g_cycleIndicatorRuns = 0;
@@ -110,9 +111,9 @@ int OnInit()
    for(int i=0;i<g_symbolCount;i++)
    {
       g_lastBar[i]=0;
+      SymbolSelect(g_symbols[i],true);
       g_lastQuoteStamp[i]=(datetime)MarketInfo(g_symbols[i],MODE_TIME);
       g_lastQuoteChangeTick[i]=GetTickCount();
-      SymbolSelect(g_symbols[i],true);
    }
    EventSetTimer(1);
    if(AccountCurrency()!="USD") Print("RISK_WARNING | reference capital is USD but account currency is ",AccountCurrency(),"; verify conversion before trading");
@@ -264,8 +265,10 @@ void RunCycle()
    UpdateScanDashboard(nc);
 
    datetime now=TimeCurrent();
-   if(g_lastHeartbeat==0 || now-g_lastHeartbeat>=300)
+   uint nowTick=GetTickCount();
+   if(g_lastHeartbeatTick==0 || nowTick-g_lastHeartbeatTick>=300000)
    {
+      g_lastHeartbeatTick=nowTick;
       g_lastHeartbeat=now;
       Print("HEARTBEAT | v",EA_VERSION," open=",CountOpenPositions(),"/",maxPos,
             " dayNet=",DoubleToString(TodayNet(),2)," assetsInUniverse=",g_symbolCount,
@@ -410,7 +413,12 @@ bool Prefilter(string sym,string &why)
    if(!TradePermissionsReady(sym,"PREFILTER")) { why="TRADE_PERMISSION_BLOCKED"; return(false); }
    if(MarketInfo(sym,MODE_TRADEALLOWED)==0) { why="SYMBOL_TRADING_DISABLED"; return(false); }
    if(iBars(sym,InpSignalTF)<InpMinBars) { why="INSUFFICIENT_HISTORY"; return(false); }
-   if(!QuoteFresh(sym)) { why="STALE_QUOTE"; return(false); }
+   int quoteAge=QuoteAgeSeconds(sym);
+   if(quoteAge>InpMaxQuoteAgeSec)
+   {
+      why=(quoteAge>=2147483647?"QUOTE_MISSING":"STALE_QUOTE ageSec="+IntegerToString(quoteAge));
+      return(false);
+   }
    if(!SessionOK(sym)) { why="OUTSIDE_SESSION"; return(false); }
    if(HasPositionForKey(AssetKey(sym))) { why="POSITION_ALREADY_OPEN"; return(false); }
    if(InCooldown(sym)) { why="LOSS_COOLDOWN"; return(false); }
@@ -857,7 +865,6 @@ bool CurrencyRiskAllowed(string sym,double lots,double stopDist,double candidate
       if(d>0.0)
       {
          double op=MarketInfo(OrderSymbol(),MODE_POINT);
-         double spr=MarketInfo(OrderSymbol(),MODE_ASK)-MarketInfo(OrderSymbol(),MODE_BID);
          double conservativeDist=d+MathMax(0,InpSlippagePoints)*MathMax(0.0,op);
          existing=EstimateRisk(OrderSymbol(),OrderLots(),conservativeDist);
       }
@@ -884,7 +891,6 @@ double CurrentOpenRisk()
       double d=(OrderType()==OP_BUY?OrderOpenPrice()-OrderStopLoss():OrderStopLoss()-OrderOpenPrice());
       if(d>0)
       {
-         double spr=MarketInfo(OrderSymbol(),MODE_ASK)-MarketInfo(OrderSymbol(),MODE_BID);
          double pt=MarketInfo(OrderSymbol(),MODE_POINT);
          double conservativeDist=d+MathMax(0,InpSlippagePoints)*MathMax(0.0,pt);
          total+=EstimateRisk(OrderSymbol(),OrderLots(),conservativeDist);
