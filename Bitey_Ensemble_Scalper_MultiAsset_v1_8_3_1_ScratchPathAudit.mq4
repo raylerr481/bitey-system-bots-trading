@@ -1054,7 +1054,7 @@ void WriteScratchSample(int ticket,string sym,int side,double rawNet,double netA
    int h=FileOpen(fileName,FILE_CSV|FILE_READ|FILE_WRITE,';');
    if(h==INVALID_HANDLE) { Print("SCRATCH_SAMPLE_FILE_ERROR | file=",fileName," error=",GetLastError()); return; }
    if(FileSize(h)==0)
-      FileWrite(h,"time","ticket","symbol","side","elapsed_sec","raw_net_usd","net_after_close_costs_usd","mfe_net_usd","mae_net_usd","target_net_usd","safety_usd","bid","ask","spread_points");
+      FileWrite(h,"time","ticket","symbol","side","elapsed_sec","raw_net_usd","net_after_close_costs_usd","mfe_net_usd","mae_net_usd","target_net_usd","safety_usd","scratch_trigger_net_usd","bid","ask","spread_points");
    FileSeek(h,0,SEEK_END);
    double bid=MarketInfo(sym,MODE_BID), ask=MarketInfo(sym,MODE_ASK), point=MarketInfo(sym,MODE_POINT);
    double spreadPoints=(point>0.0?MathMax(0.0,(ask-bid)/point):0.0);
@@ -1063,6 +1063,7 @@ void WriteScratchSample(int ticket,string sym,int side,double rawNet,double netA
              DoubleToString(rawNet,4),DoubleToString(netAfterCosts,4),
              DoubleToString(mfe,4),DoubleToString(mae,4),
              DoubleToString(InpSmallProfitCloseUSD,4),DoubleToString(MathMax(0.0,InpScratchSafetyUSD),4),
+             DoubleToString(InpSmallProfitCloseUSD+MathMax(0.0,InpScratchSafetyUSD),4),
              DoubleToString(bid,(int)MarketInfo(sym,MODE_DIGITS)),
              DoubleToString(ask,(int)MarketInfo(sym,MODE_DIGITS)),DoubleToString(spreadPoints,1));
    FileClose(h);
@@ -1075,6 +1076,7 @@ void TrackTradeExcursion(int ticket,double net)
    string rawMaxKey=ScratchAuditKey(ticket,"RAWMAX");
    string rawMinKey=ScratchAuditKey(ticket,"RAWMIN");
    string firstKey=ScratchAuditKey(ticket,"FIRST");
+   string firstScratchKey=ScratchAuditKey(ticket,"FIRSTSCRATCH");
    string sym=OrderSymbol();
    int side=OrderType();
    double lots=OrderLots();
@@ -1084,9 +1086,13 @@ void TrackTradeExcursion(int ticket,double net)
    if(!GlobalVariableCheck(minKey) || netAfterCosts<GlobalVariableGet(minKey)) GlobalVariableSet(minKey,netAfterCosts);
    if(!GlobalVariableCheck(rawMaxKey) || net>GlobalVariableGet(rawMaxKey)) GlobalVariableSet(rawMaxKey,net);
    if(!GlobalVariableCheck(rawMinKey) || net<GlobalVariableGet(rawMinKey)) GlobalVariableSet(rawMinKey,net);
-   double target=InpSmallProfitCloseUSD+MathMax(0.0,InpScratchSafetyUSD);
+   double target=MathMax(0.0,InpSmallProfitCloseUSD);
+   double scratchTrigger=target+MathMax(0.0,InpScratchSafetyUSD);
+   // Separate the research question (+$0.10 net) from the safer execution trigger (+$0.12 by default).
    if(target>0.0 && netAfterCosts>=target && !GlobalVariableCheck(firstKey))
       GlobalVariableSet(firstKey,(double)TimeCurrent());
+   if(scratchTrigger>0.0 && netAfterCosts>=scratchTrigger && !GlobalVariableCheck(firstScratchKey))
+      GlobalVariableSet(firstScratchKey,(double)TimeCurrent());
    WriteScratchSample(ticket,sym,side,net,netAfterCosts,
                       GlobalVariableGet(maxKey),GlobalVariableGet(minKey),
                       (int)MathMax(0,TimeCurrent()-OrderOpenTime()));
@@ -1099,17 +1105,20 @@ void LogAndClearTradeExcursion(int ticket,string sym,double closeNet)
    string rawMaxKey=ScratchAuditKey(ticket,"RAWMAX");
    string rawMinKey=ScratchAuditKey(ticket,"RAWMIN");
    string firstKey=ScratchAuditKey(ticket,"FIRST");
+   string firstScratchKey=ScratchAuditKey(ticket,"FIRSTSCRATCH");
    string sampleKey=ScratchAuditKey(ticket,"LASTSAMPLE");
    double mfe=(GlobalVariableCheck(maxKey)?GlobalVariableGet(maxKey):closeNet);
    double mae=(GlobalVariableCheck(minKey)?GlobalVariableGet(minKey):closeNet);
    double rawMfe=(GlobalVariableCheck(rawMaxKey)?GlobalVariableGet(rawMaxKey):closeNet);
    double rawMae=(GlobalVariableCheck(rawMinKey)?GlobalVariableGet(rawMinKey):closeNet);
    int firstSec=0;
+   int firstScratchSec=0;
    datetime openTime=0;
    if(OrderSelect(ticket,SELECT_BY_TICKET,MODE_HISTORY))
    {
       openTime=OrderOpenTime();
       if(GlobalVariableCheck(firstKey)) firstSec=(int)MathMax(0,GlobalVariableGet(firstKey)-(double)openTime);
+      if(GlobalVariableCheck(firstScratchKey)) firstScratchSec=(int)MathMax(0,GlobalVariableGet(firstScratchKey)-(double)openTime);
    }
    Print("TRADE_EXCURSION_AUDIT | ticket=",ticket,
          " symbol=",sym,
@@ -1124,7 +1133,7 @@ void LogAndClearTradeExcursion(int ticket,string sym,double closeNet)
    if(h!=INVALID_HANDLE)
    {
       if(FileSize(h)==0)
-         FileWrite(h,"close_time","ticket","symbol","side","exit_class","open_time","duration_sec","close_net_usd","max_net_after_close_costs_usd","min_net_after_close_costs_usd","max_marked_net_usd","min_marked_net_usd","first_target_sec","target_net_usd","safety_usd");
+         FileWrite(h,"close_time","ticket","symbol","side","exit_class","open_time","duration_sec","close_net_usd","max_net_after_close_costs_usd","min_net_after_close_costs_usd","max_marked_net_usd","min_marked_net_usd","first_target_sec","first_scratch_sec","target_net_usd","safety_usd");
       FileSeek(h,0,SEEK_END);
       string side="UNKNOWN";
       string exitClass="OTHER";
@@ -1143,7 +1152,7 @@ void LogAndClearTradeExcursion(int ticket,string sym,double closeNet)
                 (openTime>0?TimeToString(openTime,TIME_DATE|TIME_SECONDS):""),
                 (openTime>0?(int)MathMax(0,closeTime-openTime):0),
                 DoubleToString(closeNet,4),DoubleToString(mfe,4),DoubleToString(mae,4),
-                DoubleToString(rawMfe,4),DoubleToString(rawMae,4),firstSec,
+                DoubleToString(rawMfe,4),DoubleToString(rawMae,4),firstSec,firstScratchSec,
                 DoubleToString(InpSmallProfitCloseUSD,4),DoubleToString(MathMax(0.0,InpScratchSafetyUSD),4));
       FileClose(h);
    }
@@ -1153,6 +1162,7 @@ void LogAndClearTradeExcursion(int ticket,string sym,double closeNet)
    if(GlobalVariableCheck(rawMaxKey)) GlobalVariableDel(rawMaxKey);
    if(GlobalVariableCheck(rawMinKey)) GlobalVariableDel(rawMinKey);
    if(GlobalVariableCheck(firstKey)) GlobalVariableDel(firstKey);
+   if(GlobalVariableCheck(firstScratchKey)) GlobalVariableDel(firstScratchKey);
    if(GlobalVariableCheck(sampleKey)) GlobalVariableDel(sampleKey);
 }
 
