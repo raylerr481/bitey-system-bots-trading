@@ -55,19 +55,24 @@ def analyze(trades_path, samples_path, window_sec):
 
         ticket_samples = sample_by_ticket.get(ticket, [])
         reached = False
+        reached_scratch = False
         max_first_window = None
         for row in ticket_samples:
-            required = number(row, "target_net_usd", 0.10) + number(row, "safety_usd", 0.02)
+            target = number(row, "target_net_usd", 0.10)
+            safety = number(row, "safety_usd", 0.02)
             net = number(row, "net_after_close_costs_usd", float("-inf"))
             elapsed = number(row, "elapsed_sec", 10**9)
             if elapsed <= window_sec:
                 max_first_window = net if max_first_window is None else max(max_first_window, net)
-                if net >= required:
+                if net >= target:
                     reached = True
+                if net >= target + safety:
+                    reached_scratch = True
 
         item = {
             "ticket": ticket, "symbol": symbol, "net": close_net,
             "exit_class": exit_class, "hit_20m": reached,
+            "hit_scratch_20m": reached_scratch,
             "max_20m": max_first_window, "has_samples": bool(ticket_samples),
         }
         groups[symbol].append(item)
@@ -88,11 +93,12 @@ def analyze(trades_path, samples_path, window_sec):
             "net": sum(r["net"] for r in rows),
             "pf": gross_win / gross_loss if gross_loss else float("inf"),
             "be_wr": be, "hit": sum(r["hit_20m"] for r in rows),
+            "scratch_hit": sum(r["hit_scratch_20m"] for r in rows),
             "sampled": sum(r["has_samples"] for r in rows),
         }
 
     print(f"Scratch threshold: target + safety (default $0.10 + $0.02); window: {window_sec}s")
-    print("Hit rate uses sampled net-after-close-costs, not statement close outcomes.")
+    print("Hit rate uses sampled net-after-close-costs: +$0.10 target and +$0.12 default safety trigger.")
     print()
     header = (
         f"{'SYMBOL':<14} {'N':>5} {'WR':>7} {'BE-WR':>7} {'PF':>7} "
@@ -115,7 +121,7 @@ def analyze(trades_path, samples_path, window_sec):
             f"{len(sl_rows):>5} {st['sampled']:>5}/{st['n']:<3}"
         )
         if sl_rows:
-            print(f"  SL {symbol}: {sl_hits}/{len(sl_rows)} reached target in first {window_sec//60} min")
+            print(f"  SL {symbol}: {sl_hits}/{len(sl_rows)} reached +$0.10 in first {window_sec//60} min")
 
     overall = stats(all_rows)
     losers = [r for r in all_rows if r["net"] < 0]
@@ -124,9 +130,10 @@ def analyze(trades_path, samples_path, window_sec):
     print("OVERALL")
     print(f"Trades: {overall['n']} | sampled: {overall['sampled']} | net: {money(overall['net'])}")
     print(f"Observed WR: {overall['wr']*100:.1f}% | net breakeven WR: {overall['be_wr']*100:.1f}% | PF: {overall['pf']:.2f}")
-    print(f"All trades reaching target in first 20 min: {overall['hit']}/{overall['n']}")
-    print(f"Losing trades reaching target in first 20 min: {sum(r['hit_20m'] for r in losers)}/{len(losers)}")
-    print(f"SL-classified trades reaching target in first 20 min: {sum(r['hit_20m'] for r in sl_rows)}/{len(sl_rows)}")
+    print(f"All trades reaching +$0.10 in first 20 min: {overall['hit']}/{overall['n']}")
+    print(f"Losing trades reaching +$0.10 in first 20 min: {sum(r['hit_20m'] for r in losers)}/{len(losers)}")
+    print(f"SL-classified trades reaching +$0.10 in first 20 min: {sum(r['hit_20m'] for r in sl_rows)}/{len(sl_rows)}")
+    print(f"All trades reaching +$0.12 safety trigger in first 20 min: {overall['scratch_hit']}/{overall['n']}")
     print()
     print("Caveats:")
     print("- SL/TP classification is inferred from close price versus the recorded stop/target within a small tolerance.")
