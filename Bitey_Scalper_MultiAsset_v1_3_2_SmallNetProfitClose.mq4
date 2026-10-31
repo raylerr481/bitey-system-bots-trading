@@ -409,12 +409,14 @@ bool OpenTrade(string sym,int cmd,double score)
    double brokerMin=(MathMax(MarketInfo(sym,MODE_STOPLEVEL),MarketInfo(sym,MODE_FREEZELEVEL))+2.0)*point;
    double stopDist=MathMax(atr*InpStopATR,spreadPrice+brokerMin);
    double targetDist=MathMax(stopDist*InpRewardRisk,spreadPrice+brokerMin);
-   if(spreadPrice>stopDist*InpMaxSpreadPctOfStop/100.0)
-   {
-      Print("SPREAD_VS_STOP_REJECT | symbol=",sym," spread=",DoubleToString(spreadPrice,digits),
-            " stop=",DoubleToString(stopDist,digits)," maxPct=",DoubleToString(InpMaxSpreadPctOfStop,1));
-      return(false);
-   }
+   // Spread-to-stop ratio is diagnostic only: it must not reject an otherwise valid entry.
+   // Spread remains included in the executable Bid/Ask price and net P/L accounting.
+   double spreadPctOfStop=(stopDist>0.0?100.0*spreadPrice/stopDist:0.0);
+   if(InpMaxSpreadPctOfStop>0.0 && spreadPctOfStop>InpMaxSpreadPctOfStop)
+      Print("HIGH_SPREAD_WARNING | symbol=",sym," spread=",DoubleToString(spreadPrice,digits),
+            " stop=",DoubleToString(stopDist,digits)," spreadPctOfStop=",DoubleToString(spreadPctOfStop,1),
+            " diagnosticThreshold=",DoubleToString(InpMaxSpreadPctOfStop,1),
+            " action=CONTINUE_ENTRY_EVALUATION");
 
    double entry=(cmd==OP_BUY?ask:bid);
    double sl=NormalizeDouble(cmd==OP_BUY?entry-stopDist:entry+stopDist,digits);
