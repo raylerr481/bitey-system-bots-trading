@@ -256,6 +256,8 @@ void SyncClosedTradeStats()
       double swap=OrderSwap();
       double commission=OrderCommission();
       double net=gross+swap+commission;
+      // Capture all terminal outcomes (EA close, SL, TP, manual) exactly once.
+      if(InpScratchAuditEnabled) LogAndClearTradeExcursion(ticket,OrderSymbol(),net);
       string side=(OrderType()==OP_BUY?"BUY":"SELL");
       Print("TRADE_CLOSE_AUDIT | scope=EA_SESSION_ONLY ticket=",ticket,
             " symbol=",OrderSymbol()," side=",side,
@@ -1013,7 +1015,8 @@ bool CloseTicket(int ticket,string reason)
          " error=",(ok?0:GetLastError()));
    if(ok)
    {
-      if(InpScratchAuditEnabled) LogAndClearTradeExcursion(ticket,sym,net);
+      // The history synchronizer writes one audit row for every close reason,
+      // including broker SL/TP closes that do not pass through CloseTicket().
       string pk=NetPeakKey(ticket); if(GlobalVariableCheck(pk)) GlobalVariableDel(pk);
    }
    return(ok);
@@ -1125,9 +1128,11 @@ void LogAndClearTradeExcursion(int ticket,string sym,double closeNet)
       FileSeek(h,0,SEEK_END);
       string side="UNKNOWN";
       if(OrderSelect(ticket,SELECT_BY_TICKET,MODE_HISTORY)) side=(OrderType()==OP_BUY?"BUY":"SELL");
-      FileWrite(h,TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS),ticket,sym,side,
+      datetime closeTime=TimeCurrent();
+      if(OrderSelect(ticket,SELECT_BY_TICKET,MODE_HISTORY)) closeTime=OrderCloseTime();
+      FileWrite(h,TimeToString(closeTime,TIME_DATE|TIME_SECONDS),ticket,sym,side,
                 (openTime>0?TimeToString(openTime,TIME_DATE|TIME_SECONDS):""),
-                (openTime>0?(int)MathMax(0,TimeCurrent()-openTime):0),
+                (openTime>0?(int)MathMax(0,closeTime-openTime):0),
                 DoubleToString(closeNet,4),DoubleToString(mfe,4),DoubleToString(mae,4),
                 DoubleToString(rawMfe,4),DoubleToString(rawMae,4),firstSec,
                 DoubleToString(InpSmallProfitCloseUSD,4),DoubleToString(MathMax(0.0,InpScratchSafetyUSD),4));
