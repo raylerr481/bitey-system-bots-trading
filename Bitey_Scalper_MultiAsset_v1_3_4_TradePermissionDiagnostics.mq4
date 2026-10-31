@@ -321,8 +321,14 @@ bool TradePermissionsReady(string sym,string stage)
    bool contextBusy=IsTradeContextBusy();
    bool ready=(terminalAllowed && expertEnabled && accountAllowed && symbolAllowed && !contextBusy);
    datetime now=TimeCurrent();
-   if(!ready || g_lastPermissionDiagnostic==0 || now-g_lastPermissionDiagnostic>=60)
+   bool logNow=(g_lastPermissionDiagnostic==0 || now-g_lastPermissionDiagnostic>=60);
+   if(logNow)
    {
+      string reason="TERMINAL_TRADING_NOT_ALLOWED";
+      if(contextBusy) reason="TRADE_CONTEXT_BUSY";
+      else if(!expertEnabled) reason="EXPERT_TRADING_DISABLED";
+      else if(!accountAllowed) reason="ACCOUNT_TRADING_DISABLED";
+      else if(!symbolAllowed) reason="SYMBOL_TRADING_DISABLED";
       Print("TRADE_PERMISSION_DIAGNOSTICS | stage=",stage," symbol=",sym,
             " terminalIsTradeAllowed=",(terminalAllowed?"true":"false"),
             " expertEnabled=",(expertEnabled?"true":"false"),
@@ -330,11 +336,10 @@ bool TradePermissionsReady(string sym,string stage)
             " symbolTradeAllowed=",(symbolAllowed?"true":"false"),
             " tradeContextBusy=",(contextBusy?"true":"false"),
             " result=",(ready?"READY":"BLOCKED"));
+      if(!ready)
+         Print("TRADE_PERMISSION_BLOCK | stage=",stage," symbol=",sym," reason=",reason);
       g_lastPermissionDiagnostic=now;
    }
-   if(!ready)
-      Print("TRADE_PERMISSION_BLOCK | stage=",stage," symbol=",sym,
-            " reason=",(contextBusy?"TRADE_CONTEXT_BUSY":(!expertEnabled?"EXPERT_TRADING_DISABLED":(!accountAllowed?"ACCOUNT_TRADING_DISABLED":(!symbolAllowed?"SYMBOL_TRADING_DISABLED":"TERMINAL_TRADING_NOT_ALLOWED"))));
    return(ready);
 }
 
