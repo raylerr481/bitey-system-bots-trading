@@ -47,7 +47,7 @@ input int              InpMaxSpreadPoints       = 0;       // Optional absolute 
 input int              InpMaxQuoteAgeSec        = 120;
 input int              InpSlippagePoints        = 20;
 input int              InpBroker133CooldownMinutes = 60; // 0 = block until EA restart
-input int              InpBroker133RecheckMinutes  = 5;  // Permission-only recheck interval after cooldown
+input int              InpBroker133RecheckMinutes  = 60; // Permission-only recheck interval after cooldown
 input int              InpMinBars               = 250;
 input bool             InpUseSessionFilter      = true;    // Server hours; crypto is exempt
 input int              InpSessionStartHour      = 7;
