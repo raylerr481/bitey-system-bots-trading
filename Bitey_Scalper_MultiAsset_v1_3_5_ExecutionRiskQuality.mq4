@@ -282,7 +282,7 @@ void UpdateScanDashboard(int candidates)
    panel+="Activos en universo: "+IntegerToString(g_symbolCount)+" / "+IntegerToString(MAX_SYMBOLS)+"\n";
    panel+="Barras nuevas escaneadas: "+IntegerToString(g_cycleNewBars)+" | Prefiltro OK: "+IntegerToString(g_cyclePrefilterOK)+"\n";
    panel+="Indicadores evaluados: "+IntegerToString(g_cycleIndicatorRuns)+" | Candidatos: "+IntegerToString(candidates)+" (BUY "+IntegerToString(g_cycleBuySignals)+" / SELL "+IntegerToString(g_cycleSellSignals)+")\n";
-   panel+="Descartes prefiltro: "+IntegerToString(g_cyclePrefilterRejects)+" | Sin señal: "+IntegerToString(g_cycleSignalRejects)+" | Capacidad: "+IntegerToString(g_cycleCapacityRejects)+"\n";
+   panel+="Descartes prefiltro: "+IntegerToString(g_cyclePrefilterRejects)+" | Sin señal: "+IntegerToString(g_cycleSignalRejects)+" | Saltos por capacidad: "+IntegerToString(g_cycleCapacityRejects)+"\n";
    panel+="Posiciones: "+IntegerToString(CountOpenPositions())+"/"+IntegerToString(MaxPositions())+" | P/L día+flotante: "+DoubleToString(TodayNet(),2)+"\n";
    panel+="Último activo: "+g_lastScanSymbol+"\n";
    panel+="INDICADORES: "+g_lastIndicatorSummary;
@@ -523,8 +523,8 @@ bool OpenTrade(string sym,int cmd,double score)
    double brokerMin=(MathMax(MarketInfo(sym,MODE_STOPLEVEL),MarketInfo(sym,MODE_FREEZELEVEL))+2.0)*point;
    double stopDist=MathMax(atr*InpStopATR,spreadPrice+brokerMin);
    double targetDist=MathMax(stopDist*InpRewardRisk,spreadPrice+brokerMin);
-   // Spread-to-stop ratio is diagnostic only: it must not reject an otherwise valid entry.
-   // Spread remains included in the executable Bid/Ask price and net P/L accounting.
+   // The warning threshold is informational; the hard cap rejects excessive spread.
+   // Spread and slippage reserves are included in conservative risk sizing.
    double spreadPctOfStop=(stopDist>0.0?100.0*spreadPrice/stopDist:0.0);
    if(InpMaxSpreadPctOfStop>0.0 && spreadPctOfStop>InpMaxSpreadPctOfStop)
       Print("HIGH_SPREAD_WARNING | symbol=",sym," spread=",DoubleToString(spreadPrice,digits),
