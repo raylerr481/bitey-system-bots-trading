@@ -316,10 +316,10 @@ bool TradePermissionsReady(string sym,string stage)
 {
    bool terminalAllowed=IsTradeAllowed();
    bool expertEnabled=IsExpertEnabled();
-   bool accountAllowed=AccountTradeAllowed();
+   // Use the supported MQL4 terminal/account-level permission check.
    bool symbolAllowed=(MarketInfo(sym,MODE_TRADEALLOWED)>0);
    bool contextBusy=IsTradeContextBusy();
-   bool ready=(terminalAllowed && expertEnabled && accountAllowed && symbolAllowed && !contextBusy);
+   bool ready=(terminalAllowed && expertEnabled && symbolAllowed && !contextBusy);
    datetime now=TimeCurrent();
    bool logNow=(g_lastPermissionDiagnostic==0 || now-g_lastPermissionDiagnostic>=60);
    if(logNow)
@@ -327,12 +327,11 @@ bool TradePermissionsReady(string sym,string stage)
       string reason="TERMINAL_TRADING_NOT_ALLOWED";
       if(contextBusy) reason="TRADE_CONTEXT_BUSY";
       else if(!expertEnabled) reason="EXPERT_TRADING_DISABLED";
-      else if(!accountAllowed) reason="ACCOUNT_TRADING_DISABLED";
       else if(!symbolAllowed) reason="SYMBOL_TRADING_DISABLED";
       Print("TRADE_PERMISSION_DIAGNOSTICS | stage=",stage," symbol=",sym,
             " terminalIsTradeAllowed=",(terminalAllowed?"true":"false"),
             " expertEnabled=",(expertEnabled?"true":"false"),
-            " accountTradeAllowed=",(accountAllowed?"true":"false"),
+            " terminalAccountPermission=",(terminalAllowed?"true":"false"),
             " symbolTradeAllowed=",(symbolAllowed?"true":"false"),
             " tradeContextBusy=",(contextBusy?"true":"false"),
             " result=",(ready?"READY":"BLOCKED"));
