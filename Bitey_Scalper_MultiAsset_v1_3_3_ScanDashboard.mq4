@@ -40,7 +40,7 @@ input double           InpStopATR               = 1.5;
 input double           InpRewardRisk            = 1.5;
 
 //--- execution filters
-input double           InpMaxSpreadPctOfStop    = 12.0;    // Spread must be <= this % of the stop distance
+input double           InpMaxSpreadPctOfStop    = 12.0;    // Diagnostic warning threshold only; never blocks entry
 input int              InpMaxSpreadPoints       = 0;       // Optional absolute cap, 0 = off
 input int              InpMaxQuoteAgeSec        = 120;
 input int              InpSlippagePoints        = 20;
@@ -202,15 +202,17 @@ void RunCycle()
 
    int maxPos=MaxPositions();
    int nc=0;
-   g_cycleNewBars=0; g_cyclePrefilterOK=0; g_cycleIndicatorRuns=0;
-   g_cycleSignalCandidates=0; g_cycleBuySignals=0; g_cycleSellSignals=0;
-   g_cyclePrefilterRejects=0; g_cycleSignalRejects=0;
    for(int i=0;i<g_symbolCount;i++)
    {
       string sym=g_symbols[i];
       datetime bt=iTime(sym,InpSignalTF,0);
       if(bt<=0 || bt==g_lastBar[i]) continue;
       g_lastBar[i]=bt;                      // one evaluation per closed bar per symbol
+      if(g_cycleNewBars==0)
+      {
+         g_cyclePrefilterOK=0; g_cycleIndicatorRuns=0; g_cycleSignalCandidates=0;
+         g_cycleBuySignals=0; g_cycleSellSignals=0; g_cyclePrefilterRejects=0; g_cycleSignalRejects=0;
+      }
       g_cycleNewBars++;
       g_lastScanSymbol=sym;
 
