@@ -1043,13 +1043,13 @@ void WriteScratchSample(int ticket,string sym,int side,double rawNet,double netA
 {
    if(!InpScratchAuditEnabled) return;
    string throttleKey=ScratchAuditKey(ticket,"LASTSAMPLE");
-   uint nowTick=GetTickCount();
+   datetime nowLocal=TimeLocal();
    if(GlobalVariableCheck(throttleKey))
    {
-      uint lastTick=(uint)GlobalVariableGet(throttleKey);
-      if((int)(nowTick-lastTick)<MathMax(1,InpScratchSampleIntervalSec)*1000) return;
+      datetime lastSample=(datetime)GlobalVariableGet(throttleKey);
+      if((nowLocal-lastSample)<MathMax(1,InpScratchSampleIntervalSec)) return;
    }
-   GlobalVariableSet(throttleKey,(double)nowTick);
+   GlobalVariableSet(throttleKey,(double)nowLocal);
    string fileName="Bitey_Scratch_Samples.csv";
    int h=FileOpen(fileName,FILE_CSV|FILE_READ|FILE_WRITE,';');
    if(h==INVALID_HANDLE) { Print("SCRATCH_SAMPLE_FILE_ERROR | file=",fileName," error=",GetLastError()); return; }
@@ -1124,13 +1124,22 @@ void LogAndClearTradeExcursion(int ticket,string sym,double closeNet)
    if(h!=INVALID_HANDLE)
    {
       if(FileSize(h)==0)
-         FileWrite(h,"close_time","ticket","symbol","side","open_time","duration_sec","close_net_usd","max_net_after_close_costs_usd","min_net_after_close_costs_usd","max_marked_net_usd","min_marked_net_usd","first_target_sec","target_net_usd","safety_usd");
+         FileWrite(h,"close_time","ticket","symbol","side","exit_class","open_time","duration_sec","close_net_usd","max_net_after_close_costs_usd","min_net_after_close_costs_usd","max_marked_net_usd","min_marked_net_usd","first_target_sec","target_net_usd","safety_usd");
       FileSeek(h,0,SEEK_END);
       string side="UNKNOWN";
-      if(OrderSelect(ticket,SELECT_BY_TICKET,MODE_HISTORY)) side=(OrderType()==OP_BUY?"BUY":"SELL");
+      string exitClass="OTHER";
       datetime closeTime=TimeCurrent();
-      if(OrderSelect(ticket,SELECT_BY_TICKET,MODE_HISTORY)) closeTime=OrderCloseTime();
-      FileWrite(h,TimeToString(closeTime,TIME_DATE|TIME_SECONDS),ticket,sym,side,
+      if(OrderSelect(ticket,SELECT_BY_TICKET,MODE_HISTORY))
+      {
+         side=(OrderType()==OP_BUY?"BUY":"SELL");
+         double closePrice=OrderClosePrice();
+         double point=MarketInfo(sym,MODE_POINT);
+         double tolerance=MathMax(point*3.0,MarketInfo(sym,MODE_SPREAD)*point);
+         if(OrderStopLoss()>0.0 && MathAbs(closePrice-OrderStopLoss())<=tolerance) exitClass="SL";
+         else if(OrderTakeProfit()>0.0 && MathAbs(closePrice-OrderTakeProfit())<=tolerance) exitClass="TP";
+         closeTime=OrderCloseTime();
+      }
+      FileWrite(h,TimeToString(closeTime,TIME_DATE|TIME_SECONDS),ticket,sym,side,exitClass,
                 (openTime>0?TimeToString(openTime,TIME_DATE|TIME_SECONDS):""),
                 (openTime>0?(int)MathMax(0,closeTime-openTime):0),
                 DoubleToString(closeNet,4),DoubleToString(mfe,4),DoubleToString(mae,4),
