@@ -1230,3 +1230,36 @@ bool InCooldown(string sym)
 }
 
 //+------------------------------------------------------------------+
+//| Sizing                                                            |
+//+------------------------------------------------------------------+
+double EstimateRisk(string sym,double lots,double stopDist)
+{
+   double tv=MarketInfo(sym,MODE_TICKVALUE), ts=MarketInfo(sym,MODE_TICKSIZE);
+   if(tv<=0 || ts<=0 || lots<=0 || stopDist<=0) return(1.0e12);
+   return((stopDist/ts)*tv*lots);
+}
+
+int LotDigits(double step)
+{
+   if(step>=1.0) return(0);
+   if(step>=0.1) return(1);
+   if(step>=0.01) return(2);
+   return(3);
+}
+
+double LotsForRisk(string sym,double stopDist,double riskMoney)
+{
+   double tv=MarketInfo(sym,MODE_TICKVALUE), ts=MarketInfo(sym,MODE_TICKSIZE);
+   double minLot=MarketInfo(sym,MODE_MINLOT), maxLot=MarketInfo(sym,MODE_MAXLOT), step=MarketInfo(sym,MODE_LOTSTEP);
+   if(riskMoney<=0 || tv<=0 || ts<=0 || stopDist<=0 || minLot<=0 || maxLot<minLot || step<=0) return(0.0);
+   double lossPerLot=(stopDist/ts)*tv;
+   if(lossPerLot<=0) return(0.0);
+   double lots=MathFloor(riskMoney/lossPerLot/step+1e-9)*step;
+   lots=MathMin(lots,maxLot);
+   lots=NormalizeDouble(lots,LotDigits(step));
+   if(lots<minLot) return(0.0);
+   if(EstimateRisk(sym,lots,stopDist)>riskMoney+0.02) return(0.0);
+   return(lots);
+}
+
+//+------------------------------------------------------------------+
