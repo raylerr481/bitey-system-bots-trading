@@ -594,7 +594,8 @@ bool IsTransientExecutionReject()
       g_lastExecutionRejectCategory=="TRADE_PERMISSION") return(true);
    if(g_lastExecutionRejectCategory!="BROKER_ERROR") return(false);
    int e=g_lastExecutionErrorCode;
-   return(e==128 || e==129 || e==135 || e==136 || e==137 ||
+   // Error 128 (trade timeout) is excluded because broker outcome may be ambiguous.
+   return(e==129 || e==135 || e==136 || e==137 ||
           e==138 || e==146 || e==4109);
 }
 
