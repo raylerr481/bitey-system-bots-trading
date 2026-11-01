@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//| Bitey_Scalper_MultiAsset_v1_4_5_2_MarketDataScannerDiagnostics.mq4                 |
+//| Bitey_Scalper_MultiAsset_v1_4_5_3_CloseClockScanAudit.mq4                         |
 //| Diagnostic-only market-data scanner; no new orders are permitted.  |
 //| Existing positions remain managed by the original exit controls.  |
 //| No strategy, sizing, or risk parameters are intentionally changed.|
