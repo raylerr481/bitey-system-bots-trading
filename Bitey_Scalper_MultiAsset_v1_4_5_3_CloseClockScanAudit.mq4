@@ -323,7 +323,7 @@ void SyncClosedTradeStats()
       // MT4 history is the source of truth for realized gross P/L and booked costs.
       // EA close records are definitive; SL/TP price matches remain probable only.
       string closeClassification=ClassifyHistoricalClose(ticket,OrderClosePrice(),OrderStopLoss(),OrderTakeProfit(),OrderSymbol());
-      int serverLocalOffset=TimeLocal()-TimeCurrent();
+      long serverLocalOffset=(long)TimeLocal()-(long)TimeCurrent();
       double gross=OrderProfit();
       double swap=OrderSwap();
       double commission=OrderCommission();
@@ -743,7 +743,7 @@ void RunCycle()
    {
       g_lastHeartbeatTick=nowTick;
       g_lastHeartbeat=now;
-      int serverLocalOffset=TimeLocal()-TimeCurrent();
+      long serverLocalOffset=(long)TimeLocal()-(long)TimeCurrent();
       Print("SCAN_CYCLE_SUMMARY | windowSec=300 assets=",g_symbolCount,
             " newBarsScanned=",g_cycleNewBars,
             " indicatorsEvaluated=",g_cycleIndicatorRuns,
