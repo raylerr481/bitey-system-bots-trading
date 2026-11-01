@@ -1,0 +1,3 @@
+timestamp;session_id;event_seq;scratch_id;ticket;symbol;event_type;elapsed_sec;net_est_usd;gate_usd;ea_version;cfg_id;detail
+2026.10.31 01:48:15;S1793389696859;1;;0;ALL;SESSION_START;0;0.0000;0.1200;1.8.2.0-EXP-SCRATCH;M20_T0.10_G0.12_Q2.0_ST42_SL1.50-2.25_TF15;mode=ON,minutes=20,targetUSD=0.10,safetyUSD=0.02,taxPct=0.0,quarantine=ON,run=TERMINAL
+2026.10.31 02:44:09;S1793393048375;1;;0;ALL;SESSION_START;0;0.0000;0.1200;1.8.2.0-EXP-SCRATCH;M20_T0.10_G0.12_Q2.0_ST42_SL1.50-2.25_TF15;mode=ON,minutes=20,targetUSD=0.10,safetyUSD=0.02,taxPct=0.0,quarantine=ON,run=TERMINAL
