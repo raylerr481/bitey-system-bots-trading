@@ -209,7 +209,7 @@ int OnInit()
    if(AccountCurrency()!="USD") Print("RISK_WARNING | reference capital is USD but account currency is ",AccountCurrency(),"; verify conversion before trading");
    if(InpEstimatedCloseCommissionPerLot<=0.0) Print("NET_LOCK_WARNING | set InpEstimatedCloseCommissionPerLot if broker charges closing commission; exact net lock cannot be guaranteed otherwise");
    Print("EARLY_LOSS_EXIT_CONFIG | enabled=",(InpSmallLossCloseUSD>0.0?"true":"false")," threshold=",DoubleToString(InpSmallLossCloseUSD,2)," minHoldSeconds=",MathMax(0,InpSmallLossMinHoldSeconds)," protection=BROKER_INITIAL_SL_AND_RISK_LIMITS");
-   Print("BITEY_ENSEMBLE_INIT | version=",EA_VERSION," | universe=MARKET_WATCH_PLUS_ALL_BROKER_USDT_ADDITIVE | quoteFreshness=STRICT_POST_INIT maxQuoteAgeSec=",InpMaxQuoteAgeSec," | tradeAudit=PER_TICKET_GROSS_COMMISSION_SWAP_NET | symbols=",g_symbolCount,
+   Print("BITEY_ENSEMBLE_INIT | version=",EA_VERSION," | universe=MARKET_WATCH_PLUS_ALL_BROKER_USDT_ADDITIVE | quoteFreshness=SERVER_ANCHORED_MONOTONIC maxQuoteAgeSec=",InpMaxQuoteAgeSec," | tradeAudit=PER_TICKET_GROSS_COMMISSION_SWAP_NET | symbols=",g_symbolCount,
          " | maxPositions=",MaxPositions()," | tf=",(int)InpSignalTF,
          " | profitRunner=NET_+",DoubleToString(InpTrendRunnerTriggerNetUSD,2)," lockFloor=+",DoubleToString(InpNetLockMinUSD,2)," | accountMode=NOT_A_GATE | diagnosticOnly=",(DIAGNOSTIC_ONLY_BUILD?"ON":"OFF"),
           " | trading=",(InpEnableTrading?"ON":"OFF"));
