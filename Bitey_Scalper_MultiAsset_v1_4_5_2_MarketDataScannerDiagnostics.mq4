@@ -80,7 +80,7 @@ input double           InpNetLockStepUSD         = 0.05;    // Persist peak afte
 input double           InpEstimatedCloseCommissionPerLot = 0.0; // Configure broker close commission per 1.0 lot, account currency
 input int              InpNetLockSlippagePoints  = 3;       // Adverse stop-fill slippage reserve
 
-input bool             InpDiagnosticOnly        = true;    // HARD SAFETY: never send new orders in this diagnostic build
+#define DIAGNOSTIC_ONLY_BUILD true
 input bool             InpEnableTrading         = false;   // secondary safety: candidate logging only
 input bool             InpLogRejects            = false;
 input bool             InpLogBarScanDiagnostics  = true;    // Log per-symbol bar-scan state changes
@@ -196,7 +196,7 @@ int OnInit()
    Print("EARLY_LOSS_EXIT_CONFIG | enabled=",(InpSmallLossCloseUSD>0.0?"true":"false")," threshold=",DoubleToString(InpSmallLossCloseUSD,2)," minHoldSeconds=",MathMax(0,InpSmallLossMinHoldSeconds)," protection=BROKER_INITIAL_SL_AND_RISK_LIMITS");
    Print("BITEY_ENSEMBLE_INIT | version=",EA_VERSION," | universe=MARKET_WATCH_PLUS_ALL_BROKER_USDT_ADDITIVE | quoteFreshness=STRICT_POST_INIT maxQuoteAgeSec=",InpMaxQuoteAgeSec," | tradeAudit=PER_TICKET_GROSS_COMMISSION_SWAP_NET | symbols=",g_symbolCount,
          " | maxPositions=",MaxPositions()," | tf=",(int)InpSignalTF,
-         " | profitRunner=NET_+",DoubleToString(InpTrendRunnerTriggerNetUSD,2)," lockFloor=+",DoubleToString(InpNetLockMinUSD,2)," | accountMode=NOT_A_GATE | diagnosticOnly=",(InpDiagnosticOnly?"ON":"OFF"),
+         " | profitRunner=NET_+",DoubleToString(InpTrendRunnerTriggerNetUSD,2)," lockFloor=+",DoubleToString(InpNetLockMinUSD,2)," | accountMode=NOT_A_GATE | diagnosticOnly=",(DIAGNOSTIC_ONLY_BUILD?"ON":"OFF"),
           " | trading=",(InpEnableTrading?"ON":"OFF"));
    return(INIT_SUCCEEDED);
 }
@@ -614,7 +614,7 @@ void RunCycle()
                td=g_candPriority[a]; g_candPriority[a]=g_candPriority[b]; g_candPriority[b]=td;
             }
 
-      if(InpDiagnosticOnly)
+      if(DIAGNOSTIC_ONLY_BUILD)
       {
          Print("DIAGNOSTIC_ONLY_BLOCK | candidates=",nc,
                " buy=",g_cycleBuySignals," sell=",g_cycleSellSignals,
@@ -705,7 +705,7 @@ void RunCycle()
             " dayNet=",DoubleToString(dayNet,2),
             " dailyLossLimit=-",DoubleToString(dailyLimit,2),
             " dailyLossBlocked=",(dailyLossBlocked?"true":"false"),
-            " diagnosticOnly=",(InpDiagnosticOnly?"true":"false"),
+            " diagnosticOnly=",(DIAGNOSTIC_ONLY_BUILD?"true":"false"),
             " assetsInUniverse=",g_symbolCount,
             " newBarsScanned=",g_cycleNewBars,
             " noNewBar=",g_cycleNoNewBar,
@@ -746,7 +746,7 @@ void UpdateScanDashboard(int candidates)
    panel+="Barras nuevas escaneadas: "+IntegerToString(g_cycleNewBars)+" | Prefiltro OK: "+IntegerToString(g_cyclePrefilterOK)+"\n";
    panel+="Indicadores evaluados: "+IntegerToString(g_cycleIndicatorRuns)+" | Candidatos: "+IntegerToString(candidates)+" (BUY "+IntegerToString(g_cycleBuySignals)+" / SELL "+IntegerToString(g_cycleSellSignals)+")\n";
    panel+="Descartes prefiltro: "+IntegerToString(g_cyclePrefilterRejects)+" | Sin señal: "+IntegerToString(g_cycleSignalRejects)+" | Saltos por capacidad: "+IntegerToString(g_cycleCapacityRejects)+"\n";
-   panel+="Modo diagnóstico: "+(InpDiagnosticOnly?"ON - NO NEW ORDERS":"OFF")+"\n";
+   panel+="Modo diagnóstico: "+(DIAGNOSTIC_ONLY_BUILD?"ON - NO NEW ORDERS":"OFF")+"\n";
    panel+="Posiciones: "+IntegerToString(CountOpenPositions())+"/"+IntegerToString(MaxPositions())+" | P/L día+flotante: "+DoubleToString(TodayNet(),2)+"\n";
    panel+="Último activo: "+g_lastScanSymbol+"\n";
    panel+="INDICADORES: "+g_lastIndicatorSummary;
@@ -1112,7 +1112,7 @@ bool Analyze(string sym,int &cmd,double &score,string &why)
 bool OpenTrade(string sym,int cmd,double score)
 {
    g_lastExecutionRejectCategory="";
-   if(InpDiagnosticOnly)
+   if(DIAGNOSTIC_ONLY_BUILD)
    {
       g_lastExecutionRejectCategory="DRY_RUN";
       Print("DIAGNOSTIC_ONLY_HARD_BLOCK | symbol=",sym,
