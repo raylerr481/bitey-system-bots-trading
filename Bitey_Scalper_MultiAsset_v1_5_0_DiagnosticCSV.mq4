@@ -160,7 +160,7 @@ void OpenDiagnosticCSV()
    if(newFile)
       FileWrite(g_csvHandle,
          "timestamp","ea_version","event","symbol","chart_symbol","signal_tf","htf","side","state","reason",
-         "quote_state","quote_age_sec","tick_time","history_state","bars","min_bars","bar_time","bar_age_sec",
+         "quote_state","quote_age_sec","tick_time","history_state","bars","min_bars","bar_time","bar_age_sec","bar1_time","bar1_open","bar1_high","bar1_low","bar1_close","bar1_volume","bar2_time","bar2_close","htf_close","htf_ema50",
          "bid","ask","spread_points","adx14","atr","rsi14","score","lots","risk","sl","tp","ticket",
          "gross","commission","swap","net","open_positions","max_positions","day_net",
          "new_bars","no_new_bar","history_unavailable","insufficient_history","prefilter_ok","indicators_evaluated",
@@ -176,8 +176,10 @@ void CsvLog(string eventName,string sym,string side,string state,string reason,
 {
    if(g_csvHandle==INVALID_HANDLE) return;
    int qAge=-1,bars=0,barAge=-1;
-   datetime tickTime=0,barTime=0;
+   datetime tickTime=0,barTime=0,bar1Time=0,bar2Time=0;
+   long bar1Volume=0;
    string quoteState="NOT_APPLICABLE",historyState="NOT_APPLICABLE";
+   double bar1Open=0.0,bar1High=0.0,bar1Low=0.0,bar1Close=0.0,bar2Close=0.0,htfClose=0.0,htfEma50=0.0;
    double bid=0.0,ask=0.0,point=0.0,spreadPoints=0.0,adx=0.0,atr=0.0,rsi=0.0;
    if(StringLen(sym)>0)
    {
@@ -189,6 +191,11 @@ void CsvLog(string eventName,string sym,string side,string state,string reason,
       barTime=iTime(sym,InpSignalTF,0);
       barAge=(barTime>0?(int)MathMax(0,TimeCurrent()-barTime):-1);
       historyState=(bars>=InpMinBars && barTime>0?"HISTORY_READY":(bars>0 && barTime>0?"HISTORY_INSUFFICIENT":"HISTORY_UNAVAILABLE"));
+      bar1Time=iTime(sym,InpSignalTF,1); bar2Time=iTime(sym,InpSignalTF,2);
+      bar1Open=iOpen(sym,InpSignalTF,1); bar1High=iHigh(sym,InpSignalTF,1);
+      bar1Low=iLow(sym,InpSignalTF,1); bar1Close=iClose(sym,InpSignalTF,1);
+      bar1Volume=iVolume(sym,InpSignalTF,1); bar2Close=iClose(sym,InpSignalTF,2);
+      htfClose=iClose(sym,InpHTF,1); htfEma50=iMA(sym,InpHTF,50,0,MODE_EMA,PRICE_CLOSE,1);
       bid=MarketInfo(sym,MODE_BID); ask=MarketInfo(sym,MODE_ASK); point=MarketInfo(sym,MODE_POINT);
       if(point>0.0 && ask>=bid) spreadPoints=(ask-bid)/point;
       adx=iADX(sym,InpSignalTF,14,PRICE_CLOSE,MODE_MAIN,1);
@@ -198,7 +205,8 @@ void CsvLog(string eventName,string sym,string side,string state,string reason,
    uint written=FileWrite(g_csvHandle,
       TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS),EA_VERSION,eventName,sym,Symbol(),
       (int)InpSignalTF,(int)InpHTF,side,state,reason,quoteState,qAge,(long)tickTime,historyState,
-      bars,InpMinBars,(long)barTime,barAge,bid,ask,spreadPoints,adx,atr,rsi,score,lots,risk,sl,tp,ticket,
+      bars,InpMinBars,(long)barTime,barAge,(long)bar1Time,bar1Open,bar1High,bar1Low,bar1Close,bar1Volume,(long)bar2Time,bar2Close,htfClose,htfEma50,
+      bid,ask,spreadPoints,adx,atr,rsi,score,lots,risk,sl,tp,ticket,
       gross,commission,swap,net,CountOpenPositions(),MaxPositions(),TodayNet(),
       g_cycleNewBars,g_cycleNoNewBar,g_cycleHistoryUnavailable,g_cycleInsufficientHistory,
       g_cyclePrefilterOK,g_cycleIndicatorRuns,g_cycleSignalCandidates,g_cycleBuySignals,g_cycleSellSignals,
@@ -606,6 +614,7 @@ void RunCycle()
       int cmd; double score; string why;
       if(!Prefilter(sym,why)) { Reject(sym,why); g_cyclePrefilterRejects++; continue; }
       g_cyclePrefilterOK++;
+      CsvLog("PREFILTER_PASS",sym,"","PASS","ALL_PREFILTER_CHECKS_PASSED",0.0,0.0,0.0,0.0,0.0,0,0.0,0.0,0.0,0.0,"");
       g_cycleIndicatorRuns++;
       bool signalOK=Analyze(sym,cmd,score,why);
       CsvLog("SIGNAL_EVALUATION",sym,(cmd==OP_BUY?"BUY":(cmd==OP_SELL?"SELL":"NONE")),
