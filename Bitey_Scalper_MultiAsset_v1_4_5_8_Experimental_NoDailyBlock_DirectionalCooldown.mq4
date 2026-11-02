@@ -6,7 +6,7 @@
 //+------------------------------------------------------------------+
 #property strict
 #property version   "1.458"
-#property description "Bitey v1.4.5.8 experimental: daily entry block disabled by default; directional loss cooldown"
+#property description "Bitey v1.4.5.8 experimental: daily entry block disabled by default; directional loss context logging"
 
 #define EA_VERSION          "1.4.5.8"
 #define MAX_SYMBOLS         256
@@ -53,7 +53,7 @@ input int              InpMinBars               = 250;
 input bool             InpUseSessionFilter      = true;    // Server-hour window; recognized crypto prefixes are exempt
 input int              InpSessionStartHour      = 7;
 input int              InpSessionEndHour        = 21;
-input int              InpCooldownBars          = 6;       // Bars to wait only in the direction of the last losing trade
+input int              InpCooldownBars          = 6;       // Diagnostic lookback window; never blocks entries
 input int              InpMaxHoldBars           = 48;      // Time exit (0 = off)
 
 //--- adaptive SL/TP
