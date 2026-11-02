@@ -711,14 +711,9 @@ void RunCycle()
             Print("BAR_RETRY_WAIT | symbol=",sym," reason=",why," stage=SIGNAL_DATA");
          continue;
       }
-      if(InCooldown(sym,cmd))
-      {
-         string cooldownReason=(cmd==OP_BUY?"LOSS_COOLDOWN_BUY":"LOSS_COOLDOWN_SELL");
-         Reject(sym,cooldownReason);
-         g_cycleSignalRejects++;
-         FinalizeScanBar(i,bt,cooldownReason);
-         continue;
-      }
+      // Loss cooldown is observational only: retain context for analysis,
+      // but never reject or suppress an otherwise-valid BUY/SELL candidate.
+      LogDirectionalLossContext(sym,cmd);
       if(cmd==OP_BUY && !InpAllowBuy)  { Reject(sym,"BUY_DISABLED");  g_cycleSignalRejects++; FinalizeScanBar(i,bt,"BUY_DISABLED"); continue; }
       if(cmd==OP_SELL && !InpAllowSell) { Reject(sym,"SELL_DISABLED"); g_cycleSignalRejects++; FinalizeScanBar(i,bt,"SELL_DISABLED"); continue; }
       if(score<InpMinEntryScore) { Reject(sym,"ENTRY_SCORE_BELOW_MINIMUM"); g_cycleSignalRejects++; FinalizeScanBar(i,bt,"ENTRY_SCORE_BELOW_MINIMUM"); continue; }
@@ -1833,10 +1828,11 @@ double TodayNet()
    return(net);
 }
 
-bool InCooldown(string sym,int orderType)
+void LogDirectionalLossContext(string sym,int orderType)
 {
-   if(InpCooldownBars<=0 || (orderType!=OP_BUY && orderType!=OP_SELL)) return(false);
-   datetime latest=0; double latestNet=0.0;
+   if(InpCooldownBars<=0 || (orderType!=OP_BUY && orderType!=OP_SELL)) return;
+   datetime latest=0;
+   double latestNet=0.0;
    int seen=0;
    for(int i=OrdersHistoryTotal()-1;i>=0 && seen<80;i--)
    {
@@ -1849,15 +1845,19 @@ bool InCooldown(string sym,int orderType)
          latestNet=OrderProfit()+OrderSwap()+OrderCommission();
       }
    }
-   if(latest<=0 || latestNet>=0.0) return(false);
-   bool active=((TimeCurrent()-latest)<InpCooldownBars*PeriodSeconds(InpSignalTF));
-   if(active)
-      Print("DIRECTIONAL_LOSS_COOLDOWN | symbol=",sym,
-            " blockedSide=",(orderType==OP_BUY?"BUY":"SELL"),
-            " oppositeSide=STILL_ELIGIBLE",
-            " lastNet=",DoubleToString(latestNet,2),
-            " remainingBarsEstimate=",MathMax(0,InpCooldownBars-(int)((TimeCurrent()-latest)/MathMax(1,PeriodSeconds(InpSignalTF)))));
-   return(active);
+   if(latest<=0 || latestNet>=0.0) return;
+   int elapsedSec=(int)MathMax(0,TimeCurrent()-latest);
+   int barSeconds=MathMax(1,PeriodSeconds(InpSignalTF));
+   int remainingBars=MathMax(0,InpCooldownBars-(int)(elapsedSec/barSeconds));
+   if(remainingBars<=0) return;
+   Print("DIRECTIONAL_LOSS_CONTEXT | symbol=",sym,
+         " candidateSide=",(orderType==OP_BUY?"BUY":"SELL"),
+         " previousLosingSide=",(orderType==OP_BUY?"BUY":"SELL"),
+         " lastNet=",DoubleToString(latestNet,2),
+         " lastCloseTime=",TimeToString(latest,TIME_DATE|TIME_SECONDS),
+         " elapsedSeconds=",elapsedSec,
+         " remainingBarsEstimate=",remainingBars,
+         " decision=OBSERVE_ONLY action=DO_NOT_BLOCK_ENTRY");
 }
 
 //+------------------------------------------------------------------+
