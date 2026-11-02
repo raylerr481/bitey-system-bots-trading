@@ -1,8 +1,8 @@
 //+------------------------------------------------------------------+
 //| Bitey_Scalper_MultiAsset_v1_4_5_11_DailyAdaptiveRecovery.mq4      |
-//| Controlled execution build; BUY/SELL entries enabled when signals and safety checks pass.  |
-//| Existing positions remain managed by the original exit controls.  |
-//| No strategy, sizing, or risk parameters are intentionally changed.|
+//| Daily selector: first ten closed trades, then short-net recovery if negative.|
+//| Existing signal, sizing, risk, and protective controls are retained.    |
+//| Recovery mode changes exit selection only; no risk escalation is added. |
 //+------------------------------------------------------------------+
 #property strict
 #property version   "1.461"
@@ -345,7 +345,7 @@ void OpenAuditCSV()
          "realized_swap","realized_net","close_price","close_reason_classification","extra");
    FileFlush(g_auditCsvHandle);
    Print("AUDIT_CSV_OPEN | file=",g_auditCsvName," folder=",(IsTesting()?"Tester\\Files":"MQL4\\Files"),
-         " append=true intervalSeconds=60 strategyChanges=NONE");
+         " append=true intervalSeconds=60 strategyChanges=DAILY_MODE_SELECTOR_ONLY");
 }
 
 void AuditLifecycleSnapshot(int ticket,string eventName,string extra)
