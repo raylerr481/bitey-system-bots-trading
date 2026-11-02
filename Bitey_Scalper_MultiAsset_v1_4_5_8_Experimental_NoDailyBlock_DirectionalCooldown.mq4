@@ -912,6 +912,8 @@ void RunCycle()
             " prefilterOK=",g_cyclePrefilterOK,
             " noNewBar=",g_cycleNoNewBar,
             " buy=",g_cycleBuySignals," sell=",g_cycleSellSignals,
+            " dailyLossExceeded=",(dailyLossExceeded?"true":"false"),
+            " dailyLossBlockEnabled=",(InpEnableDailyLossBlock?"true":"false"),
             " dailyLossBlocked=",(dailyLossBlocked?"true":"false"),
             " dayNet=",DoubleToString(dayNet,2),
             " dailyLossLimit=-",DoubleToString(dailyLimit,2));
@@ -1839,8 +1841,8 @@ bool InCooldown(string sym,int orderType)
    for(int i=OrdersHistoryTotal()-1;i>=0 && seen<80;i--)
    {
       if(!OrderSelect(i,SELECT_BY_POS,MODE_HISTORY)) continue;
-      seen++;
       if(OrderMagicNumber()!=InpMagic || OrderSymbol()!=sym || OrderType()!=orderType) continue;
+      seen++;
       if(OrderCloseTime()>latest)
       {
          latest=OrderCloseTime();
