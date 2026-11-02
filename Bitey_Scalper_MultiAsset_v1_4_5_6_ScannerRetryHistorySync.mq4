@@ -49,7 +49,7 @@ input int              InpSlippagePoints        = 20;
 input int              InpBroker133CooldownMinutes = 60; // 0 = block until EA restart
 input int              InpBroker133RecheckMinutes  = 60; // Permission-only recheck interval after cooldown
 input int              InpMinBars               = 250;
-input bool             InpUseSessionFilter      = true;    // Server hours; crypto is exempt
+input bool             InpUseSessionFilter      = true;    // Server-hour window; recognized crypto prefixes are exempt
 input int              InpSessionStartHour      = 7;
 input int              InpSessionEndHour        = 21;
 input int              InpCooldownBars          = 6;       // Bars to wait on a symbol after a losing trade
@@ -421,8 +421,10 @@ string AssetKey(string s)
 bool IsCrypto(string sym)
 {
    string k=AssetKey(sym);
-   string p[24]={"BTC","XBT","ETH","SOL","XRP","LTC","BCH","DOG","ADA","DOT","LIN","AVA","BNB","NEA","ZEC","LRC","UNI","TRX","ETC","FIL","ATOM","LINK","SHIB","TON"};
-   for(int i=0;i<24;i++)
+   // AssetKey is limited to six characters. Keep prefixes short enough
+   // to recognize broker aliases while avoiding broad USDT-suffix guessing.
+   string p[31]={"BTC","XBT","ETH","SOL","XRP","LTC","BCH","DOG","ADA","DOT","LIN","AVA","BNB","NEA","ZEC","LRC","UNI","TRX","ETC","FIL","ATOM","LINK","SHIB","TON","ICP","IOT","AST","TRU","DASH","GRT","ARU"};
+   for(int i=0;i<31;i++)
       if(StringFind(k,p[i])==0) return(true);
    return(false);
 }
