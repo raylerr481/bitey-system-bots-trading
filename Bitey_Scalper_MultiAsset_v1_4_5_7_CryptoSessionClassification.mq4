@@ -421,10 +421,15 @@ string AssetKey(string s)
 bool IsCrypto(string sym)
 {
    string k=AssetKey(sym);
-   // AssetKey is limited to six characters. Keep prefixes short enough
-   // to recognize broker aliases while avoiding broad USDT-suffix guessing.
-   string p[31]={"BTC","XBT","ETH","SOL","XRP","LTC","BCH","DOG","ADA","DOT","LIN","AVA","BNB","NEA","ZEC","LRC","UNI","TRX","ETC","FIL","ATOM","LINK","SHIB","TON","ICP","IOT","AST","TRU","DASH","GRT","ARU"};
-   for(int i=0;i<31;i++)
+   // Exact six-character AssetKey values avoid exempting unrelated symbols
+   // that happen to share the first three letters with a crypto ticker.
+   if(k=="ICPUSD" || k=="IOTAUS" || k=="ASTERU" || k=="TRUMPU" ||
+      k=="DASHUS" || k=="GRTUSD" || k=="ARUSD" || k=="ARUSDT")
+      return(true);
+
+   // Preserve the original prefix list for the previously supported assets.
+   string p[24]={"BTC","XBT","ETH","SOL","XRP","LTC","BCH","DOG","ADA","DOT","LIN","AVA","BNB","NEA","ZEC","LRC","UNI","TRX","ETC","FIL","ATOM","LINK","SHIB","TON"};
+   for(int i=0;i<24;i++)
       if(StringFind(k,p[i])==0) return(true);
    return(false);
 }
