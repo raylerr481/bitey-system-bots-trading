@@ -2220,7 +2220,10 @@ datetime LatestProtectedLoss(string sym,int orderType)
 int BarsSinceProtectedClose(string sym,datetime closeTime)
 {
    if(closeTime<=0) return(2147483647);
-   return(iBarShift(sym,InpSignalTF,closeTime,false));
+   int shift=iBarShift(sym,InpSignalTF,closeTime,false);
+   if(shift<0) return(-1);
+   // Current bar is incomplete; count only fully completed bars after the close bar.
+   return(MathMax(0,shift-1));
 }
 void AuditReentryEvent(string eventName,string sym,string side,datetime closeTime,
                        int barsSince,int remainingBars,string reason)
@@ -2240,6 +2243,15 @@ bool ReentryEntryAllowed(string sym,int candidateType,double score,string &why)
    datetime lastBuy=LatestProtectedLoss(sym,OP_BUY), lastSell=LatestProtectedLoss(sym,OP_SELL);
    int buyBars=(lastBuy>0?BarsSinceProtectedClose(sym,lastBuy):2147483647);
    int sellBars=(lastSell>0?BarsSinceProtectedClose(sym,lastSell):2147483647);
+   if((lastBuy>0 && buyBars<0) || (lastSell>0 && sellBars<0))
+   {
+      why="REENTRY_HISTORY_NOT_READY";
+      Print("REENTRY_BLOCKED | symbol=",sym," candidateSide=",(candidateType==OP_BUY?"BUY":"SELL"),
+            " reason=PROTECTED_CLOSE_BAR_INDEX_UNAVAILABLE action=FAIL_CLOSED_BOTH_DIRECTIONS");
+      AuditReentryEvent("REENTRY_BLOCKED",sym,(candidateType==OP_BUY?"BUY":"SELL"),
+                        (lastBuy>0?lastBuy:lastSell),-1,InpReentryCooldownBars,"PROTECTED_CLOSE_BAR_INDEX_UNAVAILABLE");
+      return(false);
+   }
 
    // Two protected losses in opposite directions close together trigger a symbol-wide pause.
    if(lastBuy>0 && lastSell>0 && InpFlipProtectionWindowBars>0 && InpFlipLockoutBars>0)
