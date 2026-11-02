@@ -2193,7 +2193,11 @@ bool IsHistoricalProtectedLoss(string sym,int orderType)
    if(GlobalVariableCheck(ticketKey)) return(true);
    double point=MarketInfo(sym,MODE_POINT), tickSize=MarketInfo(sym,MODE_TICKSIZE);
    double tolerance=MathMax(point*3.0,tickSize*1.5), sl=OrderStopLoss();
-   if(sl>0.0 && tolerance>0.0 && MathAbs(OrderClosePrice()-sl)<=tolerance) return(true);
+   double closePrice=OrderClosePrice();
+   // Include adverse stop-fill slippage beyond the SL, not only an exact price match.
+   if(sl>0.0 && tolerance>0.0 &&
+      ((orderType==OP_BUY && closePrice<=sl+tolerance) ||
+       (orderType==OP_SELL && closePrice>=sl-tolerance))) return(true);
    return(false);
 }
 datetime LatestProtectedLoss(string sym,int orderType)
