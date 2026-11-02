@@ -1710,6 +1710,7 @@ bool CloseTicket(int ticket,string reason)
       RecordEAClosedReason(ticket,reason);
       string pk=NetPeakKey(ticket); if(GlobalVariableCheck(pk)) GlobalVariableDel(pk);
       string rk=RunnerActiveKey(ticket); if(GlobalVariableCheck(rk)) GlobalVariableDel(rk);
+      string ik=InitialRiskKey(ticket); if(GlobalVariableCheck(ik)) GlobalVariableDel(ik);
    }
    return(ok);
 }
