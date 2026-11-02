@@ -229,6 +229,7 @@ int OnInit()
       // Recent cached quotes are age-checked at startup and then aged monotonically.
    }
    LogPotentialAliasGroups();
+   DailyCycleUpdate(); // Restore today's mode before managing any existing positions.
    EventSetTimer(1);
    if(AccountCurrency()!="USD") Print("RISK_WARNING | reference capital is USD but account currency is ",AccountCurrency(),"; verify conversion before trading");
    if(InpEstimatedCloseCommissionPerLot<=0.0) Print("NET_LOCK_WARNING | set InpEstimatedCloseCommissionPerLot if broker charges closing commission; exact net lock cannot be guaranteed otherwise");
