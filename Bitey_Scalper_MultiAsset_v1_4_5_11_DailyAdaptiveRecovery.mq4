@@ -727,6 +727,8 @@ void DailyCycleUpdate()
    datetime dayStart=StrToTime(TimeToString(TimeCurrent(),TIME_DATE));
    datetime firstClose[10];
    double firstNet[10];
+   ArrayInitialize(firstClose,0);
+   ArrayInitialize(firstNet,0.0);
    int firstCount=0;
    int closedToday=0;
    double totalTodayNet=0.0;
