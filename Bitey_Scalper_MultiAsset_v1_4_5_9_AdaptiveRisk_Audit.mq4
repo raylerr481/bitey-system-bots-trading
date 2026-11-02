@@ -1761,9 +1761,14 @@ void ManageExits()
       double fSL=(slUp?newSL:oldSL), fTP=(tpUp?newTP:oldTP);
       ResetLastError();
       if(OrderModify(ticket,entry,fSL,fTP,0,clrNONE))
+      {
+         AuditLifecycleSnapshot(ticket,"ADAPTIVE_MODIFY",
+            StringFormat("oldSL=%.10f;newSL=%.10f;oldTP=%.10f;newTP=%.10f;slChanged=%s;tpChanged=%s",
+               oldSL,fSL,oldTP,fTP,(slUp?"true":"false"),(tpUp?"true":"false")));
          Print("ADAPTIVE_MODIFY | ticket=",ticket," symbol=",sym,
                " SL ",DoubleToString(oldSL,digits),"->",DoubleToString(fSL,digits),
                " TP ",DoubleToString(oldTP,digits),"->",DoubleToString(fTP,digits));
+      }
       else
          Print("ADAPTIVE_MODIFY_FAILED | ticket=",ticket," symbol=",sym," error=",GetLastError());
    }
