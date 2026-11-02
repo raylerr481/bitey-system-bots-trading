@@ -2208,6 +2208,12 @@ datetime LatestProtectedLoss(string sym,int orderType)
          OrderCloseTime()<=0) continue;
       string ticketKey=ReentryProtectTicketKey(OrderTicket());
       bool marked=GlobalVariableCheck(ticketKey);
+      double realizedNet=OrderProfit()+OrderCommission()+OrderSwap();
+      if(realizedNet>=0.0)
+      {
+         if(marked) GlobalVariableDel(ticketKey);
+         continue; // A profitable close is never treated as a protective loss.
+      }
       if(!marked && !IsHistoricalProtectedLoss(sym,orderType)) continue;
       datetime ct=OrderCloseTime();
       if(ct>latest) latest=ct;
