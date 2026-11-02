@@ -334,7 +334,7 @@ void OpenAuditCSV()
 {
    string stamp=TimeToString(TimeLocal(),TIME_DATE|TIME_MINUTES);
    StringReplace(stamp,".","-"); StringReplace(stamp,":","-"); StringReplace(stamp," ","_");
-   g_auditCsvName="Bitey_v1_4_5_12_Lifecycle_"+stamp+".csv";
+   g_auditCsvName="Bitey_v1_5_1_Lifecycle_"+stamp+".csv";
    ResetLastError();
    g_auditCsvHandle=FileOpen(g_auditCsvName,FILE_READ|FILE_WRITE|FILE_CSV|FILE_SHARE_READ|FILE_SHARE_WRITE,',');
    if(g_auditCsvHandle==INVALID_HANDLE)
