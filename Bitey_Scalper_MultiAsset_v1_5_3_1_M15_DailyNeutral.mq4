@@ -108,6 +108,7 @@ int      g_symbolCount = 0;
 uint     g_lastCycleTick = 0;
 datetime g_lastHeartbeat = 0;
 uint     g_lastHeartbeatTick = 0;
+uint     g_lastDailyLossWarningTick = 0;
 int      g_cycleNewBars = 0;
 int      g_cycleBarRetries = 0;
 int      g_cycleNoNewBar = 0;
@@ -908,11 +909,16 @@ void RunCycle()
    double dailyLimit=InpReferenceCapitalUSD*InpDailyLossPct/100.0;
    double dayNet=TodayNet();
    bool dailyLossExceeded=(dayNet<=-dailyLimit);
-   if(dailyLossExceeded)
+   uint dailyWarningNowTick=GetTickCount();
+   if(dailyLossExceeded &&
+      (g_lastDailyLossWarningTick==0 || dailyWarningNowTick-g_lastDailyLossWarningTick>=60000))
+   {
+      g_lastDailyLossWarningTick=dailyWarningNowTick;
       Print("DAILY_LOSS_WARNING | dayNet=",DoubleToString(dayNet,2),
             " limit=-",DoubleToString(dailyLimit,2),
             " candidates=",nc,
             " action=WARNING_ONLY_CONTINUE_NORMAL_ENTRY_AND_EXIT_RULES");
+   }
 
    if(nc>0)
    {
@@ -1057,7 +1063,7 @@ void RunCycle()
             " noNewBar=",g_cycleNoNewBar,
             " buy=",g_cycleBuySignals," sell=",g_cycleSellSignals,
             " dailyLossExceeded=",(dailyLossExceeded?"true":"false"),
-"             " dailyPolicy=WARNING_ONLY",
+             " dailyPolicy=WARNING_ONLY",
             " dayNet=",DoubleToString(dayNet,2),
             " dailyLossLimit=-",DoubleToString(dailyLimit,2));
       Print("CLOCK_DIAGNOSTIC | serverTime=",TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS),
