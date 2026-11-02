@@ -34,6 +34,7 @@ Location:
 
 Events:
 - `SNAPSHOT`: first observed management snapshot and then at most once per 60 seconds per open ticket.
+- `ADAPTIVE_MODIFY`: each successful adaptive OrderModify, with old/new SL and TP and flags showing which changed. This allows trailing-stop changes and TP extensions to be separated.
 - `TRADE_CLOSED`: final broker-history outcome with actual gross, booked commission, swap, net, open/close times and close classification.
 
 Fields include ticket, symbol, direction, lot size, open time, elapsed seconds, bars held, entry/mark/SL/TP, floating gross/commission/swap/net, observed maximum favorable and adverse floating net, final realized costs and outcome.
