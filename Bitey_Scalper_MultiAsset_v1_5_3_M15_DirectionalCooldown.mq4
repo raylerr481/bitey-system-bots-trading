@@ -383,7 +383,7 @@ void OpenAuditCSV()
          "realized_swap","realized_net","close_price","close_reason_classification","extra");
    FileFlush(g_auditCsvHandle);
    Print("AUDIT_CSV_OPEN | file=",g_auditCsvName," folder=",(IsTesting()?"Tester\\Files":"MQL4\\Files"),
-         " append=true intervalSeconds=60 strategyChanges=DAILY_MODE_SELECTOR_ONLY losses=TRADE_LOSS cooldown=OBSERVE_ONLY");
+         " append=true intervalSeconds=60 strategyChanges=DAILY_MODE_SELECTOR_ONLY losses=TRADE_LOSS cooldown=ACTIVE_6_CLOSED_M15_BARS");
 }
 
 void AuditLifecycleSnapshot(int ticket,string eventName,string extra)
@@ -431,7 +431,7 @@ void AuditClosedTrade(int ticket,string sym,string side,double lots,datetime ope
       ticket,sym,side,lots,TimeToString(opened,TIME_DATE|TIME_SECONDS),
       (long)MathMax(0,closed-opened),0,openPrice,closePrice,sl,tp,
       0.0,0.0,0.0,0.0,peak,trough,gross,commission,swap,net,closePrice,classification,
-      (net<0.0?"history_source=MT4;analysis=LOSS_RECORDED;cooldown=OBSERVE_ONLY":"history_source=MT4;cooldown=OBSERVE_ONLY"));
+      (net<0.0?"history_source=MT4;analysis=LOSS_RECORDED;cooldown=ACTIVE_6_CLOSED_M15_BARS":"history_source=MT4;cooldown=ACTIVE_6_CLOSED_M15_BARS"));
    FileFlush(g_auditCsvHandle);
    if(net<0.0) Print("TRADE_LOSS_RECORDED | ticket=",ticket," symbol=",sym," side=",side,
       " net=",DoubleToString(net,2)," classification=",classification," csv=",g_auditCsvName);
