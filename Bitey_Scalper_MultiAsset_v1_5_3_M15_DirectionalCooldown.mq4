@@ -319,11 +319,14 @@ bool SessionSymbolBlocked(string sym)
       g_sessionBlocked[idx]=false;
       g_sessionBlockUntilTick[idx]=0;
       g_sessionNextPermissionCheckTick[idx]=0;
+      string previousBlockReason=g_sessionBlockReason[idx];
+      int previousBlockError=g_sessionBlockError[idx];
       g_sessionBlockUntilTime[idx]=0;
       g_sessionBlockReason[idx]="";
       g_sessionBlockError[idx]=0;
       Print("SESSION_SYMBOL_UNBLOCK | symbol=",sym,
-            " previousReason=",g_sessionBlockReason[idx],
+            " previousReason=",previousBlockReason,
+            " previousError=",previousBlockError,
             " reason=COOLDOWN_EXPIRED_AND_PERMISSIONS_READY",
             " permissionProbeOnly=true no_test_order=true");
       return(false);
@@ -357,6 +360,7 @@ double SessionPerformanceAdjustment(string sym)
 //| Research audit CSV: trade lifecycle snapshots and final outcomes |
 //+------------------------------------------------------------------+
 string AuditPeakKey(int ticket)   { return("BiteyAuditPeak_"+IntegerToString(AccountNumber())+"_"+IntegerToString(ticket)); }
+string EntrySpreadKey(int ticket)  { return("BiteyEntrySpread_"+IntegerToString(AccountNumber())+"_"+IntegerToString(ticket)); }
 string AuditTroughKey(int ticket) { return("BiteyAuditTrough_"+IntegerToString(AccountNumber())+"_"+IntegerToString(ticket)); }
 string AuditLastKey(int ticket)   { return("BiteyAuditLast_"+IntegerToString(AccountNumber())+"_"+IntegerToString(ticket)); }
 
@@ -431,13 +435,14 @@ void AuditClosedTrade(int ticket,string sym,string side,double lots,datetime ope
       ticket,sym,side,lots,TimeToString(opened,TIME_DATE|TIME_SECONDS),
       (long)MathMax(0,closed-opened),0,openPrice,closePrice,sl,tp,
       0.0,0.0,0.0,0.0,peak,trough,gross,commission,swap,net,closePrice,classification,
-      (net<0.0?"history_source=MT4;analysis=LOSS_RECORDED;cooldown=ACTIVE_6_CLOSED_M15_BARS":"history_source=MT4;cooldown=ACTIVE_6_CLOSED_M15_BARS"));
+      (net<0.0?"history_source=MT4;analysis=LOSS_RECORDED;cooldown=ACTIVE_6_CLOSED_M15_BARS":"history_source=MT4;cooldown=ACTIVE_6_CLOSED_M15_BARS")+";entrySpreadPrice="+DoubleToString((GlobalVariableCheck(EntrySpreadKey(ticket))?GlobalVariableGet(EntrySpreadKey(ticket)):0.0),8)+";net=gross+commission+swap;spread_in_execution_prices");
    FileFlush(g_auditCsvHandle);
    if(net<0.0) Print("TRADE_LOSS_RECORDED | ticket=",ticket," symbol=",sym," side=",side,
       " net=",DoubleToString(net,2)," classification=",classification," csv=",g_auditCsvName);
    if(GlobalVariableCheck(pk)) GlobalVariableDel(pk);
    if(GlobalVariableCheck(tk)) GlobalVariableDel(tk);
    string lk=AuditLastKey(ticket); if(GlobalVariableCheck(lk)) GlobalVariableDel(lk);
+   string sk=EntrySpreadKey(ticket); if(GlobalVariableCheck(sk)) GlobalVariableDel(sk);
 }
 
 //+------------------------------------------------------------------+
@@ -1726,6 +1731,7 @@ bool OpenTrade(string sym,int cmd,double score)
       return(false);
    }
    GlobalVariableSet(InitialRiskKey(ticket),risk); // Persist original monetary stop risk at entry.
+   GlobalVariableSet(EntrySpreadKey(ticket),spreadPrice); // Preserve entry spread for post-trade cost audit.
     Print("ORDER_ACCEPTED | ticket=",ticket," symbol=",sym," side=",(cmd==OP_BUY?"BUY":"SELL"),
          " lots=",DoubleToString(lots,2)," risk=",DoubleToString(risk,2)," riskDistance=",DoubleToString(riskDistance,digits),
          " spread=",DoubleToString(spreadPrice,digits)," score=",DoubleToString(score,1),
