@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This experimental branch evaluates the scalper through the full trading session without the daily-loss entry block being enabled by default. It also changes the loss cooldown from symbol-wide to direction-specific.
+This experimental branch evaluates the scalper through the full trading session without the daily-loss entry block being enabled by default. It also changes the loss cooldown from a blocking rule to direction-specific diagnostic logging.
 
 The v1.4.5.7 source file is preserved unchanged. This build is a separate file and branch.
 
@@ -18,15 +18,15 @@ The v1.4.5.7 source file is preserved unchanged. This build is a separate file a
 
 The daily P/L calculation in `TodayNet()` includes realized net P/L for orders closed since the broker-server day's start, plus the current floating net P/L of all open EA market positions. Net is gross profit + swap + commission. It is not a pure closed-trades-only statistic.
 
-### 2. Direction-specific loss cooldown
+### 2. Directional loss context: log only, never block
 
-- A losing BUY can block only a subsequent BUY on the same broker symbol.
-- A losing SELL can block only a subsequent SELL on the same broker symbol.
-- The opposite direction remains eligible for evaluation, but it is not opened automatically: it must independently pass signal, score, session, spread, quote, permission, position, and risk checks.
-- Cooldown duration remains `InpCooldownBars = 6` bars.
-- The history scan considers up to 80 matching closed trades for the same EA magic number, exact broker symbol, and exact direction.
+- A losing BUY is recorded as context for subsequent BUY candidate analysis on the same broker symbol.
+- A losing SELL is recorded as context for subsequent SELL candidate analysis on the same broker symbol.
+- The configured `InpCooldownBars = 6` is a diagnostic lookback window only. It does **not** reject, delay, or suppress any entry.
+- When a valid candidate appears within that window, the journal emits `DIRECTIONAL_LOSS_CONTEXT` with symbol, candidate side, previous losing side, last net result, close time, elapsed seconds, and estimated remaining bars.
+- BUY and SELL candidates continue through the ordinary entry pipeline. A prior loss is evidence for analysis, not an entry permission rule.
+- The existing one-position-per-asset rule remains in place, along with all independent signal, score, session, spread, quote, permission, volume, margin, and portfolio-risk checks.
 
-The existing one-position-per-asset rule remains in place. Therefore, a SELL is not eligible while a BUY position on the same normalized asset key is still open.
 
 ## Protections retained
 
@@ -43,10 +43,10 @@ The existing one-position-per-asset rule remains in place. Therefore, a SELL is 
 
 - Source copied from the v1.4.5.7 crypto-session-classification commit.
 - New source file and branch committed to GitHub.
-- Follow-up source verification confirmed the new default, warning path, optional block, directional cooldown signature, and retained risk constants.
+- Follow-up source verification confirmed the new default, warning path, optional block, diagnostic-only directional context logger, and retained risk constants.
 - **Not compiled in MetaEditor and not run in MT4 Strategy Tester or on a broker account.**
 - This is not evidence of profitability or proof that any broker will accept orders. Test on demo first and inspect the complete journal and trade-history costs.
 
 ## Evaluation data to collect
 
-For each closed trade, retain symbol, direction, open/close server time, lots, entry, SL, TP, gross P/L, commission, swap, net P/L, close classification, and ticket. Also record floating P/L, daily realized P/L, and aggregate open risk at each scan cycle. Compare BUY and SELL separately and include rejected candidates, not only accepted trades.
+For each closed trade, retain symbol, direction, open/close server time, lots, entry, SL, TP, gross P/L, commission, swap, net P/L, close classification, and ticket. Also record floating P/L, daily realized P/L, and aggregate open risk at each scan cycle. Compare BUY and SELL separately and include rejected candidates, not only accepted trades. The loss-context log must never be treated as a rejection reason.
