@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //| Bitey_Scalper_MultiAsset_v1_5_1_ConfirmedRetracement.mq4      |
-//| Daily selector: first ten closed trades, then short-net recovery if negative.|
+//| Daily recovery management plus staged strictness for new entries after trade 10.|
 //| Existing signal, sizing, risk, and protective controls are retained.    |
 //| Recovery mode changes exit selection only; no risk escalation is added. |
 //+------------------------------------------------------------------+
@@ -359,7 +359,7 @@ void OpenAuditCSV()
          "realized_swap","realized_net","close_price","close_reason_classification","extra");
    FileFlush(g_auditCsvHandle);
    Print("AUDIT_CSV_OPEN | file=",g_auditCsvName," folder=",(IsTesting()?"Tester\\Files":"MQL4\\Files"),
-         " append=true intervalSeconds=60 strategyChanges=DAILY_MODE_SELECTOR_ONLY losses=TRADE_LOSS cooldown=OBSERVE_ONLY");
+         " append=true intervalSeconds=60 strategyChanges=DAILY_RECOVERY_AND_ENTRY_SELECTIVITY losses=TRADE_LOSS cooldown=OBSERVE_ONLY");
 }
 
 void AuditDailyEntryRejection(string sym,int cmd,int level,double score,double adx,string reason)
