@@ -161,6 +161,10 @@ int      g_eaCloseReasonTickets[2048];
 string   g_eaCloseReasonText[2048];
 int      g_eaCloseReasonCount = 0;
 int      g_globalLossSampleCount = 0;
+datetime g_lossPolicyDayStart = 0;
+datetime g_globalLossBlockLogDay = 0;
+int      g_dailyLossCsvHandle = INVALID_HANDLE;
+string   g_dailyLossCsvName = "";
 int      g_globalLossWins = 0;
 int      g_globalLossLosses = 0;
 int      g_globalLossStreak = 0;
@@ -184,6 +188,9 @@ int OnInit()
    ParseSymbols();
    if(g_symbolCount<=0) { Print("INIT_ERROR | no symbols found"); return(INIT_FAILED); }
    OpenAuditCSV();
+   g_lossPolicyDayStart=StrToTime(TimeToString(TimeCurrent(),TIME_DATE));
+   OpenDailyLossSummaryCSV();
+   CheckDailyLossDay();
    g_sessionStartTime=TimeCurrent();
    for(int i=0;i<g_symbolCount;i++)
    {
@@ -270,6 +277,11 @@ void OnDeinit(const int reason)
    {
       FileFlush(g_auditCsvHandle); FileClose(g_auditCsvHandle); g_auditCsvHandle=INVALID_HANDLE;
       Print("AUDIT_CSV_CLOSED | file=",g_auditCsvName);
+   }
+   if(g_dailyLossCsvHandle!=INVALID_HANDLE)
+   {
+      FileFlush(g_dailyLossCsvHandle); FileClose(g_dailyLossCsvHandle); g_dailyLossCsvHandle=INVALID_HANDLE;
+      Print("DAILY_LOSS_CSV_CLOSED | file=",g_dailyLossCsvName);
    }
 }
 void OnTick()  { RunCycle(); }
@@ -800,6 +812,7 @@ void RunCycle()
       g_lastCycleTick=nowTick;
    }
 
+   CheckDailyLossDay();
    UpdateGlobalLossPolicy();
    ManageExits();
    SyncClosedTradeStats();
@@ -811,6 +824,19 @@ void RunCycle()
    GetDailyAdaptiveState(dailyStrict,dailyShortenHold,dailyAdaptiveStart,
                          dailySample,dailyWins,dailyLosses,dailyNet,
                          avgWinSeconds,avgLossSeconds);
+   if(InpEnableRollingLossPolicy && g_globalLossAdverse &&
+      g_globalLossStreak>=MathMax(1,InpLossPolicySuspendStreak))
+   {
+      if(g_globalLossBlockLogDay!=g_lossPolicyDayStart)
+      {
+         Print("ROLLING_GLOBAL_DAILY_SUSPENSION | day=",TimeToString(g_lossPolicyDayStart,TIME_DATE),
+            " sample=",g_globalLossSampleCount," wins=",g_globalLossWins,
+            " losses=",g_globalLossLosses," net=",DoubleToString(g_globalLossNet,2),
+            " streak=",g_globalLossStreak," action=BLOCK_ALL_NEW_ENTRIES_UNTIL_NEXT_SERVER_DAY");
+         g_globalLossBlockLogDay=g_lossPolicyDayStart;
+      }
+      return;
+   }
    int maxPos=MaxPositions();
    int nc=0;
    for(int i=0;i<g_symbolCount;i++)
@@ -2279,6 +2305,123 @@ double TodayNet()
 }
 
 
+
+datetime ServerDayStart(datetime when)
+{
+   return(StrToTime(TimeToString(when,TIME_DATE)));
+}
+void OpenDailyLossSummaryCSV()
+{
+   g_dailyLossCsvName="Bitey_Daily_Loss_Summary_"+IntegerToString(AccountNumber())+"_"+IntegerToString(InpMagic)+".csv";
+   ResetLastError();
+   g_dailyLossCsvHandle=FileOpen(g_dailyLossCsvName,FILE_READ|FILE_WRITE|FILE_CSV|FILE_SHARE_READ|FILE_SHARE_WRITE,',');
+   if(g_dailyLossCsvHandle==INVALID_HANDLE)
+   {
+      Print("DAILY_LOSS_CSV_ERROR | action=OPEN file=",g_dailyLossCsvName," error=",GetLastError());
+      return;
+   }
+   bool fresh=(FileSize(g_dailyLossCsvHandle)==0);
+   FileSeek(g_dailyLossCsvHandle,0,SEEK_END);
+   if(fresh) FileWrite(g_dailyLossCsvHandle,"server_day","generated_server","scope","symbol",
+      "closed_trades","wins","losses","win_rate_pct","gross_profit","gross_loss","net_profit",
+      "profit_factor","last10_sample","last10_wins","last10_losses","last10_net",
+      "consecutive_losses","protection_level","negative_limit_minutes","asset_pause_minutes",
+      "new_entries_restricted","policy_note");
+   FileFlush(g_dailyLossCsvHandle);
+   Print("DAILY_LOSS_CSV_OPEN | file=",g_dailyLossCsvName," time_basis=MT4_SERVER_DAY");
+}
+void WriteDailyLossSummary(datetime dayStart)
+{
+   datetime dayEnd=dayStart+86400;
+   int total=0,wins=0,losses=0; double grossWin=0.0,grossLoss=0.0,net=0.0;
+   string names[MAX_SYMBOLS]; int counts[MAX_SYMBOLS],assetWins[MAX_SYMBOLS],assetLosses[MAX_SYMBOLS];
+   double assetGrossWin[MAX_SYMBOLS],assetGrossLoss[MAX_SYMBOLS],assetNet[MAX_SYMBOLS];
+   int assetCount=0;
+   ArrayInitialize(counts,0); ArrayInitialize(assetWins,0); ArrayInitialize(assetLosses,0);
+   ArrayInitialize(assetGrossWin,0.0); ArrayInitialize(assetGrossLoss,0.0); ArrayInitialize(assetNet,0.0);
+   for(int i=OrdersHistoryTotal()-1;i>=0;i--)
+   {
+      if(!OrderSelect(i,SELECT_BY_POS,MODE_HISTORY)) continue;
+      int type=OrderType();
+      if(OrderMagicNumber()!=InpMagic || (type!=OP_BUY && type!=OP_SELL)) continue;
+      datetime closed=OrderCloseTime();
+      if(closed<dayStart || closed>=dayEnd) continue;
+      double tradeNet=OrderProfit()+OrderSwap()+OrderCommission();
+      total++; net+=tradeNet;
+      if(tradeNet>0.0){wins++;grossWin+=tradeNet;} else if(tradeNet<0.0){losses++;grossLoss+=tradeNet;}
+      string sym=OrderSymbol(),key=AssetIdentityKey(sym);
+      int ix=-1;
+      for(int j=0;j<assetCount;j++) if(AssetIdentityKey(names[j])==key){ix=j;break;}
+      if(ix<0 && assetCount<MAX_SYMBOLS){ix=assetCount++;names[ix]=sym;}
+      if(ix>=0)
+      {
+         counts[ix]++;assetNet[ix]+=tradeNet;
+         if(tradeNet>0.0){assetWins[ix]++;assetGrossWin[ix]+=tradeNet;}
+         else if(tradeNet<0.0){assetLosses[ix]++;assetGrossLoss[ix]+=tradeNet;}
+      }
+   }
+   int gs=0,gw=0,gl=0,gstreak=0;double gn=0.0;bool ga=false;
+   GetRecentLossPolicyForDay("",dayStart,gs,gw,gl,gn,gstreak,ga);
+   int glevel=LossPolicyLevel(ga,gstreak);
+   bool globalBlocked=(ga && gstreak>=MathMax(1,InpLossPolicySuspendStreak));
+   if(g_dailyLossCsvHandle!=INVALID_HANDLE)
+   {
+      FileSeek(g_dailyLossCsvHandle,0,SEEK_END);
+      FileWrite(g_dailyLossCsvHandle,TimeToString(dayStart,TIME_DATE),
+         TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS),"GLOBAL","ALL",total,wins,losses,
+         (total>0?100.0*wins/total:0.0),grossWin,grossLoss,net,
+         (grossLoss<0.0?grossWin/MathAbs(grossLoss):0.0),
+         gs,gw,gl,gn,gstreak,glevel,
+         MathMax(5,InpLossNegativeMinutes-5*MathMin(4,glevel)),
+         InpLossAssetPauseMinutes,(globalBlocked?"YES":"NO"),
+         "closed_by_server_day;net=gross+swap+commission;global_block_resets_next_server_day");
+      for(int k=0;k<assetCount;k++)
+      {
+         int as=0,aw=0,al=0,astreak=0;double an=0.0;bool aa=false;
+         GetRecentLossPolicyForDay(names[k],dayStart,as,aw,al,an,astreak,aa);
+         int alevel=LossPolicyLevel(aa,astreak);
+         bool assetBlocked=(aa && astreak>=MathMax(1,InpLossPolicySuspendStreak));
+         FileWrite(g_dailyLossCsvHandle,TimeToString(dayStart,TIME_DATE|TIME_SECONDS),
+            TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS),"ASSET",names[k],
+            counts[k],assetWins[k],assetLosses[k],
+            (counts[k]>0?100.0*assetWins[k]/counts[k]:0.0),
+            assetGrossWin[k],assetGrossLoss[k],assetNet[k],
+            (assetGrossLoss[k]<0.0?assetGrossWin[k]/MathAbs(assetGrossLoss[k]):0.0),
+            as,aw,al,an,astreak,alevel,
+            MathMax(5,InpLossNegativeMinutes-5*MathMin(4,alevel)),
+            InpLossAssetPauseMinutes,(assetBlocked?"YES":"NO"),
+            "asset_scope_only;strict_filters_apply_after_pause");
+      }
+      FileFlush(g_dailyLossCsvHandle);
+   }
+   Print("DAILY_LOSS_SUMMARY | day=",TimeToString(dayStart,TIME_DATE),
+      " trades=",total," wins=",wins," losses=",losses," net=",DoubleToString(net,2),
+      " globalStrictLevel=",glevel," globalBlocked=",(globalBlocked?"true":"false"),
+      " assets=",assetCount," csv=",g_dailyLossCsvName);
+}
+void CheckDailyLossDay()
+{
+   datetime today=ServerDayStart(TimeCurrent());
+   string reportKey="B54DailyReportDay_"+IntegerToString(AccountNumber())+"_"+IntegerToString(InpMagic);
+   if(!GlobalVariableCheck(reportKey)) GlobalVariableSet(reportKey,(double)(today-86400));
+   datetime lastReported=(datetime)GlobalVariableGet(reportKey);
+   while(lastReported<today-86400)
+   {
+      datetime dayToReport=lastReported+86400;
+      WriteDailyLossSummary(dayToReport);
+      lastReported=dayToReport;
+      GlobalVariableSet(reportKey,(double)lastReported);
+   }
+   if(g_lossPolicyDayStart!=today)
+   {
+      Print("DAILY_LOSS_POLICY_RESET | previousDay=",TimeToString(g_lossPolicyDayStart,TIME_DATE),
+         " newDay=",TimeToString(today,TIME_DATE),
+         " scope=GLOBAL_AND_PER_ASSET rollingSamples=RESET negativePositionTimers=CONTINUE");
+      g_lossPolicyDayStart=today;
+      g_globalLossBlockLogDay=0;
+   }
+}
+
 // Rolling history evaluator: last 10 EA closes, globally or for one normalized asset.
 string LossDurationStartKey(int ticket){return("B54LT_"+IntegerToString(AccountNumber())+"_"+IntegerToString(ticket));}
 string AssetLossPauseUntilKey(string sym)
@@ -2298,7 +2441,17 @@ void GetRecentLossPolicy(string filterSymbol,int &sample,int &wins,int &losses,d
 {
    sample=0; wins=0; losses=0; net=0.0; lossStreak=0; adverse=false;
    if(!InpEnableRollingLossPolicy) return;
+   GetRecentLossPolicyForDay(filterSymbol,
+      StrToTime(TimeToString(TimeCurrent(),TIME_DATE)),
+      sample,wins,losses,net,lossStreak,adverse);
+}
+void GetRecentLossPolicyForDay(string filterSymbol,datetime dayStart,
+   int &sample,int &wins,int &losses,double &net,int &lossStreak,bool &adverse)
+{
+   sample=0; wins=0; losses=0; net=0.0; lossStreak=0; adverse=false;
+   if(!InpEnableRollingLossPolicy) return;
    int wanted=MathMax(1,MathMin(10,InpLossPolicySampleSize));
+   datetime dayEnd=dayStart+86400;
    datetime closeTimes[10]; double tradeNets[10];
    ArrayInitialize(closeTimes,0); ArrayInitialize(tradeNets,0.0);
    string wantedKey=(StringLen(filterSymbol)>0?AssetIdentityKey(filterSymbol):"");
@@ -2308,7 +2461,8 @@ void GetRecentLossPolicy(string filterSymbol,int &sample,int &wins,int &losses,d
       int type=OrderType();
       if(OrderMagicNumber()!=InpMagic || (type!=OP_BUY && type!=OP_SELL)) continue;
       if(StringLen(wantedKey)>0 && AssetIdentityKey(OrderSymbol())!=wantedKey) continue;
-      datetime closed=OrderCloseTime(); if(closed<=0) continue;
+      datetime closed=OrderCloseTime();
+      if(closed<dayStart || closed>=dayEnd) continue;
       int insertAt=-1;
       for(int j=0;j<sample;j++) if(closed>closeTimes[j]) {insertAt=j;break;}
       if(insertAt<0 && sample<wanted) insertAt=sample;
@@ -2351,7 +2505,9 @@ bool AssetLossPauseActive(string sym)
       if(TimeCurrent()<until) return(true);
       GlobalVariableDel(pauseKey);
    }
-   return(false); // After the timed pause, strict ADX/score/spread filters decide whether conditions are favorable.
+   int sample=0,wins=0,losses=0,streak=0; double net=0.0; bool adverse=false;
+   GetRecentLossPolicy(sym,sample,wins,losses,net,streak,adverse);
+   return(adverse && streak>=MathMax(1,InpLossPolicySuspendStreak));
 }
 
 bool DirectionalLossCooldownActive(string sym,int orderType)
