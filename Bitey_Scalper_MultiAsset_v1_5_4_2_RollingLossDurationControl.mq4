@@ -1908,15 +1908,33 @@ void ManageExits()
             int negativeSeconds=(int)MathMax(0,TimeCurrent()-(datetime)negativeSince);
             if(negativeSeconds>=allowedMinutes*60)
             {
-               Print("ROLLING_LOSS_DURATION_EXIT | ticket=",ticket," symbol=",sym,
+               double entrySpreadPrice=(GlobalVariableCheck(EntrySpreadKey(ticket))?GlobalVariableGet(EntrySpreadKey(ticket)):0.0);
+               double spreadCostEstimate=(entrySpreadPrice>0.0?EstimateRisk(sym,lots,entrySpreadPrice):0.0);
+               if(spreadCostEstimate>=1.0e11) spreadCostEstimate=0.0;
+               double bookedCostBudget=MathAbs(OrderCommission())+MathAbs(OrderSwap())+
+                  closeCommissionEstimate+spreadCostEstimate+closeSlippageReserve;
+               double permittedLoss=bookedCostBudget*MathMax(0.0,InpLossDurationMaxCostMultiple);
+               double estimatedLoss=MathAbs(MathMin(0.0,estimatedNetAfterCloseCosts));
+               if(estimatedLoss<=permittedLoss+0.000001)
+               {
+                  Print("ROLLING_LOSS_DURATION_EXIT | ticket=",ticket," symbol=",sym,
+                     " negativeSeconds=",negativeSeconds," allowedMinutes=",allowedMinutes,
+                     " estimatedLoss=",DoubleToString(estimatedLoss,2),
+                     " estimatedTransactionCostBudget=",DoubleToString(bookedCostBudget,2),
+                     " spreadCostEstimate=",DoubleToString(spreadCostEstimate,2),
+                     " sample=",sample," wins=",wins," losses=",losses,
+                     " recentNet=",DoubleToString(recentNet,2)," streak=",streak,
+                     " policyLevel=",level," action=CLOSE_WITHIN_COST_BUDGET_AND_PAUSE_ASSET");
+                  if(CloseTicket(ticket,"ROLLING_LOSS_DURATION_WITHIN_COST_BUDGET_"+IntegerToString(allowedMinutes)+"M"))
+                     GlobalVariableSet(AssetLossPauseUntilKey(sym),
+                        (double)(TimeCurrent()+MathMax(0,InpLossAssetPauseMinutes)*60));
+                  continue;
+               }
+               Print("ROLLING_LOSS_DURATION_DEFERRED | ticket=",ticket," symbol=",sym,
                   " negativeSeconds=",negativeSeconds," allowedMinutes=",allowedMinutes,
-                  " sample=",sample," wins=",wins," losses=",losses,
-                  " recentNet=",DoubleToString(recentNet,2)," streak=",streak,
-                  " policyLevel=",level," action=CLOSE_AND_PAUSE_ASSET");
-               if(CloseTicket(ticket,"ROLLING_LOSS_DURATION_"+IntegerToString(allowedMinutes)+"M"))
-                  GlobalVariableSet(AssetLossPauseUntilKey(sym),
-                     (double)(TimeCurrent()+MathMax(0,InpLossAssetPauseMinutes)*60));
-               continue;
+                  " estimatedLoss=",DoubleToString(estimatedLoss,2),
+                  " transactionCostBudget=",DoubleToString(bookedCostBudget,2),
+                  " action=KEEP_OPEN_INITIAL_SL_REMAINS_ACTIVE reason=LOSS_EXCEEDS_COST_BUDGET");
             }
          }
          else if(GlobalVariableCheck(timerKey)) GlobalVariableDel(timerKey);
