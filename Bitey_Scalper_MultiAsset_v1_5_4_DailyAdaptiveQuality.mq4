@@ -2234,15 +2234,28 @@ void GetDailyAdaptiveState(bool &strictMode,bool &shortenHold,datetime &activati
          int floorBars=MathMax(1,MathMin(InpMaxHoldBars,InpDailyAdaptiveMinHoldBars));
          reducedBars=MathMax(floorBars,MathMin(InpMaxHoldBars,raw));
       }
-      Print("DAILY_ADAPTIVE_EVALUATION | enabled=true sample=",sampleCount,
-            " wins=",wins," losses=",losses," net=",DoubleToString(netTotal,2),
-            " avgWinDurationSec=",DoubleToString(avgWinSeconds,0),
-            " avgLossDurationSec=",DoubleToString(avgLossSeconds,0),
-            " strictEntryMode=",(strictMode?"ON":"OFF"),
-            " shortenHold=",(shortenHold?"ON":"OFF"),
-            " baseMaxHoldBars=",InpMaxHoldBars," reducedMaxHoldBars=",reducedBars,
-            " activationAfterServerTime=",TimeToString(activationTime,TIME_DATE|TIME_SECONDS),
+      string adaptiveExtra="sample="+IntegerToString(sampleCount)+
+         ";wins="+IntegerToString(wins)+";losses="+IntegerToString(losses)+
+         ";net="+DoubleToString(netTotal,2)+
+         ";avgWinDurationSec="+DoubleToString(avgWinSeconds,0)+
+         ";avgLossDurationSec="+DoubleToString(avgLossSeconds,0)+
+         ";strictEntryMode="+(strictMode?"ON":"OFF")+
+         ";shortenHold="+(shortenHold?"ON":"OFF")+
+         ";baseMaxHoldBars="+IntegerToString(InpMaxHoldBars)+
+         ";reducedMaxHoldBars="+IntegerToString(reducedBars)+
+         ";activationAfter="+TimeToString(activationTime,TIME_DATE|TIME_SECONDS);
+      Print("DAILY_ADAPTIVE_EVALUATION | enabled=true ",adaptiveExtra,
             " policy=DAILY_ONLY_NO_SL_WIDENING_NO_RISK_INCREASE");
+      if(g_auditCsvHandle!=INVALID_HANDLE)
+      {
+         FileSeek(g_auditCsvHandle,0,SEEK_END);
+         FileWrite(g_auditCsvHandle,TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS),
+            "DAILY_ADAPTIVE_EVALUATION",0,"ALL","ALL",0.0,
+            TimeToString(activationTime,TIME_DATE|TIME_SECONDS),0,0,
+            0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+            0.0,0.0,0.0,netTotal,0.0,"DAILY_MODE_STATE",adaptiveExtra);
+         FileFlush(g_auditCsvHandle);
+      }
       lastLoggedDay=dayStart; lastLoggedStrict=strictMode; lastLoggedShorten=shortenHold;
    }
 }
