@@ -2291,7 +2291,8 @@ string AssetLossPauseUntilKey(string sym)
 int LossPolicyLevel(bool adverse,int streak)
 {
    if(!InpEnableRollingLossPolicy || !adverse) return(0);
-   return(MathMax(1,MathMin(5,streak)));
+   int maxLevel=MathMax(1,MathMin(5,InpLossPolicySuspendStreak));
+   return(MathMax(1,MathMin(maxLevel,streak)));
 }
 void GetRecentLossPolicy(string filterSymbol,int &sample,int &wins,int &losses,double &net,int &lossStreak,bool &adverse)
 {
