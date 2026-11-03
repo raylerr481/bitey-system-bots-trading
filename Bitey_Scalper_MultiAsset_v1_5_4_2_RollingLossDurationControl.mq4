@@ -62,7 +62,8 @@ input int              InpSessionEndHour        = 21;
 input int              InpCooldownBars          = 6;       // Closed signal bars after a net loss, same asset and direction only
 input int              InpMaxHoldBars           = 0;       // Generic time exit disabled; winners remain managed by profit exits
 input bool             InpEnableRollingLossPolicy = true;
-input int              InpLossPolicySampleSize    = 10;
+input int              InpLossPolicySampleSize    = 10; // Sequential batches: 1-10, 11-20, etc.
+input double           InpLossDurationMaxCostMultiple = 1.0; // Timed loss exit only within estimated transaction-cost budget
 input int              InpLossNegativeMinutes     = 30;
 input int              InpLossAssetPauseMinutes   = 30;
 input double           InpLossPolicyExtraScore    = 5.0;
@@ -2462,9 +2463,8 @@ void GetRecentLossPolicyForDay(string filterSymbol,datetime dayStart,
    if(!InpEnableRollingLossPolicy) return;
    int wanted=MathMax(1,MathMin(10,InpLossPolicySampleSize));
    datetime dayEnd=dayStart+86400;
-   datetime closeTimes[10]; double tradeNets[10];
-   ArrayInitialize(closeTimes,0); ArrayInitialize(tradeNets,0.0);
    string wantedKey=(StringLen(filterSymbol)>0?AssetIdentityKey(filterSymbol):"");
+   int totalCount=0;
    for(int i=OrdersHistoryTotal()-1;i>=0;i--)
    {
       if(!OrderSelect(i,SELECT_BY_POS,MODE_HISTORY)) continue;
@@ -2472,25 +2472,43 @@ void GetRecentLossPolicyForDay(string filterSymbol,datetime dayStart,
       if(OrderMagicNumber()!=InpMagic || (type!=OP_BUY && type!=OP_SELL)) continue;
       if(StringLen(wantedKey)>0 && AssetIdentityKey(OrderSymbol())!=wantedKey) continue;
       datetime closed=OrderCloseTime();
-      if(closed<dayStart || closed>=dayEnd) continue;
-      int insertAt=-1;
-      for(int j=0;j<sample;j++) if(closed>closeTimes[j]) {insertAt=j;break;}
-      if(insertAt<0 && sample<wanted) insertAt=sample;
-      if(insertAt<0) continue;
-      int newCount=MathMin(wanted,sample+1);
-      for(int k=newCount-1;k>insertAt;k--){closeTimes[k]=closeTimes[k-1];tradeNets[k]=tradeNets[k-1];}
-      closeTimes[insertAt]=closed;
-      tradeNets[insertAt]=OrderProfit()+OrderSwap()+OrderCommission();
-      sample=newCount;
+      if(closed>=dayStart && closed<dayEnd) totalCount++;
    }
-   for(int n=0;n<sample;n++)
+   // Only completed non-overlapping batches trigger evaluation.
+   int completedBatches=totalCount/wanted;
+   if(completedBatches<=0) return;
+   int batchStart=(completedBatches-1)*wanted;
+   datetime allTimes[]; double allNets[];
+   ArrayResize(allTimes,totalCount); ArrayResize(allNets,totalCount);
+   int fill=0;
+   for(int h=OrdersHistoryTotal()-1;h>=0;h--)
    {
-      net+=tradeNets[n];
-      if(tradeNets[n]>0.0) wins++;
-      else if(tradeNets[n]<0.0) losses++;
+      if(!OrderSelect(h,SELECT_BY_POS,MODE_HISTORY)) continue;
+      int htype=OrderType();
+      if(OrderMagicNumber()!=InpMagic || (htype!=OP_BUY && htype!=OP_SELL)) continue;
+      if(StringLen(wantedKey)>0 && AssetIdentityKey(OrderSymbol())!=wantedKey) continue;
+      datetime hclosed=OrderCloseTime();
+      if(hclosed<dayStart || hclosed>=dayEnd) continue;
+      if(fill<totalCount){allTimes[fill]=hclosed;allNets[fill]=OrderProfit()+OrderSwap()+OrderCommission();fill++;}
    }
-   for(int n=0;n<sample;n++){if(tradeNets[n]<0.0) lossStreak++;else break;}
-   adverse=(sample>0 && (losses>wins || net<0.0));
+   // Sort by close time, independent of MT4 history-list ordering.
+   for(int x=1;x<fill;x++)
+   {
+      datetime t=allTimes[x]; double v=allNets[x]; int y=x-1;
+      while(y>=0 && allTimes[y]>t)
+      {
+         allTimes[y+1]=allTimes[y];allNets[y+1]=allNets[y];y--;
+      }
+      allTimes[y+1]=t;allNets[y+1]=v;
+   }
+   for(int n=batchStart;n<batchStart+wanted && n<fill;n++)
+   {
+      sample++;net+=allNets[n];
+      if(allNets[n]>0.0) wins++;
+      else if(allNets[n]<0.0) losses++;
+   }
+   for(int n=sample-1;n>=0;n--){if(allNets[batchStart+n]<0.0)lossStreak++;else break;}
+   adverse=(sample==wanted && (losses>wins || net<0.0));
 }
 void UpdateGlobalLossPolicy()
 {
