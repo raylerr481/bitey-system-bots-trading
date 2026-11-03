@@ -526,7 +526,6 @@ void SyncClosedTradeStats()
       // MT4 history is the source of truth for realized gross P/L and booked costs.
       // EA close records are definitive; SL/TP price matches remain probable only.
       string closeClassification=ClassifyHistoricalClose(ticket,OrderClosePrice(),OrderStopLoss(),OrderTakeProfit(),OrderSymbol());
-      AuditClosedTrade(ticket,OrderSymbol(),(OrderType()==OP_BUY?"BUY":"SELL"),OrderLots(),OrderOpenTime(),OrderCloseTime(),OrderOpenPrice(),OrderClosePrice(),OrderStopLoss(),OrderTakeProfit(),OrderProfit(),OrderCommission(),OrderSwap(),OrderProfit()+OrderCommission()+OrderSwap(),closeClassification);
       long serverLocalOffset=(long)TimeLocal()-(long)TimeCurrent();
       double gross=OrderProfit();
       double swap=OrderSwap();
@@ -534,6 +533,17 @@ void SyncClosedTradeStats()
       double net=gross+swap+commission;
       string side=(OrderType()==OP_BUY?"BUY":"SELL");
       Print("TRADE_CLOSE_AUDIT | scope=EA_SESSION_ONLY ticket=",ticket,
+       double entrySpreadPrice=(GlobalVariableCheck(EntrySpreadKey(ticket))?GlobalVariableGet(EntrySpreadKey(ticket)):0.0);
+       double spreadCostEstimate=(entrySpreadPrice>0.0?EstimateRisk(OrderSymbol(),OrderLots(),entrySpreadPrice):0.0);
+       if(spreadCostEstimate>=1.0e11) spreadCostEstimate=0.0;
+       AuditClosedTrade(ticket,OrderSymbol(),side,OrderLots(),OrderOpenTime(),OrderCloseTime(),OrderOpenPrice(),OrderClosePrice(),OrderStopLoss(),OrderTakeProfit(),gross,commission,swap,net,closeClassification);
+       string resultLabel=(net>0.0?"EXITOSA":(net<0.0?"FRACASADA":"EMPATE"));
+       Print("TRADE_RESULT_COMMENT | ticket=",ticket," symbol=",OrderSymbol()," side=",side,
+          " result=",resultLabel," net=",DoubleToString(net,2),
+          " gross=",DoubleToString(gross,2)," commission=",DoubleToString(commission,2),
+          " swap=",DoubleToString(swap,2)," entrySpreadCostEstimate=",DoubleToString(spreadCostEstimate,2),
+          " exitReason=",closeClassification,
+          " note=spread_reflected_in_execution_prices;taxes_only_if_broker_books_them_in_commission_or_swap");
             " symbol=",OrderSymbol()," side=",side,
             " lots=",DoubleToString(OrderLots(),3),
             " openTimeServer=",TimeToString(OrderOpenTime(),TIME_DATE|TIME_SECONDS),
@@ -2347,9 +2357,9 @@ void OpenDailyLossSummaryCSV()
    FileSeek(g_dailyLossCsvHandle,0,SEEK_END);
    if(fresh) FileWrite(g_dailyLossCsvHandle,"server_day","generated_server","scope","symbol",
       "closed_trades","wins","losses","win_rate_pct","gross_profit","gross_loss","net_profit",
-      "profit_factor","last10_sample","last10_wins","last10_losses","last10_net",
+      "profit_factor","completed_batch_number","batch_sample","batch_wins","batch_losses","batch_net",
       "consecutive_losses","protection_level","negative_limit_minutes","asset_pause_minutes",
-      "new_entries_restricted","policy_note");
+      "new_entries_restricted","daily_wins_more_than_losses","daily_net_positive","policy_note");
    FileFlush(g_dailyLossCsvHandle);
    Print("DAILY_LOSS_CSV_OPEN | file=",g_dailyLossCsvName," time_basis=MT4_SERVER_DAY");
 }
@@ -2394,10 +2404,11 @@ void WriteDailyLossSummary(datetime dayStart)
          TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS),"GLOBAL","ALL",total,wins,losses,
          (total>0?100.0*wins/total:0.0),grossWin,grossLoss,net,
          (grossLoss<0.0?grossWin/MathAbs(grossLoss):0.0),
-         gs,gw,gl,gn,gstreak,glevel,
+         total/MathMax(1,InpLossPolicySampleSize),gs,gw,gl,gn,gstreak,glevel,
          LossDurationLimitMinutes(gstreak),
          InpLossAssetPauseMinutes,(globalBlocked?"YES":"NO"),
-         "closed_by_server_day;net=gross+swap+commission;global_block_resets_next_server_day");
+         (wins>losses?"YES":"NO"),(net>0.0?"YES":"NO"),
+         "sequential_batches_of_10;closed_by_server_day;net=gross+swap+commission;global_block_resets_next_server_day");
       for(int k=0;k<assetCount;k++)
       {
          int as=0,aw=0,al=0,astreak=0;double an=0.0;bool aa=false;
@@ -2410,10 +2421,11 @@ void WriteDailyLossSummary(datetime dayStart)
             (counts[k]>0?100.0*assetWins[k]/counts[k]:0.0),
             assetGrossWin[k],assetGrossLoss[k],assetNet[k],
             (assetGrossLoss[k]<0.0?assetGrossWin[k]/MathAbs(assetGrossLoss[k]):0.0),
-            as,aw,al,an,astreak,alevel,
+            counts[k]/MathMax(1,InpLossPolicySampleSize),as,aw,al,an,astreak,alevel,
             LossDurationLimitMinutes(astreak),
             InpLossAssetPauseMinutes,(assetBlocked?"YES":"NO"),
-            "asset_scope_only;strict_filters_apply_after_pause");
+            (assetWins[k]>assetLosses[k]?"YES":"NO"),(assetNet[k]>0.0?"YES":"NO"),
+            "asset_scope_only;sequential_batches_of_10;strict_filters_apply_after_pause");
       }
       FileFlush(g_dailyLossCsvHandle);
    }
