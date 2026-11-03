@@ -532,18 +532,18 @@ void SyncClosedTradeStats()
       double commission=OrderCommission();
       double net=gross+swap+commission;
       string side=(OrderType()==OP_BUY?"BUY":"SELL");
+      double entrySpreadPrice=(GlobalVariableCheck(EntrySpreadKey(ticket))?GlobalVariableGet(EntrySpreadKey(ticket)):0.0);
+      double spreadCostEstimate=(entrySpreadPrice>0.0?EstimateRisk(OrderSymbol(),OrderLots(),entrySpreadPrice):0.0);
+      if(spreadCostEstimate>=1.0e11) spreadCostEstimate=0.0;
+      AuditClosedTrade(ticket,OrderSymbol(),side,OrderLots(),OrderOpenTime(),OrderCloseTime(),OrderOpenPrice(),OrderClosePrice(),OrderStopLoss(),OrderTakeProfit(),gross,commission,swap,net,closeClassification);
+      string resultLabel=(net>0.0?"EXITOSA":(net<0.0?"FRACASADA":"EMPATE"));
+      Print("TRADE_RESULT_COMMENT | ticket=",ticket," symbol=",OrderSymbol()," side=",side,
+         " result=",resultLabel," net=",DoubleToString(net,2),
+         " gross=",DoubleToString(gross,2)," commission=",DoubleToString(commission,2),
+         " swap=",DoubleToString(swap,2)," entrySpreadCostEstimate=",DoubleToString(spreadCostEstimate,2),
+         " exitReason=",closeClassification,
+         " note=spread_reflected_in_execution_prices;taxes_only_if_broker_books_them_in_commission_or_swap");
       Print("TRADE_CLOSE_AUDIT | scope=EA_SESSION_ONLY ticket=",ticket,
-       double entrySpreadPrice=(GlobalVariableCheck(EntrySpreadKey(ticket))?GlobalVariableGet(EntrySpreadKey(ticket)):0.0);
-       double spreadCostEstimate=(entrySpreadPrice>0.0?EstimateRisk(OrderSymbol(),OrderLots(),entrySpreadPrice):0.0);
-       if(spreadCostEstimate>=1.0e11) spreadCostEstimate=0.0;
-       AuditClosedTrade(ticket,OrderSymbol(),side,OrderLots(),OrderOpenTime(),OrderCloseTime(),OrderOpenPrice(),OrderClosePrice(),OrderStopLoss(),OrderTakeProfit(),gross,commission,swap,net,closeClassification);
-       string resultLabel=(net>0.0?"EXITOSA":(net<0.0?"FRACASADA":"EMPATE"));
-       Print("TRADE_RESULT_COMMENT | ticket=",ticket," symbol=",OrderSymbol()," side=",side,
-          " result=",resultLabel," net=",DoubleToString(net,2),
-          " gross=",DoubleToString(gross,2)," commission=",DoubleToString(commission,2),
-          " swap=",DoubleToString(swap,2)," entrySpreadCostEstimate=",DoubleToString(spreadCostEstimate,2),
-          " exitReason=",closeClassification,
-          " note=spread_reflected_in_execution_prices;taxes_only_if_broker_books_them_in_commission_or_swap");
             " symbol=",OrderSymbol()," side=",side,
             " lots=",DoubleToString(OrderLots(),3),
             " openTimeServer=",TimeToString(OrderOpenTime(),TIME_DATE|TIME_SECONDS),
