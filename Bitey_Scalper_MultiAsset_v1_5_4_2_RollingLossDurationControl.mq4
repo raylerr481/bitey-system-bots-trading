@@ -2438,7 +2438,7 @@ void CheckDailyLossDay()
 {
    datetime today=ServerDayStart(TimeCurrent());
    string reportKey="B54DailyReportDay_"+IntegerToString(AccountNumber())+"_"+IntegerToString(InpMagic);
-   if(!GlobalVariableCheck(reportKey)) GlobalVariableSet(reportKey,(double)(today-86400));
+   if(!GlobalVariableCheck(reportKey)) GlobalVariableSet(reportKey,(double)(today-172800));
    datetime lastReported=(datetime)GlobalVariableGet(reportKey);
    while(lastReported<today-86400)
    {
@@ -2457,7 +2457,7 @@ void CheckDailyLossDay()
    }
 }
 
-// Rolling history evaluator: last 10 EA closes, globally or for one normalized asset.
+// Daily sequential-batch evaluator: trades 1-10, 11-20, etc., globally or per normalized asset.
 string LossDurationStartKey(int ticket){return("B54LT_"+IntegerToString(AccountNumber())+"_"+IntegerToString(ticket));}
 string AssetLossPauseUntilKey(string sym)
 {
