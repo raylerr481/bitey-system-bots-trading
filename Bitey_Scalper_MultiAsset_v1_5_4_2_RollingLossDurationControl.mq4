@@ -1899,7 +1899,7 @@ void ManageExits()
             double recentNet=0.0; bool adverse=false;
             GetRecentLossPolicy(sym,sample,wins,losses,recentNet,streak,adverse);
             int level=LossPolicyLevel(adverse,streak);
-            int allowedMinutes=MathMax(5,InpLossNegativeMinutes-5*MathMin(4,level));
+            int allowedMinutes=LossDurationLimitMinutes(streak);
             int negativeSeconds=(int)MathMax(0,TimeCurrent()-(datetime)negativeSince);
             if(negativeSeconds>=allowedMinutes*60)
             {
@@ -2372,7 +2372,7 @@ void WriteDailyLossSummary(datetime dayStart)
          (total>0?100.0*wins/total:0.0),grossWin,grossLoss,net,
          (grossLoss<0.0?grossWin/MathAbs(grossLoss):0.0),
          gs,gw,gl,gn,gstreak,glevel,
-         MathMax(5,InpLossNegativeMinutes-5*MathMin(4,glevel)),
+         LossDurationLimitMinutes(gstreak),
          InpLossAssetPauseMinutes,(globalBlocked?"YES":"NO"),
          "closed_by_server_day;net=gross+swap+commission;global_block_resets_next_server_day");
       for(int k=0;k<assetCount;k++)
@@ -2388,7 +2388,7 @@ void WriteDailyLossSummary(datetime dayStart)
             assetGrossWin[k],assetGrossLoss[k],assetNet[k],
             (assetGrossLoss[k]<0.0?assetGrossWin[k]/MathAbs(assetGrossLoss[k]):0.0),
             as,aw,al,an,astreak,alevel,
-            MathMax(5,InpLossNegativeMinutes-5*MathMin(4,alevel)),
+            LossDurationLimitMinutes(astreak),
             InpLossAssetPauseMinutes,(assetBlocked?"YES":"NO"),
             "asset_scope_only;strict_filters_apply_after_pause");
       }
@@ -2436,6 +2436,12 @@ int LossPolicyLevel(bool adverse,int streak)
    if(!InpEnableRollingLossPolicy || !adverse) return(0);
    int maxLevel=MathMax(1,MathMin(5,InpLossPolicySuspendStreak));
    return(MathMax(1,MathMin(maxLevel,streak)));
+}
+int LossDurationLimitMinutes(int consecutiveLosses)
+{
+   // First loss keeps the initial 30-minute allowance; each repeat loss cuts 5 minutes.
+   int recurrenceLevel=MathMax(0,MathMin(4,consecutiveLosses-1));
+   return(MathMax(5,InpLossNegativeMinutes-5*recurrenceLevel));
 }
 void GetRecentLossPolicy(string filterSymbol,int &sample,int &wins,int &losses,double &net,int &lossStreak,bool &adverse)
 {
