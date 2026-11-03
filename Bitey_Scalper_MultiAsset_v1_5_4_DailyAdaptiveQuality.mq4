@@ -2223,9 +2223,10 @@ void GetDailyAdaptiveState(bool &strictMode,bool &shortenHold,datetime &activati
    if(strictMode && winDurationCount>0 && lossDurationCount>0 &&
       avgLossSeconds>avgWinSeconds*MathMax(1.0,InpDailyAdaptiveDurationRatio))
       shortenHold=true;
-   static datetime lastLoggedDay=0;
+   static datetime lastLoggedDay=0, lastLoggedActivationTime=0;
    static bool lastLoggedStrict=false, lastLoggedShorten=false;
-   if(dayStart!=lastLoggedDay || strictMode!=lastLoggedStrict || shortenHold!=lastLoggedShorten)
+   if(dayStart!=lastLoggedDay || activationTime!=lastLoggedActivationTime ||
+      strictMode!=lastLoggedStrict || shortenHold!=lastLoggedShorten)
    {
       int reducedBars=InpMaxHoldBars;
       if(shortenHold && InpMaxHoldBars>0)
@@ -2256,7 +2257,8 @@ void GetDailyAdaptiveState(bool &strictMode,bool &shortenHold,datetime &activati
             0.0,0.0,0.0,netTotal,0.0,"DAILY_MODE_STATE",adaptiveExtra);
          FileFlush(g_auditCsvHandle);
       }
-      lastLoggedDay=dayStart; lastLoggedStrict=strictMode; lastLoggedShorten=shortenHold;
+      lastLoggedDay=dayStart; lastLoggedActivationTime=activationTime;
+      lastLoggedStrict=strictMode; lastLoggedShorten=shortenHold;
    }
 }
 
