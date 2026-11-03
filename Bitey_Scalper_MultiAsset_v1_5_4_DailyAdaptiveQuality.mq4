@@ -2183,7 +2183,11 @@ void GetDailyAdaptiveState(bool &strictMode,bool &shortenHold,datetime &activati
    int wanted=MathMax(1,MathMin(50,InpDailyAdaptiveSampleSize));
    datetime dayStart=StrToTime(TimeToString(TimeCurrent(),TIME_DATE));
    datetime closeTimes[50]; double tradeNets[50]; double durations[50];
-   for(int z=0;z<50;z++) { closeTimes[z]=0; tradeNets[z]=0.0; durations[z]=0.0; }
+   // Explicitly initialize every slot so the compiler and runtime both know
+   // that shifted/read elements always contain deterministic values.
+   ArrayInitialize(closeTimes,0);
+   ArrayInitialize(tradeNets,0.0);
+   ArrayInitialize(durations,0.0);
    for(int i=OrdersHistoryTotal()-1;i>=0;i--)
    {
       if(!OrderSelect(i,SELECT_BY_POS,MODE_HISTORY)) continue;
