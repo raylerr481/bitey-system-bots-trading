@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//| Bitey_Scalper_MultiAsset_v1_5_4_1_UnboundedProfitRunner.mq4       |
+//| Bitey_Scalper_MultiAsset_v1_5_4_2_RollingLossDurationControl.mq4 |
 //| Optional daily adaptive quality: stricter entries and evidence-based shorter holds. |
 //| Existing signal, sizing, risk, and protective controls are retained.    |
 //| No daily recovery mode or cumulative-loss pressure changes trade management. |
@@ -260,9 +260,13 @@ int OnInit()
    EventSetTimer(1);
    if(AccountCurrency()!="USD") Print("RISK_WARNING | reference capital is USD but account currency is ",AccountCurrency(),"; verify conversion before trading");
    if(InpEstimatedCloseCommissionPerLot<=0.0) Print("NET_LOCK_WARNING | set InpEstimatedCloseCommissionPerLot if broker charges closing commission; exact net lock cannot be guaranteed otherwise");
-   Print("PROGRESSIVE_LOSS_EXIT_CONFIG | enabled=",(InpEnableProgressiveLossExit?"true":"false")," fixedPerTradeAllowancePct=",DoubleToString(InpProgressiveLossBaseRiskPct,1)," dailyLossDependency=false initialSL=UNCHANGED_NO_WIDENING");
-   Print("DAILY_LOSS_POLICY | warningOnly=true entryBlock=false cumulativeLossPressure=false recoveryMode=false");
-   Print("EARLY_LOSS_EXIT_CONFIG | enabled=",(InpSmallLossCloseUSD>0.0?"true":"false")," threshold=",DoubleToString(InpSmallLossCloseUSD,2)," minHoldSeconds=",MathMax(0,InpSmallLossMinHoldSeconds)," protection=BROKER_INITIAL_SL_AND_RISK_LIMITS");
+   Print("ROLLING_LOSS_POLICY | enabled=",(InpEnableRollingLossPolicy?"true":"false"),
+      " sample=LAST_10_CLOSED_TRADES_PER_SERVER_DAY global=ALL_ASSETS asset=INDIVIDUAL",
+      " negativeLimitMin=",InpLossNegativeMinutes," assetPauseMin=",InpLossAssetPauseMinutes,
+      " recurrenceStepMin=5 maxStreak=",InpLossPolicySuspendStreak,
+      " globalBlock=ALL_NEW_ENTRIES assetBlock=ASSET_ONLY");
+   Print("DAILY_LOSS_REPORT | timeBasis=MT4_SERVER_DAY file=",g_dailyLossCsvName,
+      " rows=GLOBAL_AND_ASSET net=GROSS_PLUS_SWAP_PLUS_COMMISSION");
    Print("BITEY_ENSEMBLE_INIT | version=",EA_VERSION," | universe=MARKET_WATCH_PLUS_ALL_BROKER_USDT_ADDITIVE | quoteFreshness=SERVER_ANCHORED_MONOTONIC maxQuoteAgeSec=",InpMaxQuoteAgeSec," | tradeAudit=PER_TICKET_GROSS_COMMISSION_SWAP_NET | symbols=",g_symbolCount,
          " | maxPositions=",MaxPositions()," | tf=",(int)InpSignalTF,
          " | profitRunner=NET_+",DoubleToString(InpTrendRunnerTriggerNetUSD,2)," lockFloor=+",DoubleToString(InpNetLockMinUSD,2)," | accountMode=NOT_A_GATE | diagnosticOnly=",(DIAGNOSTIC_ONLY_BUILD?"ON":"OFF"),
