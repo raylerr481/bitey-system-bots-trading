@@ -1378,10 +1378,7 @@ bool Prefilter(string sym,string &why)
 {
    why="";
    if(SessionSymbolBlocked(sym)) { why="SESSION_BLOCKED_AFTER_BROKER_133"; return(false); }
-   if(AssetLossPauseActive(sym)) { why="ROLLING_ASSET_LOSS_PAUSE_OR_SUSPENSION"; return(false); }
-   if(InpEnableRollingLossPolicy && g_globalLossAdverse &&
-      g_globalLossStreak>=MathMax(1,InpLossPolicySuspendStreak))
-   { why="ROLLING_GLOBAL_LOSS_SUSPENSION"; return(false); }
+   if(AssetLossPauseActive(sym)) { why="ROLLING_ASSET_LOSS_PAUSE"; return(false); }
    // Strict freshness gate runs before permission/indicator work.
    // Cached quotes are accepted only while server-anchored monotonic age stays within the limit.
    int quoteAge=QuoteAgeSeconds(sym);
@@ -2288,6 +2285,7 @@ string AssetLossPauseUntilKey(string sym)
 {
    string asset=AssetIdentityKey(sym);
    StringReplace(asset,".","_"); StringReplace(asset,"#","_"); StringReplace(asset," ","_");
+   asset=StringSubstr(asset,0,24); // Keep the MT4 GlobalVariable name below its 63-character limit.
    return("B54L_"+IntegerToString(AccountNumber())+"_"+IntegerToString(InpMagic)+"_"+asset+"_PAUSE");
 }
 int LossPolicyLevel(bool adverse,int streak)
@@ -2352,9 +2350,7 @@ bool AssetLossPauseActive(string sym)
       if(TimeCurrent()<until) return(true);
       GlobalVariableDel(pauseKey);
    }
-   int sample=0,wins=0,losses=0,streak=0; double net=0.0; bool adverse=false;
-   GetRecentLossPolicy(sym,sample,wins,losses,net,streak,adverse);
-   return(adverse && streak>=MathMax(1,InpLossPolicySuspendStreak));
+   return(false); // After the timed pause, strict ADX/score/spread filters decide whether conditions are favorable.
 }
 
 bool DirectionalLossCooldownActive(string sym,int orderType)
