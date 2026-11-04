@@ -24,8 +24,7 @@ input double           InpReferenceCapitalUSD   = 500.0;
 input double           InpRiskPctPerTrade       = 0.5;     // 5 positions x 0.5% = 2.5% aggregate
 input double           InpMaxAggregateRiskPct   = 2.5;
 input double           InpMaxCurrencyRiskPct    = 1.5;     // Maximum stop-risk attributed to either FX currency
-input double           InpDailyLossPct          = 3.0;     // Daily loss threshold as % of reference capital
-input bool             InpEnableDailyLossEntryBlock = true; // Blocks NEW entries only; open positions remain managed
+input double           InpDailyLossPct          = 3.0;     // Informational daily loss warning only; never limits entries
 input int              InpMaxOpenPositions      = 5;       // Clamped to 1..5, one position per asset
 
 //--- direction
@@ -265,7 +264,6 @@ int OnInit()
    EventSetTimer(1);
    if(AccountCurrency()!="USD") Print("RISK_WARNING | reference capital is USD but account currency is ",AccountCurrency(),"; verify conversion before trading");
    if(InpEstimatedCloseCommissionPerLot<=0.0) Print("NET_LOCK_WARNING | commission estimate is zero; net-profit lock, net TP extension and cost-qualified exits are disabled while InpRequireCloseCommissionEstimateForNetLocks=true; set actual close commission or disable the requirement only after confirming zero commission");
-   Print("DAILY_ENTRY_GUARD | enabled=",(InpEnableDailyLossEntryBlock?"true":"false")," limitPct=",DoubleToString(InpDailyLossPct,2)," referenceCapitalUSD=",DoubleToString(InpReferenceCapitalUSD,2)," scope=NEW_ENTRIES_ONLY openPositions=CONTINUE_MANAGEMENT");
    Print("TP_DISTANCE_CAP | maxATR=",DoubleToString(InpTPMaxDistanceATR,2)," scope=ADAPTIVE_EXTENSION_ONLY");
    Print("ROLLING_LOSS_POLICY | enabled=",(InpEnableRollingLossPolicy?"true":"false"),
       " sample=LAST_10_CLOSED_TRADES_PER_SERVER_DAY global=ALL_ASSETS asset=INDIVIDUAL",
@@ -997,8 +995,7 @@ void RunCycle()
       if(cmd==OP_BUY) g_cycleBuySignals++; else g_cycleSellSignals++;
    }
 
-   // Daily P/L uses closed trades from the current server day plus current floating P/L.
-    // The entry guard is enforced again inside OpenTrade; ManageExits already ran above.
+   // Daily P/L warning only. It never blocks or limits new entries or trade count.
    double dailyLimit=InpReferenceCapitalUSD*InpDailyLossPct/100.0;
    double dayNet=TodayNet();
    bool dailyLossExceeded=(dayNet<=-dailyLimit);
@@ -1010,7 +1007,7 @@ void RunCycle()
       Print("DAILY_LOSS_WARNING | dayNet=",DoubleToString(dayNet,2),
             " limit=-",DoubleToString(dailyLimit,2),
             " candidates=",nc,
-            " action=BLOCK_NEW_ENTRIES_ONLY_OPEN_POSITION_MANAGEMENT_CONTINUES");
+            " action=WARNING_ONLY_NO_DAILY_ENTRY_LIMIT");
    }
 
    if(nc>0)
@@ -1605,32 +1602,9 @@ bool Analyze(string sym,int &cmd,double &score,string &why)
 // Enforce the daily loss guard at the final order-entry boundary.
 // TodayNet includes closed trades since server midnight plus current floating P/L.
 // RunCycle calls ManageExits before this guard, so open positions remain protected.
-bool DailyLossEntryBlocked(string sym)
-{
-   if(!InpEnableDailyLossEntryBlock || InpDailyLossPct<=0.0 || InpReferenceCapitalUSD<=0.0)
-      return(false);
-   double limit=InpReferenceCapitalUSD*InpDailyLossPct/100.0;
-   double dayNet=TodayNet();
-   if(dayNet>-limit) return(false);
-   uint nowTick=GetTickCount();
-   if(g_lastDailyLossWarningTick==0 || nowTick-g_lastDailyLossWarningTick>=60000)
-   {
-      g_lastDailyLossWarningTick=nowTick;
-      Print("DAILY_LOSS_ENTRY_BLOCK | symbol=",sym,
-         " dayNet=",DoubleToString(dayNet,2),
-         " limit=-",DoubleToString(limit,2),
-         " limitPct=",DoubleToString(InpDailyLossPct,2),
-         " referenceCapitalUSD=",DoubleToString(InpReferenceCapitalUSD,2),
-         " action=REJECT_NEW_ENTRY_ONLY existing_positions=MANAGE_EXITS_CONTINUES reset=NEXT_SERVER_DAY");
-   }
-   g_lastExecutionRejectCategory="DAILY_LOSS";
-   return(true);
-}
-
 bool OpenTrade(string sym,int cmd,double score)
 {
    g_lastExecutionRejectCategory="";
-   if(DailyLossEntryBlocked(sym)) return(false);
    if(DIAGNOSTIC_ONLY_BUILD)
    {
       g_lastExecutionRejectCategory="DRY_RUN";
