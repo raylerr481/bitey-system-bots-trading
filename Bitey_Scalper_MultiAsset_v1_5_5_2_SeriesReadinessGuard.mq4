@@ -1443,7 +1443,7 @@ void LogMarketDataState(int index,string sym)
    string combined=quoteState+"|"+historyState+
       "|SIGNAL_TF="+IntegerToString((int)InpSignalTF)+":"+IntegerToString(barsSignal)+":"+IntegerToString((int)barSignal)+
       "|HIGHER_TF="+IntegerToString((int)InpHTF)+":"+IntegerToString(barsHigher)+":"+IntegerToString((int)barHigher)+
-      "|SYNC="+(signalSynchronized?"1":"0")+":"+(higherSynchronized?"1":"0")+
+      "|SYNC="+(syncSignalKnown?"K":"U")+":"+(signalSynchronized?"1":"0")+":"+(syncHigherKnown?"K":"U")+":"+(higherSynchronized?"1":"0")+
       "|SELECT="+(symbolSelected?"1":"0")+
       "|TRADE="+(tradeAllowed?"1":"0")+
       "|PRICE="+(quotePricesValid?"1":"0")+
