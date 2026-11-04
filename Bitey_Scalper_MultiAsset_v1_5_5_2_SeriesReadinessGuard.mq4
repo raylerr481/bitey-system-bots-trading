@@ -1455,6 +1455,7 @@ void LogMarketDataState(int index,string sym)
    int higherBarAge=(barHigher>0?(int)MathMax(0,TimeCurrent()-barHigher):-1);
    int quoteAgeForLog=(quoteAge>=2147483647?-1:quoteAge);
 
+   // Keep each Print() call below the MQL4 parameter-count limit.
    Print("MARKET_DATA_SYMBOL | symbol=",sym,
          " quoteState=",quoteState,
          " quoteAgeSec=",quoteAgeForLog,
@@ -1474,7 +1475,9 @@ void LogMarketDataState(int index,string sym)
          " signalSeriesSyncKnown=",(syncSignalKnown?"true":"false"),
          " signalSeriesSynchronized=",(signalSynchronized?"true":"false"),
          " higherSeriesSyncKnown=",(syncHigherKnown?"true":"false"),
-         " higherSeriesSynchronized=",(higherSynchronized?"true":"false"),
+         " higherSeriesSynchronized=",(higherSynchronized?"true":"false"));
+
+   Print("MARKET_DATA_SYMBOL_DETAILS | symbol=",sym,
          " symbolSelectKnown=",(selectedKnown?"true":"false"),
          " symbolSelected=",(symbolSelected?"true":"false"),
          " symbolTradeAllowed=",(tradeAllowed?"true":"false"),
