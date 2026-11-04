@@ -2313,6 +2313,12 @@ double OpenExposureRiskMultiplier(string candidateSymbol,int candidateType)
    if(totalFloating<=-level3 && level3>0.0) factor=MathMin(factor,MathMax(0.10,MathMin(1.0,InpLossRiskLevel3Factor)));
    else if(totalFloating<=-level2 && level2>0.0) factor=MathMin(factor,MathMax(0.10,MathMin(1.0,InpLossRiskLevel2Factor)));
    else if(totalFloating<=-level1 && level1>0.0) factor=MathMin(factor,MathMax(0.10,MathMin(1.0,InpLossRiskLevel1Factor)));
+   if(sameSideCount>0)
+   {
+      if(sameSideFloating<=-level3 && level3>0.0) factor=MathMin(factor,MathMax(0.10,MathMin(1.0,InpLossRiskLevel3Factor)));
+      else if(sameSideFloating<=-level2 && level2>0.0) factor=MathMin(factor,MathMax(0.10,MathMin(1.0,InpLossRiskLevel2Factor)));
+      else if(sameSideFloating<=-level1 && level1>0.0) factor=MathMin(factor,MathMax(0.10,MathMin(1.0,InpLossRiskLevel1Factor)));
+   }
    if(overlapCount>0)
    {
       if(overlapFloating<=-level3 && level3>0.0) factor=MathMin(factor,MathMax(0.10,MathMin(1.0,InpLossRiskLevel3Factor)));
