@@ -2166,6 +2166,7 @@ bool NetProfitLockStop(int ticket,string sym,int type,double entry,double lots,d
    stopOut=0.0;
    if((InpProfitLockTriggerR<=0.0 && InpTrendRunnerTriggerNetUSD<=0.0) ||
       InpNetLockGivebackPct<0.0 || InpNetLockGivebackPct>=100.0) return(false);
+   if(InpRequireCloseCommissionEstimateForNetLocks && InpEstimatedCloseCommissionPerLot<=0.0) return(false);
    double runnerTriggerMoney=ProfitLockTriggerMoney(ticket);
    if(runnerTriggerMoney<=0.0) return(false);
    string key=NetPeakKey(ticket);
