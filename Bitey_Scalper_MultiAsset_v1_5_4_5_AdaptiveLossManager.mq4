@@ -62,7 +62,7 @@ input int              InpSessionEndHour        = 21;
 input int              InpCooldownBars          = 6;       // Closed signal bars after a net loss, same asset and direction only
 input int              InpMaxHoldBars           = 0;       // Generic time exit disabled; winners remain managed by profit exits
 input bool             InpEnableRollingLossPolicy = true;
-input int              InpLossPolicySampleSize    = 10; // Sequential batches: 1-10, 11-20, etc.
+input int              InpLossPolicySampleSize    = 10; // Rolling window of the latest N closed trades
 input double           InpLossDurationMaxCostMultiple = 1.0; // Timed loss exit only within estimated transaction-cost budget
 input int              InpLossNegativeMinutes     = 30;
 input int              InpLossAssetPauseMinutes   = 30; // Legacy CSV compatibility only; no asset entry pause is applied
@@ -271,7 +271,7 @@ int OnInit()
    Print("TP_DISTANCE_CAP | maxATR=",DoubleToString(InpTPMaxDistanceATR,2)," scope=ADAPTIVE_EXTENSION_ONLY");
    Print("ADAPTIVE_SL_TP_PRESERVED | SL=NO_WIDENING TP=EXISTING_ADAPTIVE_EXPANSION_AND_CAP");
    Print("ADAPTIVE_LOSS_MANAGER | enabled=",(InpEnableRollingLossPolicy?"true":"false"),
-      " sample=LAST_COMPLETED_BATCH global=ALL_ASSETS assetAndSide=INDEPENDENT",
+      " sample=ROLLING_LAST_N_CLOSED_TRADES global=ALL_ASSETS assetAndSide=INDEPENDENT",
       " riskFactors=",DoubleToString(InpLossRiskLevel1Factor,2),"/",DoubleToString(InpLossRiskLevel2Factor,2),"/",DoubleToString(InpLossRiskLevel3Factor,2),
       " recoveryWins=",InpLossRecoveryWinCount," globalSuspension=OFF assetSuspension=OFF");
    Print("DAILY_LOSS_REPORT | timeBasis=MT4_SERVER_DAY file=",g_dailyLossCsvName,
@@ -2405,7 +2405,7 @@ void OpenDailyLossSummaryCSV()
    FileSeek(g_dailyLossCsvHandle,0,SEEK_END);
    if(fresh) FileWrite(g_dailyLossCsvHandle,"server_day","generated_server","scope","symbol",
       "closed_trades","wins","losses","win_rate_pct","gross_profit","gross_loss","net_profit",
-      "profit_factor","completed_batch_number","batch_sample","batch_wins","batch_losses","batch_net",
+      "profit_factor","rolling_window_number","window_sample","batch_wins","batch_losses","batch_net",
       "consecutive_losses","protection_level","negative_limit_minutes","asset_pause_minutes",
       "new_entries_restricted","daily_wins_more_than_losses","daily_net_positive","policy_note");
    FileFlush(g_dailyLossCsvHandle);
@@ -2456,7 +2456,7 @@ void WriteDailyLossSummary(datetime dayStart)
          LossDurationLimitMinutes(gstreak),
          InpLossAssetPauseMinutes,(globalBlocked?"YES":"NO"),
          (wins>losses?"YES":"NO"),(net>0.0?"YES":"NO"),
-         "sequential_batches;closed_by_server_day;net=gross+swap+commission;adaptive_risk_scaling;no_global_or_asset_entry_suspension");
+         "rolling_last_n_closed_trades;server_day_scope;net=gross+swap+commission;adaptive_risk_scaling;no_global_or_asset_entry_suspension");
       for(int k=0;k<assetCount;k++)
       {
          int as=0,aw=0,al=0,astreak=0;double an=0.0;bool aa=false;
@@ -2473,7 +2473,7 @@ void WriteDailyLossSummary(datetime dayStart)
             LossDurationLimitMinutes(astreak),
             InpLossAssetPauseMinutes,(assetBlocked?"YES":"NO"),
             (assetWins[k]>assetLosses[k]?"YES":"NO"),(assetNet[k]>0.0?"YES":"NO"),
-            "asset_scope_only;sequential_batches;adaptive_risk_scaling;no_asset_entry_pause");
+            "asset_and_direction_scope;rolling_last_n_closed_trades;adaptive_risk_scaling;no_asset_entry_pause");
       }
       FileFlush(g_dailyLossCsvHandle);
    }
