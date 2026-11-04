@@ -2505,7 +2505,7 @@ void CheckDailyLossDay()
    }
 }
 
-// Daily sequential-batch evaluator: trades 1-10, 11-20, etc., globally or per normalized asset.
+// Rolling closed-trade evaluator: refresh the latest N trades after every new close, globally or per asset/side.
 string LossDurationStartKey(int ticket){return("B54LT_"+IntegerToString(AccountNumber())+"_"+IntegerToString(ticket));}
 int LossPolicyLevel(bool adverse,int streak)
 {
@@ -2524,7 +2524,10 @@ double AdaptiveLossRiskMultiplier(int sample,int wins,int losses,double net,int 
       if(level==2) return(MathMax(0.10,MathMin(1.0,InpLossRiskLevel2Factor)));
       return(MathMax(0.10,MathMin(1.0,InpLossRiskLevel3Factor)));
    }
-   if(net>0.0 && wins>=MathMax(1,MathMin(sample,InpLossRecoveryWinCount))) return(1.0);
+   int firstRecoveryWins=MathMax(1,MathMin(sample,InpLossRecoveryWinCount));
+   int fullRecoveryWins=MathMax(firstRecoveryWins,sample-1);
+   if(net>0.0 && wins>=fullRecoveryWins) return(1.0);
+   if(net>0.0 && wins>=firstRecoveryWins) return(0.875);
    return(MathMax(0.10,MathMin(1.0,InpLossRiskLevel1Factor)));
 }
 int LossDurationLimitMinutes(int consecutiveLosses)
@@ -2560,10 +2563,9 @@ void GetRecentLossPolicyForDay(string filterSymbol,datetime dayStart,
       datetime closed=OrderCloseTime();
       if(closed>=dayStart && closed<dayEnd) totalCount++;
    }
-   // Only completed non-overlapping batches trigger evaluation.
-   int completedBatches=totalCount/wanted;
-   if(completedBatches<=0) return;
-   int batchStart=(completedBatches-1)*wanted;
+   // Use a rolling window, not fixed batches, so risk adapts after each new closed trade.
+   if(totalCount<wanted) return;
+   int batchStart=MathMax(0,totalCount-wanted);
    datetime allTimes[]; double allNets[];
    ArrayResize(allTimes,totalCount); ArrayResize(allNets,totalCount);
    int fill=0;
