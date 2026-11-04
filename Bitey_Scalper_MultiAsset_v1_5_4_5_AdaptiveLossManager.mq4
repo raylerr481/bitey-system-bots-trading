@@ -65,7 +65,7 @@ input bool             InpEnableRollingLossPolicy = true;
 input int              InpLossPolicySampleSize    = 10; // Sequential batches: 1-10, 11-20, etc.
 input double           InpLossDurationMaxCostMultiple = 1.0; // Timed loss exit only within estimated transaction-cost budget
 input int              InpLossNegativeMinutes     = 30;
-input int              InpLossAssetPauseMinutes   = 30;
+input int              InpLossAssetPauseMinutes   = 30; // Legacy CSV compatibility only; no asset entry pause is applied
 input double           InpLossPolicyExtraScore    = 5.0;
 input double           InpLossPolicyExtraADX      = 2.0;
 input double           InpLossPolicySpreadFactor  = 0.90;
@@ -1980,10 +1980,8 @@ void ManageExits()
                      " spreadCostEstimate=",DoubleToString(spreadCostEstimate,2),
                      " sample=",sample," wins=",wins," losses=",losses,
                      " recentNet=",DoubleToString(recentNet,2)," streak=",streak,
-                     " policyLevel=",level," action=CLOSE_WITHIN_COST_BUDGET_AND_PAUSE_ASSET");
-                  if(CloseTicket(ticket,"ROLLING_LOSS_DURATION_WITHIN_COST_BUDGET_"+IntegerToString(allowedMinutes)+"M"))
-                     GlobalVariableSet(AssetLossPauseUntilKey(sym),
-                        (double)(TimeCurrent()+MathMax(0,InpLossAssetPauseMinutes)*60));
+                     " policyLevel=",level," action=CLOSE_WITHIN_COST_BUDGET_AND_CONTINUE_ADAPTIVE_RISK");
+                  CloseTicket(ticket,"ROLLING_LOSS_DURATION_WITHIN_COST_BUDGET_"+IntegerToString(allowedMinutes)+"M");
                   continue;
                }
                Print("ROLLING_LOSS_DURATION_DEFERRED | ticket=",ticket," symbol=",sym,
@@ -2509,13 +2507,6 @@ void CheckDailyLossDay()
 
 // Daily sequential-batch evaluator: trades 1-10, 11-20, etc., globally or per normalized asset.
 string LossDurationStartKey(int ticket){return("B54LT_"+IntegerToString(AccountNumber())+"_"+IntegerToString(ticket));}
-string AssetLossPauseUntilKey(string sym)
-{
-   string asset=AssetIdentityKey(sym);
-   StringReplace(asset,".","_"); StringReplace(asset,"#","_"); StringReplace(asset," ","_");
-   asset=StringSubstr(asset,0,24); // Keep the MT4 GlobalVariable name below its 63-character limit.
-   return("B54L_"+IntegerToString(AccountNumber())+"_"+IntegerToString(InpMagic)+"_"+asset+"_PAUSE");
-}
 int LossPolicyLevel(bool adverse,int streak)
 {
    if(!InpEnableRollingLossPolicy || !adverse) return(0);
@@ -2619,21 +2610,6 @@ void UpdateGlobalLossPolicy()
       " losses=",losses," net=",DoubleToString(net,2)," consecutiveLosses=",streak,
       " adverse=",(adverse?"true":"false")," strictLevel=",LossPolicyLevel(adverse,streak));
 }
-bool AssetLossPauseActive(string sym)
-{
-   if(!InpEnableRollingLossPolicy) return(false);
-   string pauseKey=AssetLossPauseUntilKey(sym);
-   if(GlobalVariableCheck(pauseKey))
-   {
-      datetime until=(datetime)GlobalVariableGet(pauseKey);
-      if(TimeCurrent()<until) return(true);
-      GlobalVariableDel(pauseKey);
-   }
-   int sample=0,wins=0,losses=0,streak=0; double net=0.0; bool adverse=false;
-   GetRecentLossPolicy(sym,sample,wins,losses,net,streak,adverse);
-   return(adverse && streak>=MathMax(1,InpLossPolicySuspendStreak));
-}
-
 bool DirectionalLossCooldownActive(string sym,int orderType)
 {
    if(InpCooldownBars<=0 || (orderType!=OP_BUY && orderType!=OP_SELL)) return(false);
