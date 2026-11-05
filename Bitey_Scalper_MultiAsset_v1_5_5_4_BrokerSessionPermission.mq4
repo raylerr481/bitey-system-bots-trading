@@ -62,7 +62,7 @@ input bool             InpRequireSynchronizedSeriesForEntry = true; // Fail clos
 input string           InpAlwaysOpenSymbolsCSV  = "";      // Exact non-crypto 24x7 broker symbols; blank = none
 input string           InpCryptoSymbolsCSV      = "";      // Exact crypto broker symbols; also classified as 24x7
 input string           InpSessionBoundSymbolsCSV = "";     // Exact broker symbols requiring configured server-hour window
-input bool             InpUseSessionFilter      = true;    // Applies only to explicitly session-bound symbols
+input bool             InpUseSessionFilter      = false;   // Optional manual hour filter; OFF by default to avoid false broker-session blocks
 input int              InpSessionStartHour      = 7;
 input int              InpSessionEndHour        = 21;
 input int              InpCooldownBars          = 6;       // Closed signal bars after a net loss, same asset and direction only
