@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//| Bitey_Scalper_MultiAsset_v1_5_5_2_SeriesReadinessGuard.mq4 |
+//| Bitey_Scalper_MultiAsset_v1_5_5_4_BrokerSessionPermission.mq4 |
 //| Adaptive loss manager retained; net-profit protection triggers at 50% giveback from peak. |
 //| Existing signals and adaptive SL/TP are retained; no SL widening or martingale. |
 //| Loss response scales new-entry risk; open positions retain existing SL/TP management. |
@@ -8,12 +8,12 @@
 #property version   "1.554"
 #property description "Bitey v1.5.5.4: explicit market metadata and fail-closed quote/session readiness"
 
-#define EA_VERSION          "1.5.5.3"
+#define EA_VERSION          "1.5.5.4"
 #define MAX_SYMBOLS         256
 #define HARD_MAX_POSITIONS  5
 
 //--- universe and timeframes
-input string           InpSymbolsCSV            = "";      // Blank = Market Watch; broker-listed USDT symbols are always added
+input string           InpSymbolsCSV            = "";      // Blank = Market Watch; broker USDT symbols are discovered additively, not classified by suffix
 input ENUM_TIMEFRAMES  InpSignalTF              = PERIOD_M15;
 input ENUM_TIMEFRAMES  InpHTF                   = PERIOD_H1;  // Higher-timeframe bias (trend regime only)
 input bool             InpUseHTFFilter          = true;
