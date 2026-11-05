@@ -1706,6 +1706,17 @@ bool Prefilter(string sym,string &why)
             " reason=",marketClassReason," action=FAIL_CLOSED_NO_NEW_ENTRY");
       return(false);
    }
+   long selectedValue=0;
+   bool selectedKnown=SymbolInfoInteger(sym,SYMBOL_SELECT,selectedValue);
+   if(!selectedKnown || selectedValue==0)
+   {
+      why="SYMBOL_NOT_SELECTED_OR_SELECTION_UNKNOWN";
+      Print("MARKET_AVAILABILITY_BLOCK | symbol=",sym,
+            " symbolSelectKnown=",(selectedKnown?"true":"false"),
+            " symbolSelected=",(selectedValue!=0?"true":"false"),
+            " action=FAIL_CLOSED_NO_NEW_ENTRY");
+      return(false);
+   }
    if(SessionSymbolBlocked(sym)) { why="SESSION_BLOCKED_AFTER_BROKER_133"; return(false); }
    // Strict freshness gate runs before permission/indicator work.
    // Cached quotes are accepted only while server-anchored monotonic age stays within the limit.
