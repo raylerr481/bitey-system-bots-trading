@@ -1,12 +1,12 @@
 //+------------------------------------------------------------------+
-//| Bitey_Scalper_MultiAsset_v1_5_4_10_ExecutionDiagnostics.mq4 |
+//| Bitey_Scalper_MultiAsset_v1_5_4_11_CandidateDecisionTrace.mq4 |
 //| Adaptive loss manager retained; net-profit protection triggers at 50% giveback from peak. |
 //| Existing signals and adaptive SL/TP are retained; no SL widening or martingale. |
 //| Loss response scales new-entry risk; open positions retain existing SL/TP management. |
 //+------------------------------------------------------------------+
 #property strict
 #property version   "1.542"
-#property description "Bitey v1.5.4.10: detailed execution diagnostics; v1.5.4.9 strategy and safeguards retained"
+#property description "Bitey v1.5.4.11: candidate decision trace; v1.5.4.10 execution diagnostics and safeguards retained"
 
 #define EA_VERSION          "1.5.4.11"
 #define MAX_SYMBOLS         256
