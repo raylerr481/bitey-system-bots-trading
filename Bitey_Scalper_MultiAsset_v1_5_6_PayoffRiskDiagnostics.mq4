@@ -196,9 +196,9 @@ bool     g_globalLossAdverse = false;
 // Append-only research audit CSV; daily adaptive decisions are independently logged.
 int      g_auditCsvHandle = INVALID_HANDLE;
 string   g_auditCsvName = "";
-string   g_execDiagKeys[512];
-uint     g_execDiagLastTick[512];
-int      g_execDiagSuppressed[512];
+string   g_execDiagKeys[2048];
+uint     g_execDiagLastTick[2048];
+int      g_execDiagSuppressed[2048];
 int      g_execDiagKeyCount = 0;
 bool     g_dailyEntryLocked = false;
 datetime g_dailyEntryLockDay = 0;
@@ -1703,7 +1703,7 @@ void LogExecutionDiagnostic(string eventName,string sym,int cmd,double lots,
    string diagnosticKey=sym+"|"+eventName;
    int diagnosticIndex=-1;
    for(int dk=0;dk<g_execDiagKeyCount;dk++) if(g_execDiagKeys[dk]==diagnosticKey){diagnosticIndex=dk;break;}
-   if(diagnosticIndex<0 && g_execDiagKeyCount<512)
+   if(diagnosticIndex<0 && g_execDiagKeyCount<2048)
    {
       diagnosticIndex=g_execDiagKeyCount++;
       g_execDiagKeys[diagnosticIndex]=diagnosticKey;
@@ -2049,7 +2049,7 @@ void ManageExits()
           givebackActivationNet>0.0 && netPeak>=MathMax(MathMax(0.0,InpNetLockMinUSD),givebackActivationNet) && net<=givebackTriggerNet)
        {
           double actualGiveback=(netPeak>0.0?(netPeak-net)/netPeak*100.0:0.0);
-          Print("NET_GIVEBACK_50_TRIGGERED | ticket=",ticket," symbol=",sym,
+          Print("NET_GIVEBACK_40_TRIGGERED | ticket=",ticket," symbol=",sym,
                 " side=",(type==OP_BUY?"BUY":"SELL"),
                 " peakNet=",DoubleToString(netPeak,2)," currentNet=",DoubleToString(net,2),
                 " givebackNet=",DoubleToString(netPeak-net,2)," givebackPct=",DoubleToString(actualGiveback,2),
@@ -2372,7 +2372,7 @@ bool NetProfitLockStop(int ticket,string sym,int type,double entry,double lots,d
    if(tv<=0.0 || ts<=0.0 || lots<=0.0 || point<=0.0) return(false);
    double moneyPerPrice=(tv/ts)*lots;
    if(moneyPerPrice<=0.0) return(false);
-   double closeCommission=MathMax(0.0,InpEstimatedCloseCommissionPerLot)*lots;
+   double closeCommission=(InpIncludeEstimatedCloseCommission?MathMax(0.0,InpEstimatedCloseCommissionPerLot)*lots:0.0);
    double slipReserve=0.0;
    if(InpNetLockSlippagePoints>0) slipReserve=EstimateRisk(sym,lots,InpNetLockSlippagePoints*point);
    if(slipReserve>=1.0e11) return(false);
