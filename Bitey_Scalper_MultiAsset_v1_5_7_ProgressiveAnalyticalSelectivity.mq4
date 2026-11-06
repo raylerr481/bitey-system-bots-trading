@@ -27,7 +27,6 @@ input double           InpMaxCurrencyRiskPct    = 1.5;     // Maximum stop-risk 
 input double           InpDailyLossPct          = 2.0;     // Daily net loss threshold as % of reference capital
 input bool             InpEnableDailyEntryProtection = true; // Enables progressive selectivity; never hard-locks entries by daily loss alone
 input double           InpSelectivityLevel1LossPct = 1.0; // Net daily loss %: Level 1
-input double           InpSelectivityLevel2LossPct = 2.0; // Net daily loss %: Level 2
 input double           InpSelectivityLevel3LossPct = 3.0; // Net daily loss %: Level 3
 input double           InpSelectivityScoreStep = 5.0; // Added minimum score per selectivity level
 input double           InpSelectivityRiskFactorL1 = 0.75;
@@ -2708,9 +2707,9 @@ void UpdateDailyEntryProtection()
    {
       if(lossPct>=MathMax(0.0,InpSelectivityLevel3LossPct) ||
          (InpPauseAfterConsecutiveLosses>0 && streak>=InpPauseAfterConsecutiveLosses+1)) targetLevel=3;
-      else if(lossPct>=MathMax(0.0,InpSelectivityLevel2LossPct) ||
+      else if(lossPct>=MathMax(0.0,InpDailyLossPct) ||
          (InpPauseAfterConsecutiveLosses>0 && streak>=InpPauseAfterConsecutiveLosses)) targetLevel=2;
-      else if(lossPct>=MathMax(0.0,InpSelectivityLevel1LossPct) || streak>=2) targetLevel=1;
+      else if(lossPct>=MathMax(0.0,InpSelectivityLevel1LossPct) || (InpPauseAfterConsecutiveLosses>0 && streak>=2)) targetLevel=1;
    }
 
    if(targetLevel>g_analyticalSelectivityLevel)
