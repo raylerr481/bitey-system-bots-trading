@@ -1,14 +1,14 @@
 //+------------------------------------------------------------------+
-//| Bitey_Scalper_MultiAsset_v1_5_9_SeriesQuoteDiagnostics.mq4 |
+//| Bitey_Scalper_MultiAsset_v1_5_10_SeriesSyncErrorIsolation.mq4 |
 //| Adaptive loss manager retained; net-profit protection triggers at 50% giveback from peak. |
 //| Existing signals and adaptive SL/TP are retained; no SL widening or martingale. |
 //| Loss response scales new-entry risk; open positions retain existing SL/TP management. |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.590"
-#property description "Bitey v1.5.9: series-sync and unified quote-age diagnostics with guarded entries"
+#property version   "1.510"
+#property description "Bitey v1.5.10: isolated series-sync errors and compact market-data diagnostics"
 
-#define EA_VERSION          "1.5.9"
+#define EA_VERSION          "1.5.10"
 #define MAX_SYMBOLS         256
 #define HARD_MAX_POSITIONS  5
 
@@ -1541,14 +1541,16 @@ void LogMarketDataState(int index,string sym)
    if(barsSignal>=InpMinBars && barSignal>0) historyState="HISTORY_READY";
    else if(barsSignal>0) historyState="HISTORY_INSUFFICIENT";
 
-   long syncSignalValue=0, syncHigherValue=0, selectedValue=0;
+      long syncSignalValue=0, syncHigherValue=0, selectedValue=0;
    ResetLastError();
    bool syncSignalKnown=SeriesInfoInteger(sym,InpSignalTF,SERIES_SYNCHRONIZED,syncSignalValue);
    int syncSignalError=GetLastError();
    ResetLastError();
    bool syncHigherKnown=SeriesInfoInteger(sym,InpHTF,SERIES_SYNCHRONIZED,syncHigherValue);
    int syncHigherError=GetLastError();
+   ResetLastError();
    bool selectedKnown=SymbolInfoInteger(sym,SYMBOL_SELECT,selectedValue);
+   int selectedError=GetLastError();
    bool signalSynchronized=(syncSignalKnown && syncSignalValue!=0);
    bool higherSynchronized=(syncHigherKnown && syncHigherValue!=0);
    bool symbolSelected=(selectedKnown && selectedValue!=0);
@@ -1558,63 +1560,77 @@ void LogMarketDataState(int index,string sym)
    double ask=MarketInfo(sym,MODE_ASK);
    bool quotePricesValid=(bid>0.0 && ask>=bid);
 
-   string sessionState=(IsCrypto(sym)?"SESSION_NOT_APPLICABLE":"SESSION_UNCONFIRMED");
+   string signalSyncState=(syncSignalKnown?(signalSynchronized?"SYNCHRONIZED":"KNOWN_UNSYNC"):"QUERY_FAILED");
+   string higherSyncState=(syncHigherKnown?(higherSynchronized?"SYNCHRONIZED":"KNOWN_UNSYNC"):"QUERY_FAILED");
+   string sessionState=(IsCrypto(sym)?"NOT_APPLICABLE_CRYPTO":"UNCONFIRMED_NO_RELIABLE_SESSION_SCHEDULE");
+   string suffix="NONE";
    int dot=StringFind(sym,".");
-   string suffix=(dot>=0?StringSubstr(sym,dot):"NONE");
+   if(dot>=0) suffix=StringSubstr(sym,dot);
+
+   int signalPeriodSec=PeriodSeconds(InpSignalTF);
+   int higherPeriodSec=PeriodSeconds(InpHTF);
+   int signalBarAge=(barSignal>0?(int)MathMax(0,TimeCurrent()-barSignal):-1);
+   int higherBarAge=(barHigher>0?(int)MathMax(0,TimeCurrent()-barHigher):-1);
+   int quoteAgeForLog=(quoteAge>=2147483647?-1:quoteAge);
+   string signalHistoryAgeState=(signalBarAge<0?"NO_BAR_TIME":
+      (signalPeriodSec>0 && signalBarAge>(2*signalPeriodSec)?"OLD":"RECENT"));
+   string higherHistoryAgeState=(higherBarAge<0?"NO_BAR_TIME":
+      (higherPeriodSec>0 && higherBarAge>(2*higherPeriodSec)?"OLD":"RECENT"));
+
    string combined=quoteState+"|"+historyState+
       "|M5="+IntegerToString(barsSignal)+":"+IntegerToString((int)barSignal)+
       "|M15="+IntegerToString(barsHigher)+":"+IntegerToString((int)barHigher)+
       "|SYNC="+(syncSignalKnown?"K":"U")+":"+(signalSynchronized?"1":"0")+":"+IntegerToString(syncSignalError)+
       ":"+(syncHigherKnown?"K":"U")+":"+(higherSynchronized?"1":"0")+":"+IntegerToString(syncHigherError)+
-      "|SELECT="+(symbolSelected?"1":"0")+
+      "|SELECT="+(symbolSelected?"1":"0")+":"+IntegerToString(selectedError)+
       "|TRADE="+(tradeAllowed?"1":"0")+
       "|PRICE="+(quotePricesValid?"1":"0")+
       "|TICK="+IntegerToString((int)tickTime);
    if(g_lastMarketDataDiagState[index]==combined) return;
    g_lastMarketDataDiagState[index]=combined;
 
-   int signalBarAge=(barSignal>0?(int)MathMax(0,TimeCurrent()-barSignal):-1);
-   int higherBarAge=(barHigher>0?(int)MathMax(0,TimeCurrent()-barHigher):-1);
-   int quoteAgeForLog=(quoteAge>=2147483647?-1:quoteAge);
-
-   // Keep Print() to one argument: the previous multi-argument call exceeded
-   // the MQL4 Print parameter limit on some MetaEditor builds.
+   // Split diagnostics into short records so Journal truncation cannot hide
+   // series errors or confuse quote age, history age and trade permission.
    string marketDataMessage=
-         "MARKET_DATA_SYMBOL | symbol="+sym+
-         " quoteState="+quoteState+
-         " quoteAgeSec="+IntegerToString(quoteAgeForLog)+
-         " quoteAgeMeaning="+(quoteAge>=2147483647?"SERVER_TIME_UNAVAILABLE_OR_INVALID":"SERVER_ANCHORED_MONOTONIC_SECONDS")+
-         " tickTime="+IntegerToString((int)tickTime)+
-         " historyState="+historyState+
-         " signalTF="+IntegerToString((int)InpSignalTF)+
-         " signalBars="+IntegerToString(barsSignal)+
-         " signalBarTime="+IntegerToString((int)barSignal)+
-         " signalPrevClosedBarTime="+IntegerToString((int)prevSignal)+
-         " signalBarAgeSec="+IntegerToString(signalBarAge)+
-         " higherTF="+IntegerToString((int)InpHTF)+
-         " higherBars="+IntegerToString(barsHigher)+
-         " higherBarTime="+IntegerToString((int)barHigher)+
-         " higherPrevClosedBarTime="+IntegerToString((int)prevHigher)+
-         " higherBarAgeSec="+IntegerToString(higherBarAge)+
-         " signalSeriesSyncKnown="+(syncSignalKnown?"true":"false")+
-         " signalSeriesSynchronized="+(signalSynchronized?"true":"false")+
-         " signalSeriesQueryError="+IntegerToString(syncSignalError)+
-         " higherSeriesSyncKnown="+(syncHigherKnown?"true":"false")+
-         " higherSeriesSynchronized="+(higherSynchronized?"true":"false")+
-         " higherSeriesQueryError="+IntegerToString(syncHigherError)+
-         " symbolSelectKnown="+(selectedKnown?"true":"false")+
-         " symbolSelected="+(symbolSelected?"true":"false")+
-         " symbolTradeAllowed="+(tradeAllowed?"true":"false")+
-         " bid="+DoubleToString(bid,(int)MarketInfo(sym,MODE_DIGITS))+
-         " ask="+DoubleToString(ask,(int)MarketInfo(sym,MODE_DIGITS))+
-         " quotePricesValid="+(quotePricesValid?"true":"false")+
-         " contractSuffix="+suffix+
-         " existingCryptoPrefixHeuristic="+(IsCrypto(sym)?"true":"false")+
-         " sessionState="+sessionState+
-         " maxQuoteAgeSec="+IntegerToString(InpMaxQuoteAgeSec)+
-         " brokerSessionSchedule=NOT_CONFIRMED"+
-         " note=SYNC_UNKNOWN_IS_DISTINCT_FROM_FALSE;QUOTE_FRESHNESS_DOES_NOT_PROVE_NEW_BAR_OR_TRADE_PERMISSION";
+      "MARKET_DATA_SYMBOL | symbol="+sym+
+      " quote="+quoteState+
+      " quoteAgeSec="+IntegerToString(quoteAgeForLog)+
+      " tickTime="+IntegerToString((int)tickTime)+
+      " history="+historyState+
+      " signalBars="+IntegerToString(barsSignal)+
+      " higherBars="+IntegerToString(barsHigher);
    Print(marketDataMessage);
+
+   string seriesSyncMessage=
+      "SERIES_SYNC_DIAG | symbol="+sym+
+      " signalTF="+IntegerToString((int)InpSignalTF)+
+      " signalState="+signalSyncState+
+      " signalError="+IntegerToString(syncSignalError)+
+      " higherTF="+IntegerToString((int)InpHTF)+
+      " higherState="+higherSyncState+
+      " higherError="+IntegerToString(syncHigherError);
+   Print(seriesSyncMessage);
+
+   string historyAgeMessage=
+      "HISTORY_AGE_DIAG | symbol="+sym+
+      " signalBarAgeSec="+IntegerToString(signalBarAge)+
+      " signalAgeState="+signalHistoryAgeState+
+      " higherBarAgeSec="+IntegerToString(higherBarAge)+
+      " higherAgeState="+higherHistoryAgeState+
+      " classification=AGE_ONLY_NOT_SESSION_STATUS";
+   Print(historyAgeMessage);
+
+   string permissionMessage=
+      "SYMBOL_PERMISSION_DIAG | symbol="+sym+
+      " selectedKnown="+(selectedKnown?"true":"false")+
+      " selected="+(symbolSelected?"true":"false")+
+      " selectError="+IntegerToString(selectedError)+
+      " tradeAllowed="+(tradeAllowed?"true":"false")+
+      " pricesValid="+(quotePricesValid?"true":"false")+
+      " session="+sessionState+
+      " suffix="+suffix+
+      " note=TRADE_PERMISSION_FALSE_DOES_NOT_PROVE_MARKET_CLOSED";
+   Print(permissionMessage);
 }
 
 bool SessionOK(string sym)
