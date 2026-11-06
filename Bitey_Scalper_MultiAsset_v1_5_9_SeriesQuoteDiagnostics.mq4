@@ -1577,40 +1577,44 @@ void LogMarketDataState(int index,string sym)
    int higherBarAge=(barHigher>0?(int)MathMax(0,TimeCurrent()-barHigher):-1);
    int quoteAgeForLog=(quoteAge>=2147483647?-1:quoteAge);
 
-   Print("MARKET_DATA_SYMBOL | symbol=",sym,
-         " quoteState=",quoteState,
-         " quoteAgeSec=",quoteAgeForLog,
-         " quoteAgeMeaning=",(quoteAge>=2147483647?"SERVER_TIME_UNAVAILABLE_OR_INVALID":"SERVER_ANCHORED_MONOTONIC_SECONDS"),
-         " tickTime=",(long)tickTime,
-         " historyState=",historyState,
-         " signalTF=",(int)InpSignalTF,
-         " signalBars=",barsSignal,
-         " signalBarTime=",(long)barSignal,
-         " signalPrevClosedBarTime=",(long)prevSignal,
-         " signalBarAgeSec=",signalBarAge,
-         " higherTF=",(int)InpHTF,
-         " higherBars=",barsHigher,
-         " higherBarTime=",(long)barHigher,
-         " higherPrevClosedBarTime=",(long)prevHigher,
-         " higherBarAgeSec=",higherBarAge,
-         " signalSeriesSyncKnown=",(syncSignalKnown?"true":"false"),
-         " signalSeriesSynchronized=",(signalSynchronized?"true":"false"),
-         " signalSeriesQueryError=",syncSignalError,
-         " higherSeriesSyncKnown=",(syncHigherKnown?"true":"false"),
-         " higherSeriesSynchronized=",(higherSynchronized?"true":"false"),
-         " higherSeriesQueryError=",syncHigherError,
-         " symbolSelectKnown=",(selectedKnown?"true":"false"),
-         " symbolSelected=",(symbolSelected?"true":"false"),
-         " symbolTradeAllowed=",(tradeAllowed?"true":"false"),
-         " bid=",DoubleToString(bid,(int)MarketInfo(sym,MODE_DIGITS)),
-         " ask=",DoubleToString(ask,(int)MarketInfo(sym,MODE_DIGITS)),
-         " quotePricesValid=",(quotePricesValid?"true":"false"),
-         " contractSuffix=",suffix,
-         " existingCryptoPrefixHeuristic=",(IsCrypto(sym)?"true":"false"),
-         " sessionState=",sessionState,
-         " maxQuoteAgeSec=",InpMaxQuoteAgeSec,
-         " brokerSessionSchedule=NOT_CONFIRMED",
-         " note=SYNC_UNKNOWN_IS_DISTINCT_FROM_FALSE;QUOTE_FRESHNESS_DOES_NOT_PROVE_NEW_BAR_OR_TRADE_PERMISSION");
+   // Keep Print() to one argument: the previous multi-argument call exceeded
+   // the MQL4 Print parameter limit on some MetaEditor builds.
+   string marketDataMessage=
+         "MARKET_DATA_SYMBOL | symbol="+sym+
+         " quoteState="+quoteState+
+         " quoteAgeSec="+IntegerToString(quoteAgeForLog)+
+         " quoteAgeMeaning="+(quoteAge>=2147483647?"SERVER_TIME_UNAVAILABLE_OR_INVALID":"SERVER_ANCHORED_MONOTONIC_SECONDS")+
+         " tickTime="+IntegerToString((int)tickTime)+
+         " historyState="+historyState+
+         " signalTF="+IntegerToString((int)InpSignalTF)+
+         " signalBars="+IntegerToString(barsSignal)+
+         " signalBarTime="+IntegerToString((int)barSignal)+
+         " signalPrevClosedBarTime="+IntegerToString((int)prevSignal)+
+         " signalBarAgeSec="+IntegerToString(signalBarAge)+
+         " higherTF="+IntegerToString((int)InpHTF)+
+         " higherBars="+IntegerToString(barsHigher)+
+         " higherBarTime="+IntegerToString((int)barHigher)+
+         " higherPrevClosedBarTime="+IntegerToString((int)prevHigher)+
+         " higherBarAgeSec="+IntegerToString(higherBarAge)+
+         " signalSeriesSyncKnown="+(syncSignalKnown?"true":"false")+
+         " signalSeriesSynchronized="+(signalSynchronized?"true":"false")+
+         " signalSeriesQueryError="+IntegerToString(syncSignalError)+
+         " higherSeriesSyncKnown="+(syncHigherKnown?"true":"false")+
+         " higherSeriesSynchronized="+(higherSynchronized?"true":"false")+
+         " higherSeriesQueryError="+IntegerToString(syncHigherError)+
+         " symbolSelectKnown="+(selectedKnown?"true":"false")+
+         " symbolSelected="+(symbolSelected?"true":"false")+
+         " symbolTradeAllowed="+(tradeAllowed?"true":"false")+
+         " bid="+DoubleToString(bid,(int)MarketInfo(sym,MODE_DIGITS))+
+         " ask="+DoubleToString(ask,(int)MarketInfo(sym,MODE_DIGITS))+
+         " quotePricesValid="+(quotePricesValid?"true":"false")+
+         " contractSuffix="+suffix+
+         " existingCryptoPrefixHeuristic="+(IsCrypto(sym)?"true":"false")+
+         " sessionState="+sessionState+
+         " maxQuoteAgeSec="+IntegerToString(InpMaxQuoteAgeSec)+
+         " brokerSessionSchedule=NOT_CONFIRMED"+
+         " note=SYNC_UNKNOWN_IS_DISTINCT_FROM_FALSE;QUOTE_FRESHNESS_DOES_NOT_PROVE_NEW_BAR_OR_TRADE_PERMISSION";
+   Print(marketDataMessage);
 }
 
 bool SessionOK(string sym)
