@@ -5,7 +5,7 @@
 //| Loss response scales new-entry risk; open positions retain existing SL/TP management. |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.590"
+#property version   "1.510"
 #property description "Bitey v1.5.10: isolated series-sync errors and compact market-data diagnostics"
 
 #define EA_VERSION          "1.5.10"
