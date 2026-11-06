@@ -35,7 +35,7 @@ input double           InpSelectivityRiskFactorL2 = 0.50;
 input double           InpSelectivityRiskFactorL3 = 0.25;
 input double           InpSelectivitySpreadFactor = 0.90; // Tighten hard spread ceiling per level
 input double           InpSelectivityADXStep = 2.0; // Additional ADX requirement per level
-input int              InpSelectivityRecoveryStableCycles = 20; // Stable cycles required before lowering a level
+input int              InpSelectivityRecoveryStableCycles = 1200; // ~20 minutes at the one-second cycle; stable cycles required before lowering a level
 input int              InpMaxOpenPositions      = 5;       // Clamped to 1..5, one position per asset
 
 //--- direction
@@ -2690,6 +2690,7 @@ int ConsecutiveNetLossesToday(datetime dayStart)
 }
 void UpdateDailyEntryProtection()
 {
+   static uint lastSelectivityLogTick=0;
    datetime today=StrToTime(TimeToString(TimeCurrent(),TIME_DATE));
    if(g_dailyEntryLockDay!=today)
    {
@@ -2739,12 +2740,17 @@ void UpdateDailyEntryProtection()
    g_dailyEntryLocked=false; // Retained only for compatibility; v1.5.7 never hard-locks entries by daily loss.
    g_dailyEntryLockReason="PROGRESSIVE_ANALYTICAL_SELECTIVITY";
    g_lastSelectivityDayNet=dayNet;
-   Print("PROGRESSIVE_SELECTIVITY_STATE | level=",g_analyticalSelectivityLevel,
-      " targetLevel=",targetLevel," dayNet=",DoubleToString(dayNet,2),
-      " lossPct=",DoubleToString(lossPct,2)," consecutiveLosses=",streak,
-      " scoreFloor=",DoubleToString(InpMinEntryScore+InpSelectivityScoreStep*g_analyticalSelectivityLevel,1),
-      " riskFactor=",DoubleToString(SelectivityRiskMultiplier(g_analyticalSelectivityLevel),2),
-      " action=CONTINUE_QUALIFIED_ENTRIES_AND_MANAGE_OPEN_POSITIONS");
+   uint selectivityNow=GetTickCount();
+   if(lastSelectivityLogTick==0 || (selectivityNow-lastSelectivityLogTick)>=60000)
+   {
+      lastSelectivityLogTick=selectivityNow;
+      Print("PROGRESSIVE_SELECTIVITY_STATE | level=",g_analyticalSelectivityLevel,
+         " targetLevel=",targetLevel," dayNet=",DoubleToString(dayNet,2),
+         " lossPct=",DoubleToString(lossPct,2)," consecutiveLosses=",streak,
+         " scoreFloor=",DoubleToString(InpMinEntryScore+InpSelectivityScoreStep*g_analyticalSelectivityLevel,1),
+         " riskFactor=",DoubleToString(SelectivityRiskMultiplier(g_analyticalSelectivityLevel),2),
+         " action=CONTINUE_QUALIFIED_ENTRIES_AND_MANAGE_OPEN_POSITIONS");
+   }
 }
 
 double SelectivityRiskMultiplier(int level)
@@ -2758,7 +2764,7 @@ double SelectivityRiskMultiplier(int level)
 bool SelectivityHTFAligned(string sym,int cmd,int level)
 {
    int tf=InpHTF;
-   int minBars=(level>=3?150:52);
+   int minBars=(level>=3?202:52);
    if(iBars(sym,tf)<minBars) return(false);
    double c=iClose(sym,tf,1);
    double ema50=iMA(sym,tf,50,0,MODE_EMA,PRICE_CLOSE,1);
