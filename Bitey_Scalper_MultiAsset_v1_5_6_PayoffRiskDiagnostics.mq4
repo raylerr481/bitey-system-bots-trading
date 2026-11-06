@@ -2648,6 +2648,8 @@ string DailyEntryLockKey(datetime dayStart)
 int ConsecutiveNetLossesToday(datetime dayStart)
 {
    datetime times[64]; double nets[64]; int count=0;
+   ArrayInitialize(times,0);
+   ArrayInitialize(nets,0.0);
    for(int i=OrdersHistoryTotal()-1;i>=0;i--)
    {
       if(!OrderSelect(i,SELECT_BY_POS,MODE_HISTORY)) continue;
