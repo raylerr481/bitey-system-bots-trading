@@ -1050,7 +1050,7 @@ void RunCycle()
       Print("DAILY_LOSS_WARNING | dayNet=",DoubleToString(dayNet,2),
             " limit=-",DoubleToString(dailyLimit,2),
             " candidates=",nc,
-            " action=WARNING_ONLY_NO_DAILY_ENTRY_LIMIT");
+            " action=",(InpEnableDailyEntryProtection?"ENTRY_LOCK_LATCHED_WHEN_THRESHOLD_REACHED":"WARNING_ONLY"));
    }
 
    if(nc>0)
