@@ -1747,13 +1747,14 @@ void LogExecutionDiagnostic(string eventName,string sym,int cmd,double lots,
       " freeMargin=",DoubleToString(AccountFreeMargin(),2),
       " entry=",DoubleToString(entry,digits),
       " SL=",DoubleToString(sl,digits)," TP=",DoubleToString(tp,digits),
-      " budget=",DoubleToString(budget,2),
-       " riskDistance=",DoubleToString(riskDistance,digits),
-       " appliedRiskFactor=",DoubleToString(appliedFactor,3),
-       " lossPerLot=",DoubleToString(lossPerLot,4),
-       " minLotLoss=",DoubleToString(lossPerLot*MarketInfo(sym,MODE_MINLOT),2),
-       " suppressedSinceLastLog=",suppressed,
-       " timestampServer=",TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS));
+      " timestampServer=",TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS));
+   Print("EXECUTION_DIAGNOSTIC_RISK | event=",eventName,
+      " symbol=",sym," budget=",DoubleToString(budget,2),
+      " riskDistance=",DoubleToString(riskDistance,digits),
+      " appliedRiskFactor=",DoubleToString(appliedFactor,3),
+      " lossPerLot=",DoubleToString(lossPerLot,4),
+      " minLotLoss=",DoubleToString(lossPerLot*MarketInfo(sym,MODE_MINLOT),2),
+      " suppressedSinceLastLog=",suppressed);
 }
 
 //+------------------------------------------------------------------+
