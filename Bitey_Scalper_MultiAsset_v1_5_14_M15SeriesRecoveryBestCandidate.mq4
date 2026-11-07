@@ -1050,14 +1050,33 @@ void RunCycle()
          continue;
       }
 
-      // Fail closed for NEW entries when signal history is not demonstrably ready.
+      // Bounded per-symbol retry gate for incomplete or stale series snapshots.
       // ManageExits() has already run and remains independent of this per-symbol guard.
+      uint seriesNowTick=GetTickCount();
+      if(g_seriesNextRetryTick[i]!=0 &&
+         (int)(seriesNowTick-g_seriesNextRetryTick[i])<0)
+      {
+         LogBarScanSymbolState(i,sym,"SERIES_RECOVERY_BACKOFF",bars,bt);
+         continue;
+      }
       string seriesGuardReason="";
       if(!EntrySeriesReady(sym,seriesGuardReason))
       {
+         int seriesDelay=MathMax(1,g_seriesRetryDelaySec[i]);
          LogBarScanSymbolState(i,sym,"ENTRY_SERIES_"+seriesGuardReason,bars,bt);
-         continue; // Keep this bar pending so the symbol is retried after synchronization.
+         Print("SERIES_RECOVERY_PENDING | symbol=",sym,
+            " timeframe=",(int)InpSignalTF,
+            " state=",seriesGuardReason,
+            " currentBarTime=",(long)bt,
+            " retryInSec=",seriesDelay,
+            " action=KEEP_PENDING_BAR_BOUNDED_RETRY_NO_NEW_ENTRY");
+         g_seriesNextRetryTick[i]=seriesNowTick+(uint)(seriesDelay*1000);
+         g_seriesRetryDelaySec[i]=MathMin(MathMax(1,InpSeriesRecoveryMaxSec),
+            MathMax(seriesDelay*2,MathMax(1,InpSeriesRecoveryInitialSec)));
+         continue; // Keep this bar pending until the bounded retry is due.
       }
+      g_seriesNextRetryTick[i]=0;
+      g_seriesRetryDelaySec[i]=MathMax(1,InpSeriesRecoveryInitialSec);
       LogBarScanSymbolState(i,sym,(retrying?"RETRY_READY":"NEW_BAR_READY"),bars,bt);
       if(g_quoteRecoveryPendingAnalysis[i])
          Print("QUOTE_RECOVERY_ANALYSIS_RESUMED | symbol=",sym,
