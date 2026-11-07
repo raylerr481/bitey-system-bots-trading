@@ -47,6 +47,6 @@ Reduce excessive broker modification requests while keeping adaptive SL and TP c
 - Enabled by default; the evaluation window is the latest five closed EA market trades within the current broker-server calendar day.
 - Evaluation is refreshed as each trade closes; the first complete evaluation occurs after five closes. No elapsed-time threshold is used.
 - A 4-win/1-loss result is tolerated and does not activate this daily strict-quality mode. The EA continues its normal v1.5.14 best-eligible-candidate scan, ranking, and execution-attempt flow.
-- At least two losses (and more losses than wins, with negative net result) are required to activate the additional daily analytical selectivity. This raises the score requirement; it does not suspend the day or bypass any existing risk/market gates.
+- At least two losses and a negative net result are required to activate the additional daily analytical selectivity. This raises the score requirement; it does not suspend the day or bypass any existing risk/market gates.
 - The daily sample resets at broker server midnight via TimeCurrent()/server date. Existing progressive daily loss, rolling loss, per-asset cooldown, exposure and open-position protections remain independently active and are not disabled by the 4/1 tolerance.
 - This is a latest-five rolling evaluation during the server day, not a fixed wall-clock timer or an absolute guarantee of a filled order.
