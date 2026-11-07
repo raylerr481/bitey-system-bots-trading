@@ -10,8 +10,8 @@
 
 1. Diagnose and recover stale M15 series without confusing an inactive market session with a frozen history series.
 2. Make every eligible new-bar candidate observable from series readiness through broker order result.
-3. Select the highest-quality eligible opportunity first. If that candidate fails a transient or symbol-specific execution check, continue to the next ranked candidate while portfolio capacity remains.
-4. Never force a trade when no candidate passes the unchanged minimum signal and hard safety gates.
+3. When one or more candidates pass all existing eligibility gates, prioritize the single highest-ranked candidate as the first trade slot and make at least one order attempt per valid scan cycle. If it fails a symbol-specific execution check, continue down the ranked list until one order is accepted, the candidates are exhausted, or portfolio capacity is reached.
+4. Do not force an order when there is no eligible candidate or when all candidates fail existing hard safety gates. This requirement is a minimum-one-attempt / best-candidate priority rule, not permission to bypass protections.
 
 ## 2. Evidence motivating this version
 
@@ -74,14 +74,14 @@ Log `BEST_CANDIDATE_SELECTED` with rank, candidate count, score, spread ratio, q
 
 Do not label a raw score or ranking value as a statistical probability or claim a calibrated win probability. A true probability estimate requires out-of-sample calibration on historical/forward trade outcomes, including costs. Until such evidence exists, call it `QUALITY_PRIORITY` or `BEST_ELIGIBLE_CANDIDATE`, not `WIN_PROBABILITY`.
 
-### 4.3 Execution fallback
+### 4.3 Minimum-one best-candidate attempt
 
-- Attempt the highest-ranked eligible candidate first.
-- If it is rejected by a symbol-specific hard gate (spread, contract, stops, margin/risk, trade permission, broker response), record the exact rejection and continue to the next candidate if capacity remains.
-- Do not bypass any rejection to force an order.
-- Stop when the configured open-position cap is reached.
-- Preserve one-position-per-normalized-asset/alias protection.
-- If no candidate survives all gates, log `NO_ELIGIBLE_CANDIDATE` with the count and top rejection categories.
+- Consider the top five ranked eligible candidates as the first-choice shortlist (or fewer when fewer than five exist). The five is a candidate shortlist, not a change to the existing maximum of five open positions.
+- When at least one eligible candidate exists and portfolio capacity is available, select the highest-ranked candidate and make an order attempt. Do not skip the top candidate merely because another symbol is easier to execute.
+- If the first candidate fails a symbol-specific execution check (spread, contract, stops, margin/risk, trade permission, broker response), log the exact rejection and immediately try the next ranked eligible candidate while capacity remains. Continue until at least one order is accepted, the shortlist/candidate list is exhausted, or the existing open-position cap is reached.
+- Once one order has been accepted in the scan cycle, the EA may continue with other eligible candidates under the existing multi-position rules and max-five cap; this specification does not impose a new one-trade-per-cycle cap.
+- Do not bypass any rejection to force an order. Existing score, quote freshness, risk, spread, session, cooldown, stop, margin, alias, permission, and broker gates remain mandatory.
+- If no candidate survives all gates, do not manufacture an entry. Log `NO_ELIGIBLE_CANDIDATE` with the count and top rejection categories and explain why a minimum-one fill was impossible.
 
 ## 5. Entry pipeline observability
 
@@ -109,7 +109,7 @@ No changes to:
 - adaptive SL/TP, break-even, trailing, net-profit protection, giveback, progressive loss exit, and loss-duration management;
 - broker-side SL/TP and no-martingale policy.
 
-No forced minimum trade count, no lowering score to manufacture a signal, no increasing risk, no bypass of broker checks, and no automatic relaxation after a no-trade interval.
+No lowering score to manufacture a signal, no increasing risk, no bypass of broker checks, and no automatic relaxation after a no-trade interval. The minimum-one rule means at least one attempt of the best eligible candidate when candidates exist; it cannot guarantee a broker fill when all candidates fail existing gates.
 
 ## 7. Acceptance criteria
 
@@ -117,11 +117,12 @@ No forced minimum trade count, no lowering score to manufacture a signal, no inc
 2. Recovery attempts are bounded and observable; no tight retry loop.
 3. An unfinalized pending bar resumes exactly once after recovery.
 4. A finalized bar is never re-analyzed merely because a quote recovers.
-5. The top eligible candidate is attempted first; if rejected, the next eligible candidate is attempted while capacity remains.
-6. No candidate can bypass score, quote, risk, spread, session, position, or broker gates.
-7. A no-trade cycle explains whether there was no new bar, no signal, insufficient score, or execution rejection.
-8. MQL4 compilation succeeds; Strategy Tester checks cover normal bars, stale series, 4066, quote recovery, multiple candidates, first-candidate rejection/fallback, and all hard protections.
-9. Demo forward validation is completed before replacing v1.5.13.
+5. If 1–5 eligible candidates exist and portfolio capacity is available, the highest-ranked one receives the first order attempt; a rejected first candidate falls through to the next ranked candidate.
+6. At least one order is accepted when at least one candidate passes every existing hard gate and the broker accepts its order; no forced fill is allowed when every candidate fails a gate.
+7. No candidate can bypass score, quote, risk, spread, session, position, or broker gates.
+8. A no-trade cycle explains whether there was no new bar, no signal, insufficient score, or execution rejection.
+9. MQL4 compilation succeeds; Strategy Tester checks cover normal bars, stale series, 4066, quote recovery, multiple candidates, first-candidate rejection/fallback, and all hard protections.
+10. Demo forward validation is completed before replacing v1.5.13.
 
 ## 8. Validation status
 
