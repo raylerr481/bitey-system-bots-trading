@@ -53,9 +53,9 @@ input double           InpRewardRisk            = 2.0;
 input double           InpMaxSpreadPctOfStop    = 12.0;    // Diagnostic warning threshold
 input double           InpHardMaxSpreadPctOfStop = 10.0;    // Hard execution-quality cap; 0 = disabled
 input double           InpMinEntryScore          = 15.0;    // Minimum entry score
-input bool             InpEnableDailyAdaptiveQuality = false; // Experimental; false until validated in Strategy Tester
-input int              InpDailyAdaptiveSampleSize = 10;      // Most recent closed EA trades for the current server day
-input int              InpDailyAdaptiveMinLosses  = 6;       // Require more losses than wins (default 6/10)
+input bool             InpEnableDailyAdaptiveQuality = true; // Evaluate closed-trade groups daily using broker server date; never hard-lock entries
+input int              InpDailyAdaptiveSampleSize = 5;       // Evaluate the latest five closed EA trades for the current server day
+input int              InpDailyAdaptiveMinLosses  = 2;       // One loss in five is tolerated; stricter analysis requires at least two
 input double           InpDailyAdaptiveExtraScore = 8.0;     // Additional score required while daily strict mode is active
 input double           InpDailyAdaptiveHoldFactor = 0.75;    // Reduce max hold bars only when losers lasted longer
 input double           InpDailyAdaptiveDurationRatio = 1.20; // Loser average duration must exceed winner duration by 20%
@@ -2905,7 +2905,7 @@ void GetDailyAdaptiveState(bool &strictMode,bool &shortenHold,datetime &activati
    if(winDurationCount>0) avgWinSeconds=winDurationTotal/winDurationCount;
    if(lossDurationCount>0) avgLossSeconds=lossDurationTotal/lossDurationCount;
    int requiredLosses=MathMax(1,MathMin(wanted,InpDailyAdaptiveMinLosses));
-   strictMode=(losses>wins && losses>=requiredLosses && netTotal<0.0);
+   strictMode=(losses>=requiredLosses && losses>wins && netTotal<0.0);
    if(strictMode && winDurationCount>0 && lossDurationCount>0 &&
       avgLossSeconds>avgWinSeconds*MathMax(1.0,InpDailyAdaptiveDurationRatio))
       shortenHold=true;
@@ -2932,7 +2932,7 @@ void GetDailyAdaptiveState(bool &strictMode,bool &shortenHold,datetime &activati
          ";reducedMaxHoldBars="+IntegerToString(reducedBars)+
          ";activationAfter="+TimeToString(activationTime,TIME_DATE|TIME_SECONDS);
       Print("DAILY_ADAPTIVE_EVALUATION | enabled=true ",adaptiveExtra,
-            " policy=DAILY_ONLY_NO_SL_WIDENING_NO_RISK_INCREASE");
+            " policy=SERVER_DAY_LATEST_FIVE_CLOSED_TRADES_ONE_LOSS_TOLERATED_NO_ENTRY_LOCK");
       if(g_auditCsvHandle!=INVALID_HANDLE)
       {
          FileSeek(g_auditCsvHandle,0,SEEK_END);
