@@ -4,7 +4,7 @@
 - **Target EA:** `Bitey_Scalper_MultiAsset_v1_5_14_M15SeriesRecoveryBestCandidate.mq4`
 - **Version:** 1.5.14; MT4 Market property: 1.514
 - **Branch:** `experimental/scalper-v1-5-14-series-recovery-best-candidate`
-- **Status:** Technical specification; implementation and validation pending.
+- **Status:** EA source implementation committed; MetaEditor compilation, Strategy Tester and demo forward validation pending.
 
 ## 1. Objectives
 
@@ -124,6 +124,24 @@ No lowering score to manufacture a signal, no increasing risk, no bypass of brok
 9. MQL4 compilation succeeds; Strategy Tester checks cover normal bars, stale series, 4066, quote recovery, multiple candidates, first-candidate rejection/fallback, and all hard protections.
 10. Demo forward validation is completed before replacing v1.5.13.
 
-## 8. Validation status
+## 8. Implementation status
 
-This document is a technical specification only. No v1.5.14 EA implementation, MetaEditor compilation, Strategy Tester run, backtest, or forward test is claimed by this commit. Keep the pull request draft until the code is implemented and validated.
+The v1.5.14 EA source is now present at `Bitey_Scalper_MultiAsset_v1_5_14_M15SeriesRecoveryBestCandidate.mq4`.
+
+Implemented in source:
+- Version identifiers updated to 1.5.14 / MT4 property 1.514.
+- Added configurable signal-series age tolerance (default 2 complete signal-timeframe intervals).
+- Added per-symbol bounded series rechecks with 5-second initial and 60-second maximum backoff, using MQL4 `iBars`, `iTime`, and `RefreshRates()`.
+- Added `SERIES_RECOVERY_PENDING` and `SERIES_RECOVERED` diagnostics. Old/uncertain series remain fail-closed for new entries; `ManageExits()` remains before the scan gates.
+- Added `BEST_CANDIDATE_SELECTED` and `MINIMUM_ONE_BEST_CANDIDATE_ATTEMPT` diagnostics. The existing ranked execution loop tries the highest-priority eligible candidate first and falls through after symbol-specific rejection, while retaining all existing hard gates and the five-position cap.
+- Preserved score floor, quote age limit, risk sizing, cooldown, adaptive exits, loss management, and broker-side SL/TP.
+
+Static source checks performed:
+- Version identifiers and new diagnostic events present.
+- No MQL5-only `SERIES_SYNCHRONIZED` identifier.
+- Braces, parentheses, and brackets balanced.
+- Existing score floor 15, quote-age limit 120 seconds, and hard maximum of five positions still present.
+
+## 9. Validation status
+
+The source has **not** been compiled in MetaEditor. No Strategy Tester run, backtest, or demo forward test is claimed. Keep the pull request draft until compilation and the specified test cases pass. Do not replace v1.5.13 in the active MT4 terminal until that validation is complete.
