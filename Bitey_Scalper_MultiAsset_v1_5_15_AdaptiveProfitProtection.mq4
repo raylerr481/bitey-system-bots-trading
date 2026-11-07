@@ -2905,7 +2905,7 @@ void GetDailyAdaptiveState(bool &strictMode,bool &shortenHold,datetime &activati
    if(winDurationCount>0) avgWinSeconds=winDurationTotal/winDurationCount;
    if(lossDurationCount>0) avgLossSeconds=lossDurationTotal/lossDurationCount;
    int requiredLosses=MathMax(1,MathMin(wanted,InpDailyAdaptiveMinLosses));
-   strictMode=(losses>=requiredLosses && losses>wins && netTotal<0.0);
+   strictMode=(losses>=requiredLosses && netTotal<0.0);
    if(strictMode && winDurationCount>0 && lossDurationCount>0 &&
       avgLossSeconds>avgWinSeconds*MathMax(1.0,InpDailyAdaptiveDurationRatio))
       shortenHold=true;
