@@ -945,6 +945,14 @@ void RunCycle()
       }
 
       bool retrying=(g_pendingBar[i]==bt);
+      if(!retrying && g_quoteRecoveryPendingAnalysis[i])
+      {
+         Print("QUOTE_RECOVERY_PENDING_SUPERSEDED | symbol=",sym,
+               " previousPendingBarTime=",(long)g_pendingBar[i],
+               " newBarTime=",(long)bt,
+               " action=PROCESS_NEWER_BAR_ONLY");
+         g_quoteRecoveryPendingAnalysis[i]=false;
+      }
       if(!retrying)
       {
          if(g_pendingBar[i]>0 && InpLogBarScanDiagnostics)
