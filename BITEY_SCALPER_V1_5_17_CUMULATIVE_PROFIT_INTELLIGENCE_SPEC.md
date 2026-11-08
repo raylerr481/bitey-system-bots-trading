@@ -36,6 +36,25 @@ This module is reporting/accounting only:
 - CUMULATIVE_PROFIT_DAY_FINALIZED: completed-day reconciliation and carry-forward amount.
 - CUMULATIVE_PROFIT_CLOCK_WARNING: server-day rollback safeguard.
 
+## Weekday operability evidence (observational only)
+
+The experimental source also maintains persistent weekday profiles, using the MT4 broker-server calendar (Sunday=0 through Saturday=6) and two conservative asset classes:
+- `RECOGNIZED_CRYPTO_24_7`: symbols recognized by the existing `IsCrypto()` classifier.
+- `NON_CRYPTO_SESSION_UNVERIFIED`: every other symbol. This is deliberately not labeled Forex or equities because broker suffixes and CFD contracts do not reliably identify the underlying market or its trading calendar.
+
+Persistent per-weekday/per-class counters:
+- `scans`: symbol scan cycles observed.
+- `fresh` / `stale`: quote-freshness outcomes.
+- `bars`: new signal bars observed.
+- `signals`: generated directional signal candidates.
+- `queued`: candidates admitted to the execution queue after existing filters.
+- `accepted`: successful MT4 order acceptance.
+- `rejected`: execution attempts rejected by the execution path.
+
+The counters are namespaced by account number and EA magic number in MT4 terminal Global Variables. They are cumulative by weekday across observed weeks, not a claim that a market is open or closed. They are saved at the five-minute profile cadence and on EA deinitialization; a terminal crash may lose the unsaved interval. The `DAY_OPERABILITY_PROFILE` log reports queued-to-accepted percentage separately for each weekday and class.
+
+**Safety:** these counters do not authorize, reject, rank, delay, or force trades. They do not infer a closed session from stale quotes or old bars. The profile is evidence for later calibration; actual broker permission, quote freshness, series readiness, spread, and all existing strategy checks remain authoritative.
+
 ## Validation checklist
 1. Compile in MetaEditor and resolve all errors/warnings.
 2. Verify the first activation starts with zero carry and does not invent historical debt.
