@@ -250,6 +250,10 @@ long     g_dayOpsSignals[7][2];
 long     g_dayOpsQueued[7][2];
 long     g_dayOpsAccepted[7][2];
 long     g_dayOpsExecutionRejected[7][2];
+long     g_dayOpsClosedTrades[7][2];
+long     g_dayOpsClosedWins[7][2];
+long     g_dayOpsClosedLosses[7][2];
+double   g_dayOpsClosedNet[7][2];
 datetime g_lastDayOperabilityLog = 0;
 
 string   g_candSym[MAX_SYMBOLS];
@@ -3212,6 +3216,10 @@ void LoadDayOperabilityProfile()
          key=DayOperabilityMetricKey(d,c,"queued"); g_dayOpsQueued[d][c]=(GlobalVariableCheck(key)?(long)GlobalVariableGet(key):0);
          key=DayOperabilityMetricKey(d,c,"accepted"); g_dayOpsAccepted[d][c]=(GlobalVariableCheck(key)?(long)GlobalVariableGet(key):0);
          key=DayOperabilityMetricKey(d,c,"rejected"); g_dayOpsExecutionRejected[d][c]=(GlobalVariableCheck(key)?(long)GlobalVariableGet(key):0);
+         key=DayOperabilityMetricKey(d,c,"closed"); g_dayOpsClosedTrades[d][c]=(GlobalVariableCheck(key)?(long)GlobalVariableGet(key):0);
+         key=DayOperabilityMetricKey(d,c,"wins"); g_dayOpsClosedWins[d][c]=(GlobalVariableCheck(key)?(long)GlobalVariableGet(key):0);
+         key=DayOperabilityMetricKey(d,c,"losses"); g_dayOpsClosedLosses[d][c]=(GlobalVariableCheck(key)?(long)GlobalVariableGet(key):0);
+         key=DayOperabilityMetricKey(d,c,"net"); g_dayOpsClosedNet[d][c]=(GlobalVariableCheck(key)?GlobalVariableGet(key):0.0);
       }
    Print("DAY_OPERABILITY_PROFILE_LOADED | timeBasis=MT4_SERVER_WEEKDAY scope=ACCOUNT_AND_MAGIC persistence=TERMINAL_GLOBAL_VARIABLES tradingEffect=NONE");
 }
@@ -3228,6 +3236,10 @@ void SaveDayOperabilityProfile()
          GlobalVariableSet(DayOperabilityMetricKey(d,c,"queued"),(double)g_dayOpsQueued[d][c]);
          GlobalVariableSet(DayOperabilityMetricKey(d,c,"accepted"),(double)g_dayOpsAccepted[d][c]);
          GlobalVariableSet(DayOperabilityMetricKey(d,c,"rejected"),(double)g_dayOpsExecutionRejected[d][c]);
+         GlobalVariableSet(DayOperabilityMetricKey(d,c,"closed"),(double)g_dayOpsClosedTrades[d][c]);
+         GlobalVariableSet(DayOperabilityMetricKey(d,c,"wins"),(double)g_dayOpsClosedWins[d][c]);
+         GlobalVariableSet(DayOperabilityMetricKey(d,c,"losses"),(double)g_dayOpsClosedLosses[d][c]);
+         GlobalVariableSet(DayOperabilityMetricKey(d,c,"net"),g_dayOpsClosedNet[d][c]);
       }
 }
 void RecordDayOperability(string sym,string eventName)
@@ -3242,11 +3254,40 @@ void RecordDayOperability(string sym,string eventName)
    else if(eventName=="ACCEPTED") g_dayOpsAccepted[day][assetClass]++;
    else if(eventName=="EXECUTION_REJECTED") g_dayOpsExecutionRejected[day][assetClass]++;
 }
+void RebuildDayOperabilityTradeOutcomes()
+{
+   // Rebuild from currently available MT4 history so restarts cannot double-count closes.
+   // Account History must expose the relevant history range for complete statistics.
+   for(int d=0;d<7;d++)
+      for(int c=0;c<2;c++)
+      {
+         g_dayOpsClosedTrades[d][c]=0;
+         g_dayOpsClosedWins[d][c]=0;
+         g_dayOpsClosedLosses[d][c]=0;
+         g_dayOpsClosedNet[d][c]=0.0;
+      }
+   for(int i=OrdersHistoryTotal()-1;i>=0;i--)
+   {
+      if(!OrderSelect(i,SELECT_BY_POS,MODE_HISTORY)) continue;
+      int type=OrderType();
+      if(OrderMagicNumber()!=InpMagic || (type!=OP_BUY && type!=OP_SELL)) continue;
+      datetime closed=OrderCloseTime();
+      if(closed<=0) continue;
+      int day=MathMax(0,MathMin(6,TimeDayOfWeek(closed)));
+      int assetClass=DayOperabilityAssetClass(OrderSymbol());
+      double tradeNet=OrderProfit()+OrderSwap()+OrderCommission();
+      g_dayOpsClosedTrades[day][assetClass]++;
+      g_dayOpsClosedNet[day][assetClass]+=tradeNet;
+      if(tradeNet>0.0) g_dayOpsClosedWins[day][assetClass]++;
+      else if(tradeNet<0.0) g_dayOpsClosedLosses[day][assetClass]++;
+   }
+}
 void UpdateDayOperabilityProfile()
 {
    datetime now=TimeCurrent();
    if(g_lastDayOperabilityLog>0 && now-g_lastDayOperabilityLog<300) return;
    g_lastDayOperabilityLog=now;
+   RebuildDayOperabilityTradeOutcomes();
    SaveDayOperabilityProfile();
    int day=DayOperabilityWeekday();
    for(int c=0;c<2;c++)
@@ -3261,6 +3302,10 @@ void UpdateDayOperabilityProfile()
          " staleQuotes=",g_dayOpsStaleQuotes[day][c]," newBars=",g_dayOpsNewBars[day][c],
          " signals=",g_dayOpsSignals[day][c]," queued=",queued,
          " accepted=",accepted," executionRejected=",g_dayOpsExecutionRejected[day][c],
+         " closedTrades=",g_dayOpsClosedTrades[day][c],
+         " closedWins=",g_dayOpsClosedWins[day][c]," closedLosses=",g_dayOpsClosedLosses[day][c],
+         " closedNet=",DoubleToString(g_dayOpsClosedNet[day][c],2),
+         " closedWinRatePct=",DoubleToString(g_dayOpsClosedTrades[day][c]>0?100.0*(double)g_dayOpsClosedWins[day][c]/(double)g_dayOpsClosedTrades[day][c]:0.0,1),
          " queuedAcceptancePct=",DoubleToString(acceptance,1),
          " sessionClosedInferred=false tradingEffect=NONE");
    }
