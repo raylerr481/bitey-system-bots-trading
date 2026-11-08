@@ -1575,6 +1575,7 @@ void OpenOpportunityClassificationCSV()
 
 string OpportunityDispositionClass(string reason,int errorCode,string executionCategory)
 {
+   if(executionCategory=="ACCEPTED") return("OPPORTUNITY_EXECUTED");
    // Confirmed broker-side denials and market/execution rejections.
    if(errorCode==132 || errorCode==133 || errorCode==135 || errorCode==136 ||
       errorCode==137 || errorCode==138 || errorCode==128)
@@ -1643,14 +1644,14 @@ void LogOpportunityDisposition(string stage,string sym,int cmd,string reason,
 
 void LogEntryFlow(string stage,string sym,int cmd,string outcome,string reason,double score,double requiredScore)
 {
+   if(outcome=="REJECT")
+      LogOpportunityDisposition(stage,sym,cmd,reason,0,score,requiredScore);
    if(!InpEnableEntryFlowDiagnostics) return;
    string side=(cmd==OP_BUY?"BUY":(cmd==OP_SELL?"SELL":"NONE"));
    Print("ENTRY_FILTER | stage=",stage,
       " symbol=",sym," side=",side," outcome=",outcome,
       " reason=",reason," score=",DoubleToString(score,1),
       " requiredScore=",DoubleToString(requiredScore,1));
-   if(outcome=="REJECT")
-      LogOpportunityDisposition(stage,sym,cmd,reason,0,score,requiredScore);
 }
 
 void Reject(string sym,string reason)
