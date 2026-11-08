@@ -20,7 +20,7 @@ Add an informational cumulative minimum net-profit objective:
 - First activation creates a clean baseline for the current server day; no retroactive debt is invented.
 - On each day rollover, the completed day's realized net is reconciled once and the carry ledger advances.
 - If the terminal is offline for multiple days, each elapsed day accrues the configured minimum; available closed MT4 history is used to credit realized trades.
-- Run one EA instance per account/magic pair to avoid concurrent ledger writers. Keep MT4 account history available for accurate reconciliation.
+- Run one EA instance per account/magic pair to avoid concurrent ledger writers. In MT4 Account History, select All History so completed days remain available for rollover reconciliation; if broker history is incomplete, the carry ledger can under-credit realized trades.
 
 ## Safety invariants
 This module is reporting/accounting only:
