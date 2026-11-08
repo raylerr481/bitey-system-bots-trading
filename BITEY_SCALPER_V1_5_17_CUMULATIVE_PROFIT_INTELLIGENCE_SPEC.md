@@ -50,6 +50,9 @@ Persistent per-weekday/per-class counters:
 - `queued`: candidates admitted to the execution queue after existing filters.
 - `accepted`: successful MT4 order acceptance.
 - `rejected`: execution attempts rejected by the execution path.
+- `closed`, `wins`, `losses`, and `net`: closed EA market-trade outcomes grouped by the weekday of close; net includes profit, swap, and commission.
+
+Closed-trade outcome aggregates are rebuilt idempotently from the MT4 history currently exposed to the EA every five minutes, avoiding duplicate counting after restart. The Account History tab should be set to **All History** for complete weekday outcome evidence. If MT4 exposes only a partial history range, those outcome aggregates are partial and must not be treated as a complete performance record.
 
 The counters are namespaced by account number and EA magic number in MT4 terminal Global Variables. They are cumulative by weekday across observed weeks, not a claim that a market is open or closed. They are saved at the five-minute profile cadence and on EA deinitialization; a terminal crash may lose the unsaved interval. The `DAY_OPERABILITY_PROFILE` log reports queued-to-accepted percentage separately for each weekday and class.
 
