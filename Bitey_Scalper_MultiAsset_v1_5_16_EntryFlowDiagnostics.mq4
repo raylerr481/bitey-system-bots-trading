@@ -1398,14 +1398,14 @@ void RunCycle()
       g_lastHeartbeat=now;
       long serverLocalOffset=(long)TimeLocal()-(long)TimeCurrent();
       Print("ENTRY_FUNNEL_DIAGNOSTICS | windowSec=300",
-            " staleQuote=",g_flowStaleQuote," historyUnavailable=",g_flowHistoryUnavailable,
-            " noNewBar=",g_flowNoNewBar," insufficientHistory=",g_flowInsufficientHistory,
+            " staleQuoteChecks=",g_flowStaleQuote," historyUnavailable=",g_flowHistoryUnavailable,
+            " noNewBarChecks=",g_flowNoNewBar," insufficientHistory=",g_flowInsufficientHistory,
             " seriesWait=",g_flowSeriesWait," prefilterPass=",g_flowPrefilterPass,
             " prefilterReject=",g_flowPrefilterReject," signalPass=",g_flowSignalPass,
             " signalReject=",g_cycleSignalRejects," queued=",g_flowQueued,
             " executionAttempts=",g_flowAttempted," accepted=",g_flowAccepted,
             " executionRejected=",g_flowExecutionRejected," aliasSkipped=",g_flowAliasSkipped,
-            " capacitySkipped=",g_flowCapacitySkipped," note=OBSERVABILITY_ONLY");
+            " capacitySkipped=",g_flowCapacitySkipped," scope=SCAN_EVENTS_NOT_UNIQUE_SYMBOLS note=OBSERVABILITY_ONLY");
          Print("ENTRY_FLOW_DIAGNOSTICS | windowSec=300",
             " newBars=",g_cycleNewBars," retries=",g_cycleBarRetries,
             " noNewBar=",g_cycleNoNewBar," prefilterPassed=",g_cyclePrefilterOK,
