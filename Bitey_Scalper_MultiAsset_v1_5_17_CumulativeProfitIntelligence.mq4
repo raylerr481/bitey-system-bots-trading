@@ -240,6 +240,18 @@ datetime g_cumulativeProfitDayStart = 0;
 datetime g_lastCumulativeProfitLog = 0;
 bool     g_cumulativeProfitInitialized = false;
 
+// Persistent weekday operability evidence, separated by known crypto vs
+// non-crypto/unverified session class. These counters are observational only.
+long     g_dayOpsScans[7][2];
+long     g_dayOpsFreshQuotes[7][2];
+long     g_dayOpsStaleQuotes[7][2];
+long     g_dayOpsNewBars[7][2];
+long     g_dayOpsSignals[7][2];
+long     g_dayOpsQueued[7][2];
+long     g_dayOpsAccepted[7][2];
+long     g_dayOpsExecutionRejected[7][2];
+datetime g_lastDayOperabilityLog = 0;
+
 string   g_candSym[MAX_SYMBOLS];
 int      g_candCmd[MAX_SYMBOLS];
 double   g_candScore[MAX_SYMBOLS];
@@ -257,6 +269,7 @@ int OnInit()
    OpenDailyLossSummaryCSV();
    CheckDailyLossDay();
    InitializeCumulativeProfitIntelligence();
+   LoadDayOperabilityProfile();
    g_sessionStartTime=TimeCurrent();
    for(int i=0;i<g_symbolCount;i++)
    {
@@ -358,6 +371,7 @@ int OnInit()
 void OnDeinit(const int reason)
 {
    EventKillTimer();
+   SaveDayOperabilityProfile();
    if(g_auditCsvHandle!=INVALID_HANDLE)
    {
       FileFlush(g_auditCsvHandle); FileClose(g_auditCsvHandle); g_auditCsvHandle=INVALID_HANDLE;
@@ -978,6 +992,7 @@ void RunCycle()
 
    CheckDailyLossDay();
    UpdateCumulativeProfitIntelligence();
+   UpdateDayOperabilityProfile();
    UpdateGlobalLossPolicy();
    ManageExits();
    SyncClosedTradeStats();
@@ -996,10 +1011,12 @@ void RunCycle()
    for(int i=0;i<g_symbolCount;i++)
    {
       string sym=g_symbols[i];
+      RecordDayOperability(sym,"SCAN");
       // Isolate stale feeds before touching bar retry state.
       // This prevents RETRY_PENDING/RETRY_READY churn while quotes are frozen.
       if(!SymbolQuoteFresh(i,sym))
       {
+         RecordDayOperability(sym,"STALE_QUOTE");
          g_flowStaleQuote++;
       }
       if(!SymbolQuoteFresh(i,sym))
@@ -1009,6 +1026,7 @@ void RunCycle()
          LogBarScanSymbolState(i,sym,"STALE_QUOTE_WAIT",staleBars,staleBar);
          continue;
       }
+      RecordDayOperability(sym,"FRESH_QUOTE");
       int bars=iBars(sym,InpSignalTF);
       datetime bt=iTime(sym,InpSignalTF,0);
       if(bt<=0)
@@ -1036,6 +1054,7 @@ void RunCycle()
          continue;
       }
       DiagnoseSignalSeriesAge(i,sym,bt,bars);
+      RecordDayOperability(sym,"NEW_BAR");
 
       bool retrying=(g_pendingBar[i]==bt);
       if(!retrying && g_quoteRecoveryPendingAnalysis[i])
@@ -1149,6 +1168,7 @@ void RunCycle()
       Print("ENTRY_CANDIDATE | symbol=",sym," side=",(cmd==OP_BUY?"BUY":"SELL"),
             " score=",DoubleToString(score,1)," barTime=",(long)bt,
             " stage=SIGNAL_GENERATED");
+      RecordDayOperability(sym,"SIGNAL");
       // Analyze first, then apply cooldown to the same normalized asset and side.
       if(DirectionalLossCooldownActive(sym,cmd))
       {
@@ -1212,6 +1232,7 @@ void RunCycle()
       if(sessionIdx>=0) g_sessionCandidates[sessionIdx]++;
       g_cycleSignalCandidates++;
          g_flowQueued++;
+      RecordDayOperability(sym,"QUEUED");
       if(cmd==OP_BUY) g_cycleBuySignals++; else g_cycleSellSignals++;
       Print("ENTRY_CANDIDATE | symbol=",sym," side=",(cmd==OP_BUY?"BUY":"SELL"),
             " score=",DoubleToString(score,1)," priority=",DoubleToString(qPriority,1),
@@ -1320,6 +1341,7 @@ void RunCycle()
                      " result=ACCEPTED category=ORDER_ACCEPTED");
                accepted++;
                   g_flowAccepted++;
+               RecordDayOperability(g_candSym[c],"ACCEPTED");
                if(statIdx>=0) g_sessionAccepted[statIdx]++;
                int acceptedScanIdx=ScanSymbolIndex(g_candSym[c]);
                if(acceptedScanIdx>=0) FinalizeScanBar(acceptedScanIdx,g_pendingBar[acceptedScanIdx],"ORDER_ACCEPTED");
@@ -1332,6 +1354,7 @@ void RunCycle()
                      " error=",g_lastExecutionErrorCode);
                executionRejected++;
                   g_flowExecutionRejected++;
+               RecordDayOperability(g_candSym[c],"EXECUTION_REJECTED");
                if(statIdx>=0) g_sessionRejected[statIdx]++;
                if(g_lastExecutionRejectCategory=="SPREAD") rejectSpread++;
                else if(g_lastExecutionRejectCategory=="RISK") rejectRisk++;
@@ -3155,6 +3178,94 @@ double TodayNet()
 datetime ServerDayStart(datetime when)
 {
    return(StrToTime(TimeToString(when,TIME_DATE)));
+}
+
+// Weekday operability profile: evidence collection only; it never gates trades.
+int DayOperabilityWeekday()
+{
+   return(MathMax(0,MathMin(6,TimeDayOfWeek(TimeCurrent())))); // MT4 server day: Sunday=0
+}
+int DayOperabilityAssetClass(string sym)
+{
+   return(IsCrypto(sym)?1:0); // 0 = non-crypto/session unverified; 1 = recognized crypto
+}
+string DayOperabilityWeekdayName(int day)
+{
+   string names[7]={"SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"};
+   return(names[MathMax(0,MathMin(6,day))]);
+}
+string DayOperabilityMetricKey(int day,int assetClass,string metric)
+{
+   return("BiteyDayOp_"+IntegerToString(AccountNumber())+"_"+
+      IntegerToString(InpMagic)+"_"+IntegerToString(day)+"_"+
+      IntegerToString(assetClass)+"_"+metric);
+}
+void LoadDayOperabilityProfile()
+{
+   for(int d=0;d<7;d++)
+      for(int c=0;c<2;c++)
+      {
+         string key;
+         key=DayOperabilityMetricKey(d,c,"scans"); g_dayOpsScans[d][c]=(GlobalVariableCheck(key)?(long)GlobalVariableGet(key):0);
+         key=DayOperabilityMetricKey(d,c,"fresh"); g_dayOpsFreshQuotes[d][c]=(GlobalVariableCheck(key)?(long)GlobalVariableGet(key):0);
+         key=DayOperabilityMetricKey(d,c,"stale"); g_dayOpsStaleQuotes[d][c]=(GlobalVariableCheck(key)?(long)GlobalVariableGet(key):0);
+         key=DayOperabilityMetricKey(d,c,"bars"); g_dayOpsNewBars[d][c]=(GlobalVariableCheck(key)?(long)GlobalVariableGet(key):0);
+         key=DayOperabilityMetricKey(d,c,"signals"); g_dayOpsSignals[d][c]=(GlobalVariableCheck(key)?(long)GlobalVariableGet(key):0);
+         key=DayOperabilityMetricKey(d,c,"queued"); g_dayOpsQueued[d][c]=(GlobalVariableCheck(key)?(long)GlobalVariableGet(key):0);
+         key=DayOperabilityMetricKey(d,c,"accepted"); g_dayOpsAccepted[d][c]=(GlobalVariableCheck(key)?(long)GlobalVariableGet(key):0);
+         key=DayOperabilityMetricKey(d,c,"rejected"); g_dayOpsExecutionRejected[d][c]=(GlobalVariableCheck(key)?(long)GlobalVariableGet(key):0);
+      }
+   Print("DAY_OPERABILITY_PROFILE_LOADED | timeBasis=MT4_SERVER_WEEKDAY scope=ACCOUNT_AND_MAGIC persistence=TERMINAL_GLOBAL_VARIABLES tradingEffect=NONE");
+}
+void SaveDayOperabilityProfile()
+{
+   for(int d=0;d<7;d++)
+      for(int c=0;c<2;c++)
+      {
+         GlobalVariableSet(DayOperabilityMetricKey(d,c,"scans"),(double)g_dayOpsScans[d][c]);
+         GlobalVariableSet(DayOperabilityMetricKey(d,c,"fresh"),(double)g_dayOpsFreshQuotes[d][c]);
+         GlobalVariableSet(DayOperabilityMetricKey(d,c,"stale"),(double)g_dayOpsStaleQuotes[d][c]);
+         GlobalVariableSet(DayOperabilityMetricKey(d,c,"bars"),(double)g_dayOpsNewBars[d][c]);
+         GlobalVariableSet(DayOperabilityMetricKey(d,c,"signals"),(double)g_dayOpsSignals[d][c]);
+         GlobalVariableSet(DayOperabilityMetricKey(d,c,"queued"),(double)g_dayOpsQueued[d][c]);
+         GlobalVariableSet(DayOperabilityMetricKey(d,c,"accepted"),(double)g_dayOpsAccepted[d][c]);
+         GlobalVariableSet(DayOperabilityMetricKey(d,c,"rejected"),(double)g_dayOpsExecutionRejected[d][c]);
+      }
+}
+void RecordDayOperability(string sym,string eventName)
+{
+   int day=DayOperabilityWeekday(), assetClass=DayOperabilityAssetClass(sym);
+   if(eventName=="SCAN") g_dayOpsScans[day][assetClass]++;
+   else if(eventName=="FRESH_QUOTE") g_dayOpsFreshQuotes[day][assetClass]++;
+   else if(eventName=="STALE_QUOTE") g_dayOpsStaleQuotes[day][assetClass]++;
+   else if(eventName=="NEW_BAR") g_dayOpsNewBars[day][assetClass]++;
+   else if(eventName=="SIGNAL") g_dayOpsSignals[day][assetClass]++;
+   else if(eventName=="QUEUED") g_dayOpsQueued[day][assetClass]++;
+   else if(eventName=="ACCEPTED") g_dayOpsAccepted[day][assetClass]++;
+   else if(eventName=="EXECUTION_REJECTED") g_dayOpsExecutionRejected[day][assetClass]++;
+}
+void UpdateDayOperabilityProfile()
+{
+   datetime now=TimeCurrent();
+   if(g_lastDayOperabilityLog>0 && now-g_lastDayOperabilityLog<300) return;
+   g_lastDayOperabilityLog=now;
+   SaveDayOperabilityProfile();
+   int day=DayOperabilityWeekday();
+   for(int c=0;c<2;c++)
+   {
+      long scans=g_dayOpsScans[day][c], queued=g_dayOpsQueued[day][c];
+      long accepted=g_dayOpsAccepted[day][c];
+      double acceptance=(queued>0?100.0*(double)accepted/(double)queued:0.0);
+      Print("DAY_OPERABILITY_PROFILE | weekday=",DayOperabilityWeekdayName(day),
+         " weekdayIndex=",day," timeBasis=MT4_SERVER_DAY",
+         " assetClass=",(c==1?"RECOGNIZED_CRYPTO_24_7":"NON_CRYPTO_SESSION_UNVERIFIED"),
+         " scans=",scans," freshQuotes=",g_dayOpsFreshQuotes[day][c],
+         " staleQuotes=",g_dayOpsStaleQuotes[day][c]," newBars=",g_dayOpsNewBars[day][c],
+         " signals=",g_dayOpsSignals[day][c]," queued=",queued,
+         " accepted=",accepted," executionRejected=",g_dayOpsExecutionRejected[day][c],
+         " queuedAcceptancePct=",DoubleToString(acceptance,1),
+         " sessionClosedInferred=false tradingEffect=NONE");
+   }
 }
 
 string CumulativeProfitCarryKey()
