@@ -177,7 +177,7 @@ int      g_cycleCapacityRejects = 0;
 // Five-minute funnel counters; diagnostic only and never used by trading decisions.
 int g_flowStaleQuote=0, g_flowHistoryUnavailable=0, g_flowNoNewBar=0;
 int g_flowInsufficientHistory=0, g_flowSeriesWait=0;
-int g_flowPrefilterPass=0, g_flowPrefilterReject=0, g_flowSignalPass=0, g_flowSignalReject=0;
+int g_flowPrefilterPass=0, g_flowPrefilterReject=0, g_flowSignalPass=0;
 int g_flowQueued=0, g_flowAttempted=0, g_flowAccepted=0, g_flowExecutionRejected=0;
 int g_flowAliasSkipped=0, g_flowCapacitySkipped=0;
 datetime g_lastPermissionDiagnostic = 0;
@@ -1128,7 +1128,6 @@ void RunCycle()
       if(!Analyze(sym,cmd,score,why))
       {
          LogEntryFlow("SIGNAL",sym,-1,"REJECT",why,score,0.0);
-            g_flowSignalReject++;
          Reject(sym,why); g_cycleSignalRejects++;
          if(!IsTransientSignalReject(why))
             FinalizeScanBar(i,bt,"SIGNAL_"+why);
@@ -1403,7 +1402,7 @@ void RunCycle()
             " noNewBar=",g_flowNoNewBar," insufficientHistory=",g_flowInsufficientHistory,
             " seriesWait=",g_flowSeriesWait," prefilterPass=",g_flowPrefilterPass,
             " prefilterReject=",g_flowPrefilterReject," signalPass=",g_flowSignalPass,
-            " signalReject=",g_flowSignalReject," queued=",g_flowQueued,
+            " signalReject=",g_cycleSignalRejects," queued=",g_flowQueued,
             " executionAttempts=",g_flowAttempted," accepted=",g_flowAccepted,
             " executionRejected=",g_flowExecutionRejected," aliasSkipped=",g_flowAliasSkipped,
             " capacitySkipped=",g_flowCapacitySkipped," note=OBSERVABILITY_ONLY");
@@ -1475,7 +1474,7 @@ void RunCycle()
       g_cycleBuySignals=0; g_cycleSellSignals=0; g_cyclePrefilterRejects=0; g_cycleSignalRejects=0; g_cycleCapacityRejects=0;
          g_flowStaleQuote=0; g_flowHistoryUnavailable=0; g_flowNoNewBar=0;
          g_flowInsufficientHistory=0; g_flowSeriesWait=0; g_flowPrefilterPass=0;
-         g_flowPrefilterReject=0; g_flowSignalPass=0; g_flowSignalReject=0;
+         g_flowPrefilterReject=0; g_flowSignalPass=0;
          g_flowQueued=0; g_flowAttempted=0; g_flowAccepted=0; g_flowExecutionRejected=0;
          g_flowAliasSkipped=0; g_flowCapacitySkipped=0;
    }
