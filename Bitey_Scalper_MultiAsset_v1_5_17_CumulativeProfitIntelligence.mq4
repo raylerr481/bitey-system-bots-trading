@@ -1014,13 +1014,11 @@ void RunCycle()
       RecordDayOperability(sym,"SCAN");
       // Isolate stale feeds before touching bar retry state.
       // This prevents RETRY_PENDING/RETRY_READY churn while quotes are frozen.
-      if(!SymbolQuoteFresh(i,sym))
+      bool dayScanQuoteFresh=SymbolQuoteFresh(i,sym);
+      if(!dayScanQuoteFresh)
       {
          RecordDayOperability(sym,"STALE_QUOTE");
          g_flowStaleQuote++;
-      }
-      if(!SymbolQuoteFresh(i,sym))
-      {
          int staleBars=iBars(sym,InpSignalTF);
          datetime staleBar=iTime(sym,InpSignalTF,0);
          LogBarScanSymbolState(i,sym,"STALE_QUOTE_WAIT",staleBars,staleBar);
@@ -1054,9 +1052,9 @@ void RunCycle()
          continue;
       }
       DiagnoseSignalSeriesAge(i,sym,bt,bars);
-      RecordDayOperability(sym,"NEW_BAR");
 
       bool retrying=(g_pendingBar[i]==bt);
+      if(!retrying) RecordDayOperability(sym,"NEW_BAR");
       if(!retrying && g_quoteRecoveryPendingAnalysis[i])
       {
          Print("QUOTE_RECOVERY_PENDING_SUPERSEDED | symbol=",sym,
