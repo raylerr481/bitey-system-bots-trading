@@ -1034,6 +1034,7 @@ void RunCycle()
       if(!dayScanQuoteFresh)
       {
          RecordDayOperability(sym,"STALE_QUOTE");
+         LogOpportunityDisposition("SCAN_DATA",sym,-1,"STALE_QUOTE",0,0.0,0.0);
          g_flowStaleQuote++;
          int staleBars=iBars(sym,InpSignalTF);
          datetime staleBar=iTime(sym,InpSignalTF,0);
@@ -1048,6 +1049,7 @@ void RunCycle()
          g_cycleHistoryUnavailable++;
          g_flowHistoryUnavailable++;
          LogBarScanSymbolState(i,sym,"HISTORY_UNAVAILABLE",bars,bt);
+         LogOpportunityDisposition("SCAN_DATA",sym,-1,"HISTORY_UNAVAILABLE",0,0.0,0.0);
          continue;
       }
       // If history was unavailable during OnInit, establish a baseline now.
@@ -1104,6 +1106,7 @@ void RunCycle()
          g_cycleInsufficientHistory++;
          g_flowInsufficientHistory++;
          LogBarScanSymbolState(i,sym,"NEW_BAR_INSUFFICIENT_HISTORY",bars,bt);
+         LogOpportunityDisposition("SCAN_DATA",sym,-1,"INSUFFICIENT_HISTORY",0,0.0,0.0);
          continue;
       }
 
@@ -1115,6 +1118,7 @@ void RunCycle()
       {
          g_flowSeriesWait++;
             LogBarScanSymbolState(i,sym,"SERIES_RECOVERY_BACKOFF",bars,bt);
+         LogOpportunityDisposition("SCAN_DATA",sym,-1,"SERIES_RECOVERY_BACKOFF",0,0.0,0.0);
          continue;
       }
       string seriesGuardReason="";
@@ -1123,7 +1127,8 @@ void RunCycle()
          int seriesDelay=MathMax(1,g_seriesRetryDelaySec[i]);
             g_flowSeriesWait++;
          LogBarScanSymbolState(i,sym,"ENTRY_SERIES_"+seriesGuardReason,bars,bt);
-         Print("SERIES_RECOVERY_PENDING | symbol=",sym,
+         LogOpportunityDisposition("SCAN_DATA",sym,-1,"ENTRY_SERIES_"+seriesGuardReason,0,0.0,0.0);
+         Print("SERIES_RECOVERY_PENDING | symbol=",
             " timeframe=",(int)InpSignalTF,
             " state=",seriesGuardReason,
             " currentBarTime=",(long)bt,
