@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//| Bitey_Scalper_MultiAsset_v1_5_28_InstrumentFeedHealthIntelligence.mq4 |
+//| Bitey_Scalper_MultiAsset_v1_5_29_TradeProtectionEvidenceIntelligence.mq4 |
 //| Adaptive loss manager retained; net-profit protection triggers at 50% giveback from peak. |
 //| Existing signals and adaptive SL/TP are retained; no SL widening or martingale. |
 //| Loss response scales new-entry risk; open positions retain existing SL/TP management. |
