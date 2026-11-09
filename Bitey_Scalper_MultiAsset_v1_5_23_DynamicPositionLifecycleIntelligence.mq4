@@ -210,7 +210,11 @@ int      g_sessionAttempts[MAX_SYMBOLS];
 int      g_sessionAccepted[MAX_SYMBOLS];
 int      g_sessionRejected[MAX_SYMBOLS];
 int      g_sessionClosed[MAX_SYMBOLS];
+int      g_sessionWins[MAX_SYMBOLS];
+int      g_sessionLosses[MAX_SYMBOLS];
 double   g_sessionNet[MAX_SYMBOLS];
+int      g_sessionTotalWins = 0;
+int      g_sessionTotalLosses = 0;
 int      g_processedCloseTickets[2048];
 int      g_processedCloseCount = 0;
 int      g_eaCloseReasonTickets[2048];
@@ -701,10 +705,23 @@ void SyncClosedTradeStats()
             " net=",DoubleToString(net,2),
             " magic=",OrderMagicNumber());
 
+      if(net>0.0) g_sessionTotalWins++;
+      else if(net<0.0) g_sessionTotalLosses++;
+      int sessionClosedTotal=g_sessionTotalWins+g_sessionTotalLosses;
+      double sessionWinRate=(sessionClosedTotal>0?100.0*g_sessionTotalWins/sessionClosedTotal:0.0);
+      Print("SESSION_WIN_RATE_DIAGNOSTIC | wins=",g_sessionTotalWins,
+         " losses=",g_sessionTotalLosses,
+         " closed=",sessionClosedTotal,
+         " winRatePct=",DoubleToString(sessionWinRate,2),
+         " target=MORE_WINS_THAN_LOSSES",
+         " targetReached=",(g_sessionTotalWins>g_sessionTotalLosses?"true":"false"),
+         " mode=OBSERVATION_ONLY");
       int idx=SessionSymbolIndex(OrderSymbol());
       if(idx>=0)
       {
          g_sessionClosed[idx]++;
+         if(net>0.0) g_sessionWins[idx]++;
+         else if(net<0.0) g_sessionLosses[idx]++;
          g_sessionNet[idx]+=net;
          Print("SESSION_TRADE_STAT | symbol=",OrderSymbol()," ticket=",ticket,
                " gross=",DoubleToString(gross,2),
@@ -712,6 +729,9 @@ void SyncClosedTradeStats()
                " swap=",DoubleToString(swap,2),
                " net=",DoubleToString(net,2),
                " symbolClosed=",g_sessionClosed[idx],
+               " symbolWins=",g_sessionWins[idx],
+               " symbolLosses=",g_sessionLosses[idx],
+               " symbolWinRatePct=",DoubleToString((g_sessionWins[idx]+g_sessionLosses[idx]>0?100.0*g_sessionWins[idx]/(g_sessionWins[idx]+g_sessionLosses[idx]):0.0),2),
                " symbolSessionNet=",DoubleToString(g_sessionNet[idx],2));
       }
    }
