@@ -3213,9 +3213,11 @@ void UpdateTradeProtectionEvidence()
       }
    }
 
+   int currencyGroups=0;
    for(int c=0;c<8;c++)
    {
       if(grossLots[c]<=0.0) continue;
+      currencyGroups++;
       FileSeek(g_tradeProtectionCsvHandle,0,SEEK_END);
       FileWrite(g_tradeProtectionCsvHandle,
          TimeToString(now,TIME_DATE|TIME_SECONDS),"CURRENCY_CLUSTER",0,"","",
@@ -3227,7 +3229,7 @@ void UpdateTradeProtectionEvidence()
    }
    FileFlush(g_tradeProtectionCsvHandle);
    Print("TRADE_PROTECTION_EVIDENCE_SNAPSHOT | openPositions=",openCount,
-      " currenciesReported=",8,
+      " currenciesWithExposure=",currencyGroups,
       " cadenceSec=",interval,
       " action=OBSERVATION_ONLY_NO_ORDER_CLOSE_NO_ORDER_MODIFY_NO_ENTRY_OR_RISK_CHANGE");
 }
