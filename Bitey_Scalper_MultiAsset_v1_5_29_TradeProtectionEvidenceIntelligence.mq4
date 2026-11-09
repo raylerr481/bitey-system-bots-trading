@@ -3168,6 +3168,11 @@ void UpdateTradeProtectionEvidence()
       string peakKey=AuditPeakKey(ticket),troughKey=AuditTroughKey(ticket);
       double mfe=(GlobalVariableCheck(peakKey)?GlobalVariableGet(peakKey):net);
       double mae=(GlobalVariableCheck(troughKey)?GlobalVariableGet(troughKey):net);
+      // Maintain extrema in this diagnostic layer too, even if the legacy audit CSV cannot be opened.
+      mfe=MathMax(mfe,net);
+      mae=MathMin(mae,net);
+      GlobalVariableSet(peakKey,mfe);
+      GlobalVariableSet(troughKey,mae);
       double giveback=(mfe>0.0?MathMax(0.0,mfe-net):0.0);
       double capture=(mfe>0.0?100.0*net/mfe:0.0);
       double initialRisk=(GlobalVariableCheck(InitialRiskKey(ticket))?GlobalVariableGet(InitialRiskKey(ticket)):0.0);
