@@ -1726,6 +1726,7 @@ string StaleQuoteDispositionReason(int index,int quoteAgeSec,datetime lastTickTi
 string QuoteFreshnessSourceState(int index,string sym,datetime tickTime,double bid,double ask,double point)
 {
    if(index<0 || index>=g_symbolCount) return("SYMBOL_INDEX_UNKNOWN");
+   if(!((bool)SymbolInfoInteger(sym,SYMBOL_SELECT))) return("SYMBOL_NOT_SELECTED");
    if(tickTime<=0) return("NO_TICK_TIMESTAMP");
    datetime serverNow=TimeCurrent();
    if(tickTime>serverNow+5) return("TIME_SOURCE_MISMATCH");
@@ -1734,7 +1735,9 @@ string QuoteFreshnessSourceState(int index,string sym,datetime tickTime,double b
    if(g_quoteDiagLastTick[index]<=0 || tickTime>g_quoteDiagLastTick[index])
       g_quoteDiagNoAdvanceCount[index]=0;
    else if(tickTime==g_quoteDiagLastTick[index])
+   {
       if(g_quoteDiagNoAdvanceCount[index]<1000000) g_quoteDiagNoAdvanceCount[index]++;
+   }
    g_quoteDiagLastTick[index]=tickTime;
 
    long rawAge=(long)serverNow-(long)tickTime;
