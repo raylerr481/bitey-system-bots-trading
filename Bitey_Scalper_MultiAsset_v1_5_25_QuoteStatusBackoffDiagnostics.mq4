@@ -1096,6 +1096,10 @@ void RunCycle()
           string staleAssetClass=OpportunityAssetClass(sym);
           string staleSessionStatus=OpportunitySessionStatus(sym);
           string staleDispositionReason=StaleQuoteDispositionReason(i,staleQuoteAgeSec,staleLastTickTime);
+          // One immediate bounded resample: no Sleep, no retry loop and no entry authorization.
+          datetime staleSecondTickTime=(datetime)MarketInfo(sym,MODE_TIME);
+          int staleSecondQuoteAge=QuoteAgeSeconds(sym);
+          bool staleTickChangedDuringSample=(staleSecondTickTime>staleLastTickTime);
           double staleBid=MarketInfo(sym,MODE_BID);
           double staleAsk=MarketInfo(sym,MODE_ASK);
           double stalePoint=MarketInfo(sym,MODE_POINT);
@@ -1108,6 +1112,9 @@ void RunCycle()
              " quoteAgeSec=",staleQuoteAgeSec,
              " maxAgeSec=",InpMaxQuoteAgeSec,
              " lastTickTime=",(long)staleLastTickTime,
+             " secondTickTime=",(long)staleSecondTickTime,
+             " secondQuoteAgeSec=",staleSecondQuoteAge,
+             " tickChangedDuringSample=",(staleTickChangedDuringSample?"true":"false"),
              " serverTime=",(long)TimeCurrent(),
              " bid=",DoubleToString(staleBid,DigitsForSymbol(sym)),
              " ask=",DoubleToString(staleAsk,DigitsForSymbol(sym)),
