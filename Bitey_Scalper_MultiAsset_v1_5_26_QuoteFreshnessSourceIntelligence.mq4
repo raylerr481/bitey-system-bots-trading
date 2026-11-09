@@ -1734,7 +1734,7 @@ string QuoteFreshnessSourceState(int index,string sym,datetime tickTime,double b
    if(g_quoteDiagLastTick[index]<=0 || tickTime>g_quoteDiagLastTick[index])
       g_quoteDiagNoAdvanceCount[index]=0;
    else if(tickTime==g_quoteDiagLastTick[index])
-      g_quoteDiagNoAdvanceCount[index]=MathMin(1000000,g_quoteDiagNoAdvanceCount[index]+1);
+      if(g_quoteDiagNoAdvanceCount[index]<1000000) g_quoteDiagNoAdvanceCount[index]++;
    g_quoteDiagLastTick[index]=tickTime;
 
    long rawAge=(long)serverNow-(long)tickTime;
