@@ -26,7 +26,7 @@ All trade net values use `OrderProfit()+OrderSwap()+OrderCommission()`. Floating
 
 Daily P/L state is a soft risk-sizing controller, not a new entry filter:
 - Existing daily levels continue to scale new-entry risk by their configured factors (default 1.00 / 0.75 / 0.50 / 0.25).
-- Daily P/L levels no longer add score-floor points, an extra HTF hard rejection, extra ADX requirements, or a tighter hard spread ceiling.
+- Daily P/L levels no longer add score-floor points, an extra HTF hard rejection, extra ADX requirements, or a tighter hard spread ceiling. The separate daily-sample quality flag also no longer adds an extra score-floor penalty.
 - Existing base signal quality, quote freshness, broker permission, spread, exposure, aggregate-risk, stop validity and independent rolling-loss safeguards remain in force.
 - No daily hard entry lock, no forced entry, no lot/risk increase to catch up, no filter relaxation, no daily profit cap and no automatic close of profitable positions to hit the objective.
 - The existing multi-family signal engine and candidate quality ranking remain in place. This version does not invent or hot-swap untested strategy families; strategy-level attribution is a separate evidence task.
