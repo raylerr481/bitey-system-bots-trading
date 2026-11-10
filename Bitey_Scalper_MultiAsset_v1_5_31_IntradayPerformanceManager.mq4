@@ -4880,7 +4880,7 @@ void UpdateIntradayPerformanceManager()
       " serverHour=",TimeHour(now)," closed=",total," wins=",wins," losses=",losses,
       " winRatePct=",DoubleToString(winRate,1),
       " grossWinsNet=",DoubleToString(grossWins,2),
-      " grossLossesNet=",-DoubleToString(grossLosses,2),
+      " grossLossesNet=",DoubleToString(-grossLosses,2),
       " realizedNet=",DoubleToString(realized,2),
       " floatingNet=",DoubleToString(floating,2),
       " liveCombinedNet=",DoubleToString(liveCombined,2),
