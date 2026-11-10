@@ -1,12 +1,12 @@
 //+------------------------------------------------------------------+
-//| Bitey_Scalper_MultiAsset_v1_5_29_TradeProtectionEvidenceIntelligence.mq4 |
+//| Bitey_Scalper_MultiAsset_v1_5_30_MarketSessionAwareQuoteRecoveryIntelligence.mq4 |
 //| Adaptive loss manager retained; net-profit protection triggers at 50% giveback from peak. |
 //| Existing signals and adaptive SL/TP are retained; no SL widening or martingale. |
 //| Loss response scales new-entry risk; open positions retain existing SL/TP management. |
 //+------------------------------------------------------------------+
 #property strict
 #property version   "1.530"
-#property description "Bitey v1.5.29 experimental: trade protection evidence and currency-cluster diagnostics; trading logic unchanged"
+#property description "Bitey v1.5.30 experimental: broker-session-aware stale-quote diagnostics; entry and protection logic unchanged"
 
 #define EA_VERSION          "1.5.30-experimental"
 #define MAX_SYMBOLS         256
