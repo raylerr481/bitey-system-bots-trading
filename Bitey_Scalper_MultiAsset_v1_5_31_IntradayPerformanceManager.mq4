@@ -31,12 +31,12 @@ input int              InpCumulativeProfitLogIntervalSec = 300; // Snapshot cade
 input bool             InpEnableDailyEntryProtection = true; // Enables progressive selectivity; never hard-locks entries by daily loss alone
 input double           InpSelectivityLevel1LossPct = 1.0; // Net daily loss %: Level 1
 input double           InpSelectivityLevel3LossPct = 3.0; // Net daily loss %: Level 3
-input double           InpSelectivityScoreStep = 5.0; // Added minimum score per selectivity level
+input double           InpSelectivityScoreStep = 5.0; // Legacy compatibility input; v1.5.31 daily state no longer raises the hard score floor
 input double           InpSelectivityRiskFactorL1 = 0.75;
 input double           InpSelectivityRiskFactorL2 = 0.50;
 input double           InpSelectivityRiskFactorL3 = 0.25;
-input double           InpSelectivitySpreadFactor = 0.90; // Tighten hard spread ceiling per level
-input double           InpSelectivityADXStep = 2.0; // Additional ADX requirement per level
+input double           InpSelectivitySpreadFactor = 0.90; // Legacy compatibility input; daily state no longer tightens hard spread eligibility
+input double           InpSelectivityADXStep = 2.0; // Legacy compatibility input; daily state no longer raises the hard ADX gate
 input int              InpSelectivityRecoveryStableCycles = 1200; // ~20 minutes at the one-second cycle; stable cycles required before lowering a level
 input int              InpMaxOpenPositions      = 5;       // Clamped to 1..5, one position per asset
 
