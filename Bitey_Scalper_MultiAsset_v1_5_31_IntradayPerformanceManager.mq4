@@ -1389,16 +1389,18 @@ void RunCycle()
       // Daily P/L adaptation changes new-entry risk sizing, not signal eligibility.
       // Base score and independent rolling-loss evidence remain authoritative.
       double requiredScore=InpMinEntryScore;
-      if(InpEnableDailyAdaptiveQuality && dailyStrict)
-         requiredScore+=MathMax(0.0,InpDailyAdaptiveExtraScore);
+      // Daily P/L and daily sample state do not add score-floor penalties.
+      // Only independent rolling-loss evidence may add a score requirement.
       if(InpEnableRollingLossPolicy)
          requiredScore+=MathMax(0.0,InpLossPolicyExtraScore)*(globalLevel+assetLevel+directionLevel);
       // Daily P/L state is deliberately not a hard HTF entry gate.
       // Broker permissions, quote freshness, base signal quality and rolling-loss safeguards remain active.
       if(score<requiredScore)
       {
-         string rejectReason=(g_analyticalSelectivityLevel>0?"PROGRESSIVE_SELECTIVITY_SCORE":"ENTRY_SCORE_BELOW_MINIMUM");
-         LogRejectedSelectivityCandidate(sym,cmd,score,requiredScore,g_analyticalSelectivityLevel,rejectReason);
+         string rejectReason="ENTRY_SCORE_BELOW_BASE_OR_ROLLING_LOSS_REQUIREMENT";
+         if(InpEnableRollingLossPolicy && (globalLevel+assetLevel+directionLevel)>0)
+            rejectReason="ROLLING_LOSS_SCORE_REQUIREMENT";
+         LogRejectedSelectivityCandidate(sym,cmd,score,requiredScore,0,rejectReason);
          LogEntryFlow("SCORE",sym,cmd,"REJECT",rejectReason,score,requiredScore);
          Reject(sym,rejectReason); g_cycleSignalRejects++;
          FinalizeScanBar(i,bt,rejectReason);
