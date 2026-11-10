@@ -1125,9 +1125,11 @@ void RunCycle()
           string staleAssetClass=OpportunityAssetClass(sym);
           int brokerSessionsToday=0,brokerSessionsYesterday=0,brokerSecondsToBoundary=-1;
           bool brokerScheduleAvailable=false;
-          string staleSessionStatus=OpportunitySessionStatus(sym);
           string brokerSessionState=BrokerSessionState(sym,brokerSessionsToday,
              brokerSessionsYesterday,brokerScheduleAvailable,brokerSecondsToBoundary);
+          string staleSessionStatus=brokerSessionState;
+          if(IsExplicitSession24x7(sym)) staleSessionStatus="EXPLICIT_24X7_ALLOWLIST_NOT_LIVE_SESSION_PROOF";
+          else if(IsCrypto(sym)) staleSessionStatus="CRYPTO_EXPECTED_24_7_NOT_BROKER_CONFIRMED";
           string staleDispositionReason=StaleQuoteDispositionReason(i,staleQuoteAgeSec,staleLastTickTime);
           // One immediate bounded resample: no Sleep, no retry loop and no entry authorization.
           datetime staleSecondTickTime=(datetime)MarketInfo(sym,MODE_TIME);
