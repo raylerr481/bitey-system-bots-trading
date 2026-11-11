@@ -2786,7 +2786,7 @@ void ManageWinnerPyramiding()
          string attemptKey=PyramidAttemptKey(parentTicket,stage);
          if(GlobalVariableCheck(stageKey)) continue;
          double lastAttempt=(GlobalVariableCheck(attemptKey)?GlobalVariableGet(attemptKey):0.0);
-         if(lastAttempt>0.0 && TimeCurrent()-(datetime)lastAttempt<MathMax(10,InpPyramidRetrySeconds)) continue;
+         if(lastAttempt>0.0 && TimeCurrent()-(datetime)lastAttempt<MathMax(10,InpPyramidRetrySeconds)) break;
          double trigger=atr*(MathMax(0.1,InpPyramidFirstTriggerATR)+
                              (stage-1)*MathMax(0.1,InpPyramidStageSpacingATR));
          if(favorable+point>=trigger) stageToOpen=stage;
