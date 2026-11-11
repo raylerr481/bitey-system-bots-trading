@@ -4588,8 +4588,8 @@ double FloatingNetForEA()
    for(int i=OrdersTotal()-1;i>=0;i--)
    {
       if(!OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) continue;
-      int type=OrderType();
-      if(OrderMagicNumber()!=InpMagic || (type!=OP_BUY && type!=OP_SELL)) continue;
+      int openType=OrderType();
+      if(OrderMagicNumber()!=InpMagic || (openType!=OP_BUY && openType!=OP_SELL)) continue;
       floating+=OrderProfit()+OrderSwap()+OrderCommission();
    }
    return(floating);
