@@ -1,4 +1,4 @@
-﻿//+------------------------------------------------------------------+
+//+------------------------------------------------------------------+
 //| Bitey_Scalper_MultiAsset_v1_5_35_AdaptiveLeverageWinnerBoost.mq4 |
 //| v1.5.35: leverage/margin caps shrink with the adaptive risk factor; moderate winner boost (max 1.5x) |
 //| for an asset with a clean winning run. Boost stays inside aggregate-risk, currency and leverage caps. |
@@ -1557,12 +1557,12 @@ void RunCycle()
                g_flowAttempted++;
             minimumOneAttemptMade=true;
             if(g_candCmd[c]==OP_BUY) attemptedBuy++; else if(g_candCmd[c]==OP_SELL) attemptedSell++;
-            double qPenalty=g_candScore[c]-g_candPriority[c];
+            double executionPenalty=g_candScore[c]-g_candPriority[c];
             Print("EXECUTION_PRIORITY | symbol=",g_candSym[c],
                   " side=",(g_candCmd[c]==OP_BUY?"BUY":"SELL"),
                   " signalScore=",DoubleToString(g_candScore[c],1),
                   " spreadPctOfStop=",DoubleToString(g_candSpreadPct[c],1),
-                  " qualityPenalty=",DoubleToString(qPenalty,1),
+                  " qualityPenalty=",DoubleToString(executionPenalty,1),
                   " sessionNetAdjustment=",DoubleToString(SessionPerformanceAdjustment(g_candSym[c]),1),
                   " priorityScore=",DoubleToString(g_candPriority[c],1),
                   " rank=",attempted,"/",nc);
@@ -3930,16 +3930,16 @@ void ManageExits()
       {
          int modifyError=GetLastError();
          bool closedInHistory=false;
-         datetime confirmedCloseTime=0;
+         datetime modifyConfirmedCloseTime=0;
          if(OrderSelect(ticket,SELECT_BY_TICKET,MODE_HISTORY) && OrderCloseTime()>0)
          {
             closedInHistory=true;
-            confirmedCloseTime=OrderCloseTime();
+            modifyConfirmedCloseTime=OrderCloseTime();
          }
          if(closedInHistory)
             Print("ORDER_ALREADY_CLOSED | ticket=",ticket," symbol=",sym,
                   " stage=MODIFY_RESPONSE error=",modifyError,
-                  " historyConfirmed=true closeTimeServer=",(long)confirmedCloseTime,
+                  " historyConfirmed=true closeTimeServer=",(long)modifyConfirmedCloseTime,
                   " action=CLASSIFY_CLOSED_NO_RETRY");
          else
             Print("ADAPTIVE_MODIFY_FAILED | ticket=",ticket," symbol=",sym,
