@@ -3910,14 +3910,12 @@ void ManageExits()
       if(OrderModify(ticket,entry,fSL,fTP,0,clrNONE))
       {
          if(slUp)
-         {
-            slModifyKey="BiteySLMod_"+IntegerToString(AccountNumber())+"_"+IntegerToString(ticket);
-            GlobalVariableSet(slModifyKey,(double)TimeCurrent());
+         {            string slModifyUpdateKey="BiteySLMod_"+IntegerToString(AccountNumber())+"_"+IntegerToString(ticket);
+            GlobalVariableSet(slModifyUpdateKey,(double)TimeCurrent());
          }
          if(tpUp)
-         {
-            tpModifyKey="BiteyTPMod_"+IntegerToString(AccountNumber())+"_"+IntegerToString(ticket);
-            GlobalVariableSet(tpModifyKey,(double)TimeCurrent());
+         {            string tpModifyUpdateKey="BiteyTPMod_"+IntegerToString(AccountNumber())+"_"+IntegerToString(ticket);
+            GlobalVariableSet(tpModifyUpdateKey,(double)TimeCurrent());
          }
          AuditLifecycleSnapshot(ticket,"ADAPTIVE_MODIFY",
             StringFormat("oldSL=%.10f;newSL=%.10f;oldTP=%.10f;newTP=%.10f;slChanged=%s;tpChanged=%s",
