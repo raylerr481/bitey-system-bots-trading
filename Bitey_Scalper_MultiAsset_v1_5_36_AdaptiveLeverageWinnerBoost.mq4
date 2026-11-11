@@ -1631,9 +1631,9 @@ void RunCycle()
                if(!HasPositionForKey(AssetIdentityKey(g_candSym[pendingC])) && CountOpenPositions()>=maxPos)
                   g_flowCapacitySkipped++;
             }
-            for(int pendingC=attempted;pendingC<nc;pendingC++)
+            for(int pendingCandidate=attempted;pendingCandidate<nc;pendingCandidate++)
          {
-            int pendingIdx=ScanSymbolIndex(g_candSym[pendingC]);
+            int pendingIdx=ScanSymbolIndex(g_candSym[pendingCandidate]);
             if(pendingIdx>=0) FinalizeScanBar(pendingIdx,g_pendingBar[pendingIdx],"PORTFOLIO_CAPACITY_REACHED");
          }
          int capacityNotAttempted=MathMax(0,nc-attempted);
@@ -1665,10 +1665,10 @@ void RunCycle()
    UpdateScanDashboard(nc);
 
    datetime now=TimeCurrent();
-   uint nowTick=GetTickCount();
-   if(g_lastHeartbeatTick==0 || nowTick-g_lastHeartbeatTick>=300000)
+   uint heartbeatTick=GetTickCount();
+   if(g_lastHeartbeatTick==0 || heartbeatTick-g_lastHeartbeatTick>=300000)
    {
-      g_lastHeartbeatTick=nowTick;
+      g_lastHeartbeatTick=heartbeatTick;
       g_lastHeartbeat=now;
       long serverLocalOffset=(long)TimeLocal()-(long)TimeCurrent();
       Print("ENTRY_FUNNEL_DIAGNOSTICS | windowSec=300",
@@ -3417,8 +3417,8 @@ void UpdateTradeProtectionEvidence()
    {
       if(!OrderSelect(pos,SELECT_BY_POS,MODE_TRADES)) continue;
       if(OrderMagicNumber()!=InpMagic) continue;
-      int type=OrderType();
-      if(type!=OP_BUY && type!=OP_SELL) continue;
+      int evidenceOrderType=OrderType();
+      if(evidenceOrderType!=OP_BUY && evidenceOrderType!=OP_SELL) continue;
 
       int ticket=OrderTicket();
       string sym=OrderSymbol();
@@ -3426,7 +3426,7 @@ void UpdateTradeProtectionEvidence()
       double entry=OrderOpenPrice();
       double sl=OrderStopLoss(),tp=OrderTakeProfit();
       double bid=MarketInfo(sym,MODE_BID),ask=MarketInfo(sym,MODE_ASK);
-      double mark=(type==OP_BUY?bid:ask);
+      double mark=(evidenceOrderType==OP_BUY?bid:ask);
       if(mark<=0.0) mark=entry;
       double gross=OrderProfit(),commission=OrderCommission(),swap=OrderSwap();
       double net=gross+commission+swap;
@@ -3442,12 +3442,12 @@ void UpdateTradeProtectionEvidence()
       double capture=(mfe>0.0?100.0*net/mfe:0.0);
       double initialRisk=(GlobalVariableCheck(InitialRiskKey(ticket))?GlobalVariableGet(InitialRiskKey(ticket)):0.0);
       double adverseStopDistance=0.0,protectedDistance=0.0;
-      if(type==OP_BUY && sl>0.0)
+      if(evidenceOrderType==OP_BUY && sl>0.0)
       {
          adverseStopDistance=MathMax(0.0,entry-sl);
          protectedDistance=MathMax(0.0,sl-entry);
       }
-      else if(type==OP_SELL && sl>0.0)
+      else if(evidenceOrderType==OP_SELL && sl>0.0)
       {
          adverseStopDistance=MathMax(0.0,sl-entry);
          protectedDistance=MathMax(0.0,entry-sl);
@@ -3456,7 +3456,7 @@ void UpdateTradeProtectionEvidence()
       double protectedValue=(protectedDistance>0.0?EstimateRisk(sym,lots,protectedDistance):0.0);
       if(residualRisk>=1.0e11) residualRisk=0.0;
       if(protectedValue>=1.0e11) protectedValue=0.0;
-      string side=(type==OP_BUY?"BUY":"SELL");
+      string side=(evidenceOrderType==OP_BUY?"BUY":"SELL");
       string base="",quote="";
       bool fx=EvidenceFxPair(sym,base,quote);
       string quality=(fx?"FX_PAIR_PARSED":"NON_FX_OR_UNRECOGNIZED_CURRENCY");
@@ -3472,7 +3472,7 @@ void UpdateTradeProtectionEvidence()
       if(fx)
       {
          int bi=EvidenceCurrencyIndex(base),qi=EvidenceCurrencyIndex(quote);
-         double sign=(type==OP_BUY?1.0:-1.0);
+         double sign=(evidenceOrderType==OP_BUY?1.0:-1.0);
          if(bi>=0){signedLots[bi]+=sign*lots;grossLots[bi]+=lots;legRisk[bi]+=residualRisk;}
          if(qi>=0){signedLots[qi]-=sign*lots;grossLots[qi]+=lots;legRisk[qi]+=residualRisk;}
       }
@@ -3517,9 +3517,9 @@ bool CloseTicket(int ticket,string reason)
 {
    if(!OrderSelect(ticket,SELECT_BY_TICKET,MODE_TRADES) || OrderCloseTime()>0) return(false);
    string sym=OrderSymbol();
-   int type=OrderType();
+   int evidenceOrderType=OrderType();
    double lots=OrderLots();
-   double px=(type==OP_BUY?MarketInfo(sym,MODE_BID):MarketInfo(sym,MODE_ASK));
+   double px=(evidenceOrderType==OP_BUY?MarketInfo(sym,MODE_BID):MarketInfo(sym,MODE_ASK));
    int digits=(int)MarketInfo(sym,MODE_DIGITS);
    if(px<=0) return(false);
    double net=OrderProfit()+OrderSwap()+OrderCommission();
@@ -3899,7 +3899,7 @@ void ManageExits()
       {
          datetime confirmedCloseTime=0;
          if(OrderSelect(ticket,SELECT_BY_TICKET,MODE_HISTORY) && OrderCloseTime()>0)
-            confirmedCloseTimeAfter=OrderCloseTime();
+            confirmedCloseTime=OrderCloseTime();
          Print("ORDER_ALREADY_CLOSED | ticket=",ticket," symbol=",sym,
                " stage=PRE_MODIFY historyConfirmed=",(confirmedCloseTime>0?"true":"false"),
                " closeTimeServer=",(long)confirmedCloseTime,
@@ -3930,7 +3930,7 @@ void ManageExits()
       {
          int modifyError=GetLastError();
          bool closedInHistory=false;
-         datetime confirmedCloseTimeAfter=0;
+         datetime confirmedCloseTime=0;
          if(OrderSelect(ticket,SELECT_BY_TICKET,MODE_HISTORY) && OrderCloseTime()>0)
          {
             closedInHistory=true;
@@ -3939,7 +3939,7 @@ void ManageExits()
          if(closedInHistory)
             Print("ORDER_ALREADY_CLOSED | ticket=",ticket," symbol=",sym,
                   " stage=MODIFY_RESPONSE error=",modifyError,
-                  " historyConfirmed=true closeTimeServer=",(long)confirmedCloseTimeAfter,
+                  " historyConfirmed=true closeTimeServer=",(long)confirmedCloseTime,
                   " action=CLASSIFY_CLOSED_NO_RETRY");
          else
             Print("ADAPTIVE_MODIFY_FAILED | ticket=",ticket," symbol=",sym,
@@ -5206,8 +5206,8 @@ void UpdateIntradayPerformanceManager()
    for(int p=OrdersTotal()-1;p>=0;p--)
    {
       if(!OrderSelect(p,SELECT_BY_POS,MODE_TRADES)) continue;
-      int type=OrderType();
-      if(OrderMagicNumber()!=InpMagic || (type!=OP_BUY && type!=OP_SELL)) continue;
+      int floatingOrderType=OrderType();
+      if(OrderMagicNumber()!=InpMagic || (floatingOrderType!=OP_BUY && floatingOrderType!=OP_SELL)) continue;
       double openNet=OrderProfit()+OrderSwap()+OrderCommission();
       floating+=openNet; openPositions++;
       if(openNet>0.0) openWinners++;
