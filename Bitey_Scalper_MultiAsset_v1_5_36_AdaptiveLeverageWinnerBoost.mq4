@@ -1626,9 +1626,9 @@ void RunCycle()
                }
             }
          }
-         for(int pendingC=attempted;pendingC<nc;pendingC++)
+         for(int pendingCapacityIdx=attempted;pendingCapacityIdx<nc;pendingCapacityIdx++)
             {
-               if(!HasPositionForKey(AssetIdentityKey(g_candSym[pendingC])) && CountOpenPositions()>=maxPos)
+               if(!HasPositionForKey(AssetIdentityKey(g_candSym[pendingCapacityIdx])) && CountOpenPositions()>=maxPos)
                   g_flowCapacitySkipped++;
             }
             for(int pendingCandidate=attempted;pendingCandidate<nc;pendingCandidate++)
