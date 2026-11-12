@@ -15,7 +15,7 @@
 
 #define EA_VERSION          "1.5.37-analysis-only"
 #define MAX_SYMBOLS         256
-#define HARD_MAX_POSITIONS  5
+#define HARD_MAX_POSITIONS  10 // v1.5.37 analysis capacity; intended split 5 base + 5 winner-additions
 
 //--- universe and timeframes
 input string           InpSymbolsCSV            = "";      // Blank = Market Watch; broker-listed USDT symbols are always added
@@ -43,7 +43,7 @@ input double           InpSelectivityRiskFactorL3 = 0.25;
 input double           InpSelectivitySpreadFactor = 0.90; // Legacy compatibility input; daily state no longer tightens hard spread eligibility
 input double           InpSelectivityADXStep = 2.0; // Legacy compatibility input; daily state no longer raises the hard ADX gate
 input int              InpSelectivityRecoveryStableCycles = 1200; // ~20 minutes at the one-second cycle; stable cycles required before lowering a level
-input int              InpMaxOpenPositions      = 5;       // Clamped to 1..5, one position per asset
+input int              InpMaxOpenPositions      = 10;      // Analysis capacity: up to 10 total; intended allocation 5 base + 5 winner-additions (add-on execution not implemented)
 
 //--- leverage and margin control (v1.5.34)
 input bool             InpEnableLeverageControl = true;    // Caps lot size by effective leverage and margin usage; never raises risk-based lots
@@ -507,7 +507,7 @@ void OnTimer() { RunCycle(); }
 
 int MaxPositions()
 {
-   return(MathMin(HARD_MAX_POSITIONS,MathMax(1,InpMaxOpenPositions)));
+   return(MathMin(HARD_MAX_POSITIONS,MathMax(1,InpMaxOpenPositions))); // Total cap only; does not implement separate base/add-on buckets
 }
 
 int SessionSymbolIndex(string sym)
