@@ -166,11 +166,6 @@ void BuildUniverse()
       g_oldModify[k]=g_lastModify[k];
    }
 
-   g_symbolCount=0;
-   ArrayResize(g_symbols,0);
-   ArrayResize(g_lastSignalBar,0);
-   ArrayResize(g_lastModify,0);
-
    int brokerTotal=0, selected=0, rejected=0;
    bool explicitList=(StringLen(InpSymbolsCSV)>0);
    bool marketWatchOnly=(!explicitList && InpScanMarketWatch);
@@ -188,6 +183,12 @@ void BuildUniverse()
       }
       for(int i=0;i<brokerTotal;i++) discovered[i]=SymbolName(i,marketWatchOnly);
    }
+
+   // Only clear the live universe after discovery memory has been allocated.
+   g_symbolCount=0;
+   ArrayResize(g_symbols,0);
+   ArrayResize(g_lastSignalBar,0);
+   ArrayResize(g_lastModify,0);
 
    // Two passes: crypto instruments first, then every remaining broker symbol.
    // This prevents a long FX list from consuming a finite user cap before crypto.
