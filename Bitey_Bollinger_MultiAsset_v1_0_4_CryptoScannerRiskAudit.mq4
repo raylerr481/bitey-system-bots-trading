@@ -133,7 +133,6 @@ string NormalizeSymbolForCrypto(string symbol)
    if(StringFind(out,"PRO")==0) out=StringSubstr(out,3);
    else if(StringFind(out,"RAW")==0) out=StringSubstr(out,3);
    else if(StringFind(out,"MICRO")==0) out=StringSubstr(out,5);
-   else if(StringLen(out)>1 && StringSubstr(out,0,1)=="M") out=StringSubstr(out,1);
    return(out);
 }
 
@@ -141,7 +140,8 @@ bool IsCryptoSymbol(string symbol)
 {
    string s=NormalizeSymbolForCrypto(symbol);
    string bases[]={"BTC","XBT","ETH","XRP","LTC","BCH","ADA","DOT","SOL","DOGE","AVAX","LINK","XLM","TRX","TON","BNB","SHIB","UNI","AAVE","ETC","EOS","FIL","ATOM","NEAR","ALGO","VET","SAND","MANA","AXS","ICP","OP","ARB","APT","SUI","PEPE","FLOKI","INJ","HBAR","XTZ","EGLD","THETA","FTM","MATIC","POL","CRV","COMP","SNX","MKR","ZEC","DASH","XMR","TRUMP","LDO","RUNE","KAS","TIA","SEI","WIF","BONK","JUP"};
-   for(int i=0;i<ArraySize(bases);i++) if(StringFind(s,bases[i])==0) return(true);
+   for(int i=0;i<ArraySize(bases);i++)
+      if(StringFind(s,bases[i])==0 || StringFind(s,"M"+bases[i])==0) return(true);
    if(StringFind(s,"USDT")>=0 || StringFind(s,"USDC")>=0 || StringFind(s,"BUSD")>=0 || StringFind(s,"FDUSD")>=0) return(true);
    return(false);
 }
