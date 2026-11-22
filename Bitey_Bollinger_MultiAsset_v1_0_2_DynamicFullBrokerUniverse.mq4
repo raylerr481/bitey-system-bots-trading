@@ -775,7 +775,7 @@ int OnInit()
    }
    if(!InpNewsGuardShadowOnly)
    {
-      Print("INIT_FAILED | reason=NEWS_GUARD_MUST_REMAIN_SHADOW_ONLY_IN_V1_0_1");
+      Print("INIT_FAILED | reason=NEWS_GUARD_MUST_REMAIN_SHADOW_ONLY_IN_V1_0_2");
       return(INIT_PARAMETERS_INCORRECT);
    }
    BuildUniverse();
@@ -797,7 +797,9 @@ int OnInit()
          " modes=REBOUND+BREAKOUT conflictPolicy=ABSTAIN",
          " newsGuard=SHADOW_ONLY scoutsNotBlocked=true",
          " fundedAddOns=HARD_DISABLED",
-         " universeRefreshSec=",MathMax(60,InpUniverseRefreshSeconds),\n         " universeSource=",(StringLen(InpSymbolsCSV)>0?"EXPLICIT_CSV":(InpScanMarketWatch?"MARKET_WATCH":"ALL_BROKER_SYMBOLS")),\n         " crypto24x7=EXPECTED_ONLY_FRESH_QUOTE_AND_BROKER_PERMISSION_REQUIRED");
+         " universeRefreshSec=",MathMax(60,InpUniverseRefreshSeconds),
+         " universeSource=",(StringLen(InpSymbolsCSV)>0?"EXPLICIT_CSV":(InpScanMarketWatch?"MARKET_WATCH":"ALL_BROKER_SYMBOLS")),
+         " crypto24x7=EXPECTED_ONLY_FRESH_QUOTE_AND_BROKER_PERMISSION_REQUIRED");
    return(INIT_SUCCEEDED);
 }
 
