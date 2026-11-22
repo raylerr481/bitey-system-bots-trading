@@ -39,7 +39,6 @@ input int              InpATRPeriod             = 14;
 input double           InpSL_ATR                = 1.50;
 input double           InpMinSL_ATR             = 0.80;
 input double           InpMaxSL_ATR             = 3.00;
-input double           InpTP_R_multiple         = 1.80;
 input bool             InpBreakEvenEnabled      = true;
 input double           InpBreakEvenAtR          = 0.80;
 input double           InpBreakEvenLockR        = 0.05;
@@ -68,11 +67,6 @@ input bool             InpAllowSell             = true;
 
 //--- Selective leverage: add-on risk must be fully funded by profit protected by the parent SL.
 //--- Disabled by default until demo validation. It never increases the aggregate risk ceiling.
-input bool             InpEnableFundedAddOns    = false;
-input double           InpAddOnMinParentR       = 1.00;
-input double           InpAddOnFundingPct       = 50.0;
-input double           InpAddOnMaxLotMultiplier = 0.50;
-input int              InpMaxAddOnsPerSymbol    = 1;
 
 //--- News guard copied from v1.5.62 file contract. SHADOW ONLY by design.
 input bool             InpNewsGuardEnabled      = true;
