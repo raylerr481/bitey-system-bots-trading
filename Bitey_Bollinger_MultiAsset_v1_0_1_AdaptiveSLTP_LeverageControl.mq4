@@ -250,6 +250,7 @@ bool AdaptiveDistances(string symbol,int signal,double entry,double atr,double &
    double baseSL=atr*InpSL_ATR;
    double structural=(signal>0 ? entry-iLow(symbol,InpSignalTF,1)+atr*InpSLStructureBufferATR
                                : iHigh(symbol,InpSignalTF,1)-entry+atr*InpSLStructureBufferATR);
+   if(structural>atr*InpMaxSL_ATR) return(false); // Never compress a structural stop inside the signal candle.
    slDist=MathMax(atr*InpMinSL_ATR,MathMax(baseSL,structural));
    slDist=MathMin(slDist,atr*InpMaxSL_ATR);
    if(slDist<=0.0) return(false);
@@ -655,64 +656,7 @@ void ManageOpenPositions()
 //--- Optional funded add-on. Only uses locked profit; aggregate risk cap remains absolute.
 bool TryFundedAddOn(string symbol,int signal,string signalName)
 {
-   // No pyramiding or funded add-ons in this release: leverage is controlled only by sizing and margin checks.
-   return(false);
-   if(!InpEnableFundedAddOns || InpMaxAddOnsPerSymbol<=0) return(false);
-   string newsWhy="";
-   if(NewsGuardWouldBlock(symbol,newsWhy))
-   {
-      Print("NEWS_GUARD_LEVERAGED_ADDON_BLOCK | symbol=",symbol," reason=",newsWhy,
-            " action=FUNDED_ADDON_BLOCKED_SCOUT_POLICY_REMAINS_SHADOW");
-      return(false);
-   }
-   int cmd=(signal>0?OP_BUY:OP_SELL);
-   int parent=-1, addons=0;
-   double lockedFunding=0.0, parentLots=0.0, parentRisk=0.0;
-   for(int i=OrdersTotal()-1;i>=0;i--)
-   {
-      if(!OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) continue;
-      if(OrderMagicNumber()!=InpMagic || OrderSymbol()!=symbol) continue;
-      if(OrderType()!=cmd) continue;
-      if(StringFind(OrderComment(),"LEV")>=0) { addons++; continue; }
-      if(parent<0) { parent=OrderTicket(); parentLots=OrderLots(); parentRisk=MathAbs(OrderOpenPrice()-OrderStopLoss()); }
-      double v=PriceValuePerUnit(symbol);
-      if(v<=0.0 || OrderStopLoss()<=0.0) continue;
-      double locked=(cmd==OP_BUY?OrderStopLoss()-OrderOpenPrice():OrderOpenPrice()-OrderStopLoss());
-      double secured=locked*OrderLots()*v+OrderSwap()+OrderCommission();
-      if(secured>0.0) lockedFunding+=secured;
-   }
-   if(parent<0 || addons>=InpMaxAddOnsPerSymbol || !OrderSelect(parent,SELECT_BY_TICKET)) return(false);
-   if(CountOurPositions("",-1)>=InpMaxOpenPositions) return(false);
-   if(parentRisk<=0.0 || parentLots<=0.0) return(false);
-   double parentR=(cmd==OP_BUY?MarketInfo(symbol,MODE_BID)-OrderOpenPrice():OrderOpenPrice()-MarketInfo(symbol,MODE_ASK))/parentRisk;
-   if(parentR<InpAddOnMinParentR || lockedFunding<=0.0) return(false);
-   double point=MarketInfo(symbol,MODE_POINT);
-   double atr=iATR(symbol,InpSignalTF,InpATRPeriod,1);
-   double slDist=atr*InpSL_ATR;
-   double vpu=PriceValuePerUnit(symbol);
-   if(point<=0.0 || slDist<=0.0 || vpu<=0.0) return(false);
-   double riskBudget=lockedFunding*InpAddOnFundingPct/100.0;
-   double lots=MathMin(CalcLots(symbol,slDist,riskBudget),parentLots*InpAddOnMaxLotMultiplier);
-   double step=MarketInfo(symbol,MODE_LOTSTEP);
-   lots=MathFloor(lots/step+1e-9)*step;
-   if(lots<MarketInfo(symbol,MODE_MINLOT)) return(false);
-   double addRisk=lots*slDist*vpu;
-   double cap=AccountBalance()*InpMaxAggregateRiskPct/100.0;
-   if(OpenRiskMoney()+addRisk>cap) return(false);
-   double price=(cmd==OP_BUY?MarketInfo(symbol,MODE_ASK):MarketInfo(symbol,MODE_BID));
-   int digits=(int)MarketInfo(symbol,MODE_DIGITS);
-   double sl=(cmd==OP_BUY?price-slDist:price+slDist);
-   double tp=(cmd==OP_BUY?price+slDist*InpTP_R_multiple:price-slDist*InpTP_R_multiple);
-   int ticket=OrderSend(symbol,cmd,lots,NormalizeDouble(price,digits),InpSlippagePoints,
-                        NormalizeDouble(sl,digits),NormalizeDouble(tp,digits),
-                        EA_NAME+" LEV "+signalName,InpMagic,0,clrGold);
-   if(ticket>0)
-   {
-      Print("FUNDED_ADDON_OPEN | ticket=",ticket," symbol=",symbol," lockedFundingUSD=",DoubleToString(lockedFunding,2),
-            " addRiskUSD=",DoubleToString(addRisk,2)," source=PROFIT_LOCKED_BY_PARENT_SL");
-      return(true);
-   }
-   Print("FUNDED_ADDON_FAIL | symbol=",symbol," error=",GetLastError());
+   // Hard-disabled in v1.0.1. No pyramiding: exposure is controlled by risk sizing and margin checks.
    return(false);
 }
 
@@ -786,7 +730,7 @@ int OnInit()
    }
    if(!InpNewsGuardShadowOnly)
    {
-      Print("INIT_FAILED | reason=NEWS_GUARD_MUST_REMAIN_SHADOW_ONLY_IN_V1_0_0");
+      Print("INIT_FAILED | reason=NEWS_GUARD_MUST_REMAIN_SHADOW_ONLY_IN_V1_0_1");
       return(INIT_PARAMETERS_INCORRECT);
    }
    BuildUniverse();
@@ -807,7 +751,7 @@ int OnInit()
          " pyramiding=HARD_DISABLED",
          " modes=REBOUND+BREAKOUT conflictPolicy=ABSTAIN",
          " newsGuard=SHADOW_ONLY scoutsNotBlocked=true",
-         " fundedAddOns=",(InpEnableFundedAddOns?"ENABLED":"DISABLED"),
+         " fundedAddOns=HARD_DISABLED",
          " crypto24x7=EXPECTED_ONLY_FRESH_QUOTE_AND_BROKER_PERMISSION_REQUIRED");
    return(INIT_SUCCEEDED);
 }
