@@ -6,11 +6,11 @@
 //| No EMA, RSI, MACD, ADX or other indicator is used for signals.     |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "1.021"
-#property description "v1.0.2.1 warning fix: initialized universe-state buffers; Bollinger-only multi-asset EA."
+#property version   "1.022"
+#property description "v1.0.2.2 warning fix: initialized universe-state buffers; Bollinger-only multi-asset EA."
 
 #define EA_NAME "Bitey_Bollinger_MultiAsset"
-#define EA_VER  "1.0.2.1-INITIALIZATION-WARNING-FIX"
+#define EA_VER  "1.0.2.2-GLOBAL-STATE-BUFFERS"
 #define MAX_SCAN 256
 #define NEWS_MAX_ROWS 300
 
@@ -87,6 +87,10 @@ string   g_symbols[MAX_SCAN];
 datetime g_lastSignalBar[MAX_SCAN];
 datetime g_lastModify[MAX_SCAN];
 int      g_symbolCount=0;
+// Global scratch buffers are zero-initialized by the MQL4 runtime.
+string   g_oldSymbols[MAX_SCAN];
+datetime g_oldBars[MAX_SCAN];
+datetime g_oldModify[MAX_SCAN];
 datetime g_lastScan=0;
 datetime g_lastUniverseRefresh=0;
 datetime g_newsLastLoad=0;
@@ -141,25 +145,14 @@ void BuildUniverse()
 {
    // Preserve per-symbol bar/throttle state across refreshes so a rebuild cannot
    // manufacture a fresh signal window or erase an existing symbol's scan state.
-   string oldSymbols[MAX_SCAN];
-   datetime oldBars[MAX_SCAN], oldModify[MAX_SCAN];
-
-   // Initialize every temporary slot before any possible read. This also
-   // keeps the compiler's definite-initialization analysis satisfied.
-   for(int init=0;init<MAX_SCAN;init++)
-   {
-      oldSymbols[init]="";
-      oldBars[init]=0;
-      oldModify[init]=0;
-   }
-
-   // Clamp the copied state to the actual fixed-array capacity.
+   // Snapshot current state into global scratch buffers. MQL4 initializes
+   // global arrays to zero before OnInit, avoiding local-array warnings.
    int oldCount=MathMin(MAX_SCAN,MathMax(0,g_symbolCount));
    for(int k=0;k<oldCount;k++)
    {
-      oldSymbols[k]=g_symbols[k];
-      oldBars[k]=g_lastSignalBar[k];
-      oldModify[k]=g_lastModify[k];
+      g_oldSymbols[k]=g_symbols[k];
+      g_oldBars[k]=g_lastSignalBar[k];
+      g_oldModify[k]=g_lastModify[k];
    }
 
    g_symbolCount=0;
@@ -198,10 +191,10 @@ void BuildUniverse()
    {
       for(int j=0;j<oldCount;j++)
       {
-         if(g_symbols[n]==oldSymbols[j])
+         if(g_symbols[n]==g_oldSymbols[j])
          {
-            g_lastSignalBar[n]=oldBars[j];
-            g_lastModify[n]=oldModify[j];
+            g_lastSignalBar[n]=g_oldBars[j];
+            g_lastModify[n]=g_oldModify[j];
             break;
          }
       }
