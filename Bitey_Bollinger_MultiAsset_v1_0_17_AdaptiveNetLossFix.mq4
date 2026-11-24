@@ -88,7 +88,7 @@ input int              InpMaxPositionsPerSymbol = 1;
 input double           InpMaxSpreadPoints       = 100.0;
 input double           InpMaxSpreadPctOfSL      = 20.0;
 input int              InpSlippagePoints        = 30;
-input int              InpMagic                 = 26112201;
+input int              InpMagic                 = 26112217;       // Unique to v1.0.17; do not manage orders from earlier EA versions.
 input bool             InpAllowBuy              = true;
 input bool             InpAllowSell             = true;
 
@@ -972,8 +972,6 @@ int CountScoutOpensLastHour()
    for(int j=total-1;j>=0;j--)
    {
       if(!OrderSelect(j,SELECT_BY_POS,MODE_HISTORY)) continue;
-      // MT4 history is ordered by close time; older closed orders cannot have opened in this rolling hour.
-      if(OrderCloseTime()>0 && OrderCloseTime()<from) break;
       if(OrderMagicNumber()!=InpMagic) continue;
       if(StringFind(OrderComment(),"BBM_SC_")==0 && OrderOpenTime()>=from) n++;
    }
@@ -1589,7 +1587,7 @@ int OnInit()
    }
    if(!InpNewsGuardShadowOnly)
    {
-      Print("INIT_FAILED | reason=NEWS_GUARD_MUST_REMAIN_SHADOW_ONLY_IN_V1_0_6");
+      Print("INIT_FAILED | reason=NEWS_GUARD_MUST_REMAIN_SHADOW_ONLY_IN_V1_0_17");
       return(INIT_PARAMETERS_INCORRECT);
    }
    BuildUniverse();
