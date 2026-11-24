@@ -969,14 +969,30 @@ int CountScoutOpensLastHour()
       if(StringFind(OrderComment(),"BBM_SC_")==0 && OrderOpenTime()>=from) n++;
    }
    int total=OrdersHistoryTotal();
-   int scanned=0;
-   for(int j=total-1;j>=0 && scanned<400;j--,scanned++)
+   for(int j=total-1;j>=0;j--)
    {
       if(!OrderSelect(j,SELECT_BY_POS,MODE_HISTORY)) continue;
+      // MT4 history is ordered by close time; older closed orders cannot have opened in this rolling hour.
+      if(OrderCloseTime()>0 && OrderCloseTime()<from) break;
       if(OrderMagicNumber()!=InpMagic) continue;
       if(StringFind(OrderComment(),"BBM_SC_")==0 && OrderOpenTime()>=from) n++;
    }
    return(n);
+}
+
+bool IsSessionLimitedSymbol(string symbol)
+{
+   // Session window is intended for FX, precious metals and oil only.
+   string a="",b="";
+   if(FxPair(symbol,a,b)) return(true);
+   string s=Upper(symbol);
+   while(StringLen(s)>0 && !((StringGetCharacter(s,0)>='A' && StringGetCharacter(s,0)<='Z') ||
+                             (StringGetCharacter(s,0)>='0' && StringGetCharacter(s,0)<='9')))
+      s=StringSubstr(s,1);
+   string limited[]={"XAU","XAG","XPT","XPD","USOIL","UKOIL","BRENT","WTI","OIL"};
+   for(int i=0;i<ArraySize(limited);i++)
+      if(StringFind(s,limited[i])==0) return(true);
+   return(false);
 }
 
 bool SessionAllows(string symbol,string &why)
@@ -984,6 +1000,7 @@ bool SessionAllows(string symbol,string &why)
    why="";
    if(!InpSessionFilterEnabled) return(true);
    if(IsCryptoSymbol(symbol) && !InpCryptoSessionFilter) return(true);
+   if(!IsSessionLimitedSymbol(symbol)) return(true); // stocks/other CFDs are not restricted by this FX/metals/oil window
    int h=TimeHour(TimeCurrent());
    bool ok=(InpSessionStartHour<=InpSessionEndHour ? (h>=InpSessionStartHour && h<InpSessionEndHour)
                                                     : (h>=InpSessionStartHour || h<InpSessionEndHour));
