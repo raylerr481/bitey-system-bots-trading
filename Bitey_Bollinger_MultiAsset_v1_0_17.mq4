@@ -56,7 +56,7 @@ input double           InpNetLossBufferUSD       = 0.20;        // Extra project
 input double           InpLossGuardRiskFrac      = 0.00;        // v1.0.17 fixed buffer; adaptive risk fraction disabled
 input double           InpLossGuardMaxBufferUSD  = 0.20;        // Fixed buffer cap
 input double           InpLossGuardFloorUSD      = 0.00;        // No floor that delays the configured net-loss trigger
-input int              InpLossGuardGraceSec      = 90;          // Do not evaluate the loss guard during the first N seconds after opening
+input int              InpLossGuardGraceSec      = 0;           // Evaluate from the first management cycle; 0 = no grace delay
 input double           InpOtherCloseCostsPerLotUSD = 0.0;       // Estimated taxes/other close fees per lot when not already in OrderCommission()
 input bool             InpPeakLockEnabled        = true;        // Ratchet SL to lock a growing share of the best profit reached
 input double           InpPeakLockStartR         = 0.80;        // Start once the best excursion reached this many R
