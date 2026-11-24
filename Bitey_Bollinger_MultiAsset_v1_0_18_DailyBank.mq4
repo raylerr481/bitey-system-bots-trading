@@ -1666,7 +1666,8 @@ int OnInit()
       InpSoftDailyLossUSD<0.0 || InpSoftLossPauseMin<0 ||
       (InpSoftDailyLossUSD>0.0 && InpMaxDailyLossUSD>0.0 && InpSoftDailyLossUSD>InpMaxDailyLossUSD) ||
       InpMaxAddOnsTotal<0 || InpAddOnMinScoutR<0.0 || InpAddOnSLScale<0.5 || InpAddOnSLScale>2.0 ||
-      InpAddOnTPScale<0.5 || InpAddOnTPScale>3.0 ||\r\n      InpBankMinProtectedUSD<0.0 || InpBankActivationUSD<=0.0 || InpBankAllowedRetracePct<0.0 || InpBankAllowedRetracePct>=100.0 || InpBankProtectionMarginUSD<0.0 || InpBankPlayUSD<0.0)
+      InpAddOnTPScale<0.5 || InpAddOnTPScale>3.0 ||
+      InpBankMinProtectedUSD<0.0 || InpBankActivationUSD<=0.0 || InpBankAllowedRetracePct<0.0 || InpBankAllowedRetracePct>=100.0 || InpBankProtectionMarginUSD<0.0 || InpBankPlayUSD<0.0)
    {
       Print("INIT_FAILED | reason=INVALID_INPUT_CONFIGURATION");
       return(INIT_PARAMETERS_INCORRECT);
