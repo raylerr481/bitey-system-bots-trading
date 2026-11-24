@@ -1117,7 +1117,10 @@ void ManageOpenPositions()
       double lossRoundTripEstimate=MathMax(0.0,lossRoundTripRate*lossLots);
       double lossRemainingCommission=MathMax(0.0,lossRoundTripEstimate-lossPostedCommission);
       double lossOtherCloseCosts=MathMax(0.0,InpOtherCloseCostsPerLotUSD)*lossLots;
-      double lossGuardNet=OrderProfit()+OrderSwap()+OrderCommission()
+      double lossProfitNow=OrderProfit();
+      double lossSwapNow=OrderSwap();
+      double lossCommissionPostedNow=OrderCommission();
+      double lossGuardNet=lossProfitNow+lossSwapNow+lossCommissionPostedNow
                           -lossRemainingCommission-lossOtherCloseCosts;
       if(InpMaxLossPerTradeUSD>0.0 && lossGuardNet<=-InpMaxLossPerTradeUSD)
       {
@@ -1129,8 +1132,8 @@ void ManageOpenPositions()
          if(lossClosed)
             Print("TRUE_NET_LOSS_CAP_CLOSE | ticket=",closeTicket," symbol=",symbol," type=",(type==OP_BUY?"BUY":"SELL"),
                   " estimatedNetAtDecision=",DoubleToString(lossGuardNet,2)," limitUSD=",DoubleToString(InpMaxLossPerTradeUSD,2),
-                  " profit=",DoubleToString(OrderProfit(),2)," swap=",DoubleToString(OrderSwap(),2),
-                  " postedCommission=",DoubleToString(OrderCommission(),2),
+                  " profit=",DoubleToString(lossProfitNow,2)," swap=",DoubleToString(lossSwapNow,2),
+                  " postedCommission=",DoubleToString(lossCommissionPostedNow,2),
                   " estimatedRemainingCommission=",DoubleToString(lossRemainingCommission,2),
                   " estimatedOtherCloseCosts=",DoubleToString(lossOtherCloseCosts,2),
                   " spreadAlreadyInProfit=true"," lots=",DoubleToString(lossLots,2)," action=CLOSED_TRUE_NET_GUARD");
